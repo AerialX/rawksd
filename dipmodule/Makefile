@@ -49,7 +49,7 @@ all:
 	@$(MAKE) -C $(BUILD) --no-print-directory -f $(CURDIR)/Makefile BUILDING=all
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(BIN)/*.elf
+	@rm -fr $(BUILD) $(BIN)/*.elf ../launcher/data/$(TARGET).dat ../testemu/data/$(TARGET).dat
 else
 
 TARGET := $(notdir $(ROOT))
@@ -105,6 +105,8 @@ LDFLAGS	= -g $(ARCH) -specs=$(SPECS) -T$(LINKSCRIPT) $(LIBPATHS) $(LIBS) -Wl,--g
 $(OUTPUT).elf: $(TARGET).elf
 	@echo stripping $(notdir $@)
 	@$(STRIPIOS) $< $@
+	@cp $@ ../../launcher/data/$(TARGET).dat
+	@cp $@ ../../testemu/data/$(TARGET).dat
 	
 %.elf: $(OFILES)
 	@echo linking $(notdir $@)

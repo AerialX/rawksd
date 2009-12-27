@@ -121,9 +121,9 @@ $(OUTPUT).dol: $(OUTPUT).elf
 $(OUTPUT).elf: $(OFILES)
 
 #---------------------------------------------------------------------------------
-# This rule links in binary data with the .jpg extension
+# This rule links in binary data with the .dat extension
 #---------------------------------------------------------------------------------
-%.elf.o	:	%.elf
+%.dat.o	:	%.dat
 #---------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	$(bin2o)

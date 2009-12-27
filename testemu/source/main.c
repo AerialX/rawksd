@@ -5,10 +5,10 @@
 #include <mload.h>
 #include <malloc.h>
 
-#include "emumodule_elf.h"
-#include "ehcmodule_elf.h"
-#include "sslmodule_elf.h"
-#include "filemodule_elf.h"
+#include "emumodule_dat.h"
+#include "ehcmodule_dat.h"
+#include "sslmodule_dat.h"
+#include "filemodule_dat.h"
 
 static void *xfb = NULL;
 static GXRModeObj *rmode = NULL;
