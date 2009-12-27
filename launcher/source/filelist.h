@@ -30,9 +30,6 @@ extern const u32	elevator_ogg_size;
 
 /** Images ***/
 /*
-extern const u8		Background_png[];
-extern const u32	Background_png_size;
-
 extern const u8		ButtonNo_over_png[];
 extern const u32	ButtonNo_over_png_size;
 
