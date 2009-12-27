@@ -38,7 +38,7 @@ all:
 	@$(MAKE) -C $(BUILD) --no-print-directory -f $(CURDIR)/Makefile BUILDING=all
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD)
+	@rm -fr $(BUILD) $(TARGET).a
 else
 
 TARGET := $(notdir $(ROOT))

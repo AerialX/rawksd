@@ -1,1 +1,3 @@
-../processor.h
+#pragma once
+
+#include <processor.h>
