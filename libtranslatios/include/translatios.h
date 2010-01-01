@@ -70,6 +70,6 @@ void AddPatch(int fd, u32 fileoffset, u64 offset, u32 length);
 void AddShift(u64 original, u64 newoffset, u32 size);
 void ResizeFST(DiscNode* node, u32 length, bool telldip);
 bool PatchFST(const char* fstname, u32 offset, const char* filename, u32 fileoffset, u32 length);
-void ExecuteQueue(std::vector<PatchShift>* shifts, std::vector<PatchFile>* files, u32* fstsize);
+void ExecuteQueue(std::vector<PatchShift*>* shifts, std::vector<PatchFile*>* files, u32* fstsize);
 
 u32 GetShiftOffset();

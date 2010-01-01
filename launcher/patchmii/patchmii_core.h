@@ -42,8 +42,6 @@ void aes_encrypt(u8 *iv, u8 *inbuf, u8 *outbuf, unsigned long long len);
 #define ISFS_ACCESS_WRITE 2
 
 // OMG MASTER HAXX
-#define RAWKHAXX
-//#define RIIVOLUTION
 #define EHCUSB
 
 #define DOWNGRADED_IOS 15

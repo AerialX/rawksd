@@ -176,7 +176,7 @@ bool PatchFST(const char* fstname, u32 offset, const char* filename, u32 fileoff
 	return true;
 }
 
-void ExecuteQueue(vector<PatchShift>* shifts, vector<PatchFile>* patches, u32* fstsize)
+void ExecuteQueue(vector<PatchShift*>* shifts, vector<PatchFile*>* patches, u32* fstsize)
 {
 	//DiscNode* fst = (DiscNode*)*MEM_FSTADDRESS; // Start of FST
 	DiscNode* fst = (DiscNode*)fstaddress; // Start of FST
@@ -211,14 +211,14 @@ void ExecuteQueue(vector<PatchShift>* shifts, vector<PatchFile>* patches, u32* f
 			strcat(curpath, name);
 			
 			if (patches != NULL) {
-				for (vector<PatchFile>::iterator patch = patches->begin(); patch != patches->end(); patch++) {
-					if (!strcasecmp(curpath, patch->DiscFile.c_str()) || !strcasecmp(name, patch->DiscFile.c_str())) {
-						if (patch->Length == 0) {
+				for (vector<PatchFile*>::iterator patch = patches->begin(); patch != patches->end(); patch++) {
+					if (!strcasecmp(curpath, (*patch)->DiscFile.c_str()) || !strcasecmp(name, (*patch)->DiscFile.c_str())) {
+						if ((*patch)->Length == 0) {
 							Stats st;
-							if (File_Stat(patch->External.c_str(), &st) == 0) {
-								patch->Length = st.Size;
-								patch->Stated = true;
-								patch->ExternalID = st.Identifier;
+							if (File_Stat((*patch)->External.c_str(), &st) == 0) {
+								(*patch)->Length = st.Size;
+								(*patch)->Stated = true;
+								(*patch)->ExternalID = st.Identifier;
 							} else {
 								patches->erase(patch);
 								break;
@@ -226,21 +226,21 @@ void ExecuteQueue(vector<PatchShift>* shifts, vector<PatchFile>* patches, u32* f
 						}
 						
 						s32 fd = -1;
-						if (patch->Stated)
-							fd = AddPatchFile(patch->External.c_str(), patch->ExternalID);
+						if ((*patch)->Stated)
+							fd = AddPatchFile((*patch)->External.c_str(), (*patch)->ExternalID);
 						else
-							fd = AddPatchFile(patch->External.c_str());
+							fd = AddPatchFile((*patch)->External.c_str());
 						
 						if (fd >= 0) {
-							if (patch->Resize) {
-								if (patch->Length + patch->Offset > node->Size)
-									ResizeFST(node, patch->Length + patch->Offset, patch->Offset > 0);
+							if ((*patch)->Resize) {
+								if ((*patch)->Length + (*patch)->Offset > node->Size)
+									ResizeFST(node, (*patch)->Length + (*patch)->Offset, (*patch)->Offset > 0);
 								else 
-									node->Size = patch->Length + patch->Offset;
+									node->Size = (*patch)->Length + (*patch)->Offset;
 								
 							}
 							
-							AddPatch(fd, patch->FileOffset, ((u64)node->DataOffset << 2) + (u64)patch->Offset, patch->Length);
+							AddPatch(fd, (*patch)->FileOffset, ((u64)node->DataOffset << 2) + (u64)(*patch)->Offset, (*patch)->Length);
 						}
 						
 						patches->erase(patch);
@@ -251,11 +251,11 @@ void ExecuteQueue(vector<PatchShift>* shifts, vector<PatchFile>* patches, u32* f
 			
 			if (shifts != NULL) {
 				int patchnum = 0;
-				for (vector<PatchShift>::iterator patch = shifts->begin(); patch != shifts->end(); patch++) {
-					if (!strcasecmp(curpath, patch->Source.c_str()) || !strcasecmp(name, patch->Source.c_str())) {
+				for (vector<PatchShift*>::iterator patch = shifts->begin(); patch != shifts->end(); patch++) {
+					if (!strcasecmp(curpath, (*patch)->Source.c_str()) || !strcasecmp(name, (*patch)->Source.c_str())) {
 						shiftstodo[patchnum * 2] = node;
 						break;
-					} else if (!strcasecmp(curpath, patch->Destination.c_str()) || !strcasecmp(name, patch->Destination.c_str())) {
+					} else if (!strcasecmp(curpath, (*patch)->Destination.c_str()) || !strcasecmp(name, (*patch)->Destination.c_str())) {
 						shiftstodo[patchnum * 2 + 1] = node;
 						break;
 					}
@@ -269,9 +269,9 @@ void ExecuteQueue(vector<PatchShift>* shifts, vector<PatchFile>* patches, u32* f
 			// Before popping back, check if we need to create any files here
 			curpath[pos] = '\0';
 			// When we pop out of a directory, we can assume anything that matches it is fucked.
-			for (vector<PatchFile>::iterator patch = patches->begin(); patch != patches->end(); patch++) {
-				if (patch->Create && !strncasecmp(curpath, patch->DiscFile.c_str(), pos)) {
-					char* token = patch->DiscFile.c_str() + pos;
+			for (vector<PatchFile*>::iterator patch = patches->begin(); patch != patches->end(); patch++) {
+				if ((*patch)->Create && !strncasecmp(curpath, (*patch)->DiscFile.c_str(), pos)) {
+					char* token = (*patch)->DiscFile.c_str() + pos;
 					vector<string> directories;
 					
 					char* nexttoken = token - 1;

@@ -697,21 +697,21 @@ void RB2DipReplacement(int device)
 
 #define ADD_PATCH(patch) { \
 	if (disc) { \
-		for (int i = 0; i < patch.Files.size(); i++) \
-			patches.push_back(patch.Files[i]); \
-		for (int i = 0; i < patch.Shifts.size(); i++) \
-			shifts.push_back(patch.Shifts[i]); \
+		for (size_t i = 0; i < (patch)->Files.size(); i++) \
+			patches.push_back(&(patch)->Files[i]); \
+		for (size_t i = 0; i < (patch)->Shifts.size(); i++) \
+			shifts.push_back(&(patch)->Shifts[i]); \
 	} \
 	if (memory) { \
-		for (int i = 0; i < patch.Memory.size(); i++) { \
-			PatchMemory* memory = &patch.Memory[i]; \
+		for (size_t i = 0; i < (patch)->Memory.size(); i++) { \
+			PatchMemory* memory = &(patch)->Memory[i]; \
 			if (memory->Verify && *memory->Offset != memory->Original) \
 				continue; \
 			*memory->Offset = memory->Value; \
 		} \
 	} \
 }
-
+/*
 #define STRING_REPLACE(str) { \
 	while ((pos = str->find("{$")) != string::npos) { \
 		string::size_type pend = str->find("}", pos); \
@@ -719,31 +719,48 @@ void RB2DipReplacement(int device)
 		*str = str->substr(0, pos) + option->Params[param] + str->substr(pend + 1); \
 	} \
 }
+*/
+bool STRING_REPLACE(string* str, vector<PatchOption>::iterator* option)
+{
+	bool found = false;
+	string::size_type pos;
+	while ((pos = str->find("{$")) != string::npos) {
+		string::size_type pend = str->find("}", pos);
+		string param = str->substr(pos + 2, pend - pos - 2);
+		*str = str->substr(0, pos) + (*option)->Params[param] + str->substr(pend + 1);
+		found = true;
+	}
+	
+	return found;
+}
 
 void DipReplacement(bool disc, bool memory, u32* fstsize)
 {
-	vector<PatchShift> shifts;
-	vector<PatchFile> patches;
+	vector<PatchShift*> shifts;
+	vector<PatchFile*> patches;
+	
+	vector<PatchPatch> patchcache;
 	
 	for (vector<PatchOption>::iterator option = Options.begin(); option != Options.end(); option++) {
 		if (option->Enabled == 0)
 			continue;
 		
 		for (vector<string>::iterator patchid = option->Choices[option->Enabled - 1].Patches.begin(); patchid != option->Choices[option->Enabled - 1].Patches.end(); patchid++) {
-			PatchPatch* pth = GetPatchByID(*patchid);
-			if (pth != NULL) {
-				PatchPatch patch = *pth;
-				for (vector<PatchFile>::iterator file = patch.Files.begin(); file != patch.Files.end(); file++) {
-					string::size_type pos;
-					string* str = &file->DiscFile;
+			PatchPatch* patch = GetPatchByID(*patchid);
+			if (patch != NULL) {
+				PatchPatch newpatch = *patch;
+				bool found = false;
+				for (vector<PatchFile>::iterator file = newpatch.Files.begin(); file != newpatch.Files.end(); file++) {
+					found |= STRING_REPLACE(&file->DiscFile, &option);
 					
-					STRING_REPLACE(str);
-					
-					str = &file->External;
-					
-					STRING_REPLACE(str);
+					found |= STRING_REPLACE(&file->External, &option);
 				}
-				ADD_PATCH(patch);
+				
+				if (found) {
+					patchcache.push_back(newpatch);
+					ADD_PATCH(&patchcache[patchcache.size() - 1]); // WARNING: Taking address of a vector that will resize... However only storing the address of its subvector entries; should be okay.
+				} else
+					ADD_PATCH(patch);
 			}
 		}
 	}
