@@ -60,7 +60,7 @@ int verify_bk(BK_Header *bk)
 		LogPrintf("bk_header.title_id_2 incorrect %08X %08X\n", bk->title_id_2, *(u32*)0);
 		failed = 1;
 	}
-	if (bk->padding != 0)
+	if (bk->padding[0] != 0 || bk->padding[0] != bk->padding[1] || bk->padding[0] != bk->padding[2])
 	{
 		LogPrintf("bk_header.padding incorrect %08X\n", bk->padding);
 		failed =1;
@@ -248,6 +248,7 @@ s32 ReadBin(BinFile* file, u8* buffer, u32 numbytes)
 		memcpy(buffer, file->buf, i);
 		numbytes -= i;
 		buffer += i;
+		file->pos += i;
 
 		// middle bytes (16-byte blocks)
 		i = numbytes & ~15;

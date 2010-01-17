@@ -78,7 +78,7 @@ typedef struct _BK_Header
     u8  content_mask[0x40];
     u32 title_id_1;
     u32 title_id_2;
-    u64 padding;
+    u64 padding[3];
 } __attribute__((packed)) BK_Header;
 
 typedef struct _sig_rsa2048 {
