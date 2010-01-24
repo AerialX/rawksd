@@ -21,7 +21,8 @@ namespace ProxiIOS {
 			Write = 0x04,
 			Seek = 0x05,
 			Ioctl = 0x06,
-			Ioctlv = 0x07
+			Ioctlv = 0x07,
+			Callback = 0x08
 		};
 	}
 
@@ -67,6 +68,10 @@ namespace ProxiIOS {
 		virtual int HandleSeek(ipcmessage* message)
 		{
 			return -1;
+		}
+		virtual int HandleCallback(ipcmessage* message) // eat unknown callback messages
+		{
+			return 0;
 		}
 		virtual bool HandleOther(u32 message, int &result, bool &ack) // for timers and other static messages
 		{

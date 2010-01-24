@@ -60,6 +60,11 @@ os_message_queue_create:
 	syscall 0xA
 
 	.code 32
+	.global os_message_queue_destroy
+os_message_queue_destroy:
+	syscall 0xB
+	
+	.code 32
 	.global os_message_queue_send
 os_message_queue_send:
 	syscall 0xC
@@ -162,6 +167,41 @@ os_ioctl:
 	.global os_ioctlv
 os_ioctlv:
 	syscall 0x22
+	
+	.code 32
+	.global os_open_async
+os_open_async:
+	syscall 0x23
+	
+	.code 32
+	.global os_close_async
+os_close_async:
+	syscall 0x24
+	
+	.code 32
+	.global os_read_async
+os_read_async:
+	syscall 0x25
+	
+	.code 32
+	.global os_write_async
+os_write_async:
+	syscall 0x26
+	
+	.code 32
+	.global os_seek_async
+os_seek_async:
+	syscall 0x27
+	
+	.code 32
+	.global os_ioctl_async
+os_ioctl_async:
+	syscall 0x28
+	
+	.code 32
+	.global os_ioctlv_async
+os_ioctlv_async:
+	syscall 0x29
 
 	.code 32
 	.global os_message_queue_ack
@@ -202,6 +242,20 @@ os_aes_encrypt:
 	.global os_aes_decrypt
 os_aes_decrypt:
 	syscall 0x6B
+	
+	.code 32
+	.global os_puts
+os_puts:
+	adds r1,r0,#0
+	movs R0,#4
+	svc 0xAB
+	bx lr
+	
+	.code 32
+	.global os_mload
+os_mload:
+	svc 0xCC
+	bx lr
 
 	.pool
 	.end

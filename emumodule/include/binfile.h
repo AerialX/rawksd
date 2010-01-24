@@ -9,10 +9,10 @@ extern "C" {
 
 typedef struct
 {
-    u8 iv[16];
-    u8 buf[16];
     s32 handle;
     u32 pos;
+    u8 iv[16];
+    u8 buf[16];
     u32 data_size;
     u32 header_size;
     u16 index;

@@ -1,14 +1,15 @@
-#include <string.h>
-
-#include "mem.h"
 
 #define USE_LWP
 
+#include "mem.h"
+
+#include <string.h>
+
 #ifndef USE_LWP
-	#include "syscalls.h"
-	static u32 heaphandle;
+#include "syscalls.h"
+static u32 heaphandle;
 #else
-	static heap_cntrl heap;
+static heap_cntrl heap;
 #endif
 
 bool InitializeHeap(void* heapspace, u32 size, u32 pagesize)
@@ -56,7 +57,17 @@ void *Realloc(void* data, u32 size, u32 oldsize)
 #ifdef USE_LWP
 	return __lwp_heap_realloc(&heap, data, size);
 #else
-	return NULL;
+	void *new_mem = data;
+	if (size > oldsize)
+	{
+		new_mem = Alloc(size);
+		if (new_mem)
+		{
+			memcpy(new_mem, data, (size > oldsize) ? oldsize : size);
+			Dealloc(data);
+		}
+	}
+	return new_mem;
 #endif
 }
 
@@ -69,19 +80,3 @@ u32 HeapInfo()
 #endif
 	return 0;
 }
-
-void* malloc(size_t n)
-{
-	return Alloc(n);
-}
-
-void* memalign(size_t align, size_t n)
-{
-	return Memalign(align, n);
-}
-
-void free(void* ptr)
-{
-	Dealloc(ptr);
-}
-

@@ -8,8 +8,6 @@
 #include "es.h"
 #include "mem.h"
 
-void LogPrintf(const char *fmt, ...);
-
 #define setAccessMask(mask, bit) (mask[bit>>3] |= (1 << (bit&7)))
 #define unsetAccessMask(mask, bit) (mask[bit>>3] &= ~(1 << (bit&7)))
 #define checkAccessMask(mask, bit) (mask[bit>>3] & (1 << (bit&7)))
@@ -17,7 +15,9 @@ void LogPrintf(const char *fmt, ...);
 #define BIN_READ	1
 #define BIN_WRITE	2
 
-#define FSERR_EINVAL -4
+#define debug_printf(fmt, args...)
+
+#define FSERR_EINVAL	-4
 
 int verify_bk(BK_Header *bk)
 {
@@ -27,51 +27,49 @@ int verify_bk(BK_Header *bk)
 
 	if (bk->size != 0x70)
 	{
-		LogPrintf("bk_header.size incorrect %d\n", bk->size);
+		debug_printf("bk_header.size incorrect %d\n", bk->size);
 		failed = 1;
 	}
 	if (bk->magic != 0x426B)
 	{
-		LogPrintf("bk_header.magic incorrect %d\n", bk->magic);
+		debug_printf("bk_header.magic incorrect %d\n", bk->magic);
 		failed = 1;
 	}
 	if (bk->version != 1)
 	{
-		LogPrintf("bk_header.version incorrect %d\n", bk->version);
+		debug_printf("bk_header.version incorrect %d\n", bk->version);
 		failed = 1;
 	}
 	if (bk->NG_id != wii_id)
 	{
-		LogPrintf("bk_header.NG_id incorrect %08X\n", bk->NG_id);
+		debug_printf("bk_header.NG_id incorrect %08X\n", bk->NG_id);
 		failed = 1;
 	}
 	if (bk->zeroes != 0)
 	{
-		LogPrintf("bk_header.zeroes not zero %08X\n", bk->zeroes);
+		debug_printf("bk_header.zeroes not zero %08X\n", bk->zeroes);
 		failed = 1;
 	}
 	if (bk->title_id_1 != 0x00010000)
 	{
-		LogPrintf("bk_header.title_id_1 incorrect %08X\n", bk->title_id_1);
+		debug_printf("bk_header.title_id_1 incorrect %08X\n", bk->title_id_1);
 		failed =1;
 	}
 	if (bk->title_id_2 != *(u32*)0)
 	{
-		LogPrintf("bk_header.title_id_2 incorrect %08X %08X\n", bk->title_id_2, *(u32*)0);
+		debug_printf("bk_header.title_id_2 incorrect got=%08X expected=%08X\n", bk->title_id_2, *(u32*)0);
 		failed = 1;
 	}
 	if (bk->padding[0] != 0 || bk->padding[0] != bk->padding[1] || bk->padding[0] != bk->padding[2])
 	{
-		LogPrintf("bk_header.padding incorrect %08X\n", bk->padding);
+		debug_printf("bk_header.padding incorrect %08X\n", bk->padding);
 		failed =1;
 	}
-
-	if (!failed)
-		LogPrintf("BK_Header verified\n");
 
 	return failed;
 }
 
+#if 1
 int FileRead(BinFile* file, void *buf, u32 size)
 {
 	if (size==0)
@@ -99,6 +97,44 @@ int FileSeek(BinFile* file, s32 where)
 	file->pos = where;
 	return 0;
 }
+#else
+
+#include <wrapper.h>
+
+int FileRead(BinFile* file, void *buf, u32 size)
+{
+	if (size==0)
+		return 0;
+	if (FAT_Read(file->handle, buf, size)!=size)
+		return 1;
+
+	file->pos += size;
+	return 0;
+}
+
+int FileWrite(BinFile* file, void *buf, u32 size)
+{
+	if (size==0)
+		return 0;
+	if (FAT_Write(file->handle, buf, size)!=size)
+		return 1;
+
+	file->pos += size;
+	return 0;
+}
+
+int FileSeek(BinFile* file, s32 where)
+{
+	if (file->pos==where);
+		return 0;
+	if (FAT_Seek(file->handle, where, SEEK_SET)!=where)
+		return 1;
+
+	file->pos = where;
+	return 0;
+}
+
+#endif
 
 BinFile* OpenBinRead(s32 file)
 {
@@ -120,7 +156,7 @@ BinFile* OpenBinRead(s32 file)
     	FileSeek(binfile, 0x1C0) ||
     	FileRead(binfile, &tmd_header, sizeof(tmd)))
     	{
-			LogPrintf("DLC Open failed reading bk_header\n");
+			debug_printf("DLC Open failed reading bk_header\n");
     		goto open_error;
 		}
 
@@ -142,8 +178,8 @@ BinFile* OpenBinRead(s32 file)
 			if (bk_header.contents_size != ROUND_UP(content_rec.size, 64) ||
 				content_rec.type != 0x4001)
 				{
-					LogPrintf("DLC Open size mismatch or contents not DLC\n");
-				goto open_error;
+					debug_printf("DLC Open size mismatch or contents not DLC\n");
+					goto open_error;
 				}
 			found = 1;
 			break;
@@ -155,14 +191,13 @@ BinFile* OpenBinRead(s32 file)
 
     if (!found)
     {
-		LogPrintf("DLC Open failed to find index in TMD\n");
+		debug_printf("DLC Open failed to find index in TMD\n");
     	goto open_error;
 	}
 
-    if (FileSeek(binfile, binfile->header_size))
-    	goto open_error;
+    if (SeekBin(binfile, 0, SEEK_SET)>=0)
+	    return binfile;
 
-    return binfile;
 open_error:
 	Dealloc(binfile);
 	return NULL;

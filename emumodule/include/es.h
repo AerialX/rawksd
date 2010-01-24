@@ -31,9 +31,6 @@ distribution.
 #ifndef __ES_H__
 #define __ES_H__
 
-#define HW_RVL
-#if defined(HW_RVL)
-
 #include <gctypes.h>
 #include <gcutil.h>
 
@@ -222,8 +219,6 @@ typedef struct _cert_rsa4096 {
 
 #ifdef __cplusplus
    }
-#endif /* __cplusplus */
-
-#endif /* defined(HW_RVL) */
+#endif
 
 #endif

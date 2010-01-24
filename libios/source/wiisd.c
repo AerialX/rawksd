@@ -32,25 +32,14 @@
  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-#include <malloc.h>
-#include <time.h>
-#include <gcutil.h>
-#include <ipc.h>
-#include <unistd.h>
-#include <disc_io.h>
-#include <wiisd_io.h>
-#include <gctypes.h>
-
+#include "gctypes.h"
+#include "gcutil.h"
+#include "ipc.h"
+#include "disc_io.h"
+#include "wiisd_io.h"
 #include "syscalls.h"
-
-#define VISUALIZE
-
-#ifdef VISUALIZE
 #include "gpio.h"
-#endif
 
 #define PAGE_SIZE512				512
 
@@ -469,15 +458,22 @@ bool sdio_Transfer(u32 cmd, sec_t sector, sec_t numSectors, void *buffer)
 {
 	s32 ret;
 
-	if (buffer==NULL || (u32)buffer & 0x1F || __sd0_select()<0)
+	// buffer not aligned
+	if ((u32)buffer & 0x1F)
+	{
+		gpio_set_on(GPIO_OSLOT);
 		return false;
+	}
+
+	if (buffer==NULL || __sd0_select()<0)
+		return false;
+
+	if (!__sd0_sdhc)
+		sector <<= 9;
 
 #ifdef VISUALIZE
 	gpio_set_on(GPIO_OSLOT);
 #endif
-
-	if (!__sd0_sdhc)
-		sector <<= 9;
 
 	ret = __sdio_sendcommand(cmd, SDIOCMD_TYPE_AC,SDIO_RESPONSE_R1,sector,numSectors,PAGE_SIZE512,buffer,NULL,0);
 

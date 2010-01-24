@@ -26,7 +26,6 @@ void RTC_Init(time_t epoch)
 	initted = 1;
 }
 
-// call this at least once before each timer overflow
 void RTC_Update()
 {
 	u32 stime = TIMER_REG;

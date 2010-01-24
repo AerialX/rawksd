@@ -72,6 +72,7 @@ typedef struct ipcmessage
 			u32* buffer_io;
 			u32 length_io;
 		} ioctl;
+
 		struct
 		{
 			u32 command;
@@ -80,6 +81,8 @@ typedef struct ipcmessage
 			u32 num_io;
 			ioctlv* vector;
 		} ioctlv;
+
+		void *cb_data;
 	};
 } __attribute__((packed)) ipcmessage;
 

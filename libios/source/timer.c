@@ -22,23 +22,27 @@
 
 #include "syscalls.h"
 #include "gctypes.h"
-#include "gcutil.h"
 #include "mem.h"
-#include <stdlib.h>
 
-static s32 queuehandle = -1;
-static s32 timerId     = -1;
+#define TIMER_MSGS 8
+
+static osqueue_t queuehandle = -1;
+static ostimer_t timerId     = -1;
 
 void Timer_Init(void)
 {
 	void *queuespace = NULL;
+
 	if (queuehandle >= 0)
 		return;
 
-	queuespace = Alloc(0x40);
-	queuehandle = os_message_queue_create(queuespace, 16);
+	queuespace = Alloc(TIMER_MSGS*sizeof(u32));
+	if (queuespace==NULL)
+		return;
 
-	timerId = os_create_timer(1000000, 1, queuehandle, 0x666);
+	queuehandle = os_message_queue_create(queuespace, TIMER_MSGS);
+
+	timerId = os_create_timer(0, 0, queuehandle, 0x666);
 
 	os_stop_timer(timerId);
 }
@@ -47,23 +51,22 @@ void Timer_Sleep(u32 time)
 {
 	u32 message;
 
-	/* Send message */
+	// not initialized
+	if (timerId<0 || queuehandle<0)
+		return;
+
 	os_message_queue_send(queuehandle, 0x555, 0);
 
-	/* Restart timer */
-	os_restart_timer(timerId, time);
+	os_restart_timer(timerId, time, 0);
 
 	while (1) {
-		os_message_queue_receive(queuehandle, (void *)&message, 0);
+		os_message_queue_receive(queuehandle, &message, 0);
 
-		/* Message received */
 		if (message == 0x555)
 			break;
 	}
 
+	os_message_queue_receive(queuehandle, &message, 0);
 
-	os_message_queue_receive(queuehandle, (void *)&message, 0);
-
-	/* Stop timer */
 	os_stop_timer(timerId);
 }

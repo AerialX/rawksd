@@ -31,6 +31,8 @@ typedef s32 sfp32;                              ///< 1:19:8 fixed point
 typedef u16 ufp16;                              ///< 8:8 fixed point
 typedef u32 ufp32;                              ///< 24:8 fixed point
 
+typedef s32 osqueue_t; // ipc message queue
+typedef s32 ostimer_t; // ipc timer
 
 // bool is a standard type in cplusplus, but not in c.
 #ifndef __cplusplus

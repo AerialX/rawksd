@@ -164,38 +164,3 @@ char *inet_ntoa(struct in_addr addr)
   return str;
 }
 
-#if 0
-#ifndef BYTE_ORDER
-#error BYTE_ORDER is not defined
-#endif
-#if BYTE_ORDER == LITTLE_ENDIAN
-
-u16_t
-htons(u16_t n)
-{
-  return ((n & 0xff) << 8) | ((n & 0xff00) >> 8);
-}
-
-u16_t
-ntohs(u16_t n)
-{
-  return htons(n);
-}
-
-u32
-htonl(u32 n)
-{
-  return ((n & 0xff) << 24) |
-    ((n & 0xff00) << 8) |
-    ((n & 0xff0000) >> 8) |
-    ((n & 0xff000000) >> 24);
-}
-
-u32
-ntohl(u32 n)
-{
-  return htonl(n);
-}
-
-#endif /* BYTE_ORDER == LITTLE_ENDIAN */
-#endif

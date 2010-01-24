@@ -10,7 +10,7 @@ namespace ProxiIOS {
 		os_thread_set_priority(os_get_thread_id(), 1);
 
 		void* queue = Alloc(0x20);
-		u32 queuehandle = os_message_queue_create(queue, 8);
+		osqueue_t queuehandle = os_message_queue_create(queue, 8);
 
 		os_device_register(Device, queuehandle);
 
@@ -44,6 +44,9 @@ namespace ProxiIOS {
 					case Ios::Ioctlv:
 						result = HandleIoctlv(message);
 						break;
+					case Ios::Callback:
+						result = HandleCallback(message);
+						break;
 					default:
 						result = -1; // wtf kind of IPC message is this?
 						break;
@@ -52,7 +55,7 @@ namespace ProxiIOS {
 
 			// Respond
 			if (acknowledge)
-				os_message_queue_ack((void*)message, result);
+				os_message_queue_ack(message, result);
 		}
 
 		return 0;
