@@ -234,16 +234,6 @@ os_get_key:
 	syscall 0x63
 
 	.code 32
-	.global os_aes_encrypt
-os_aes_encrypt:
-	syscall 0x69
-
-	.code 32
-	.global os_aes_decrypt
-os_aes_decrypt:
-	syscall 0x6B
-	
-	.code 32
 	.global os_puts
 os_puts:
 	adds r1,r0,#0

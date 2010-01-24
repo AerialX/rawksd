@@ -13,7 +13,14 @@ TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data  
-INCLUDES	:=	include
+INCLUDES	:=  include ../libios/include libfat/include
+SCRIPTDIR	:=  scripts
+BIN		:=  bin
+
+STRIPIOS	:=  ../stripios/stripios
+
+LIBS		:=  ../libfat/libfat.a ../../libios/libios.a
+LIBDIRS		:=
 
 #---------------------------------------------------------------------------------
 # the prefix on the compiler executables
@@ -29,19 +36,31 @@ AS			:= $(PREFIX)g++
 #---------------------------------------------------------------------------------
 # linker script
 #---------------------------------------------------------------------------------
+LINKSCRIPT		:= $(ROOT)/$(SCRIPTDIR)/link.ld
+SPECS			:= $(ROOT)/$(SCRIPTDIR)/nostart.specs	
+
 ifeq ($(BUILDING),$(emptystring))
 
 export ROOT	:= $(CURDIR)
 
+
 all:
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
+	@$(MAKE) -C libfile --no-print-directory -f Makefile.ios
+	@$(MAKE) -C libfile --no-print-directory -f Makefile.wii
+	@$(MAKE) -C libfat --no-print-directory -f Makefile
 	@$(MAKE) -C $(BUILD) --no-print-directory -f $(CURDIR)/Makefile BUILDING=all
+	
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).a
+	@$(MAKE) -C libfile --no-print-directory -f Makefile.ios clean
+	@$(MAKE) -C libfile --no-print-directory -f Makefile.wii clean
+	@$(MAKE) -C libfat --no-print-directory -f Makefile clean
+	@rm -fr $(BUILD) $(BIN)/*.elf ../launcher/data/$(TARGET).dat ../testemu/data/$(TARGET).dat
 else
 
 TARGET := $(notdir $(ROOT))
+STRIPIOS := $(ROOT)/$(STRIPIOS)
 #----------------------------------------------------
 # MS Visual Studio Style Fix:
 #----------------------------------------------------
@@ -50,7 +69,7 @@ STYLEFIX	= 2>&1 | sed -e 's/\([a-zA-Z\.]\+\):\([0-9]\+\):\([0-9]\+:\)\?\(.\+\)/\
 #---------------------------------------------------------------------------------
 # automatically build a list of object files for our project
 #---------------------------------------------------------------------------------
-OUTPUT		:=  $(ROOT)/$(TARGET)
+OUTPUT		:=  $(ROOT)/$(BIN)/$(TARGET)
 CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(ROOT)/$(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(ROOT)/$(dir)/*.cpp)))
 sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(ROOT)/$(dir)/*.s)))
@@ -70,30 +89,37 @@ VPATH		=  $(foreach dir,$(SOURCES),$(ROOT)/$(dir))
 # options for code generation
 #---------------------------------------------------------------------------------
 INCLUDE	:=			$(foreach dir,$(INCLUDES),-I$(ROOT)/$(dir)) \
+					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 					-I$(ROOT)/$(BUILD) 
 
 #---------------------------------------------------------------------------------
 # build a list of library paths
 #---------------------------------------------------------------------------------
+LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) 
+
 ARCH	=	-mcpu=arm9tdmi -mtune=arm9tdmi -mthumb -mthumb-interwork -mbig-endian
 
 CFLAGS	=	-g $(ARCH) $(INCLUDE) -fno-strict-aliasing -Wall -O2 -fomit-frame-pointer -ffast-math -fverbose-asm \
-			-Wpointer-arith -Winline -Wundef -g -ffunction-sections -fdata-sections -fno-exceptions \
-			-DHAVE_CONFIG_H
-
-CPPFLAGS	=	-g $(ARCH) $(INCLUDE) -fno-strict-aliasing -Wall -O2 -fomit-frame-pointer -ffast-math -fverbose-asm \
-			-Wpointer-arith -Winline -Wundef -g -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti
+			-Wpointer-arith -Winline -Wundef -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti
 
 
 AFLAGS	=	-g $(ARCH) -x assembler-with-cpp
 
-$(OUTPUT).a: $(OFILES)
+LDFLAGS	= -g $(ARCH) -specs=$(SPECS) -T$(LINKSCRIPT) $(LIBPATHS) $(LIBS) -Wl,--gc-sections -Wl,-static -Wl,-Map,$(TARGET).map -nostartfiles
+
+$(OUTPUT).elf: $(TARGET).elf
+	@echo stripping $(notdir $@)
+	@$(STRIPIOS) $< $@
+	@cp -f $@ ../../launcher/data/$(TARGET).dat
+	@cp -f $@ ../../testemu/data/$(TARGET).dat
+	
+%.elf: $(OFILES)
 	@echo linking $(notdir $@)
-	@$(AR) rvs $@ $(OFILES) $(STYLEFIX)
+	@$(LD) -g -o $@ $(OFILES) $(LDFLAGS) $(STYLEFIX)
 	
 %_cpp.o : %.cpp
 	@echo $(notdir $<)
-	@$(CXX) -MMD -MF $*_cpp.d $(CPPFLAGS) -c $< -o$@ $(STYLEFIX)
+	@$(CXX) -MMD -MF $*_cpp.d $(CFLAGS) -c $< -o$@ $(STYLEFIX)
 
 %_c.o : %.c
 	@echo $(notdir $<)

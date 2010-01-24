@@ -9,11 +9,11 @@
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-TARGET		:=	$(notdir $(CURDIR))
-BUILD		:=	build
-SOURCES		:=	source
-DATA		:=	data  
-INCLUDES	:=	include
+TARGET		:=	$(notdir $(CURDIR))_ios
+BUILD		:=	buildios
+SOURCES		:=	.
+DATA		:=	data
+INCLUDES	:=  ../include ../../libios/include
 
 #---------------------------------------------------------------------------------
 # the prefix on the compiler executables
@@ -35,13 +35,14 @@ export ROOT	:= $(CURDIR)
 
 all:
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
-	@$(MAKE) -C $(BUILD) --no-print-directory -f $(CURDIR)/Makefile BUILDING=all
+	@$(MAKE) -C $(BUILD) --no-print-directory -f $(CURDIR)/Makefile.ios BUILDING=all
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).a
+	@rm -fr $(BUILD)
+	@rm -f $(TARGET).a
 else
 
-TARGET := $(notdir $(ROOT))
+TARGET := $(notdir $(ROOT))_ios
 #----------------------------------------------------
 # MS Visual Studio Style Fix:
 #----------------------------------------------------
@@ -79,10 +80,7 @@ ARCH	=	-mcpu=arm9tdmi -mtune=arm9tdmi -mthumb -mthumb-interwork -mbig-endian
 
 CFLAGS	=	-g $(ARCH) $(INCLUDE) -fno-strict-aliasing -Wall -O2 -fomit-frame-pointer -ffast-math -fverbose-asm \
 			-Wpointer-arith -Winline -Wundef -g -ffunction-sections -fdata-sections -fno-exceptions \
-			-DHAVE_CONFIG_H
-
-CPPFLAGS	=	-g $(ARCH) $(INCLUDE) -fno-strict-aliasing -Wall -O2 -fomit-frame-pointer -ffast-math -fverbose-asm \
-			-Wpointer-arith -Winline -Wundef -g -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti
+			-DHAVE_CONFIG_H -DLIBOGC_INTERNAL -DHW_RVL
 
 
 AFLAGS	=	-g $(ARCH) -x assembler-with-cpp
@@ -93,7 +91,7 @@ $(OUTPUT).a: $(OFILES)
 	
 %_cpp.o : %.cpp
 	@echo $(notdir $<)
-	@$(CXX) -MMD -MF $*_cpp.d $(CPPFLAGS) -c $< -o$@ $(STYLEFIX)
+	@$(CXX) -MMD -MF $*_cpp.d $(CFLAGS) -c $< -o$@ $(STYLEFIX)
 
 %_c.o : %.c
 	@echo $(notdir $<)

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include <string.h>
-#include <mem.h>
+#include "mem.h"
 
 namespace ProxiIOS {
 	namespace Errors {
@@ -29,8 +29,10 @@ namespace ProxiIOS {
 	class Module
 	{
 	protected:
+		u32 queue[8];
 		char Device[0x20];
 		int Fd;
+		osqueue_t queuehandle;
 
 	public:
 		Module(const char* device)
@@ -38,6 +40,7 @@ namespace ProxiIOS {
 			strncpy(Device, device, 0x20);
 			Device[0x20 - 1] = '\0';
 			Fd = -1;
+			queuehandle = -1;
 		}
 
 		virtual int Loop();
@@ -82,6 +85,7 @@ namespace ProxiIOS {
 			}
 			return false;
 		}
+
 	};
 
 	class ProxyModule : public Module

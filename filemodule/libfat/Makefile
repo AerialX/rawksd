@@ -11,9 +11,9 @@
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source
+SOURCES		:=	source source/fat
 DATA		:=	data  
-INCLUDES	:=	include
+INCLUDES	:=  include include/fat ../../libios/include
 
 #---------------------------------------------------------------------------------
 # the prefix on the compiler executables
@@ -38,7 +38,8 @@ all:
 	@$(MAKE) -C $(BUILD) --no-print-directory -f $(CURDIR)/Makefile BUILDING=all
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).a
+	@rm -fr $(BUILD) 
+	@rm -f $(TARGET).a
 else
 
 TARGET := $(notdir $(ROOT))
@@ -78,11 +79,8 @@ INCLUDE	:=			$(foreach dir,$(INCLUDES),-I$(ROOT)/$(dir)) \
 ARCH	=	-mcpu=arm9tdmi -mtune=arm9tdmi -mthumb -mthumb-interwork -mbig-endian
 
 CFLAGS	=	-g $(ARCH) $(INCLUDE) -fno-strict-aliasing -Wall -O2 -fomit-frame-pointer -ffast-math -fverbose-asm \
-			-Wpointer-arith -Winline -Wundef -g -ffunction-sections -fdata-sections -fno-exceptions \
+			-Wstrict-prototypes -Wpointer-arith -Winline -Wundef -g -ffunction-sections -fdata-sections -fno-exceptions -Wno-strict-prototypes -std=gnu99 \
 			-DHAVE_CONFIG_H
-
-CPPFLAGS	=	-g $(ARCH) $(INCLUDE) -fno-strict-aliasing -Wall -O2 -fomit-frame-pointer -ffast-math -fverbose-asm \
-			-Wpointer-arith -Winline -Wundef -g -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti
 
 
 AFLAGS	=	-g $(ARCH) -x assembler-with-cpp
@@ -93,7 +91,7 @@ $(OUTPUT).a: $(OFILES)
 	
 %_cpp.o : %.cpp
 	@echo $(notdir $<)
-	@$(CXX) -MMD -MF $*_cpp.d $(CPPFLAGS) -c $< -o$@ $(STYLEFIX)
+	@$(CXX) -MMD -MF $*_cpp.d $(CFLAGS) -c $< -o$@ $(STYLEFIX)
 
 %_c.o : %.c
 	@echo $(notdir $<)

@@ -2,15 +2,12 @@
 
 #include <string.h>
 
-u32 heaphandle;
-
 namespace ProxiIOS {
 	int Module::Loop()
 	{
 		os_thread_set_priority(os_get_thread_id(), 1);
 
-		void* queue = Alloc(0x20);
-		osqueue_t queuehandle = os_message_queue_create(queue, 8);
+		queuehandle = os_message_queue_create(queue, 8);
 
 		os_device_register(Device, queuehandle);
 

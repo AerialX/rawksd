@@ -80,3 +80,18 @@ u32 HeapInfo()
 #endif
 	return 0;
 }
+
+void* malloc(size_t n)
+{
+	return Alloc(n);
+}
+
+void* memalign(size_t align, size_t n)
+{
+	return Memalign(align, n);
+}
+
+void free(void* ptr)
+{
+	Dealloc(ptr);
+}
