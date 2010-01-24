@@ -1,29 +1,6 @@
-/*
-	Custom IOS Module (FAT)
-
-	Copyright (C) 2008 neimod.
-	Copyright (C) 2009 WiiGator.
-	Copyright (C) 2009 Waninkoko.
-
-	This program is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation; either version 2 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 #include <string.h>
 #include <fcntl.h>
 
-//#include "errors.h"
 #include "fat.h"
 #include "wrapper.h"
 #include "ipc.h"
@@ -54,12 +31,14 @@ s32 FAT_OpenDir(const char* path)
 
 	s32 ret = (s32)_FAT_diropen_r(&fReent, &dir, path);
 
-	if (ret < 0) {
+	if (ret==NULL) {
 		Dealloc(state);
+		return -1;
 	}
 
-	return (int)state;
+	return (s32)state;
 }
+
 s32 FAT_NextDir(s32 state, char* filename, struct stat* st)
 {
 	DIR_ITER dir;
@@ -67,6 +46,7 @@ s32 FAT_NextDir(s32 state, char* filename, struct stat* st)
 	fReent._errno = 0;
 	return _FAT_dirnext_r(&fReent, &dir, filename, st);
 }
+
 s32 FAT_CloseDir(s32 state)
 {
 	DIR_ITER dir;
