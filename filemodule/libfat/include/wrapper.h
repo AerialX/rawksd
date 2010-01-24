@@ -32,7 +32,7 @@ s32 FAT_ReadDir(const char *dirpath, char *outbuf, u32 *outlen, u32 maxlen);
 s32 FAT_Delete(const char *path);
 s32 FAT_DeleteDir(const char *dirpath);
 s32 FAT_Rename(const char *oldname, const char *newname);
-s32 FAT_Stat(const char *path, void *stats);
+s32 FAT_Stat(const char *path, struct stat *stats);
 s32 FAT_GetVfsStats(const char *path, void *stats);
 s32 FAT_GetFileStats(s32 fd, fstats *stats);
 s32 FAT_GetUsage(const char *dirpath, u64 *size, u32 *files);

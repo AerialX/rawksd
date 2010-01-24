@@ -64,21 +64,21 @@ namespace ProxiIOS { namespace Filesystem {
 
 	namespace Disks {
 		enum Enum {
-			SD				= DISK_SD,
-			USB				= DISK_USB,
-			USB2			= DISK_USB2
+			SD				= SD_DISK,
+			USB				= USB_DISK,
+			USB2			= USB2_DISK
 		};
 	}
 
 	namespace Errors {
 		enum Enum {
-			Success			= 0x00,
-			Unrecognized	= -0x80,
-			NotMounted		= -0x81,
+			Success			= ERROR_SUCCESS,
+			Unrecognized	= ERROR_UNRECOGNIZED,
+			NotMounted		= ERROR_NOTMOUNTED,
 
-			DiskNotStarted	= -0x90,
-			DiskNotInserted	= -0x91,
-			DiskNotMounted	= -0x92
+			DiskNotStarted	= ERROR_DISKNOTSTARTED,
+			DiskNotInserted	= ERROR_DISKNOTINSERTED,
+			DiskNotMounted	= ERROR_DISKNOTMOUNTED
 		};
 	}
 

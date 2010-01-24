@@ -1,7 +1,29 @@
+/*
+	Custom IOS Module (FAT)
+
+	Copyright (C) 2008 neimod.
+	Copyright (C) 2009 WiiGator.
+	Copyright (C) 2009 Waninkoko.
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+*/
 
 #include <string.h>
 #include <fcntl.h>
 
+//#include "errors.h"
 #include "fat.h"
 #include "wrapper.h"
 #include "ipc.h"
@@ -30,15 +52,14 @@ s32 FAT_OpenDir(const char* path)
 
 	fReent._errno = 0;
 
-	DIR_ITER *ret = _FAT_diropen_r(&fReent, &dir, path);
+	s32 ret = (s32)_FAT_diropen_r(&fReent, &dir, path);
 
-	if (ret==NULL) {
+	if (ret < 0) {
 		Dealloc(state);
 	}
 
-	return (s32)state;
+	return (int)state;
 }
-
 s32 FAT_NextDir(s32 state, char* filename, struct stat* st)
 {
 	DIR_ITER dir;
@@ -46,7 +67,6 @@ s32 FAT_NextDir(s32 state, char* filename, struct stat* st)
 	fReent._errno = 0;
 	return _FAT_dirnext_r(&fReent, &dir, filename, st);
 }
-
 s32 FAT_CloseDir(s32 state)
 {
 	DIR_ITER dir;
@@ -156,8 +176,8 @@ s32 FAT_Read(s32 fd, void *buffer, u32 len)
 
 	/* Read file */
 	ret = _FAT_read_r(&fReent, fd, buffer, len);
-	if (ret < 0)
-		ret = __FAT_GetError();
+	//if (ret < 0)
+	//	ret = __FAT_GetError();
 
 	return ret;
 }
@@ -201,14 +221,15 @@ s32 FAT_Seek(s32 fd, u32 where, u32 whence)
 
 	/* Seek file */
 	ret = _FAT_seek_r(&fReent, fd, where, whence);
-	if (ret < 0)
-		ret = __FAT_GetError();
+	//if (ret < 0)
+	//	ret = __FAT_GetError();
 
 	return ret;
 }
 
 s32 FAT_Tell(s32 fd)
 {
+	//return (s32)FAT_Seek(fd, 0, SEEK_CUR);
 	return (s32)((FILE_STRUCT*)fd)->currentPosition;
 }
 
@@ -363,7 +384,7 @@ s32 FAT_Rename(const char *oldname, const char *newname)
 	return ret;
 }
 
-s32 FAT_Stat(const char *path, void *stats)
+s32 FAT_Stat(const char *path, struct stat *stats)
 {
 	s32 ret;
 

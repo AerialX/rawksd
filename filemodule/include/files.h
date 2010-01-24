@@ -16,9 +16,9 @@ typedef struct _stats
 } Stats;
 
 typedef enum {
-	DISK_SD,
-	DISK_USB,
-	DISK_USB2
+	SD_DISK,
+	USB_DISK,
+	USB2_DISK
 } disk_phys;
 
 typedef enum {
@@ -44,6 +44,15 @@ typedef enum {
 	IOCTL_NextDir =		0x52,
 	IOCTL_CloseDir =	0x53
 } file_ioctl;
+
+typedef enum {
+	ERROR_SUCCESS = 		0,
+	ERROR_UNRECOGNIZED =	-0x80,
+	ERROR_NOTMOUNTED =		-0x81,
+	ERROR_DISKNOTSTARTED =	-0x90,
+	ERROR_DISKNOTINSERTED = -0x91,
+	ERROR_DISKNOTMOUNTED =	-0x92
+} file_error;
 
 int File_Init();
 int File_Deinit();

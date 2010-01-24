@@ -42,7 +42,7 @@ inline void StToStats(Stats* stats, struct stat* st) {
 FilesystemInfo* FatHandler::Mount(DISC_INTERFACE* disk)
 {
 	if (fatMount(__fatName, disk, 0, 8, 4)<0)
-		return null;
+		return NULL;
 	
 	chdir("fat:/");
 	
@@ -60,7 +60,7 @@ FileInfo* FatHandler::Open(FilesystemInfo* filesystem, const char* path, u8 mode
 	int ret = -1;
 	if (strstr(path, "id\\")) {
 		if (mode & (O_CREAT | O_TRUNC | O_WRONLY))
-			return null; // Cluster-opened files must be read-only
+			return NULL; // Cluster-opened files must be read-only
 		// strlen("cluster\\") == 8
 		u32 cluster = HexToInt(path + 3, 8);
 		ret = (int)GenerateReadonlyFile(cluster);
