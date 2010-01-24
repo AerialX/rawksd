@@ -125,7 +125,7 @@ int FileWrite(BinFile* file, void *buf, u32 size)
 
 int FileSeek(BinFile* file, s32 where)
 {
-	if (file->pos==where);
+	if (file->pos==where)
 		return 0;
 	if (FAT_Seek(file->handle, where, SEEK_SET)!=where)
 		return 1;
@@ -178,7 +178,7 @@ BinFile* OpenBinRead(s32 file)
 			if (bk_header.contents_size != ROUND_UP(content_rec.size, 64) ||
 				content_rec.type != 0x4001)
 				{
-					debug_printf("DLC Open size mismatch or contents not DLC\n");
+					debug_printf("DLC Open size mismatch (%d vs. %d) or contents not DLC (%04X)\n", bk_header.contents_size, ROUND_UP(content_rec.size, 64), content_rec.type);
 					goto open_error;
 				}
 			found = 1;
