@@ -26,8 +26,9 @@ distribution.
 
 -------------------------------------------------------------*/
 
+#include <string.h>
+
 #include "usbstorage.h"
-#include "string.h"
 #include "syscalls.h"
 #include "mem.h"
 #include "ipc.h"

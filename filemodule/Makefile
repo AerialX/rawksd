@@ -46,6 +46,7 @@ export ROOT	:= $(CURDIR)
 
 all:
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
+	@$(MAKE) -C ../libios --no-print-directory -f Makefile
 	@$(MAKE) -C libfile --no-print-directory -f Makefile.ios
 	@$(MAKE) -C libfile --no-print-directory -f Makefile.wii
 	@$(MAKE) -C libfat --no-print-directory -f Makefile

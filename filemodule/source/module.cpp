@@ -43,6 +43,9 @@ namespace ProxiIOS { namespace Filesystem {
 					case Disks::USB:
 						Disk = const_cast<DISC_INTERFACE*>(&__io_usbstorage);
 						break;
+					//case Disks::USB2:
+					//	Disk = const_cast<DISC_INTERFACE*>(&__io_usb2storage);
+					//	break;
 					default:
 						return Errors::Unrecognized;
 				}

@@ -28,10 +28,10 @@ distribution.
 -------------------------------------------------------------*/
 
 #include <string.h>
+
 #include "gcutil.h"
 #include "ipc.h"
 #include "syscalls.h"
-#include "print.h"
 #include "mem.h"
 #include "gpio.h"
 
@@ -193,11 +193,43 @@ usb_device *USB_OpenDevice(const char *device,u16 vid,u16 pid)
 	usb_device *dev = NULL;
 	s32 fd;
 	char *devicepath = NULL;
+	int i;
+
+	// I guess one day we might want to open something from oh1
+	if (!device || (strcmp(device, "oh0") && strcmp(device, "oh1")))
+		return NULL;
 
 	devicepath = Alloc(USB_MAXPATH);
 	if(devicepath==NULL) return NULL;
 
+	// try to avoid linking with _sprintf
+#if 0
 	_sprintf(devicepath,"/dev/usb/%s/%x/%x",device,vid,pid);
+#else
+	strcpy(devicepath, "/dev/usb/");
+	strcat(devicepath, device);
+
+	for (i=0; i<2; i++)
+	{
+		int j;
+		char *nextchar;
+		u16 id = !i ? vid : pid;
+		strcat(devicepath, "/");
+		nextchar = devicepath + strlen(devicepath);
+		// ignore leading zeroes
+		for (j=3; j>0; j--)
+		{
+			u16 idshift = id >> (j*4);
+			if (!idshift)
+				continue;
+			idshift &= 0x0F;
+			*nextchar++ = (idshift>9) ? idshift+'a'-10 : idshift+'0';
+		}
+		id &= 0x0F;
+		*nextchar++ = (id>9) ? id+'a'-10 : id+'0';
+		*nextchar = '\0';
+	}
+#endif
 
 	debug_printf("USB_OPEN: %s\n", devicepath);
 

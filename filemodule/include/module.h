@@ -10,6 +10,7 @@
 #include "ipc.h"
 #include "wiisd_io.h"
 #include "usbstorage.h"
+#include "usb2storage.h"
 #include "files.h"
 #include "mem.h"
 #include "timer.h"

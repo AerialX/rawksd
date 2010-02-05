@@ -1,7 +1,7 @@
 #include "module.h"
 
-#include <gctypes.h>
-#include <mem.h>
+#include "gctypes.h"
+#include "mem.h"
 
 static u8 Heapspace[0xa000] __attribute__ ((aligned (32)));
 
