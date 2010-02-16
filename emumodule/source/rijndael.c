@@ -16,8 +16,6 @@
 #include "gctypes.h"
 #include "gcutil.h"
 
-void LogPrintf(const char *fmt, ...);
-
 /* rotates x one bit to the left */
 
 #define ROTL(x) (((x)>>7)|((x)<<1))

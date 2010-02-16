@@ -28,7 +28,7 @@ typedef s32 (*async_cb)(s32 result, void *cb_data);
 /* 12 */ s32       os_restart_timer(ostimer_t timer_id, s32 time_us, s32 repeat_time_us);
 /* 13 */ s32       os_stop_timer(ostimer_t timer_id);
 /* 14 */ s32       os_destroy_timer(ostimer_t time_id);
-/* 15 */ s32       os_timer_now(s32 time_id); // just returns HW_TIMER?
+/* 15 */ s32       os_time_now(); // just returns HW_TIMER?
 /* 16 */ u32       os_heap_create(void* ptr, u32 size);
 /* 17 */ u32       os_heap_destroy(u32 heap);
 /* 18 */ void*     os_heap_alloc(u32 heap, u32 size);
@@ -53,6 +53,8 @@ typedef s32 (*async_cb)(s32 result, void *cb_data);
 
 /* 3F */ void      os_sync_before_read(const void* ptr, u32 size);
 /* 40 */ void      os_sync_after_write(const void* ptr, u32 size);
+
+/* 4B */ void      os_debug_print(u32 flags);
 
 /* 50 */ void      os_syscall_50(u32 unknown);
 

@@ -217,6 +217,11 @@ os_sync_before_read:
 	.global os_sync_after_write
 os_sync_after_write:
 	syscall 0x40
+	
+	.code 32
+	.global os_debug_print
+os_debug_print:
+	syscall 0x4B
 
 	.code 32
 	.global os_syscall_50

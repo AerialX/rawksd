@@ -471,17 +471,14 @@ found:
 
 	retval = __USB_CtrlMsgTimeout(dev, (USB_CTRLTYPE_DIR_DEVICE2HOST | USB_CTRLTYPE_TYPE_CLASS | USB_CTRLTYPE_REC_INTERFACE), USBSTORAGE_GET_MAX_LUN, 0, dev->interface, 1, max_lun);
 	if(retval < 0)
-		dev->max_lun = 1;
-	else
-		dev->max_lun = *max_lun;
+		*max_lun = 0; // doesn't support multiple LUNs, may be STALLed
+
+	dev->max_lun = *max_lun+1;
 
 	if(retval == USBSTORAGE_ETIMEDOUT)
 		goto free_and_return;
 
 	retval = USBSTORAGE_OK;
-
-	if(dev->max_lun == 0)
-		dev->max_lun++;
 
 	dev->sector_size = Alloc(dev->max_lun*sizeof(u32));
 	if(dev->sector_size == NULL)
@@ -659,7 +656,8 @@ static bool __usbstorage_IsInserted(void)
 {
    u8 *buffer;
    u8 dummy;
-   u8 i, j;
+   u8 i;
+   int j;
    u16 vid, pid;
    s32 maxLun;
    s32 retval;
@@ -728,7 +726,7 @@ static bool __usbstorage_IsInserted(void)
 
 
        maxLun = USBStorage_GetMaxLUN(&__usbfd);
-	   debug_printf("Storage device maxLUN is %d\n", maxLun);
+	   debug_printf("Storage device maxLUN is %d\n", maxLun-1);
        for(j = maxLun-1; j >=0; j--)
        {
 		   debug_printf("Trying to mount LUN %d\n", j);

@@ -69,7 +69,6 @@ int verify_bk(BK_Header *bk)
 	return failed;
 }
 
-#if 1
 int FileRead(BinFile* file, void *buf, u32 size)
 {
 	if (size==0)
@@ -92,49 +91,13 @@ int FileWrite(BinFile* file, void *buf, u32 size)
 
 int FileSeek(BinFile* file, s32 where)
 {
+	if (file->pos==where)
+		return 0;
 	if (os_seek(file->handle, where, SEEK_SET)!=where)
 		return 0;
 	file->pos = where;
 	return 0;
 }
-#else
-
-#include <wrapper.h>
-
-int FileRead(BinFile* file, void *buf, u32 size)
-{
-	if (size==0)
-		return 0;
-	if (FAT_Read(file->handle, buf, size)!=size)
-		return 1;
-
-	file->pos += size;
-	return 0;
-}
-
-int FileWrite(BinFile* file, void *buf, u32 size)
-{
-	if (size==0)
-		return 0;
-	if (FAT_Write(file->handle, buf, size)!=size)
-		return 1;
-
-	file->pos += size;
-	return 0;
-}
-
-int FileSeek(BinFile* file, s32 where)
-{
-	if (file->pos==where)
-		return 0;
-	if (FAT_Seek(file->handle, where, SEEK_SET)!=where)
-		return 1;
-
-	file->pos = where;
-	return 0;
-}
-
-#endif
 
 BinFile* OpenBinRead(s32 file)
 {
