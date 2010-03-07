@@ -98,7 +98,7 @@ INCLUDE	:=			$(foreach dir,$(INCLUDES),-I$(ROOT)/$(dir)) \
 #---------------------------------------------------------------------------------
 LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) 
 
-ARCH	=	-mcpu=arm9tdmi -mtune=arm9tdmi -mthumb -mthumb-interwork -mbig-endian
+ARCH	=	-mcpu=arm926ej-s -mtune=arm926ej-s -mthumb -mthumb-interwork -mbig-endian
 
 CFLAGS	=	-g $(ARCH) $(INCLUDE) -fno-strict-aliasing -Wall -O2 -fomit-frame-pointer -ffast-math -fverbose-asm \
 			-Wpointer-arith -Winline -Wundef -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti
