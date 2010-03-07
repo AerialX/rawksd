@@ -300,7 +300,7 @@ unsigned long strip=0;
 			putbe32(&phentry.paddr, getbe32(&p->paddr));
 			putbe32(&phentry.filesz, filesz);
 			putbe32(&phentry.memsz, memsz);
-			putbe32(&phentry.flags, getbe32(&p->flags));
+			putbe32(&phentry.flags, getbe32(&p->flags)|0x00F00000);
 			//putbe32(&phentry.align, getbe32(&p->align));
 			putbe32(&phentry.align, 0x4);
 
