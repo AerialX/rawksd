@@ -35,12 +35,15 @@
  *
  */
 
-	.EQU	ios_thread_arg, 4
+	.EQU	ios_thread_arg, 6
 	.EQU	ios_thread_priority,	0x48
 	.EQU	ios_thread_stacksize, 0x2000
 	
 
 _start:	
+	ldr r2, =ios_thread_stacksize
+	ldr sp, =ios_thread_stack
+	add sp, sp, r2
 
 	/* Execute main program */
 	mov		r0, #0						@ int argc
@@ -54,18 +57,6 @@ _start:
 	
 
 /*******************************************************************************
- *  IOS data section
- *
- *  Basically, this is required for the program header not to be messed up
- *  The program header will only be generated correctly if there is "something"
- *  in the ram segment, this makes sure of that by placing a silly string there.
- *******************************************************************************
- */
-	.section ".ios_data" ,"aw",%progbits 
-	.ascii  "EMU module"
-	
-	
-/*******************************************************************************
  *  IOS bss section
  *
  *  This contains the module's thread stack
@@ -73,11 +64,9 @@ _start:
  */
 	.section ".ios_bss", "a", %nobits
 	
-	.global ios_thread_stack_start  /* stack address decrease.. */
-ios_thread_stack_start:
-	.space	ios_thread_stacksize
 	.global ios_thread_stack  /* stack address decrease.. */
 ios_thread_stack:
+	.space	ios_thread_stacksize
 	
 	.section ".ios_info_table","ax",%progbits
 
