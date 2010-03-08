@@ -1,33 +1,29 @@
 #pragma once
 
-#include "module.h"
+#include "filemodule.h"
 
 #include "wrapper.h"
-//#include <fat.h>
-//#include <fat/fatfile.h>
 
 namespace ProxiIOS { namespace Filesystem {
-
-struct FatFilesystemInfo : public FilesystemInfo
-{
-	FatFilesystemInfo(FilesystemHandler* handler, const char* name) :
-		FilesystemInfo(Filesystems::FAT, handler), Name(name) { }
-	
-	const char* Name;
-};
 	
 struct FatFileInfo : public FileInfo
 {
-	FILE_STRUCT* File;
+	FatFileInfo(FilesystemHandler* system, int fd) : FileInfo(system) { File = fd; }
+
+	int File;
 };
 
 class FatHandler : public FilesystemHandler
 {
 public:
-	FilesystemInfo* Mount(DISC_INTERFACE* disk);
-	int Unmount(FilesystemInfo* filesystem);
+	char Name[0x20];
+
+	FatHandler(Filesystem* fs) : FilesystemHandler(fs) { }
 	
-	FileInfo* Open(FilesystemInfo* filesystem, const char* path, u8 mode);
+	int Mount(const void* options, int length);
+	int Unmount();
+	
+	FileInfo* Open(const char* path, int mode);
 	int Read(FileInfo* file, u8* buffer, int length);
 	int Write(FileInfo* file, const u8* buffer, int length);
 	int Seek(FileInfo* file, int where, int whence);
@@ -35,14 +31,14 @@ public:
 	int Sync(FileInfo* file);
 	int Close(FileInfo* file);
 	
-	int Stat(const char* filename, Stats* st);
-	int CreateFile(const char* filename);
-	int Delete(const char* filename);
+	int Stat(const char* path, Stats* st);
+	int CreateFile(const char* path);
+	int Delete(const char* path);
 	int Rename(const char* source, const char* destination);
-	int CreateDir(const char* dirname);
-	int OpenDir(const char* dirname);
-	int NextDir(int dir, char* filename, Stats* st);
-	int CloseDir(int dir);
+	int CreateDir(const char* path);
+	FileInfo* OpenDir(const char* path);
+	int NextDir(FileInfo* dir, char* filename, Stats* st);
+	int CloseDir(FileInfo* dir);
 };
 
 } }

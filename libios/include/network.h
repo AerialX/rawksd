@@ -3,6 +3,9 @@
 
 #include <gctypes.h>
 
+#define __LINUX_ERRNO_EXTENSIONS__
+#include <errno.h>
+
 #define INVALID_SOCKET	(~0)
 #define SOCKET_ERROR	(-1)
 

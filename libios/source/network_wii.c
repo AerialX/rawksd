@@ -33,7 +33,6 @@ distribution.
 #define net_free(a) 				Dealloc(a)
 
 #include <string.h>
-#include <errno.h>
 #include <fcntl.h>
 
 #include "gctypes.h"

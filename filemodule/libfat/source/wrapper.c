@@ -31,7 +31,7 @@ s32 FAT_OpenDir(const char* path)
 
 	s32 ret = (s32)_FAT_diropen_r(&fReent, &dir, path);
 
-	if (ret==NULL) {
+	if (ret == 0) {
 		Dealloc(state);
 		return -1;
 	}

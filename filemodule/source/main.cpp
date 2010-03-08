@@ -1,4 +1,4 @@
-#include "module.h"
+#include "filemodule.h"
 
 #include "gctypes.h"
 #include "mem.h"

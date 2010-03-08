@@ -1,47 +1,52 @@
-#include "module.h"
+#include "filemodule.h"
 
 #include "file_fat.h"
+#include "file_riifs.h"
 #include "file_isfs.h"
 
-static int tFd = 1;
+#define FILE_IOCTL_FD 0x123
 
 namespace ProxiIOS { namespace Filesystem {
-	Filesystem::Filesystem() : Module("file")
+	struct FilePathDesc {
+		FilePathDesc(Filesystem* module, const char* path);
+
+		const char* Path;
+		FilesystemHandler* System;
+	};
+
+	Filesystem::Filesystem() : Module(FILE_MODULE_NAME)
 	{
-		memset(OpenFiles, 0, sizeof(OpenFiles));
-		Disk = NULL;
-		Mounted = NULL;
-
+		memset(Mounted, null, sizeof(Mounted));
+		memset(Disk, null, sizeof(Disk));
+		
 		Timer_Init();
+		
+		Mounted[0] = new IsfsHandler(this);
+		Mounted[0]->Mount(null, 0);
 
-		Isfs = (new IsfsHandler())->Mount(NULL);
-		tFd = 1;
+		Default = 0;
 	}
 
 	int Filesystem::HandleIoctl(ipcmessage* message)
 	{
 		os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
-
+		
 		switch (message->ioctl.command) {
 			case Ioctl::InitDisc: {
-				if (Mounted != NULL) {
-					Mounted->Handler->Unmount(Mounted);
-					delete Mounted->Handler;
-					delete Mounted;
-					Mounted = NULL;
-				}
-				if (Disk != NULL) {
-					Disk->shutdown();
-					Disk = NULL;
-				}
-
-				int disk = message->ioctl.buffer_in[0];
-				switch (disk) {
+				int index = 0;
+				for (index = 0; Disk[index] != null && index < FILE_MAX_DISKS; index++)
+					;
+				
+				if (index == FILE_MAX_DISKS)
+					return Errors::OutOfMemory;
+				
+				int diskid = message->ioctl.buffer_in[0];
+				switch (diskid) {
 					case Disks::SD:
-						Disk = const_cast<DISC_INTERFACE*>(&__io_wiisd);
+						Disk[index] = const_cast<DISC_INTERFACE*>(&__io_wiisd);
 						break;
 					case Disks::USB:
-						Disk = const_cast<DISC_INTERFACE*>(&__io_usbstorage);
+						Disk[index] = const_cast<DISC_INTERFACE*>(&__io_usbstorage);
 						break;
 					//case Disks::USB2:
 					//	Disk = const_cast<DISC_INTERFACE*>(&__io_usb2storage);
@@ -49,82 +54,152 @@ namespace ProxiIOS { namespace Filesystem {
 					default:
 						return Errors::Unrecognized;
 				}
-
-				if (!Disk->startup()) {
-					Disk = NULL;
+				
+				if (!Disk[index]->startup()) {
+					Disk[index] = null;
 					return Errors::DiskNotStarted;
 				}
-				if (!Disk->isInserted()) {
-					Disk = NULL;
+				if (!Disk[index]->isInserted()) {
+					Disk[index] = null;
 					return Errors::DiskNotInserted;
 				}
-
-				return Errors::Success;
+				
+				return index;
 				break; }
 			case Ioctl::Mount: {
-				if (Disk == NULL)
-					return Errors::NotMounted;
-
-				if (Mounted != NULL) {
-					Mounted->Handler->Unmount(Mounted);
-					delete Mounted->Handler;
-					delete Mounted;
-					Mounted = NULL;
-				}
-
-				FilesystemHandler* handler = NULL;
-				int disk = message->ioctl.buffer_in[0];
-				switch (disk) {
+				int index = 0;
+				for (index = 0; Mounted[index] != null && index < FILE_MAX_MOUNTED; index++)
+					;
+				if (index == FILE_MAX_MOUNTED)
+					return Errors::OutOfMemory;
+				
+				FilesystemHandler* system = null;
+				Filesystems::Enum fs = (Filesystems::Enum)message->ioctl.buffer_in[0];
+				switch (fs) {
 					case Filesystems::FAT:
-						handler = new FatHandler();
+						system = new FatHandler(this);
 						break;
-					case Filesystems::ELM:
+					case Filesystems::RiiFS:
+						system = new RiiHandler(this);
 						break;
-					case Filesystems::NTFS:
-						break;
-					case Filesystems::Ext2:
-						break;
-					case Filesystems::SMB:
+					default:
 						break;
 				}
-
-				if (handler == NULL)
+				
+				if (!system)
 					return Errors::Unrecognized;
 
-				Mounted = handler->Mount(Disk);
-
-				if (Mounted == NULL) {
-					delete handler;
-					return Errors::DiskNotMounted;
+				os_sync_before_read(message->ioctl.buffer_io, message->ioctl.length_io);
+				int ret = system->Mount(message->ioctl.buffer_io, message->ioctl.length_io);
+				if (ret < 0) {
+					delete system;
+					return ret;
 				}
+				
+				Mounted[index] = system;
 
-				return Errors::Success; }
+				return index; }
+			case Ioctl::Unmount: {
+				int index = message->ioctl.buffer_in[0];
+				FilesystemHandler* system = Mounted[index];
+				if (!system)
+					return Errors::NotMounted;
+
+				int ret = system->Unmount();
+
+				if (ret >= 0)
+					delete system;
+				return ret;
+			}
+			case Ioctl::GetMountPoint: {
+				int index = message->ioctl.buffer_in[0];
+				FilesystemHandler* system = Mounted[index];
+				if (!system)
+					return Errors::NotMounted;
+
+				strncpy((char*)message->ioctl.buffer_io, system->MountPoint, message->ioctl.length_io);
+				os_sync_after_write(message->ioctl.buffer_io, message->ioctl.length_io);
+
+				return Errors::Success;
+			}
+			case Ioctl::SetDefault: {
+				FilesystemHandler* system;
+				if (message->ioctl.length_io) {
+					os_sync_before_read(message->ioctl.buffer_io, message->ioctl.length_io);
+					FilePathDesc desc(this, (const char*)message->ioctl.buffer_io);
+					system = desc.System;
+				} else
+					system = Mounted[message->ioctl.buffer_in[0]];
+
+				if (!system)
+					return Errors::NotMounted;
+
+				u32 index;
+				for (index = 0; Mounted[index] != system; index++)
+					;
+				Default = index;
+
+				return Errors::Success;
+			}
 			case Ioctl::Stat: {
-				int ret = Mounted->Handler->Stat((const char*)message->ioctl.buffer_in, (Stats*)message->ioctl.buffer_io);
+				FilePathDesc descriptor(this, (const char*)message->ioctl.buffer_in);
+				if (!descriptor.System)
+					return Errors::NotMounted;
+				int ret = descriptor.System->Stat(descriptor.Path, (Stats*)message->ioctl.buffer_io);
 				if (ret >= 0)
 					os_sync_after_write(message->ioctl.buffer_io, message->ioctl.length_io);
-
 				return ret; }
-			case Ioctl::CreateFile:
-				return Mounted->Handler->CreateFile((const char*)message->ioctl.buffer_in);
-			case Ioctl::Delete:
-				return Mounted->Handler->Delete((const char*)message->ioctl.buffer_in);
-			case Ioctl::Rename:
+			case Ioctl::CreateFile: {
+				FilePathDesc descriptor(this, (const char*)message->ioctl.buffer_in);
+				if (!descriptor.System)
+					return Errors::NotMounted;
+				return descriptor.System->CreateFile(descriptor.Path); }
+			case Ioctl::Delete: {
+				FilePathDesc descriptor(this, (const char*)message->ioctl.buffer_in);
+				if (!descriptor.System)
+					return Errors::NotMounted;
+				return descriptor.System->Delete(descriptor.Path); }
+			case Ioctl::Rename: {
 				os_sync_before_read((void*)message->ioctl.buffer_in[0], IPC_MAXPATH_LEN);
 				os_sync_before_read((void*)message->ioctl.buffer_in[1], IPC_MAXPATH_LEN);
-				return Mounted->Handler->Rename((const char*)message->ioctl.buffer_in[0], (const char*)message->ioctl.buffer_in[1]);
-			case Ioctl::CreateDir:
-				return Mounted->Handler->CreateDir((const char*)message->ioctl.buffer_in);
-			case Ioctl::OpenDir:
-				return Mounted->Handler->OpenDir((const char*)message->ioctl.buffer_in);
+				FilePathDesc source(this, (const char*)message->ioctl.buffer_in[0]);
+				FilePathDesc dest(this, (const char*)message->ioctl.buffer_in[1]);
+				if (!source.System)
+					return Errors::NotMounted;
+				if (source.System != dest.System)
+					return Errors::Unrecognized; // Cross-filesystem renaming not yet possible; TODO: Copy file then delete
+				return source.System->Rename(source.Path, dest.Path); }
+			case Ioctl::CreateDir: {
+				FilePathDesc descriptor(this, (const char*)message->ioctl.buffer_in);
+				if (!descriptor.System)
+					return Errors::NotMounted;
+				return descriptor.System->CreateDir(descriptor.Path); }
+			case Ioctl::OpenDir: {
+				FilePathDesc descriptor(this, (const char*)message->ioctl.buffer_in);
+				if (!descriptor.System)
+					return Errors::NotMounted;
+				return (int)descriptor.System->OpenDir(descriptor.Path); }
+			case Ioctl::CloseDir: {
+				FileInfo* dir = (FileInfo*)message->ioctl.buffer_in[0];
+				return dir->System->CloseDir(dir); }
+			default:
+				return -1;
+		}
+	}
+
+	int Filesystem::HandleIoctlv(ipcmessage* message)
+	{
+		for (u32 i = 0; i < message->ioctlv.num_in; i++)
+			os_sync_before_read(message->ioctlv.vector[i].data, message->ioctlv.vector[i].len);
+		switch (message->ioctlv.command) {
 			case Ioctl::NextDir: {
-				int ret = Mounted->Handler->NextDir((int)message->ioctl.buffer_in[0], (char*)message->ioctl.buffer_io, (Stats*)message->ioctl.buffer_in[1]);
-				//os_sync_after_write((void*)message->ioctl.buffer_in[1], strlen((const char*)message->ioctl.buffer_in[1]) + 1);
-				os_sync_after_write((void*)message->ioctl.buffer_io, message->ioctl.length_io);
-				os_sync_after_write((void*)message->ioctl.buffer_in[1], sizeof(Stats));
+				if (message->ioctlv.num_in != 1 || message->ioctlv.num_io != 2)
+					return -1;
+				FileInfo* dir = (FileInfo*)((u32*)message->ioctlv.vector[0].data)[0];
+				int ret = dir->System->NextDir(dir, (char*)message->ioctlv.vector[1].data, (Stats*)message->ioctlv.vector[2].data);
+				os_sync_after_write(message->ioctlv.vector[1].data, message->ioctlv.vector[1].len);
+				os_sync_after_write(message->ioctlv.vector[2].data, message->ioctlv.vector[2].len);
 				return ret; }
-			case Ioctl::CloseDir:
-				return Mounted->Handler->CloseDir((int)message->ioctl.buffer_in[0]);
 			default:
 				return -1;
 		}
@@ -132,58 +207,82 @@ namespace ProxiIOS { namespace Filesystem {
 
 	int Filesystem::HandleOpen(ipcmessage* message)
 	{
-		// If it exactly matches "file" then give an fd for ioctls (though any fd will technically do)
-		if (!strcmp(message->open.device, "file"))
-			//return Module::HandleOpen(message);
-			return tFd++;
-
-		if (Mounted == NULL)
+		if (!strcmp(message->open.device, FILE_MODULE_NAME))
+			return FILE_IOCTL_FD;
+		
+		FilePathDesc descriptor(this, message->open.device + FILE_MODULE_NAME_LENGTH);
+		
+		if (!descriptor.System)
 			return Errors::NotMounted;
+		
+		int ret = (int)descriptor.System->Open(descriptor.Path, message->open.mode);
+		
+		if (!ret)
+			return Errors::NotOpened;
 
-		if (strstr(message->open.device, "isfs\\")) {
-			return (int)Isfs->Handler->Open(NULL, message->open.device + 4 + 5, message->open.mode);
-		}
-
-		// Strip "file" from the path
-		return (int)Mounted->Handler->Open(Mounted, message->open.device + 4, message->open.mode);
+		return ret;
 	}
-
+	
 	int Filesystem::HandleClose(ipcmessage* message)
 	{
-		//if ((int)message->fd == Fd)
-			//return Module::HandleClose(message);
-		if (message->fd < 0x20)
+		if (message->fd == FILE_IOCTL_FD)
 			return 1;
-
+		
 		FileInfo* file = (FileInfo*)message->fd;
-		return file->System->Handler->Close(file);
+		if (!file)
+			return Errors::NotOpened;
+		return file->System->Close(file);
 	}
-
+	
 	int Filesystem::HandleSeek(ipcmessage* message)
 	{
 		FileInfo* file = (FileInfo*)message->fd;
+		if (!file)
+			return Errors::NotOpened;
 		switch (message->seek.origin) {
 			case Ioctl::Tell:
-				return file->System->Handler->Tell(file);
+				return file->System->Tell(file);
 			case Ioctl::Sync:
-				return file->System->Handler->Sync(file);
+				return file->System->Sync(file);
 			default:
-				return file->System->Handler->Seek(file, message->seek.offset, message->seek.origin);
+				return file->System->Seek(file, message->seek.offset, message->seek.origin);
 		}
 	}
-
+	
 	int Filesystem::HandleRead(ipcmessage* message)
 	{
 		FileInfo* file = (FileInfo*)message->fd;
-		int ret = file->System->Handler->Read(file, (u8*)message->read.data, message->read.length);
+		if (!file)
+			return Errors::NotOpened;
+		int ret = file->System->Read(file, (u8*)message->read.data, message->read.length);
 		os_sync_after_write(message->read.data, message->read.length);
 		return ret;
 	}
-
+	
 	int Filesystem::HandleWrite(ipcmessage* message)
 	{
 		os_sync_before_read(message->write.data, message->write.length);
 		FileInfo* file = (FileInfo*)message->fd;
-		return file->System->Handler->Write(file, (const u8*)message->write.data, message->write.length);
+		if (!file)
+			return Errors::NotOpened;
+		return file->System->Write(file, (const u8*)message->write.data, message->write.length);
+	}
+	
+	FilePathDesc::FilePathDesc(Filesystem* module, const char* path)
+	{
+		Path = path;
+		System = module->Mounted[module->Default];
+
+		for (int i = 0; i < FILE_MAX_MOUNTED; i++) {
+			FilesystemHandler* system = module->Mounted[i];
+			if (!system)
+				continue;
+			int mountlength = strlen(system->MountPoint);
+			if (!strncmp(Path, system->MountPoint, mountlength)) {
+				System = system;
+				Path = Path + mountlength;
+				return;
+			}
+		}
 	}
 } }

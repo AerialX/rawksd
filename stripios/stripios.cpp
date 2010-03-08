@@ -1,4 +1,4 @@
-/*
+/*   
 	IOS ELF stripper, converts traditional ELF files into the format IOS wants.
     Copyright (C) 2008 neimod.
 
@@ -20,62 +20,72 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #define ELF_NIDENT 16
 
-typedef struct
+typedef int8_t s8;
+typedef uint8_t u8;
+typedef int16_t s16;
+typedef uint16_t u16;
+typedef int32_t s32;
+typedef uint32_t u32;
+typedef int64_t s64;
+typedef uint64_t u64;
+
+typedef struct 
 {
-        unsigned long		ident0;
-		unsigned long		ident1;
-		unsigned long		ident2;
-		unsigned long		ident3;
-        unsigned long		machinetype;
-        unsigned long		version;
-        unsigned long		entry;
-        unsigned long       phoff;
-        unsigned long       shoff;
-        unsigned long		flags;
-        unsigned short      ehsize;
-        unsigned short      phentsize;
-        unsigned short      phnum;
-        unsigned short      shentsize;
-        unsigned short      shnum;
-        unsigned short      shtrndx;
+        u32		ident0;
+		u32		ident1;
+		u32		ident2;
+		u32		ident3;
+        u32		machinetype;
+        u32		version;
+        u32		entry;
+        u32       phoff;
+        u32       shoff;
+        u32		flags;
+        u16      ehsize;
+        u16      phentsize;
+        u16      phnum;
+        u16      shentsize;
+        u16      shnum;
+        u16      shtrndx;
 } elfheader;
 
-typedef struct
+typedef struct 
 {
-       unsigned long      type;
-       unsigned long      offset;
-       unsigned long      vaddr;
-       unsigned long      paddr;
-       unsigned long      filesz;
-       unsigned long      memsz;
-       unsigned long      flags;
-       unsigned long      align;
+       u32      type;
+       u32      offset;
+       u32      vaddr;
+       u32      paddr;
+       u32      filesz;
+       u32      memsz;
+       u32      flags;
+       u32      align;
 } elfphentry;
 
 typedef struct
 {
-	unsigned long offset;
-	unsigned long size;
+	u32 offset;
+	u32 size;
 } offset_size_pair;
 
-unsigned short getbe16(void* pvoid)
+u16 getbe16(void* pvoid)
 {
 	unsigned char* p = (unsigned char*)pvoid;
 
 	return (p[0] << 8) | (p[1] << 0);
 }
 
-unsigned long getbe32(void* pvoid)
+u32 getbe32(void* pvoid)
 {
 	unsigned char* p = (unsigned char*)pvoid;
 
 	return (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | (p[3] << 0);
 }
 
-void putbe16(void* pvoid, unsigned short val)
+void putbe16(void* pvoid, u16 val)
 {
 	unsigned char* p = (unsigned char*)pvoid;
 
@@ -83,7 +93,7 @@ void putbe16(void* pvoid, unsigned short val)
 	p[1] = val >> 0;
 }
 
-void putbe32(void* pvoid, unsigned long val)
+void putbe32(void* pvoid, u32 val)
 {
 	unsigned char* p = (unsigned char*)pvoid;
 
@@ -93,11 +103,11 @@ void putbe32(void* pvoid, unsigned long val)
 	p[3] = val >> 0;
 }
 
-int main(int argc, char* argv[])
+s32 main(s32 argc, char* argv[])
 {
-	int result = 0;
+	s32 result = 0;
 
-unsigned long strip=0;
+u32 strip=0;
 
 	fprintf(stdout, "stripios - IOS ELF stripper - by neimod\n");
 	if (argc < 3 || argc==4)
@@ -143,7 +153,7 @@ unsigned long strip=0;
 		return 1;
 	}
 
-	unsigned long elfmagicword = getbe32(&header.ident0);
+	u32 elfmagicword = getbe32(&header.ident0);
 
 	if (elfmagicword != 0x7F454C46)
 	{
@@ -151,10 +161,10 @@ unsigned long strip=0;
 		return 1;
 	}
 
-	unsigned long phoff = getbe32(&header.phoff);
-	unsigned short phnum = getbe16(&header.phnum);
-	unsigned long memsz = 0, filesz = 0;
-	unsigned long vaddr = 0, paddr = 0;
+	u32 phoff = getbe32(&header.phoff);
+	u16 phnum = getbe16(&header.phnum);
+	u32 memsz = 0, filesz = 0;
+	u32 vaddr = 0, paddr = 0;
 
 	putbe32(&header.ident1, 0x01020161);
 	putbe32(&header.ident2, 0x01000000);
@@ -186,7 +196,7 @@ unsigned long strip=0;
 
 
 	// Find zero-address phentry
-	for(int i=0; i<phnum; i++)
+	for(s32 i=0; i<phnum; i++)
 	{
 		elfphentry* phentry = &origentries[i];
 
@@ -201,7 +211,7 @@ unsigned long strip=0;
 		fprintf(stderr,"ERROR IOS table not found in program header\n");
 		return 1;
 	}
-
+	
 
 	elfphentry* entries = new elfphentry[phnum+2];
 	offset_size_pair* offsetsizes = new offset_size_pair[phnum];
@@ -209,7 +219,7 @@ unsigned long strip=0;
 	elfphentry* q = entries;
 	phoff = 0x34;
 
-	for(int i=0; i<phnum; i++)
+	for(s32 i=0; i<phnum; i++)
 	{
 		elfphentry phentry;
 		elfphentry* p = &origentries[i];
@@ -219,14 +229,14 @@ unsigned long strip=0;
 
 		if (p == iosphentry)
 		{
-			unsigned long startoffset = phoff;
-			unsigned long startvaddr = vaddr;
-			unsigned long startpaddr = paddr;
-			unsigned long totalsize = 0;
+			u32 startoffset = phoff;
+			u32 startvaddr = vaddr;
+			u32 startpaddr = paddr;
+			u32 totalsize = 0;
 
 			filesz = memsz = (phnum+2) * 0x20;
 
-			// PHDR
+			// PHDR 
 			putbe32(&phentry.type, 6);
 			putbe32(&phentry.offset, phoff);
 			putbe32(&phentry.vaddr, paddr);
@@ -236,7 +246,7 @@ unsigned long strip=0;
 			putbe32(&phentry.flags, 0x00F00000);
 			putbe32(&phentry.align, 0x4);
 
-			*q++ = phentry;
+			*q++ = phentry;	
 
 			phoff += memsz;
 			paddr += memsz;
@@ -245,9 +255,9 @@ unsigned long strip=0;
 
 			filesz = memsz = getbe32(&p->memsz);
 
+			
 
-
-			// NOTE
+			// NOTE 
 			putbe32(&phentry.type, 4);
 			putbe32(&phentry.offset, phoff);
 			putbe32(&phentry.vaddr, vaddr);
@@ -259,7 +269,7 @@ unsigned long strip=0;
 
 
 
-			*q++ = phentry;
+			*q++ = phentry;	
 
 			phoff += memsz;
 			paddr += memsz;
@@ -289,9 +299,9 @@ unsigned long strip=0;
 			if(strip==getbe32(&p->vaddr) && strip!=0) // strip zeroes
 			{
 			filesz=1;
-
+			
 			putbe32(&p->filesz,filesz);
-
+	
 			}
 
 			putbe32(&phentry.type, getbe32(&p->type));
@@ -309,7 +319,7 @@ unsigned long strip=0;
 			phoff += filesz;
 		}
 	}
-
+	
 	if (fwrite(&header, sizeof(elfheader), 1, fout) != 1)
 	{
 		fprintf(stderr,"ERROR writing ELF header\n");
@@ -322,23 +332,23 @@ unsigned long strip=0;
 		return 1;
 	}
 
-	for(int i=0; i<phnum; i++)
+	for(s32 i=0; i<phnum; i++)
 	{
 		elfphentry *p = &origentries[i];
 
-		unsigned long offset = getbe32(&p->offset);
-		unsigned long filesz = getbe32(&p->filesz);
+		u32 offset = getbe32(&p->offset);
+		u32 filesz = getbe32(&p->filesz);
 
 		if (filesz)
 		{
 			fseek(fin, offset, SEEK_SET);
-
+            
 			fprintf(stdout,"Writing segment 0x%08X to 0x%08X (%d bytes) - %x %s\n", getbe32(&p->vaddr), ftell(fout), filesz,getbe32(&p->memsz),
 				(strip==getbe32(&p->vaddr)  && strip!=0 )? "- Stripped" : "");
 
 			unsigned char* data = new unsigned char[filesz];
 
-
+			
 			if (fread(data, filesz, 1, fin) != 1 || fwrite(data, filesz, 1, fout) != 1)
 			{
 				fprintf(stderr,"ERROR writing segment\n");

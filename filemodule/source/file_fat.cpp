@@ -6,15 +6,15 @@ namespace ProxiIOS { namespace Filesystem {
 
 static const char __fatName[] = "fat";
 
-static int HexToInt(const char* hex, int length)
+static u64 HexToInt(const char* hex, int length)
 {
-	int ret = 0;
+	u64 ret = 0;
 	for (int i = 0; i < length; i++)
 		ret = (ret << 4) + hex[i] - ((hex[i] > '9') ? ('a' - 10) : '0');
 	return ret;
 }
 
-inline FILE_STRUCT* GenerateReadonlyFile(u32 cluster) {
+static inline FILE_STRUCT* GenerateReadonlyFile(FatHandler* fs, u32 cluster) {
 	FILE_STRUCT* ffile = new FILE_STRUCT();
 	ffile->filesize = 0xCFFFFFF0;
 	ffile->startCluster = cluster;
@@ -22,7 +22,7 @@ inline FILE_STRUCT* GenerateReadonlyFile(u32 cluster) {
 	ffile->rwPosition.cluster = ffile->startCluster;
 	ffile->rwPosition.sector =  0;
 	ffile->rwPosition.byte = 0;
-	ffile->partition = (PARTITION*)GetDeviceOpTab(__fatName)->deviceData;
+	ffile->partition = (PARTITION*)GetDeviceOpTab(fs->Name)->deviceData;
 	ffile->read = true;
 	ffile->write = false;
 	ffile->append = false;
@@ -39,126 +39,160 @@ inline void StToStats(Stats* stats, struct stat* st) {
 	stats->Mode = st->st_mode;
 }
 
-FilesystemInfo* FatHandler::Mount(DISC_INTERFACE* disk)
+int FatHandler::Mount(const void* options, int length)
 {
-	if (fatMount(__fatName, disk, 0, 8, 4)<0)
-		return NULL;
+	if (length < 4)
+		return Errors::Unrecognized;
+
+	int disk = *(const int*)options;
 	
-	chdir("fat:/");
+	if (length > 4) { // optional forced fs name
+		strcpy(Name, (const char*)options + 4);
+	} else
+		strcpy(Name, __fatName);
+
+	//if (fatMount(Name, Module->Disk[disk], 0, 8, 4) < 0)
+	if (fatMount(Name, Module->Disk[disk], 0, 2, 4) < 0)
+		return Errors::DiskNotMounted;
+
+	strcpy(MountPoint, "/mnt/");
+	strcat(MountPoint, Name);
 	
-	return new FatFilesystemInfo(this, __fatName);
+	strcat(Name, ":/");
+
+	return Errors::Success;
 }
 
-int FatHandler::Unmount(FilesystemInfo* filesystem)
+int FatHandler::Unmount()
 {
-	fatUnmount(((FatFilesystemInfo*)filesystem)->Name);
+	Name[strlen(Name) - 1] = '\0'; // Get rid of the '/'
+	fatUnmount(Name);
 	return 0;
 }
 
-FileInfo* FatHandler::Open(FilesystemInfo* filesystem, const char* path, u8 mode)
+FileInfo* FatHandler::Open(const char* path, int mode)
 {
+	chdir(Name);
+
 	int ret = -1;
-	if (strstr(path, "id\\")) {
-		if (mode & (O_CREAT | O_TRUNC | O_WRONLY))
-			return NULL; // Cluster-opened files must be read-only
-		// strlen("cluster\\") == 8
-		u32 cluster = HexToInt(path + 3, 8);
-		ret = (int)GenerateReadonlyFile(cluster);
-	} else {
+
+	if (!strncmp(path, FILE_ID_PATH, FILE_ID_PATH_LEN)) {
+		if (mode != O_RDONLY)
+			return null;
+		u32 cluster = (u32)HexToInt(path + FILE_ID_PATH_LEN, 0x10);
+		ret = (int)GenerateReadonlyFile(this, cluster);
+	} else
 		ret = FAT_Open(path, mode);
-	}
+	
 	if (ret < 0)
-		return (FileInfo*)-1;
-	FatFileInfo* file = new FatFileInfo();
-	file->System = filesystem;
-	file->File = (FILE_STRUCT*)ret;
-	return file;
+		return null;
+	
+	return new FatFileInfo(this, ret);
 }
 
 int FatHandler::Read(FileInfo* file, u8* buffer, int length)
 {
-	return FAT_Read((int)((FatFileInfo*)file)->File, buffer, length);
+	return FAT_Read(((FatFileInfo*)file)->File, buffer, length);
 }
 
 int FatHandler::Write(FileInfo* file, const u8* buffer, int length)
 {
-	return FAT_Write((int)((FatFileInfo*)file)->File, (void*)buffer, length);
+	return FAT_Write(((FatFileInfo*)file)->File, (void*)buffer, length);
 }
 
 int FatHandler::Seek(FileInfo* file, int where, int whence)
 {
-	return FAT_Seek((int)((FatFileInfo*)file)->File, where, whence);
+	return FAT_Seek(((FatFileInfo*)file)->File, where, whence);
 }
 
 int FatHandler::Tell(FileInfo* file)
 {
-	return FAT_Tell((int)((FatFileInfo*)file)->File);
+	return FAT_Tell(((FatFileInfo*)file)->File);
 }
 
 int FatHandler::Sync(FileInfo* file)
 {
-	return FAT_Sync((int)((FatFileInfo*)file)->File);
+	return FAT_Sync(((FatFileInfo*)file)->File);
 }
 
 int FatHandler::Close(FileInfo* file)
 {
-	int ret = FAT_Close((int)((FatFileInfo*)file)->File);
+	int ret = FAT_Close(((FatFileInfo*)file)->File);
 	delete file;
 	return ret;
 }
 
-int FatHandler::Stat(const char* filename, Stats* stats)
+int FatHandler::Stat(const char* path, Stats* stats)
 {
+	chdir(Name);
+
 	struct stat st;
-	int ret = FAT_Stat(filename, &st);
+	int ret = FAT_Stat(path, &st);
 	
 	StToStats(stats, &st);
 	
 	return ret;
 }
 
-int FatHandler::CreateFile(const char* filename)
+int FatHandler::CreateFile(const char* path)
 {
-	int fd = FAT_Open(filename, O_CREAT);
+	chdir(Name);
+
+	int fd = FAT_Open(path, O_CREAT);
 	if (fd < 0)
 		return fd;
 	FAT_Close(fd);
 	return Errors::Success;
 }
 
-int FatHandler::Delete(const char* filename)
+int FatHandler::Delete(const char* path)
 {
-	return FAT_Delete(filename);
+	chdir(Name);
+
+	return FAT_Delete(path);
 }
 
-int FatHandler::Rename(const char* source, const char* destination)
+int FatHandler::Rename(const char* path, const char* destination)
 {
-	return FAT_Rename(source, destination);
+	chdir(Name);
+
+	return FAT_Rename(path, destination);
 }
 
-int FatHandler::CreateDir(const char* dirname)
+int FatHandler::CreateDir(const char* path)
 {
-	return FAT_CreateDir(dirname);
+	chdir(Name);
+
+	return FAT_CreateDir(path);
 }
 
-int FatHandler::OpenDir(const char* dirname)
+FileInfo* FatHandler::OpenDir(const char* path)
 {
-	return FAT_OpenDir(dirname);
+	chdir(Name);
+
+	int fd = FAT_OpenDir(path);
+	
+	if (!fd)
+		return null;
+	
+	return new FatFileInfo(this, fd);
 }
 
-int FatHandler::NextDir(int dir, char* filename, Stats* stats)
+int FatHandler::NextDir(FileInfo* dir, char* filename, Stats* stats)
 {
 	struct stat st;
-	int ret = FAT_NextDir(dir, filename, &st);
+	int ret = FAT_NextDir(((FatFileInfo*)dir)->File, filename, &st);
 	
 	StToStats(stats, &st);
 	
 	return ret;
 }
 
-int FatHandler::CloseDir(int dir)
+int FatHandler::CloseDir(FileInfo* dir)
 {
-	return FAT_CloseDir(dir);
+	int ret = FAT_CloseDir(((FatFileInfo*)dir)->File);
+	delete dir;
+	return ret;
 }
 
 } }

@@ -57,7 +57,7 @@ clean:
 	@$(MAKE) -C libfile --no-print-directory -f Makefile.ios clean
 	@$(MAKE) -C libfile --no-print-directory -f Makefile.wii clean
 	@$(MAKE) -C libfat --no-print-directory -f Makefile clean
-	@rm -fr $(BUILD) $(BIN)/*.elf ../launcher/data/$(TARGET).dat ../testemu/data/$(TARGET).dat
+	@rm -fr $(BUILD) $(BIN)/*.elf ../launcher/data/$(TARGET).dat
 else
 
 TARGET := $(notdir $(ROOT))
@@ -112,7 +112,6 @@ $(OUTPUT).elf: $(TARGET).elf
 	@echo stripping $(notdir $@)
 	@$(STRIPIOS) $< $@
 	@cp -f $@ ../../launcher/data/$(TARGET).dat
-	@cp -f $@ ../../testemu/data/$(TARGET).dat
 	
 %.elf: $(OFILES)
 	@echo linking $(notdir $@)
