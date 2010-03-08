@@ -22,12 +22,19 @@ struct PatchMemory
 	bool Verify;
 };
 
+struct PatchFs
+{
+	std::string Source;
+	std::string Destination;
+};
+
 struct PatchPatch
 {
 	std::string ID;
 	std::vector<PatchShift> Shifts;
 	std::vector<PatchFile> Files;
 	std::vector<PatchMemory> Memory;
+	std::vector<PatchFs> Fs;
 };
 
 struct PatchOption;

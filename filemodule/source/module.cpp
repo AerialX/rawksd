@@ -2,6 +2,7 @@
 
 #include "file_fat.h"
 #include "file_isfs.h"
+#include "file_riifs.h"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -85,6 +86,9 @@ namespace ProxiIOS { namespace Filesystem {
 					case Filesystems::Ext2:
 						break;
 					case Filesystems::SMB:
+						break;
+					case Filesystems::RiiFS:
+						handler = new RiiHandler();
 						break;
 				}
 				

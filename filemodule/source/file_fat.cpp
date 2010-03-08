@@ -44,30 +44,30 @@ bool Fat_Mount(const char *point, const DISC_INTERFACE *dev)
 	int result = -1;
 	u8 *sectorBuffer = (u8*)Memalign(32, 2048);
 	u8 *bootBuffer = (u8*)Memalign(32, 2048);
-	if (dev->readSectors(0,1,sectorBuffer)) {
+	if (dev->readSectors(0, 1, sectorBuffer)) {
 		u32 lba = 0;
 		if ((sectorBuffer[0x1FE]==0x55) && (sectorBuffer[0x1FF]==0xAA)) {
 			int i;
 			u8 *ptr = sectorBuffer+0x1BE;
-			for(i=0;i<4;i++,ptr+=16) {
-				lba = ptr[8]  | ptr[9]<<8 | ptr[10] << 16 | ptr[11] << 24;
-				if (dev->readSectors(lba,1,bootBuffer)) {
-					if ((bootBuffer[0x1FE]==0x55) && (bootBuffer[0x1FF]==0xAA)) {
-						if (!memcmp(bootBuffer+0x36,FAT_SIG,sizeof(FAT_SIG)))
+			for (i = 0; i < 4; i++, ptr += 16) {
+				lba = ptr[8] | (ptr[9] << 8) | (ptr[10] << 16) | (ptr[11] << 24);
+				if (dev->readSectors(lba, 1, bootBuffer)) {
+					if ((bootBuffer[0x1FE] == 0x55) && (bootBuffer[0x1FF] == 0xAA)) {
+						if (!memcmp(bootBuffer + 0x36, FAT_SIG, sizeof(FAT_SIG)))
 							break;
-						if (!memcmp(bootBuffer+0x52,FAT_SIG,sizeof(FAT_SIG)))
+						if (!memcmp(bootBuffer + 0x52, FAT_SIG, sizeof(FAT_SIG)))
 							break;
 					}
 				}
-				lba=0;
+				lba = 0;
 			}
 		}
-		if(lba)
-			result = fatMount(point, dev, lba, 8, 4);
+		if (lba)
+			result = fatMount(point, dev, lba, 8, 8);
 	}
 	Dealloc(bootBuffer);
 	Dealloc(sectorBuffer);
-	return (result>=0);
+	return result >= 0;
 }
 
 FilesystemInfo* FatHandler::Mount(DISC_INTERFACE* disk)
@@ -89,15 +89,13 @@ int FatHandler::Unmount(FilesystemInfo* filesystem)
 FileInfo* FatHandler::Open(FilesystemInfo* filesystem, const char* path, u8 mode)
 {
 	int ret = -1;
-	if (strstr(path, "id\\")) {
+	if (strncmp(path, "id\\", 3)) {
 		if (mode & (O_CREAT | O_TRUNC | O_WRONLY))
 			return null; // Cluster-opened files must be read-only
-		// strlen("cluster\\") == 8
 		u32 cluster = HexToInt(path + 3, 8);
 		ret = (int)GenerateReadonlyFile(cluster);
-	} else {
+	} else
 		ret = FAT_Open(path, mode);
-	}
 	if (ret < 0)
 		return (FileInfo*)-1;
 	FatFileInfo* file = new FatFileInfo();

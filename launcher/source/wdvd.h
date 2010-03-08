@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <ogc/es.h>
+
 int WDVD_Init();
 void WDVD_Close();
 bool WDVD_Reset();
@@ -29,7 +31,10 @@ int WDVD_LowReadDiskId();
 int WDVD_LowOpenPartition(u64 offset);
 int WDVD_LowReadBCA(void* buffer, u32 length);
 int WDVD_StopMotor(bool eject, bool kill);
-bool WDVD_CheckCover();
+int WDVD_CheckCover();
+int WDVD_VerifyCover(bool* cover);
+int WDVD_DiscInserted();
 int WDVD_EnableDVD();
+tmd* WDVD_GetTMD();
 
 int WDVD_StartLog();

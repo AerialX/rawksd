@@ -15,6 +15,7 @@
 #define MEM_GAMEONLINE		((u32*)0x80003180)
 #define MEM_GAMEIDADDRESS	((u8**)0x80003184)
 #define MEM_IOSEXPECTED		((u32*)0x80003188)
+#define MEM_VIDEOMODE		((u32*)0x800000CC)
 
 #define MEM_FSTADDRESS		((u32*)0x80000038)
 #define MEM_APPLOADER		((u32*)0x81200000)
@@ -64,12 +65,13 @@ void SetClusters(bool clusters);
 
 DiscNode* FindNode(const char* fstname);
 
+int AddPatchFs(const char* source, const char* dest);
 int AddPatchFile(const char* filename);
 int AddPatchFile(const char* filename, int id);
 void AddPatch(int fd, u32 fileoffset, u64 offset, u32 length);
 void AddShift(u64 original, u64 newoffset, u32 size);
 void ResizeFST(DiscNode* node, u32 length, bool telldip);
 bool PatchFST(const char* fstname, u32 offset, const char* filename, u32 fileoffset, u32 length);
-void ExecuteQueue(std::vector<PatchShift*>* shifts, std::vector<PatchFile*>* files, u32* fstsize);
+void ExecuteQueue(std::vector<PatchShift*>* shifts, std::vector<PatchFile*>* files, bool shiftfiles, u32* fstsize);
 
 u32 GetShiftOffset();

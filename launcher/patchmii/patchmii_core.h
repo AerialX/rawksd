@@ -36,26 +36,35 @@ void aes_set_key(u8 *key);
 void aes_decrypt(u8 *iv, u8 *inbuf, u8 *outbuf, unsigned long long len);
 void aes_encrypt(u8 *iv, u8 *inbuf, u8 *outbuf, unsigned long long len);
 }
+
+void installer_downgrade(bool skipdowngrade);
+void installer_go(bool skipdowngrade);
+void installer_init(bool skipdowngrade);
+void installer_cleanup();
+
 #define TRACE(x) debug_printf("%s / %d: %d\n", __FUNCTION__, __LINE__, (x))
 
 #define ISFS_ACCESS_READ 1
 #define ISFS_ACCESS_WRITE 2
 
 // OMG MASTER HAXX
-#define EHCUSB
+//#define EHCUSB
 
 #define DOWNGRADED_IOS 15
 #define DOWNGRADED_VERSION 257
 #define PATCHED_IOS 37
 #define HAXXED_IOS 36
-#define HAXXED_VERSION 1042
+//#define HAXXED_VERSION 1042
+#define HAXXED_VERSION 3351
 #ifdef RAWKHAXX
 #define HAXXED_NEW_IOS 243
 #endif
 #ifdef RIIVOLUTION
 #define HAXXED_NEW_IOS 242
 #endif
-#define HAXXED_NEW_VERSION 2
 #define SD_IOS 56
 #define SD_VERSION 5405
 #define SD_CONTENT 4
+#define HAXXED_NEW_VERSION 4
+
+#define HAXXED_NEW_TITLEID (0x0000000100000000ULL | (u64)HAXXED_NEW_IOS)

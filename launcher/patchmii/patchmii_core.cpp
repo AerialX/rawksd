@@ -90,7 +90,9 @@ u32 fs_patch3_pos=0xD744;
 
 unsigned char gpio_orig[8] = {0xD1, 0x0F, 0x28, 0xFC, 0xD0, 0x33, 0x28, 0xFC};
 unsigned char gpio_patch[2] = {0x46, 0xC0};
-u32 gpio_patch_pos = 0x22DBE;
+// u32 gpio_patch_pos = 0x22DBE; // IOS36.1042
+u32 gpio_patch_pos = 0x22DE6; // IOS36.3351
+
 
 static bool netinited = false;
 int initnet()
@@ -267,15 +269,13 @@ int get_nus_object(u32 titleid1, u32 titleid2, const char *content, u8 **outbuf,
 	static char buf[128];
 	
 	if (initfat()) {
-		snprintf(buf, 128, "/patch/%08x/%08x/%s",
-			titleid1, titleid2, content);
+		snprintf(buf, 128, "/patch/%08x/%08x/%s", titleid1, titleid2, content);
 		struct stat st;
 		if (stat(buf, &st) == 0) {
-			*outlen = st.st_size;
 			FILE* fd = fopen(buf, "rb");
 			if (fd != NULL) {
-				u8* buffer = (u8*)memalign(32, st.st_size);
-				fread(buffer, 1, *outlen, fd);
+				*outbuf = (u8*)memalign(32, st.st_size);
+				*outlen = fread(*outbuf, 1, st.st_size, fd);
 				fclose(fd);
 				
 				return 0;
@@ -286,18 +286,16 @@ int get_nus_object(u32 titleid1, u32 titleid2, const char *content, u8 **outbuf,
 	if (initnet()) {
 		u32 http_status;
 
-		snprintf(buf, 128, "http://nus.cdn.shop.wii.com/ccs/download/%08x%08x/%s",
-			titleid1, titleid2, content);
+		snprintf(buf, 128, "http://nus.cdn.shop.wii.com/ccs/download/%08x%08x/%s", titleid1, titleid2, content);
 
 		int retval = http_request(buf, 1 << 31);
 		if (!retval) {
-			debug_printf("Error making http request\n");
-			return 1;
+			return -1;
 		}
 		
 		retval = http_get_result(&http_status, outbuf, outlen); 
 		if (((int)*outbuf & 0xF0000000) == 0xF0000000) {
-			return (int) *outbuf;
+			return (int)*outbuf;
 		}
 		
 		return 0;
@@ -489,6 +487,31 @@ int patch_identify_check(u8 *buf, u32 size)
 	}
 	
 	return match_count;
+}
+
+int FindInBuffer(const u8* buffer, const int bufferlength, const char* pattern, const int patternlength)
+{
+	for (int i = 0; i < bufferlength - patternlength; i++) {
+		if (!memcmp(buffer + i, pattern, patternlength))
+			return i;
+	}
+	
+	return -1;
+}
+
+int patch_di_do(u8 *Address, int Size)
+{
+	int ret = 0;
+	int pos;
+	while (Size > 0 && (pos = FindInBuffer(Address, Size, "/dev/di", 7)) >= 0) {
+		ret++;
+		Address[pos + 6] = 'o';
+		pos += 7;
+		Address += pos;
+		Size -= pos;
+	}
+	
+	return ret;
 }
 
 int patch_fsperms(u8 *buf, u32 size) 
@@ -874,7 +897,7 @@ int patchmii(int input_h, int input_l, int output_h, int output_l, int patchtype
 				
 				if (patchtype == 2) { // 1337 haxx
 #ifdef RAWKHAXX
-					/* tueidj: RawkEMU /dev/fs hooks */
+					/* tueidj: /dev/fs hooks */
 					if (apply_patch(content_buf, fs_patch1_pos, fs_orig1, sizeof(fs_orig1), fs_patch1, sizeof(fs_patch1)))
 						update_tmd = 1;
 					if (apply_patch(content_buf, fs_patch2_pos, fs_orig2, sizeof(fs_orig2), fs_patch2, sizeof(fs_patch2)))
@@ -883,6 +906,8 @@ int patchmii(int input_h, int input_l, int output_h, int output_l, int patchtype
 						update_tmd = 1;
 #endif
 					if (apply_patch(content_buf, gpio_patch_pos, gpio_orig, sizeof(gpio_orig), gpio_patch, sizeof(gpio_patch)))
+						update_tmd = 1;
+					if (patch_di_do(content_buf, content_size))
 						update_tmd = 1;
 				}
 			}
@@ -953,37 +978,41 @@ void predownloadcontents(const tmd* t)
 	}
 }
 
-void installer_init()
+void installer_init(bool skipdowngrade)
 {
-	getticket(1, DOWNGRADED_IOS);
 #ifdef RAWKHAXX
 	getticket(1, PATCHED_IOS);
 #endif
 	getticket(1, HAXXED_IOS);
 	getticket(1, SD_IOS); gettmd(1, SD_IOS, SD_VERSION); getcontent(1, SD_IOS, SD_CONTENT, NULL);
 	
-	predownloadcontents((const tmd*)SIGNATURE_PAYLOAD((signed_blob*)gettmd(1, DOWNGRADED_IOS, DOWNGRADED_VERSION)));
-	predownloadcontents((const tmd*)SIGNATURE_PAYLOAD((signed_blob*)gettmd(1, DOWNGRADED_IOS, 0)));
+	if (!skipdowngrade) {
+		getticket(1, DOWNGRADED_IOS);
+		predownloadcontents((const tmd*)SIGNATURE_PAYLOAD((signed_blob*)gettmd(1, DOWNGRADED_IOS, DOWNGRADED_VERSION)));
+		predownloadcontents((const tmd*)SIGNATURE_PAYLOAD((signed_blob*)gettmd(1, DOWNGRADED_IOS, 0)));
+	}
 #ifdef RAWKHAXX
 	predownloadcontents((const tmd*)SIGNATURE_PAYLOAD((signed_blob*)gettmd(1, PATCHED_IOS, 0)));
 #endif
 	predownloadcontents((const tmd*)SIGNATURE_PAYLOAD((signed_blob*)gettmd(1, HAXXED_IOS, HAXXED_VERSION)));
 }
 
-void installer_downgrade()
+void installer_downgrade(bool skipdowngrade)
 {
+	if (skipdowngrade)
+		return;
 	//patchmii(1, DOWNGRADED_IOS, 1, DOWNGRADED_IOS, 0, 1, 0, 0);
 	//patchmii(1, DOWNGRADED_IOS, 1, DOWNGRADED_IOS, 0, 0, DOWNGRADED_VERSION, 0);
 	patchmii(1, DOWNGRADED_IOS, 1, DOWNGRADED_IOS, 0, 2, DOWNGRADED_VERSION, 0);
 }
 
-void installer_go()
+void installer_go(bool skipdowngrade)
 {
 #ifdef RAWKHAXX
-	patchmii(1, PATCHED_IOS, 1, PATCHED_IOS, 1, 0, 0, DOWNGRADED_IOS);
+	patchmii(1, PATCHED_IOS, 1, PATCHED_IOS, 1, 0, 0, skipdowngrade ? 0 : DOWNGRADED_IOS);
 	patchmii(1, HAXXED_IOS, 1, HAXXED_NEW_IOS, 2, 0, HAXXED_VERSION, 0);
 #else
-	patchmii(1, HAXXED_IOS, 1, HAXXED_NEW_IOS, 2, 0, HAXXED_VERSION, DOWNGRADED_IOS);
+	patchmii(1, HAXXED_IOS, 1, HAXXED_NEW_IOS, 2, 0, HAXXED_VERSION, skipdowngrade ? 0 : DOWNGRADED_IOS);
 #endif
 	
 	patchmii(1, DOWNGRADED_IOS, 1, DOWNGRADED_IOS, 0, 0, 0, 0);

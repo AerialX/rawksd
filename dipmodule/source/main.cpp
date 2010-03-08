@@ -3,16 +3,16 @@
 #include <gctypes.h>
 #include <mem.h>
 
-static u8 Heapspace[0x15000] __attribute__ ((aligned (32)));
-//static u8 Heapspace[0x18000] __attribute__ ((aligned (32)));
-//static u8 Heapspace[0x3f000] __attribute__ ((aligned (32)));
+#ifdef DIP_RIIVOLUTION
+static u8 Heapspace[0x2d000] __attribute__ ((aligned (32)));
+#endif
+#ifdef DIP_RAWKSD
+static u8 Heapspace[0x1d000] __attribute__ ((aligned (32)));
+#endif
 
 int main()
 {
 	InitializeHeap(Heapspace, sizeof(Heapspace), 32);
-
-	//ProxiIOS::ProxyModule dip("/dev/do", "/dev/di");
-	//return dip.Loop();
 
 	ProxiIOS::DIP::DIP dip;
 	return dip.Loop();

@@ -21,12 +21,13 @@ namespace Ioctl {
 		SetClusters		= 0xC4,
 		Allocate		= 0xC5,
 		Yarr_Enable		= 0xCA,
-		Yarr_AddIso		= 0xCB
+		Yarr_AddIso		= 0xCB,
+		AddFsPatch		= 0xC6
 	};
 }
 
 static void* fstaddress;
-static u32 shiftoffset = 0;
+static u32 shiftoffset;
 static int dipfd = -1;
 static u32 Command[8] ATTRIBUTE_ALIGN(32);
 static u32 Output[8] ATTRIBUTE_ALIGN(32);
@@ -65,6 +66,11 @@ void SetClusters(bool clusters)
 {
 	Command[0] = clusters;
 	IOS_Ioctl(dipfd, Ioctl::SetClusters, Command, 0x04, Output, 0x04);
+}
+
+int AddPatchFs(const char* source, const char* dest)
+{
+	IOS_Ioctl(dipfd, Ioctl::AddFsPatch, (void*)source, strlen(source) + 1, (void*)dest, strlen(dest) + 1);
 }
 
 DiscNode* FindNode(const char* fstname)
@@ -149,15 +155,25 @@ void PatchAllocate(int type, int toadd)
 	IOS_Ioctl(dipfd, Ioctl::Allocate, Command, 0x20, Output, 0x20);
 }
 
+void ShiftFST(DiscNode* node)
+{
+	node->DataOffset = (u32)((SHIFT_BASE + (u64)shiftoffset) >> 2);
+	
+	shiftoffset += node->Size;
+	shiftoffset = (shiftoffset / 0x40 + 2) * 0x40;
+	//shiftoffset = ROUND_UP(shiftoffset, 0x40);
+}
+
 void ResizeFST(DiscNode* node, u32 length, bool telldip)
 {
-	if (telldip)
-		AddShift((u64)node->DataOffset << 2, SHIFT_BASE + shiftoffset, node->Size);
+	u64 oldoffset = ((u64)node->DataOffset) << 2;
+	u32 oldsize = node->Size;
 	node->Size = length;
-	node->DataOffset = (u32)((SHIFT_BASE + shiftoffset) >> 2);
 	
-	shiftoffset += length;
-	shiftoffset = ROUND_UP(shiftoffset, 0x40);
+	ShiftFST(node);
+	
+	if (telldip)
+		AddShift(oldoffset, ((u64)node->DataOffset) << 2, oldsize);
 }
 
 bool PatchFST(const char* fstname, u32 offset, const char* filename, u32 fileoffset, u32 length)
@@ -176,7 +192,7 @@ bool PatchFST(const char* fstname, u32 offset, const char* filename, u32 fileoff
 	return true;
 }
 
-void ExecuteQueue(vector<PatchShift*>* shifts, vector<PatchFile*>* patches, u32* fstsize)
+void ExecuteQueue(vector<PatchShift*>* shifts, vector<PatchFile*>* patches, bool shiftfiles, u32* fstsize)
 {
 	//DiscNode* fst = (DiscNode*)*MEM_FSTADDRESS; // Start of FST
 	DiscNode* fst = (DiscNode*)fstaddress; // Start of FST
@@ -232,15 +248,22 @@ void ExecuteQueue(vector<PatchShift*>* shifts, vector<PatchFile*>* patches, u32*
 							fd = AddPatchFile((*patch)->External.c_str());
 						
 						if (fd >= 0) {
+							bool shifted = false;
+							
 							if ((*patch)->Resize) {
-								if ((*patch)->Length + (*patch)->Offset > node->Size)
+								if ((*patch)->Length + (*patch)->Offset > node->Size) {
 									ResizeFST(node, (*patch)->Length + (*patch)->Offset, (*patch)->Offset > 0);
-								else 
+									shifted = true;
+								} else
 									node->Size = (*patch)->Length + (*patch)->Offset;
-								
 							}
 							
-							AddPatch(fd, (*patch)->FileOffset, ((u64)node->DataOffset << 2) + (u64)(*patch)->Offset, (*patch)->Length);
+							if (!shifted)
+							
+							//if (shiftfiles && !shifted && (*patch)->Length == node->Size && (*patch)->Offset == 0)
+								ShiftFST(node);
+							
+							AddPatch(fd, (*patch)->FileOffset, (((u64)node->DataOffset) << 2) + (u64)(*patch)->Offset, (*patch)->Length);
 						}
 						
 						patches->erase(patch);
@@ -266,6 +289,7 @@ void ExecuteQueue(vector<PatchShift*>* shifts, vector<PatchFile*>* patches, u32*
 		
 		while (nodes.size() > 0 && count == nodes.back()->Size - 1) {
 #ifdef FUCKYOU
+#error FUCKERS
 			// Before popping back, check if we need to create any files here
 			curpath[pos] = '\0';
 			// When we pop out of a directory, we can assume anything that matches it is fucked.

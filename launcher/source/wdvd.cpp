@@ -32,7 +32,7 @@ int WDVD_Init() {
 		return 1;
 
     //di_fd = IOS_Open("/dev/di", 0);
-	di_fd = IOS_Open("/dev/do", 0);
+	di_fd = IOS_Open("/dev/di", 0);
     
     return di_fd;
 }
@@ -93,14 +93,29 @@ int WDVD_LowOpenPartition(u64 offset) {
 
 	return IOS_Ioctlv(di_fd, 0x8b, 3, 2, (ioctlv*)inbuffer);
 }
+tmd* WDVD_GetTMD()
+{
+	return (tmd*)tmd_data;
+}
 
 void WDVD_Close() {
 	IOS_Close(di_fd);
 }
 
-bool WDVD_CheckCover() {
+int WDVD_CheckCover() {
 	inbuffer[0] = 0x88000000;
-	return IOS_Ioctl(di_fd, 0x88, inbuffer, 0x20, inbuffer + 0x20, 0x20);
+	return IOS_Ioctl(di_fd, 0x88, inbuffer, 0x20, inbuffer + 0x08, 0x20);
+}
+
+int WDVD_VerifyCover(bool* cover) {
+	inbuffer[0] = 0xdb000000;
+	int ret = IOS_Ioctl(di_fd, 0xdb, inbuffer, 0x20, inbuffer + 0x08, 0x20);
+	*cover = !(bool)inbuffer[0x08];
+	return ret;
+}
+
+int WDVD_DiscInserted() {
+	return IOS_Ioctl(di_fd, 0xce, inbuffer, 0x20, inbuffer + 0x08, 0x20);
 }
 
 int WDVD_LowReadBCA(void* buffer, u32 length)
@@ -114,17 +129,17 @@ int WDVD_StopMotor(bool eject, bool kill)
 	inbuffer[0] = 0xE3000000;
 	inbuffer[1] = eject ? 1 : 0;
 	inbuffer[2] = kill ? 1 : 0;
-	return IOS_Ioctl(di_fd, 0xE3, inbuffer, 0x20, inbuffer + 0x20, 0x20);
+	return IOS_Ioctl(di_fd, 0xE3, inbuffer, 0x20, inbuffer + 0x08, 0x20);
 }
 
 int WDVD_EnableDVD()
 {
 	// <tueidj> the function is just "int WDVD_EnableDVD()", it calls ioctl 0x8E with inbuffer[0] = 1<<24 ; 0 is disable
 	inbuffer[0] = 1 << 24;
-	return IOS_Ioctl(di_fd, 0x8E, inbuffer, 0x20, inbuffer + 0x20, 0x20);
+	return IOS_Ioctl(di_fd, 0x8E, inbuffer, 0x20, inbuffer + 0x08, 0x20);
 }
 
 int WDVD_StartLog()
 {
-	return IOS_Ioctl(di_fd, 0xCF, inbuffer, 0x20, inbuffer + 0x20, 0x20);
+	return IOS_Ioctl(di_fd, 0xCF, inbuffer, 0x20, inbuffer + 0x08, 0x20);
 }

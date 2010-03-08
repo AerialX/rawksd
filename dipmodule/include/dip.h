@@ -51,6 +51,9 @@ namespace ProxiIOS { namespace DIP {
 			AddShift		= 0xC3,
 			SetClusters		= 0xC4,
 			Allocate		= 0xC5,
+			AddFsPatch		= 0xC6,
+			HandleFs		= 0xC7,
+			GetFsHook		= 0xC8,
 			Yarr_Enable		= 0xCA,
 			Yarr_AddIso		= 0xCB,
 			InitLog			= 0xCF,
@@ -76,20 +79,27 @@ namespace ProxiIOS { namespace DIP {
 	class DIP : public ProxiIOS::ProxyModule
 	{
 	public:
+		s32 MyFd;
+		
 		s32 CurrentPartition;
 
 		u32 AllocatedFiles;
 		u32 AllocatedPatches;
+		u32 AllocatedFsPatches;
 		u32 AllocatedShifts;
 
 		u32 FileCount;
 		u32 PatchCount;
+		u32 FsPatchCount;
 		u32 ShiftCount;
 		FileDesc* Files;
 		Patch* Patches;
 		Shift* Shifts;
+		FsPatch* FsPatches;
 		s32 OpenFiles[MAX_OPEN_FILES];
 		s32 OpenFds[MAX_OPEN_FILES];
+		
+		s32 FsFds[MAX_OPEN_FILES];
 		
 		bool Clusters; // Whether we're using the space-saving FAT cluster hack or not
 		
@@ -107,9 +117,11 @@ namespace ProxiIOS { namespace DIP {
 
 		int FindShift(u64 pos, u32 len);
 		int FindPatch(u64 pos, u32 len);
+		FsPatch* FindFsPatch(char* filename);
 		bool ReadFile(s16 fileid, u32 offset, void* data, u32 length);
 		bool Reallocate(u32 type, int toadd);
 		int IsFileOpen(s16 fileid);
+		int HandleFsMessage(ipcmessage* message, int* ret);
 
 		// yarr
 		bool Yarr;

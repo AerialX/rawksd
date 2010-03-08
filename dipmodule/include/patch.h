@@ -22,4 +22,10 @@ namespace ProxiIOS { namespace DIP {
 		u32 Offset;
 		u32 Length;
 	};
+	struct FsPatch
+	{
+		char* Source;
+		char* Destination;
+		u8 Folder;
+	};
 } }

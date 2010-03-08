@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wiiuse/wpad.h>
+#include <ogc/es.h>
 
 #include "libwiigui/gui.h"
 #include "menu.h"
@@ -21,11 +22,9 @@
 #include "filelist.h"
 #include "filebrowser.h"
 
-#include "certs_dat.h"
-#include "su_tik_dat.h"
-#include "su_tmd_dat.h"
-
 #include "launcher.h"
+
+#include "patchmii_core.h"
 
 #define THREAD_SLEEP 100
 
@@ -42,6 +41,29 @@ static GuiSound * bgMusic = NULL;
 static GuiWindow * mainWindow = NULL;
 static lwp_t guithread = LWP_THREAD_NULL;
 static volatile bool guiHalt = true;
+
+s32 Uninstall_RemoveTicket(u64 tid);
+s32 Uninstall_DeleteTitle(u32 title_u, u32 title_l);
+s32 Uninstall_DeleteTicket(u32 title_u, u32 title_l);
+
+s32 Uninstall_FromTitle(const u64 tid)
+{
+	s32 contents_ret, tik_ret, title_ret, ret;
+	u32 id = (u32)tid;
+	u32 kind = (u32)(tid >> 32);
+	contents_ret = tik_ret = title_ret = ret = 0;
+	tik_ret		= Uninstall_DeleteTicket(kind, id);
+	title_ret	= Uninstall_DeleteTitle(kind, id);
+	contents_ret = title_ret;
+	if (tik_ret < 0 && contents_ret < 0 && title_ret < 0)
+		ret = -1;
+	else if (tik_ret < 0 || contents_ret < 0 || title_ret < 0)
+		ret =  1;
+	else
+		ret =  0;
+	
+	return ret;
+}
 
 /****************************************************************************
  * ResumeGui
@@ -245,8 +267,8 @@ WindowPrompt(const char *title, const char *msg, const char *btn1Label, const ch
 	btn1.SetState(STATE_SELECTED);
 	btn1.SetEffectGrow();
 	
-	GuiText btn2Txt(btn1Label, 22, (GXColor){255, 229, 149, 255});
-	GuiText btn2Over(btn1Label, 22, (GXColor){226, 182, 46, 255});
+	GuiText btn2Txt(btn2Label, 22, (GXColor){255, 229, 149, 255});
+	GuiText btn2Over(btn2Label, 22, (GXColor){226, 182, 46, 255});
 	
 	GuiImage btn2Img(&btnOutline);
 	GuiImage btn2ImgOver(&btnOutlineOver);
@@ -331,10 +353,8 @@ UpdateGUI (void *arg)
 			for(i=0; i < 4; i++)
 				mainWindow->Update(&userInput[i]);
 
-			if(ExitRequested)
-			{
-				for(i = 0; i < 255; i += 15)
-				{
+			if (ExitRequested) {
+				for (i = 0; i < 255; i += 15) {
 					mainWindow->Draw();
 					Menu_DrawRectangle(0,0,screenwidth,screenheight,(GXColor){0, 0, 0, i},1);
 					Menu_Render();
@@ -398,7 +418,7 @@ string disabledstr = "Disabled";
 
 struct PageView
 {
-	PageView(PatchSection* page, GuiImage* arrowRight, GuiImage* arrowLeft, GuiTrigger* trigA, GuiSound* btnSoundOver, GuiSound* btnSoundClick) : Window(640, 480)
+	PageView(PatchSection* page, GuiImageData* arrowRightd, GuiImageData* arrowLeftd, GuiTrigger* trigA, GuiSound* btnSoundOver, GuiSound* btnSoundClick) : Window(640, 480)
 	{
 		Page = page;
 		
@@ -417,6 +437,9 @@ struct PageView
 			Options[i]->SetPosition(-96, y);
 			Window.Append(Options[i]);
 			
+			ArrowImages.push_back(new GuiImage(arrowRightd));
+			ArrowImages.push_back(new GuiImage(arrowLeftd));
+			
 			OptionsButton.push_back(new GuiButton(140 - 32, 20));
 			OptionsButton[i]->SetLabel(Choices[i]);
 			OptionsButton[i]->SetLabelOver(ChoicesOver[i]);
@@ -424,22 +447,22 @@ struct PageView
 			OptionsButton[i]->SetPosition(32 + (140 - 32) / 2, y);
 			OptionsButton[i]->SetTrigger(trigA);
 			
-			OptionsRight.push_back(new GuiButton(arrowRight->GetWidth(), arrowRight->GetHeight()));
-			OptionsRight[i]->SetImage(arrowRight);
+			OptionsRight.push_back(new GuiButton(ArrowImages[i * 2]->GetWidth(), ArrowImages[i * 2]->GetHeight()));
+			OptionsRight[i]->SetImage(ArrowImages[i * 2]);
 			//OptRight[p][o]->SetImageOver(SmallArrowRightOver);
 			OptionsRight[i]->SetAlignment(ALIGN_CENTRE, ALIGN_TOP);
-			OptionsRight[i]->SetPosition(140, y + 10 - arrowRight->GetHeight() / 2);
+			OptionsRight[i]->SetPosition(140, y + 10 - ArrowImages[i * 2]->GetHeight() / 2);
 			OptionsRight[i]->SetSelectable(false);
 			OptionsRight[i]->SetTrigger(trigA);
 			OptionsRight[i]->SetSoundOver(btnSoundOver);
 			OptionsRight[i]->SetSoundClick(btnSoundClick);
 			OptionsRight[i]->SetEffectGrow();
 			
-			OptionsLeft.push_back(new GuiButton(arrowLeft->GetWidth(), arrowLeft->GetHeight()));
-			OptionsLeft[i]->SetImage(arrowLeft);
+			OptionsLeft.push_back(new GuiButton(ArrowImages[i * 2 + 1]->GetWidth(), ArrowImages[i * 2 + 1]->GetHeight()));
+			OptionsLeft[i]->SetImage(ArrowImages[i * 2 + 1]);
 			//OptLeft[p][o]->SetImageOver(SmallArrowLeftOver);
 			OptionsLeft[i]->SetAlignment(ALIGN_CENTRE, ALIGN_TOP);
-			OptionsLeft[i]->SetPosition(24, y + 10 - arrowLeft->GetHeight() / 2);
+			OptionsLeft[i]->SetPosition(24, y + 10 - ArrowImages[i * 2 + 1]->GetHeight() / 2);
 			OptionsLeft[i]->SetSelectable(false);
 			OptionsLeft[i]->SetTrigger(trigA);
 			OptionsLeft[i]->SetSoundOver(btnSoundOver);
@@ -454,6 +477,7 @@ struct PageView
 	
 	GuiWindow Window;
 	PatchSection* Page;
+	vector<GuiImage*> ArrowImages;
 	vector<GuiText*> Options;
 	vector<GuiText*> Choices;
 	vector<GuiText*> ChoicesOver;
@@ -462,6 +486,23 @@ struct PageView
 	vector<GuiButton*> OptionsLeft;
 	vector<string**> OptionsChoices;
 };
+int GetPreferredIOS();
+static bool Uninstall()
+{
+	if (WindowPrompt("Uninstall", "Are you sure that you want to uninstall?", "Yes", "No") == 1) {
+		if (Uninstall_FromTitle(HAXXED_NEW_TITLEID) == 0) {
+			WindowPrompt("Uninstall", "The patch has been successfully uninstalled.", "OK", NULL);
+			SYS_ResetSystem(SYS_RESTART, 0, 0);
+			IOS_ReloadIOS(GetPreferredIOS());
+			return true;
+		} else {
+			WindowPrompt("Uninstall", "An error occurred while uninstalling the patch.", "OK", NULL);
+			return false;
+		}
+	}
+	
+	return false;
+}
 
 #define DoWaitForInput() \
 	if (ExitBtn.GetState() == STATE_CLICKED) { \
@@ -470,9 +511,8 @@ struct PageView
 		return; \
 	} else if (DisableBtn.GetState() == STATE_CLICKED) { \
 		DisableBtn.ResetState(); \
-		if (WindowPrompt("Uninstall", "Are you sure that you want to uninstall the patch?", "Yes", "No") == 1) { \
-		/* Disable the Patch */ \
-		} \
+		if (Uninstall()) \
+			return; \
 	}
 
 #define WaitForInput() \
@@ -501,9 +541,9 @@ static void MenuExecute()
 	GuiTrigger trigHome;
 	trigHome.SetButtonOnlyTrigger(-1, WPAD_BUTTON_HOME | WPAD_CLASSIC_BUTTON_HOME, PAD_BUTTON_START);
 	GuiTrigger trigPlus;
-	trigPlus.SetButtonOnlyTrigger(-1, WPAD_BUTTON_MINUS | WPAD_CLASSIC_BUTTON_MINUS | WPAD_CLASSIC_BUTTON_FULL_L, PAD_TRIGGER_L);
+	trigPlus.SetButtonOnlyTrigger(-1, WPAD_BUTTON_PLUS | WPAD_CLASSIC_BUTTON_MINUS | WPAD_CLASSIC_BUTTON_FULL_L, PAD_TRIGGER_L);
 	GuiTrigger trigMinus;
-	trigMinus.SetButtonOnlyTrigger(-1, WPAD_BUTTON_PLUS | WPAD_CLASSIC_BUTTON_PLUS | WPAD_CLASSIC_BUTTON_FULL_R, PAD_TRIGGER_R);
+	trigMinus.SetButtonOnlyTrigger(-1, WPAD_BUTTON_MINUS | WPAD_CLASSIC_BUTTON_PLUS | WPAD_CLASSIC_BUTTON_FULL_R, PAD_TRIGGER_R);
 	GuiTrigger trigLeft;
 	trigLeft.SetButtonOnlyTrigger(-1, WPAD_BUTTON_LEFT | WPAD_CLASSIC_BUTTON_LEFT | PAD_BUTTON_LEFT, PAD_BUTTON_LEFT);
 	GuiTrigger trigRight;
@@ -569,8 +609,8 @@ static void MenuExecute()
 	GuiImageData PageOverr(page_over_png);
 	GuiImageData BigArrowRightr(bigarrow_right_png);
 	GuiImageData BigArrowLeftr(bigarrow_left_png);
-	GuiImageData SmallArrowRightr(smallarrow_right_png);
-	GuiImageData SmallArrowLeftr(smallarrow_left_png);
+	GuiImageData SmallArrowRight(smallarrow_right_png);
+	GuiImageData SmallArrowLeft(smallarrow_left_png);
 	
 	//Linked Images
 	GuiImage OptionsBG(&OptionsBGr);
@@ -581,8 +621,6 @@ static void MenuExecute()
 	GuiImage PageOver(&PageOverr);
 	GuiImage BigArrowRight(&BigArrowRightr);
 	GuiImage BigArrowLeft(&BigArrowLeftr);
-	GuiImage SmallArrowRight(&SmallArrowRightr);
-	GuiImage SmallArrowLeft(&SmallArrowLeftr);
 	
 	//Static Setup of alignment and positioning
 	OptionsBG.SetAlignment(ALIGN_CENTRE, ALIGN_MIDDLE);
@@ -627,7 +665,7 @@ static void MenuExecute()
 	win.Append(&DisableBtn);
 	win.Append(&ExitBtn);
 	
-	GuiText InfoText("Mounting USB/SD...", 14, (GXColor){255, 255, 255, 255});
+	GuiText InfoText("Mounting SD...", 14, (GXColor){255, 255, 255, 255});
 	InfoText.SetAlignment(ALIGN_CENTRE, ALIGN_MIDDLE);
 	InfoText.SetPosition(0, 0);
 	win.Append(&InfoText);
@@ -678,12 +716,13 @@ static void MenuExecute()
 	pageTitle.SetPosition(0, 74);	
 	
 	//Oh, and the Current Page Text
+	/*
 	GuiText curpageTxt(GameTitle, 14, (GXColor){255, 229, 149, 255});
 	curpageTxt.SetAlignment(ALIGN_CENTRE, ALIGN_TOP);
 	curpageTxt.SetPosition(0, 400);
-	
+	*/
 	vector<PageView*> page;
-	vector<GuiButton*> pageMarker;
+	//vector<GuiButton*> pageMarker;
 	
 	int CurrentPage = 0;
 	GuiWindow PageInfo(640, 480);
@@ -692,6 +731,7 @@ static void MenuExecute()
 	
 	for (int p = 0; p < Sections.size(); p++) {
 		if (Sections.size() > 1) {
+			/*
 			pageMarker.push_back(new GuiButton(12, 12));
 			pageMarker[p]->SetImage(&PageInactive);
 			pageMarker[p]->SetImageOver(&PageOver);
@@ -700,12 +740,13 @@ static void MenuExecute()
 			pageMarker[p]->SetTrigger(&trigA);
 			pageMarker[p]->SetSoundClick(&btnSoundClick);
 			PageInfo.Append(pageMarker[p]);
+			*/
 		}
 		
 		page.push_back(new PageView(&Sections[p], &SmallArrowRight, &SmallArrowLeft, &trigA, &btnSoundOver, &btnSoundClick));
 	}
 	
-	PageInfo.Append(&curpageTxt);
+	//PageInfo.Append(&curpageTxt);
 	if (Sections.size() > 0) {
 		pageTitle.SetText(Sections[CurrentPage].Name.c_str());
 		PageInfo.Append(&pageTitle);
@@ -721,6 +762,7 @@ static void MenuExecute()
 	while (true)
 	{
 		usleep(THREAD_SLEEP);
+		/*
 		for (int ap = 0; ap < pageMarker.size(); ap++) {
 			if (pageMarker[ap]->GetState() == STATE_CLICKED) {
 				pageMarker[ap]->ResetState();
@@ -728,7 +770,7 @@ static void MenuExecute()
 				SET_PAGE(ap);
 			}
 		}
-		
+		*/
 		if (Sections.size() > 0) {
 			//Check to see if the option left/right buttons have been pressed, and change the choice if it has
 			for (int o = 0; o < Sections[CurrentPage].Options(); o++) {
@@ -802,12 +844,13 @@ void MainMenu(int menu)
 	bgMusic->SetVolume(50);
 	bgMusic->SetLoop(true);
 	bgMusic->Play(); // startup music
-	
+
 	MenuExecute();
 
 	ResumeGui();
-	ExitRequested = 1;
-	while(1) usleep(THREAD_SLEEP);
+	ExitRequested = true;
+	while (true)
+		usleep(THREAD_SLEEP);
 
 	HaltGui();
 

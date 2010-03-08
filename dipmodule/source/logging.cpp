@@ -13,8 +13,8 @@
 	#include <network.h>
 	static int LogSocket = -1;
 	#define DEBUG_PORT 1100
-//	#define DEBUG_IPADDRESS "192.168.1.8"
-	#define DEBUG_IPADDRESS "192.168.1.100" // Tempus
+	#define DEBUG_IPADDRESS "192.168.1.8"
+//	#define DEBUG_IPADDRESS "192.168.1.100" // Tempus
 #endif
 #ifdef LOGGING_FILE
 	static int LogFile = -1;
@@ -40,7 +40,8 @@ void LogInit()
 	net_send(LogSocket, "y halo thar mr network\n", 23, 0);
 #endif
 #ifdef LOGGING_FILE
-	LogFile = File_Open("/log.txt", O_CREAT | O_WRONLY | O_TRUNC);
+	File_CreateFile("/log.txt");
+	LogFile = File_Open("/log.txt", O_WRONLY | O_TRUNC);
 	LogPrintf("Super sekrit log file commence!\n");
 #endif
 }

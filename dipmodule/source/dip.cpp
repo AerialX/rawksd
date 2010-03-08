@@ -4,6 +4,46 @@
 #include <print.h>
 
 #include "logging.h"
+#include "../include/dip.h"
+
+#include <gpio.h>
+
+#define FSIOCTL_GETSTATS		2
+#define FSIOCTL_CREATEDIR		3
+#define FSIOCTL_READDIR			4
+#define FSIOCTL_SETATTR			5
+#define FSIOCTL_GETATTR			6
+#define FSIOCTL_DELETE			7
+#define FSIOCTL_RENAME			8
+#define FSIOCTL_CREATEFILE		9
+
+#define ISFS_MAXPATH			64
+
+#define EMU_MODE				0x0F
+
+typedef struct isfs_ioctl
+{
+	union {
+		struct {
+			char filepathOld[ISFS_MAXPATH];
+			char filepathNew[ISFS_MAXPATH];
+		} fsrename;
+		struct {
+			u32 owner_id;
+			u16 group_id;
+			char filepath[ISFS_MAXPATH];
+			u8 ownerperm;
+			u8 groupperm;
+			u8 otherperm;
+			u8 attributes;
+			u8 pad0[2];
+		} fsattr;
+	};
+} isfs_ioctl;
+
+static int FilesystemHook(ipcmessage* message, int* result);
+static s32 DiFd = -1;
+static ipcmessage ProxyMessage;
 
 static const char HEX_CHARS[] = "0123456789abcdef";
 static void IntToHex(char* dest, u32 num, int length)
@@ -20,14 +60,16 @@ struct TemporaryPatch
 };
 
 namespace ProxiIOS { namespace DIP {
-	DIP::DIP() : ProxyModule("/dev/do", "/dev/di")
+	DIP::DIP() : ProxyModule("/dev/di", "/dev/do")
 	{
 		OffsetBase = 0;
 		
 		File_Init();
 		
-		for (int i = 0; i < MAX_OPEN_FILES; i++)
+		for (int i = 0; i < MAX_OPEN_FILES; i++) {
 			OpenFiles[i] = -1;
+			FsFds[i] = 0;
+		}
 		FileCount = 0;
 		PatchCount = 0;
 		ShiftCount = 0;
@@ -45,10 +87,15 @@ namespace ProxiIOS { namespace DIP {
 		Yarr = false;
 		YarrPartitionStream = NULL;
 		YarrStream = NULL;
+		
+		MyFd = 1;
 	}
 	
 	int DIP::HandleOpen(ipcmessage* message)
 	{
+		if (message->open.mode == EMU_MODE) // EMU
+			return 2;
+		
 		int ret = ProxyModule::HandleOpen(message);
 		if (ret < 0)
 			return Errors::OpenProxyFailure;
@@ -85,6 +132,19 @@ namespace ProxiIOS { namespace DIP {
 		}
 
 		return patch;
+	}
+	
+	FsPatch* DIP::FindFsPatch(char* filename)
+	{
+		for (u32 i = 0; i < FsPatchCount; i++) {
+			if (FsPatches[i].Folder) {
+				if (!strncmp(filename, FsPatches[i].Source, strlen(FsPatches[i].Source)))
+					return FsPatches + i;
+			} else if (!strcmp(filename, FsPatches[i].Source))
+					return FsPatches + i;
+		}
+		
+		return null;
 	}
 
 	int DIP::IsFileOpen(s16 fileid)
@@ -183,6 +243,18 @@ namespace ProxiIOS { namespace DIP {
 				}
 				AllocatedShifts += toadd;
 				return true; }
+			case 3: { // FsPatches
+				FsPatch* oldpatches = FsPatches;
+				FsPatches = new FsPatch[AllocatedFsPatches + toadd];
+				if (FsPatches == NULL) {
+					FsPatches = oldpatches;
+					return false;
+				} else if (oldpatches != NULL) {
+					memcpy(FsPatches, oldpatches, sizeof(FsPatch) * FsPatchCount);
+					delete[] oldpatches;
+				}
+				AllocatedFsPatches += toadd;
+				return true; }
 		}
 
 		return false;
@@ -205,7 +277,7 @@ namespace ProxiIOS { namespace DIP {
 				u32 size = message->ioctl.buffer_in[0];
 				u64 originaloffset = *(u64*)&message->ioctl.buffer_in[1];
 				u64 newoffset = *(u64*)&message->ioctl.buffer_in[3];
-
+				
 				Shift shift;
 				shift.Size = size;
 				shift.OriginalOffset = originaloffset >> 2;
@@ -269,13 +341,39 @@ namespace ProxiIOS { namespace DIP {
 				patch.Offset = offset >> 2;
 				patch.Length = length;
 				
-				if (PatchCount == AllocatedPatches) {
+				if (PatchCount == AllocatedPatches)
 					if (!Reallocate(1, 1))
 						return -1;
-				}
 				
 				Patches[PatchCount] = patch;
 				PatchCount++;
+				
+				return 1;
+			}
+			case Ioctl::AddFsPatch: {
+				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
+				
+				FsPatch patch;
+				
+				char* filename = (char*)message->ioctl.buffer_in;
+				patch.Source = new char[strlen(filename)];
+				strcpy(patch.Source, filename);
+				
+				filename = (char*)message->ioctl.buffer_io;
+				patch.Destination = new char[strlen(filename)];
+				strcpy(patch.Destination, filename);
+				
+				if (patch.Source[strlen(patch.Source) - 1] == '/')
+					patch.Folder = 1;
+				else
+					patch.Folder = 0;
+				
+				if (FsPatchCount == AllocatedFsPatches)
+					if (!Reallocate(3, 1))
+						return -1;
+				
+				FsPatches[FsPatchCount] = patch;
+				FsPatchCount++;
 				
 				return 1;
 			}
@@ -295,9 +393,8 @@ namespace ProxiIOS { namespace DIP {
 			case Ioctl::Read: {
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				u32 len = message->ioctl.buffer_in[1];
-				u64 pos = message->ioctl.buffer_in[2];
-				pos <<= 2;
-
+				u64 pos = ((u64)message->ioctl.buffer_in[2]) << 2;
+				
 				int foundshifts = FindShift(pos, len);
 				for (int i = 0; i < foundshifts; i++) {
 					Shift* shift = FoundShifts[i];
@@ -311,7 +408,6 @@ namespace ProxiIOS { namespace DIP {
 				if (foundpatches == 0)
 					return ForwardIoctl(message);
 				
-				int ret = 1;
 				TemporaryPatch patches[MAX_FOUND];
 				bool filecover = false;
 				for (int i = 0; i < foundpatches; i++) {
@@ -331,12 +427,13 @@ namespace ProxiIOS { namespace DIP {
 						filecover = true;
 				}
 				if (!filecover) {
-					ForwardIoctl(message);
+					if (((u32)(pos >> 2)) < 0xA0000000)
+						ForwardIoctl(message);
 					os_sync_before_read(message->ioctl.buffer_io, message->ioctl.length_io);
 				}
 				for (int i = 0; i < foundpatches; i++) {
 					if (!ReadFile(FoundPatches[i]->File, patches[i].FileOffset, (u8*)message->ioctl.buffer_io + patches[i].Offset, patches[i].Length))
-						return -1; // File error
+						return 2; // File error
 				}
 				
 				return 1;
@@ -344,6 +441,19 @@ namespace ProxiIOS { namespace DIP {
 			case Ioctl::ClosePartition:
 				CurrentPartition = 0;
 				return ForwardIoctl(message);
+			case Ioctl::GetFsHook:
+				return (int)FilesystemHook;
+			case Ioctl::HandleFs: {
+				u32* inbuffer = message->ioctl.buffer_in;
+				u32* outbuffer = message->ioctl.buffer_io;
+				u32 insize = message->ioctl.length_in;
+				//u32 outsize = message->ioctl.length_io;
+
+				if (insize)
+					os_sync_before_read(inbuffer, insize);
+				
+				return HandleFsMessage((ipcmessage*)inbuffer, (int*)outbuffer);
+			}
 			default:
 				return ForwardIoctl(message);
 		}
@@ -360,5 +470,154 @@ namespace ProxiIOS { namespace DIP {
 				break;
 		}
 	}
+	
+	#define MAKE_PATH(dest, patch, path) { \
+		if ((patch)->Folder) { \
+			strcpy(dest, (patch)->Destination); \
+			strcat(dest, (path) + strlen((patch)->Source)); \
+		} else \
+			strcpy(dest, (patch)->Destination); \
+	}
+	static char temppath[MAXPATHLEN];
+	static char temppath2[MAXPATHLEN];
+	int DIP::HandleFsMessage(ipcmessage* message, int* ret)
+	{
+		int fd = message->fd - 0x1000;
+		
+		/* TODO: Save fsattr info in filename.attr on SD */
+		if (message->command == ProxiIOS::Ios::Ioctl) {
+			os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
+			isfs_ioctl* ioctl = (isfs_ioctl*)message->ioctl.buffer_in;
+			
+			switch (message->ioctl.command) {
+				case FSIOCTL_CREATEDIR: {
+					FsPatch* patch = FindFsPatch(ioctl->fsattr.filepath);
+					if (patch == null)
+						return false;
+					
+					if (!patch->Folder)
+						return false;
+					
+					MAKE_PATH(temppath, patch, ioctl->fsattr.filepath);
+					File_CreateDir(temppath);
+					
+					*ret = 1;
+					return true; }
+				case FSIOCTL_CREATEFILE: {
+					FsPatch* patch = FindFsPatch(ioctl->fsattr.filepath);
+					if (patch == null)
+						return false;
+					
+					MAKE_PATH(temppath, patch, ioctl->fsattr.filepath);
+					File_CreateFile(temppath);
+					
+					*ret = 1;
+					return true; }
+				case FSIOCTL_DELETE: {
+					FsPatch* patch = FindFsPatch((char*)message->ioctl.buffer_in);
+					if (patch == null)
+						return false;
+					
+					MAKE_PATH(temppath, patch, (char*)message->ioctl.buffer_in);
+					File_Delete(temppath);
+					
+					*ret = 1;
+					return true; }
+				case FSIOCTL_SETATTR: case FSIOCTL_GETATTR: {
+					FsPatch* patch = FindFsPatch(ioctl->fsattr.filepath);
+					if (patch == null)
+						return false;
+					
+					*ret = 1;
+					return true; }
+				case FSIOCTL_RENAME: {
+					FsPatch* patch1 = FindFsPatch(ioctl->fsrename.filepathOld);
+					FsPatch* patch2 = FindFsPatch(ioctl->fsrename.filepathNew);
+					if (patch1 == null || patch2 == null) // Don't support cross-filesystem file moving
+						return false;
+					
+					MAKE_PATH(temppath, patch1, ioctl->fsrename.filepathOld);
+					MAKE_PATH(temppath2, patch2, ioctl->fsrename.filepathNew);
+					
+					File_Rename(temppath, temppath2);
+					
+					*ret = 1;
+					return true; }
+				case FSIOCTL_GETSTATS:
+				case FSIOCTL_READDIR:
+				default:
+					break;
+			}
+		}
+		
+		if ((fd < 0 || fd >= MAX_OPEN_FILES) && message->command != ProxiIOS::Ios::Open)
+			return false;
+			
+		switch (message->command) {
+			case ProxiIOS::Ios::Open: {
+				u32 mode = message->open.mode;
+				if (mode > 0)
+					mode--; // change ISFS_READ|ISFS_WRITE to O_RDONLY|O_WRONLY|O_RDWR
+				
+				FsPatch* patch = FindFsPatch(message->open.device);
+				if (patch == null)
+					return false;
+				
+				for (fd = 0; FsFds[fd] != 0 && fd < MAX_OPEN_FILES; fd++)
+					;
+				if (fd >= MAX_OPEN_FILES)
+					return false;
+				
+				MAKE_PATH(temppath, patch, message->open.device);
+				FsFds[fd] = File_Open(temppath, mode);
+				
+				if (FsFds[fd] <= 0)
+					*ret = -1;
+				else
+					*ret = 0x1000 + fd;
+				return true;
+			}
+			case ProxiIOS::Ios::Close:
+				*ret = 0;
+				if (FsFds[fd] == 0)
+					*ret = -1;
+				else
+					File_Close(FsFds[fd]);
+				FsFds[fd] = 0;
+				return true;
+			case ProxiIOS::Ios::Read:
+				*ret = File_Read(FsFds[fd], (u8*)message->read.data, message->read.length);
+				os_sync_after_write(message->read.data, message->read.length);
+				return true;
+			case ProxiIOS::Ios::Write:
+				os_sync_before_read(message->write.data, message->write.length);
+				*ret = File_Write(FsFds[fd], (u8*)message->write.data, message->write.length);
+				return true;
+			case ProxiIOS::Ios::Seek:
+				*ret = File_Seek(FsFds[fd], message->seek.offset, message->seek.origin);
+				return true;
+			default:
+				return false;
+		}
 
+		return false;
+	}
 } }
+
+static int FilesystemHook(ipcmessage* message, int* result)
+{
+	if (message) {
+		if (DiFd < 0)
+			DiFd = os_open("/dev/di", EMU_MODE);
+
+		if (DiFd >= 0) {
+			memcpy(&ProxyMessage, message, sizeof(ipcmessage));
+			os_sync_after_write(&ProxyMessage, sizeof(ipcmessage));
+			int ret = os_ioctl(DiFd, ProxiIOS::DIP::Ioctl::HandleFs, &ProxyMessage, sizeof(ipcmessage), result, result ? sizeof(int) : 0);
+			
+			return ret;
+		}
+	}
+	
+	return false;
+}

@@ -5,7 +5,7 @@ static char DeviceName[] __attribute__ ((aligned (32))) = "emu";
 static u32 bins_titleid = 0;
 static u8 bins[512]; // Yeah yeah, a bitfield can come later
 
-static u8 Heapspace[0xa000] __attribute__ ((aligned (32)));
+static u8 Heapspace[0x8000] __attribute__ ((aligned (32)));
 static void* Queue;
 static u32 QueueHandle;
 static s32 EmuFd = -1;

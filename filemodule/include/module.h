@@ -62,7 +62,8 @@ namespace ProxiIOS { namespace Filesystem {
 			NTFS			= 0x03,
 			Ext2			= 0x04,
 			SMB				= 0x05,
-			ISFS			= 0x06
+			ISFS			= 0x06,
+			RiiFS			= 0x07
 		};
 	}
 	

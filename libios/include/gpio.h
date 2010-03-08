@@ -14,9 +14,17 @@
 #define GPIO_IDISC 			0x80
 #define GPIO_OEJECT 		0x200
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void gpio_set_on(u32 flag);
 void gpio_set_off(u32 flag);
 void gpio_set_toggle(u32 flag);
 bool gpio_get(u32 flag);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
