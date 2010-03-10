@@ -10,8 +10,11 @@
 #include <files.h>
 #include <malloc.h>
 
-#define MYIP "192.168.1.113"
-#define MYPORT 1137
+using std::vector;
+
+#define RIIFS_MYIP "192.168.1.113"
+#define RIIFS_SERVERIP "67.214.140.23"
+#define RIIFS_PORT 1137
 
 #define printf(...)
 
@@ -54,30 +57,31 @@ int Haxx_Init()
 }
 
 #define DEFAULT() if (!hasdefault) { ret = File_SetDefault(ret); if (ret >= 0) hasdefault = true; }
-List<int> Haxx_Mount()
+vector<int> Haxx_Mount()
 {
-	List<int> list;
+	vector<int> list;
 	int fd = File_Init();
 	if (fd < 0)
 		return list;
 
 	bool hasdefault = false;
 	int ret;
-/*
-	ret = File_RiiFS_Mount(MYIP, MYPORT);
-	if (ret >= 0) {
-		list.Add(ret);
-		DEFAULT();
-	}
-*/
+
 	ret = File_Fat_Mount(SD_DISK, "sd");
 	if (ret >= 0) {
-		list.Add(ret);
+		list.push_back(ret);
 		DEFAULT();
 	}
+
 	ret = File_Fat_Mount(USB_DISK, "usb");
 	if (ret >= 0) {
-		list.Add(ret);
+		list.push_back(ret);
+		DEFAULT();
+	}
+
+	ret = File_RiiFS_Mount(RIIFS_SERVERIP, RIIFS_PORT);
+	if (ret >= 0) {
+		list.push_back(ret);
 		DEFAULT();
 	}
 

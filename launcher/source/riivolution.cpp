@@ -5,6 +5,8 @@
 
 #include <unistd.h>
 
+#include <wdvd.h>
+
 #define OPEN_MODE_BYPASS 0x80
 
 static int fd = -1;
@@ -14,13 +16,16 @@ static u64 shift = 0;
 static u32 fstsize;
 
 using std::string;
+using std::map;
+using std::vector;
 
 namespace Ioctl { enum Enum {
 	AddFile			= 0xC1,
 	AddPatch		= 0xC2,
 	AddShift		= 0xC3,
 	SetClusters		= 0xC4,
-	Allocate		= 0xC5
+	Allocate		= 0xC5,
+	AddEmu			= 0xC6
 }; }
 
 int RVL_Initialize()
@@ -36,6 +41,11 @@ void RVL_Close()
 	if (fd < 0)
 		return;
 	IOS_Close(fd);
+}
+
+void* RVL_GetFST()
+{
+	return fst;
 }
 
 void RVL_SetFST(void* address, u32 size)
@@ -99,6 +109,11 @@ int RVL_AddPatch(int file, u64 offset, u32 fileoffset, u32 length)
 	return IOS_Ioctl(fd, Ioctl::AddPatch, command, 0x20, NULL, 0);
 }
 
+int RVL_AddEmu(const char* nandpath, const char* external)
+{
+	return IOS_Ioctl(fd, Ioctl::AddEmu, (void*)nandpath, strlen(nandpath) + 1, (void*)external, strlen(external) + 1);
+}
+
 #define ROUND_UP(p, round) \
 	((p + round - 1) & ~(round - 1))
 
@@ -112,7 +127,7 @@ u64 RVL_GetShiftOffset(u32 length)
 #define REFRESH_PATH() { \
 	strcpy(curpath, "/"); \
 	if (nodes.size() > 1) \
-		for (DiscNode** iter = nodes.Data() + 1; iter != nodes.End(); iter++) { \
+		for (DiscNode** iter = nodes.begin() + 1; iter != nodes.end(); iter++) { \
 			strcat(curpath, nametable + (*iter)->GetNameOffset()); \
 			strcat(curpath, "/"); \
 		} \
@@ -185,13 +200,14 @@ DiscNode* RVL_FindNode(const char* fstname)
 	strcpy(name, fstname + 1);
 
 	DiscNode* root = fst;
+
 	while (root) {
 		char* slash = strchr(name, '/');
 		if (!slash)
-			return RVL_FindNode(name, root, false);
+			return RVL_FindNode(name, root + 1, false);
 
 		*slash = '\0';
-		root = RVL_FindNode(name, root, false);
+		root = RVL_FindNode(name, root + 1, false);
 		name = slash + 1;
 	}
 
@@ -223,6 +239,7 @@ static void RVL_Patch(RiiFilePatch* file, bool stat, u64 externalid, string comm
 	if (!node) {
 		if (file->Create) {
 			// TODO: Add FST entries
+			return;
 		} else
 			return;
 	}
@@ -231,10 +248,10 @@ static void RVL_Patch(RiiFilePatch* file, bool stat, u64 externalid, string comm
 	if (commonfs.size() && !commonfs.compare(0, commonfs.size(), external))
 		external = external.substr(commonfs.size());
 
-	if (file->Length == 0) {
+	if (!stat && file->Length == 0) {
 		Stats st;
 		if (File_Stat(external.c_str(), &st) == 0) {
-			file->Length = st.Size;
+			file->Length = st.Size - file->FileOffset;
 			stat = true;
 			externalid = st.Identifier;
 		} else
@@ -262,8 +279,7 @@ static void RVL_Patch(RiiFilePatch* file, bool stat, u64 externalid, string comm
 			ShiftFST(node);
 
 		RVL_AddPatch(fd, ((u64)node->DataOffset << 2) + file->Offset, file->FileOffset, file->Length);
-	} else
-		exit(0);
+	}
 }
 
 static void RVL_Patch(RiiFilePatch* file, string commonfs)
@@ -279,12 +295,14 @@ static void RVL_Patch(RiiFolderPatch* folder, string commonfs)
 
 	char fdirname[MAXPATHLEN];
 	int fdir = File_OpenDir(external.c_str());
+	if (fdir < 0)
+		return;
 	Stats stats;
 	while (!File_NextDir(fdir, fdirname, &stats)) {
 		if (fdirname[0] == '.')
 			continue;
 		if (stats.Mode & S_IFDIR) {
-			if (folder->Recursive) {
+			if (folder->Recursive){
 				RiiFolderPatch newfolder = *folder;
 				newfolder.Disc = PathCombine(newfolder.Disc, fdirname);
 				newfolder.External = PathCombine(external, fdirname);
@@ -305,41 +323,52 @@ static void RVL_Patch(RiiFolderPatch* folder, string commonfs)
 	File_CloseDir(fdir);
 }
 
-static void RVL_Patch(RiiSavegamePatch* save)
+static void RVL_Patch(RiiSavegamePatch* save, string commonfs)
 {
-	// TODO: This
+	string external = save->External;
+	if (commonfs.size() && !commonfs.compare(0, commonfs.size(), external))
+		external = external.substr(commonfs.size());
+
+	char nandpath[0x40];
+	sprintf(nandpath, "/title/%08x/%08x/data", (int)(WDVD_GetTMD()->title_id >> 32), (int)WDVD_GetTMD()->title_id);
+	RVL_AddEmu(nandpath, external.c_str());
 }
 
-static void ApplyParams(std::string* str, Map<string, string>* params)
+static void ApplyParams(std::string* str, map<string, string>* params)
 {
 	bool found = false;
 	string::size_type pos;
 	while ((pos = str->find("{$")) != string::npos) {
 		string::size_type pend = str->find("}", pos);
-		string param = str->substr(pos + 2, pend - pos - 2);
-		*str = str->substr(0, pos) + (*params)[param] + str->substr(pend + 1);
+		string paramname = str->substr(pos + 2, pend - pos - 2);
+		map<string, string>::iterator param = params->find(paramname);
+		if (param == params->end())
+			paramname = "";
+		else
+			paramname = param->second;
+		*str = str->substr(0, pos) + paramname + str->substr(pend + 1);
 		found = true;
 	}
 }
 
-static void RVL_Patch(RiiPatch* patch, Map<string, string>* params, string commonfs)
+static void RVL_Patch(RiiPatch* patch, map<string, string>* params, string commonfs)
 {
-	for (RiiFilePatch* file = patch->Files.Data(); file != patch->Files.End(); file++) {
+	for (vector<RiiFilePatch>::iterator file = patch->Files.begin(); file != patch->Files.end(); file++) {
 		RiiFilePatch temp = *file;
 		ApplyParams(&temp.External, params);
 		ApplyParams(&temp.Disc, params);
 		RVL_Patch(&temp, commonfs);
 	}
-	for (RiiFolderPatch* folder = patch->Folders.Data(); folder != patch->Folders.End(); folder++) {
+	for (vector<RiiFolderPatch>::iterator folder = patch->Folders.begin(); folder != patch->Folders.end(); folder++) {
 		RiiFolderPatch temp = *folder;
 		ApplyParams(&temp.External, params);
 		ApplyParams(&temp.Disc, params);
 		RVL_Patch(&temp, commonfs);
 	}
-	for (RiiSavegamePatch* save = patch->Savegames.Data(); save != patch->Savegames.End(); save++) {
+	for (vector<RiiSavegamePatch>::iterator save = patch->Savegames.begin(); save != patch->Savegames.end(); save++) {
 		RiiSavegamePatch temp = *save;
 		ApplyParams(&temp.External, params);
-		RVL_Patch(&temp);
+		RVL_Patch(&temp, commonfs);
 	}
 }
 
@@ -347,41 +376,51 @@ void RVL_Patch(RiiDisc* disc)
 {
 	// Search for a common filesystem so we can optimize memory
 	string filesystem;
-	for (RiiSection* section = disc->Sections.Data(); section != disc->Sections.End(); section++) {
-			for (RiiOption* option = section->Options.Data(); option != section->Options.End(); option++) {
-				if (option->Default == 0)
-					continue;
-				RiiChoice* choice = &option->Choices[option->Default - 1];
-				if (!filesystem.size())
-					filesystem = choice->Filesystem;
-				else if (!filesystem.compare(choice->Filesystem)) {
-					filesystem = string();
-					goto no_common_fs;
-				}
+	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
+		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
+			if (option->Default == 0)
+				continue;
+			RiiChoice* choice = &option->Choices[option->Default - 1];
+			if (!filesystem.size()) {
+				filesystem = choice->Filesystem;
 			}
+			else if (filesystem != choice->Filesystem) {
+				filesystem = string();
+				goto no_common_fs;
+			}
+		}
 	}
 no_common_fs:
 
 	if (filesystem.size()) {
 		File_SetDefaultPath(filesystem.c_str());
 		RVL_SetClusters(true);
-	}
+	} else
+		RVL_SetClusters(false);
 
-	for (RiiSection* section = disc->Sections.Data(); section != disc->Sections.End(); section++) {
-		for (RiiOption* option = section->Options.Data(); option != section->Options.End(); option++) {
+	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
+		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
 			if (option->Default == 0)
 				continue;
-			Map<string, string> params;
-			params.Add(option->Params.Data(), option->Params.Size());
+			map<string, string> params;
+			params.insert(option->Params.begin(), option->Params.end());
 			RiiChoice* choice = &option->Choices[option->Default - 1];
-			params.Add(choice->Params.Data(), choice->Params.Size());
-			int end = params.Size();
-			for (RiiChoice::Patch* patch = choice->Patches.Data(); patch != choice->Patches.End(); patch++) {
-				params.Add(patch->Params.Data(), patch->Params.Size());
+			params.insert(choice->Params.begin(), choice->Params.end());
+			u32 end = params.size();
+			for (vector<RiiChoice::Patch>::iterator patch = choice->Patches.begin(); patch != choice->Patches.end(); patch++) {
+				map<string, RiiPatch>::iterator currentpatch = disc->Patches.find(patch->ID);
+				if (currentpatch != disc->Patches.end()) {
+					params.insert(patch->Params.begin(), patch->Params.end());
 
-				RVL_Patch(&disc->Patches[patch->ID], &params, filesystem);
+					RVL_Patch(&currentpatch->second, &params, filesystem);
 
-				params.Delete(params.Data() + end, patch->Params.End());
+					if (patch->Params.size()) {
+						map<string, string>::iterator endi = params.begin();
+						for (u32 i = 0; i < end; i++) // Fucking iterator needs operator+()
+							endi++;
+						params.erase(endi, patch->Params.end());
+					}
+				}
 			}
 		}
 	}
@@ -397,15 +436,15 @@ static void RVL_Patch(RiiMemoryPatch* memory)
 
 void RVL_PatchMemory(RiiDisc* disc)
 {
-	for (RiiSection* section = disc->Sections.Data(); section != disc->Sections.End(); section++) {
-		for (RiiOption* option = section->Options.Data(); option != section->Options.End(); option++) {
+	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
+		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
 			if (option->Default == 0)
 				continue;
 			RiiChoice* choice = &option->Choices[option->Default - 1];
-			for (RiiChoice::Patch* patch = choice->Patches.Data(); patch != choice->Patches.End(); patch++) {
+			for (vector<RiiChoice::Patch>::iterator patch = choice->Patches.begin(); patch != choice->Patches.end(); patch++) {
 				RiiPatch* mem = &disc->Patches[patch->ID];
-				for (RiiMemoryPatch* memory = mem->Memory.Data(); memory != mem->Memory.End(); memory++) {
-					RVL_Patch(memory);
+				for (vector<RiiMemoryPatch>::iterator memory = mem->Memory.begin(); memory != mem->Memory.end(); memory++) {
+					RVL_Patch(&*memory);
 				}
 			}
 		}

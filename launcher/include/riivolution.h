@@ -25,6 +25,7 @@ namespace PatchType { enum Enum {
 int RVL_Initialize();
 void RVL_Close();
 void RVL_SetFST(void* address, u32 size);
+void* RVL_GetFST();
 int RVL_SetClusters(bool clusters);
 void RVL_SetAlwaysShift(bool shift);
 int RVL_Allocate(PatchType::Enum type, int num);
@@ -32,6 +33,7 @@ int RVL_AddFile(const char* filename);
 int RVL_AddFile(const char* filename, u64 identifier);
 int RVL_AddShift(u64 original, u64 offset, u32 length);
 int RVL_AddPatch(int file, u64 offset, u32 fileoffset, u32 length);
+int RVL_AddEmu(const char* nandpath, const char* external);
 
 u64 RVL_GetShiftOffset(u32 length);
 DiscNode* RVL_FindNode(const char* fstname);

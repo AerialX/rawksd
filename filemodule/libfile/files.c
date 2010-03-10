@@ -188,8 +188,8 @@ int File_NextDir(int dir, char* path, Stats* st)
 	ioctlvbuffer[2].len = sizeof(Stats);
 	os_sync_after_write(ioctlvbuffer, sizeof(ioctlvbuffer));
 	ret = os_ioctlv(file_fd, IOCTL_NextDir, 1, 2, ioctlvbuffer);
-	for (u32 i = 1; i < 3; i++)
-		os_sync_before_read(ioctlvbuffer[i].data, ioctlvbuffer[i].len);
+	os_sync_before_read(path, MAXPATHLEN);
+	os_sync_before_read(st, sizeof(Stats));
 
 	return ret;
 }

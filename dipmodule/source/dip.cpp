@@ -128,6 +128,9 @@ namespace ProxiIOS { namespace DIP {
 				
 				return AddPatch(PatchType::File, &file);
 			}
+			case Ioctl::AddEmu: {
+				return -1;
+			}
 			case Ioctl::SetClusters:
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				Clusters = message->ioctl.buffer_in[0];

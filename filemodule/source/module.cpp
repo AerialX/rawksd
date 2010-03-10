@@ -107,8 +107,10 @@ namespace ProxiIOS { namespace Filesystem {
 
 				int ret = system->Unmount();
 
-				if (ret >= 0)
+				if (ret >= 0) {
 					delete system;
+					Mounted[index] = null;
+				}
 				return ret;
 			}
 			case Ioctl::GetMountPoint: {
@@ -197,7 +199,8 @@ namespace ProxiIOS { namespace Filesystem {
 					return -1;
 				FileInfo* dir = (FileInfo*)((u32*)message->ioctlv.vector[0].data)[0];
 				int ret = dir->System->NextDir(dir, (char*)message->ioctlv.vector[1].data, (Stats*)message->ioctlv.vector[2].data);
-				os_sync_after_write(message->ioctlv.vector[1].data, message->ioctlv.vector[1].len);
+				//os_sync_after_write(message->ioctlv.vector[1].data, message->ioctlv.vector[1].len);
+				os_sync_after_write(message->ioctlv.vector[1].data, MAXPATHLEN);
 				os_sync_after_write(message->ioctlv.vector[2].data, message->ioctlv.vector[2].len);
 				return ret; }
 			default:

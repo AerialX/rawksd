@@ -636,7 +636,6 @@ s32 net_recvfrom(s32 s, void *mem, s32 len, u32 flags, struct sockaddr *from, so
 
 	if (fromlen)
 		os_sync_after_write(from, *fromlen);
-	os_sync_after_write(message_buf, len);
 	os_sync_after_write(params, sizeof(u32) * 2);
 
 	vec[0].data = params;
@@ -659,8 +658,10 @@ s32 net_recvfrom(s32 s, void *mem, s32 len, u32 flags, struct sockaddr *from, so
 		//os_sync_before_read(message_buf, ret);
 		os_sync_after_write(message_buf, ret);
 
-		if (mem != message_buf)
+		if (mem != message_buf) {
 			memcpy(mem, message_buf, ret);
+			os_sync_after_write(mem, ret);
+		}
 	}
 
 	if (fromlen && from) *fromlen = from->sa_len;

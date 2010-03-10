@@ -6,7 +6,8 @@
 #include <unistd.h>
 #include <files.h>
 
-#include "mystl.h"
+#include <vector>
+using std::vector;
 
 /*
 #define OPTIONS_PER_PAGE 15
@@ -23,11 +24,11 @@ using std::string;
 
 struct Page {
 	string Name;
-	List<RiiOption*> Options;
+	vector<RiiOption*> Options;
 };
 
 static RiiDisc Disc;
-static List<Page> Pages;
+static vector<Page> Pages;
 
 extern "C" {
 	extern u8 arrow_left_png[];
@@ -76,7 +77,7 @@ struct PageViewer {
 		RightArrowImageData = new GuiImageData(arrow_right_png);
 		RightArrowOverImageData = new GuiImageData(arrow_active_right_png);
 
-		if (Pages.Size() > 1) {
+		if (Pages.size() > 1) {
 			PageText = new GuiText("Page", 18, (GXColor){0, 0, 0, 255});
 			PageText->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 			PageText->SetPosition(352, 48);
@@ -111,13 +112,13 @@ struct PageViewer {
 			Window->Append(RightButton);
 		}
 
-		if (Pages.Size())
+		if (Pages.size())
 			SetPage(0);
 	}
 
 	~PageViewer()
 	{
-		if (Pages.Size() > 1) {
+		if (Pages.size() > 1) {
 			Window->Remove(RightButton);
 			Window->Remove(LeftButton);
 			Window->Remove(PageText);
@@ -142,7 +143,7 @@ struct PageViewer {
 
 	const char* GetChoiceText(RiiOption* option)
 	{
-		if (option->Default > option->Choices.Size())
+		if (option->Default > option->Choices.size())
 			option->Default = 0; // NOTE: Should this really happen here? Probably not
 
 		if (option->Default == 0)
@@ -158,7 +159,7 @@ struct PageViewer {
 
 		HaltGui();
 
-		for (u32 i = 0; i < Current->Options.Size(); i++) {
+		for (u32 i = 0; i < Current->Options.size(); i++) {
 			Window->Remove(Title[i]);
 			Window->Remove(Choice[i]);
 			Window->Remove(LeftArrow[i]);
@@ -196,7 +197,7 @@ struct PageViewer {
 	{
 		CleanPage();
 
-		if (page >= Pages.Size())
+		if (page >= Pages.size())
 			return;
 
 		HaltGui();
@@ -206,13 +207,13 @@ struct PageViewer {
 
 		Subtitle->SetText(Current->Name.c_str());
 
-		if (Pages.Size() > 1) {
+		if (Pages.size() > 1) {
 			char pagenum[0x10];
 			sprintf(pagenum, "%d", PageNumber + 1);
 			PageNumberText->SetText(pagenum);
 		}
 
-		int options = Current->Options.Size();
+		int options = Current->Options.size();
 		Title = new GuiText*[options];
 		ChoiceText = new GuiText*[options];
 		ChoiceOverText = new GuiText*[options];
@@ -226,7 +227,7 @@ struct PageViewer {
 
 
 		u32 i = 0;
-		for (RiiOption** iter = Current->Options.Data(); iter != Current->Options.End(); iter++, i++) {
+		for (vector<RiiOption*>::iterator iter = Current->Options.begin(); iter != Current->Options.end(); iter++, i++) {
 			int y = 112 + i * OPTION_FONT_HEIGHT;
 			RiiOption* option = *iter;
 
@@ -277,36 +278,36 @@ struct PageViewer {
 
 	void Update()
 	{
-		if (Pages.Size() > 1) {
+		if (Pages.size() > 1) {
 			if (LeftButton->GetState() == STATE_CLICKED) {
 				LeftButton->ResetState();
-				SetPage(Wrap(PageNumber - 1, Pages.Size()));
+				SetPage(Wrap(PageNumber - 1, Pages.size()));
 			}
 			if (RightButton->GetState() == STATE_CLICKED) {
 				RightButton->ResetState();
-				SetPage(Wrap(PageNumber + 1, Pages.Size()));
+				SetPage(Wrap(PageNumber + 1, Pages.size()));
 			}
 		}
 
 		if (!Current)
 			return;
 
-		for (u32 i = 0; i < Current->Options.Size(); i++) {
+		for (u32 i = 0; i < Current->Options.size(); i++) {
 			if (RightArrow[i]->GetState() == STATE_CLICKED || Choice[i]->GetState() == STATE_CLICKED) {
 				RightArrow[i]->ResetState();
 				Choice[i]->ResetState();
-				SetOption(i, Current->Options[i], Wrap(Current->Options[i]->Default + 1, Current->Options[i]->Choices.Size() + 1));
+				SetOption(i, Current->Options[i], Wrap(Current->Options[i]->Default + 1, Current->Options[i]->Choices.size() + 1));
 			}
 			if (LeftArrow[i]->GetState() == STATE_CLICKED) {
 				LeftArrow[i]->ResetState();
-				SetOption(i, Current->Options[i], Wrap(Current->Options[i]->Default - 1, Current->Options[i]->Choices.Size() + 1));
+				SetOption(i, Current->Options[i], Wrap(Current->Options[i]->Default - 1, Current->Options[i]->Choices.size() + 1));
 			}
 		}
 	}
 
 	void SetOption(int index, RiiOption* option, u32 choice)
 	{
-		if (choice >= option->Choices.Size() + 1)
+		if (choice >= option->Choices.size() + 1)
 			return;
 
 		option->Default = choice;
@@ -342,17 +343,19 @@ Menus::Enum MenuInit()
 	buttons.GetButton(0)->SetTrigger(&Trigger[Triggers::Home]);
 	ResumeGui();
 
-	List<int> mounted;
+	vector<int> mounted;
 	do {
 		mounted = Haxx_Mount();
-		if (!mounted.Size())
+		if (!mounted.size()) {
+			HaltGui();
 			Subtitle->SetText("No SD/USB Mounted");
+			ResumeGui();
+		}
 
 		MENUINIT_CHECKBUTTONS();
-	} while (!mounted.Size());
+	} while (!mounted.size());
 
 	RVL_Initialize();
-	RVL_SetClusters(true);
 
 	LauncherStatus::Enum status;
 
@@ -389,8 +392,8 @@ Menus::Enum MenuInit()
 
 	Title->SetText(Launcher_GetGameName());
 
-	List<RiiDisc> discs;
-	for (int* mount = mounted.Data(); mount != mounted.End(); mount++) {
+	vector<RiiDisc> discs;
+	for (vector<int>::iterator mount = mounted.begin(); mount != mounted.end(); mount++) {
 		char mountpoint[MAXPATHLEN];
 		char mountpath[MAXPATHLEN];
 		if (File_GetMountPoint(*mount, mountpoint, sizeof(mountpoint)) < 0)
@@ -401,6 +404,12 @@ Menus::Enum MenuInit()
 	}
 	Disc = CombineDiscs(&discs);
 	ParseConfigXMLs(&Disc);
+
+	if (Launcher_RVL() < 0)
+		return Menus::Exit;
+
+	Title->SetText(Launcher_GetGameName());
+
 	MENUINIT_CHECKBUTTONS();
 
 	return Menus::Main;
@@ -413,25 +422,25 @@ Menus::Enum MenuInit()
 
 static void PreparePages()
 {
-	Pages.Clear();
-	for (RiiSection* section = Disc.Sections.Data(); section != Disc.Sections.End(); section++) {
+	Pages.clear();
+	for (vector<RiiSection>::iterator section = Disc.Sections.begin(); section != Disc.Sections.end(); section++) {
 		Page page;
 		int pagenum = 1;
-		for (RiiOption* option = section->Options.Data(); option != section->Options.End(); option++) {
-			if (page.Options.Size() == OPTIONS_PER_PAGE) {
+		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
+			if (page.Options.size() == OPTIONS_PER_PAGE) {
 				PAGENUM(page, pagenum++);
-				Pages.Add(page);
+				Pages.push_back(page);
 				page = Page();
 			}
 
-			page.Options.Add(option);
+			page.Options.push_back(&*option);
 		}
 
 		if (pagenum > 1) {
 			PAGENUM(page, pagenum);
 		} else
 			page.Name = section->Name;
-		Pages.Add(page);
+		Pages.push_back(page);
 	}
 }
 
@@ -470,8 +479,6 @@ Menus::Enum MenuLaunch()
 
 	SaveConfigXML(&Disc);
 
-	if (Launcher_RVL() < 0)
-		return Menus::Exit;
 	RVL_Patch(&Disc);
 
 	// Launcher_CommitRVL(true); // TODO: CommitRVL properly?
@@ -483,6 +490,8 @@ Menus::Enum MenuLaunch()
 	Launcher_CommitRVL(false);
 
 	RVL_PatchMemory(&Disc);
+
+	Launcher_AddPlaytimeEntry();
 
 	Launcher_Launch();
 

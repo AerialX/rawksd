@@ -41,6 +41,7 @@ namespace ProxiIOS { namespace DIP {
 			AddShift		= 0xC3,
 			SetClusters		= 0xC4,
 			Allocate		= 0xC5,
+			AddEmu			= 0xC6,
 			
 			// Ioctlv
 			OpenPartition	= 0x8B

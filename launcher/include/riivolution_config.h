@@ -1,27 +1,28 @@
 #pragma once
 
 #include "riivolution.h"
-#include "mystl.h"
 
 #include <string>
+#include <map>
+#include <vector>
 
 #define RIIVOLUTION_PATH "/riivolution/"
 
 struct RiiMacro {
 	std::string Name;
 	std::string ID;
-	Map<std::string, std::string> Params;
+	std::map<std::string, std::string> Params;
 };
 
 struct RiiChoice {
 	struct Patch {
 		std::string ID;
-		Map<std::string, std::string> Params;
+		std::map<std::string, std::string> Params;
 	};
 	std::string Name;
 	std::string ID;
-	Map<std::string, std::string> Params;
-	List<Patch> Patches;
+	std::map<std::string, std::string> Params;
+	std::vector<Patch> Patches;
 	std::string Filesystem;
 };
 
@@ -29,14 +30,14 @@ struct RiiOption {
 	std::string Name;
 	std::string ID;
 	u32 Default;
-	Map<std::string, std::string> Params;
-	List<RiiChoice> Choices;
+	std::map<std::string, std::string> Params;
+	std::vector<RiiChoice> Choices;
 };
 
 struct RiiSection {
 	std::string Name;
 	std::string ID;
-	List<RiiOption> Options;
+	std::vector<RiiOption> Options;
 };
 
 struct RiiFilePatch {
@@ -90,28 +91,23 @@ struct RiiMemoryPatch {
 };
 
 struct RiiPatch {
-	List<RiiFilePatch> Files;
-	List<RiiFolderPatch> Folders;
-	List<RiiShiftPatch> Shifts;
-	List<RiiMemoryPatch> Memory;
-	List<RiiSavegamePatch> Savegames;
+	std::vector<RiiFilePatch> Files;
+	std::vector<RiiFolderPatch> Folders;
+	std::vector<RiiShiftPatch> Shifts;
+	std::vector<RiiMemoryPatch> Memory;
+	std::vector<RiiSavegamePatch> Savegames;
 };
 
 struct RiiDisc
 {
-	List<RiiMacro> Macros;
-	List<RiiSection> Sections;
-	Map<std::string, RiiPatch> Patches;
+	std::vector<RiiMacro> Macros;
+	std::vector<RiiSection> Sections;
+	std::map<std::string, RiiPatch> Patches;
 };
 
-struct RiiConfig
-{
-	Map<std::string, int> Defaults;
-};
-
-void ParseXMLs(const char* rootpath, const char* rootfs, List<RiiDisc>* discs);
+void ParseXMLs(const char* rootpath, const char* rootfs, std::vector<RiiDisc>* discs);
 bool ParseXML(const char* xmldata, int length, RiiDisc* disc, const char* rootpath, const char* rootfs);
-RiiDisc CombineDiscs(List<RiiDisc>* discs);
+RiiDisc CombineDiscs(std::vector<RiiDisc>* discs);
 void ParseConfigXMLs(RiiDisc* disc);
 bool ParseConfigXML(const char* xmldata, int length, RiiDisc* disc);
 void SaveConfigXML(RiiDisc* disc);

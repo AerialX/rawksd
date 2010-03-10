@@ -2,6 +2,8 @@
 #include "launcher.h"
 
 using std::string;
+using std::vector;
+using std::map;
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -26,6 +28,26 @@ static s64 ELEMENT_INT(string str)
 		return strtoll(str.c_str(), NULL, 10);
 	else
 		return strtoll(str.c_str() + 2, NULL, 16);
+}
+
+static void HexToBytes(void* mem, const char* source)
+{
+	if (!strncmp(source, "0x", 2)) // For compatibility with the old format
+		source += 2;
+
+	u8* dest = (u8*)mem;
+	bool mod = true;
+    while (*source) {
+    	u8 chr = *source - ((*source > '9') ? ('a' - 10) : '0');
+    	if (mod)
+    		*dest = chr << 4;
+    	else {
+    		*dest = *dest | (chr & 0x0F);
+    		dest++;
+    	}
+    	mod = !mod;
+    	source++;
+    }
 }
 
 string PathCombine(string path, string file)
@@ -161,7 +183,7 @@ versionisvalid:
 						ELEMENT_PARAM(macro.Params);
 					}
 
-					disc->Macros.Add(macro);
+					disc->Macros.push_back(macro);
 				}
 
 				ELEMENT_START("section") {
@@ -223,19 +245,19 @@ versionisvalid:
 
 												ELEMENT_PARAM(patch.Params);
 											}
-											choice.Patches.Add(patch);
+											choice.Patches.push_back(patch);
 										}
 									}
 
-									option.Choices.Add(choice);
+									option.Choices.push_back(choice);
 								} // </choice>
 							}
 
-							section.Options.Add(option);
+							section.Options.push_back(option);
 						} // </option>
 					}
 
-					disc->Sections.Add(section);
+					disc->Sections.push_back(section);
 				} // </section>
 			}
 		} // </options>
@@ -270,15 +292,15 @@ versionisvalid:
 					ELEMENT_ATTRIBUTE("length", true)
 						file.Length = ELEMENT_INT(attribute);
 
-					patch.Files.Add(file);
+					patch.Files.push_back(file);
 				}
 
 				ELEMENT_START("folder") {
 					RiiFolderPatch folder;
 					ELEMENT_ATTRIBUTE("create", true)
 						folder.Create = ELEMENT_BOOL();
-					ELEMENT_ATTRIBUTE("create", true)
-						folder.Create = ELEMENT_BOOL();
+					ELEMENT_ATTRIBUTE("resize", true)
+						folder.Resize = ELEMENT_BOOL();
 					ELEMENT_ATTRIBUTE("recursive", true)
 						folder.Recursive = ELEMENT_BOOL();
 					ELEMENT_ATTRIBUTE("disc", true)
@@ -286,7 +308,7 @@ versionisvalid:
 					ELEMENT_ATTRIBUTE("external", true)
 						folder.External = AbsolutePathCombine(xmlroot, attribute, rootfs);
 
-					patch.Folders.Add(folder);
+					patch.Folders.push_back(folder);
 				}
 
 				ELEMENT_START("shift") {
@@ -296,7 +318,7 @@ versionisvalid:
 					ELEMENT_ATTRIBUTE("destination", true)
 						shift.Destination = attribute;
 
-					patch.Shifts.Add(shift);
+					patch.Shifts.push_back(shift);
 				}
 
 				ELEMENT_START("savegame") {
@@ -304,7 +326,7 @@ versionisvalid:
 					ELEMENT_ATTRIBUTE("external", true)
 						savegame.External = AbsolutePathCombine(xmlroot, attribute, rootfs);
 
-					patch.Savegames.Add(savegame);
+					patch.Savegames.push_back(savegame);
 				}
 
 				ELEMENT_START("memory") {
@@ -312,7 +334,18 @@ versionisvalid:
 					ELEMENT_ATTRIBUTE("offset", true)
 						memory.Offset = ELEMENT_INT(attribute);
 
-					patch.Memory.Add(memory);
+					ELEMENT_ATTRIBUTE("value", true) {
+						int length = attribute.size() / 2;
+						memory.Value = new u8[length];
+						HexToBytes(memory.Value, attribute.c_str());
+					}
+					ELEMENT_ATTRIBUTE("original", true) {
+						int length = attribute.size() / 2;
+						memory.Original = new u8[length];
+						HexToBytes(memory.Original, attribute.c_str());
+					}
+
+					patch.Memory.push_back(memory);
 				}
 			}
 
@@ -323,122 +356,68 @@ versionisvalid:
 	return true;
 }
 
-bool ParseConfigXML(const char* xmldata, int length, RiiDisc* disc)
-{
-	TRIM_XML();
-
-	TextReader reader((const u8*)xmldata, length);
-	string attribute;
-	reader.read();
-	ELEMENT_START("riivolution")
-		ELEMENT_ATTRIBUTE("version", ELEMENT_INT(attribute) != 1)
-			goto versionisvalid;
-	return false;
-
-versionisvalid:
-	RiiConfig config;
-
-	ELEMENT_LOOP {
-		ELEMENT_END("riivolution")
-			break;
-
-		ELEMENT_START("option") {
-			string id;
-			int choice = 0;
-
-			ELEMENT_ATTRIBUTE("id", true)
-				id = attribute;
-			ELEMENT_ATTRIBUTE("default", true)
-				choice = ELEMENT_INT(attribute);
-
-			config.Defaults[id] = choice;
-		}
-	}
-
-	for (RiiSection* section = disc->Sections.Data(); section < disc->Sections.End(); section++) {
-		for (RiiOption* option = section->Options.Data(); option != section->Options.End(); option++) {
-			for (Pair<string, int>* choice = config.Defaults.Data(); choice != config.Defaults.End(); choice++) {
-				if (!option->ID.compare(choice->Key())) {
-					option->Default = choice->Value();
-					break;
-				}
-			}
-		}
-	}
-
-	return true;
-}
-
 #define STD_APPEND(list, toadd) \
-		(list).Add((toadd).Data(), (toadd).Size())
+		(list).insert((list).end(), (toadd).begin(), (toadd).end())
+#define STD_APPEND_MAP(list, toadd) \
+		(list).insert((toadd).begin(), (toadd).end())
 
 static RiiSection* CreateSectionByID(RiiDisc* disc, RiiSection* section)
 {
-	File_Open("createsectionbyname", 0);
-	for (RiiSection* iter = disc->Sections.Data(); iter != disc->Sections.End(); iter++) {
-		if (!iter->ID.compare(section->ID)) {
-			File_Open("foundone", 0);
-			return iter;
-		}
+	for (vector<RiiSection>::iterator iter = disc->Sections.begin(); iter != disc->Sections.end(); iter++) {
+		if (!iter->ID.compare(section->ID))
+			return &*iter;
 	}
 
 	RiiSection newsection;
 	newsection.ID = section->ID;
 	newsection.Name = section->Name;
-	return disc->Sections.Add(newsection);
+	disc->Sections.push_back(newsection);
+	return &*disc->Sections.rbegin();
 }
 
 static RiiOption* GetOptionByID(RiiSection* section, string id)
 {
-	File_Open("getoptionbyid", 0);
-	for (RiiOption* option = section->Options.Data(); option != section->Options.End(); option++) {
-		if (!option->ID.compare(id)) {
-			File_Open("foundone", 0);
-			return option;
-		}
+	for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
+		if (id == option->ID)
+			return &*option;
 	}
 	return NULL;
 }
 
 static void AddOption(RiiSection* section, RiiOption* option)
 {
-	File_Open("addoption", 0);
 	RiiOption* found = GetOptionByID(section, option->ID);
 	if (found)
 		STD_APPEND(found->Choices, option->Choices);
 	else
-		section->Options.Add(*option);
+		section->Options.push_back(*option);
 }
 
-RiiDisc CombineDiscs(List<RiiDisc>* discs)
+RiiDisc CombineDiscs(vector<RiiDisc>* discs)
 {
 	RiiDisc ret;
 
-	for (RiiDisc* disc = discs->Data(); disc != discs->End(); disc++) {
-		File_Open("disc", 0);
-		for (RiiSection* section = disc->Sections.Data(); section != disc->Sections.End(); section++) {
-			File_Open("section", 0);
-			RiiSection* retsection = CreateSectionByID(&ret, section);
-			for (RiiOption* option = section->Options.Data(); option != section->Options.End(); option++) {
-				File_Open("option", 0);
+	for (vector<RiiDisc>::iterator disc = discs->begin(); disc != discs->end(); disc++) {
+		for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
+			RiiSection* retsection = CreateSectionByID(&ret, &*section);
+			for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
 				bool macroed = false;
-				for (RiiMacro* macro = disc->Macros.Data(); macro != disc->Macros.End(); macro++) {
-					File_Open("macro", 0);
+				for (vector<RiiMacro>::iterator macro = disc->Macros.begin(); macro != disc->Macros.end(); macro++) {
 					if (!option->ID.compare(macro->ID)) {
 						macroed = true;
 						RiiOption newoption = *option;
 						newoption.Name = macro->Name;
 						newoption.ID += macro->Name;
-						STD_APPEND(newoption.Params, macro->Params);
+						STD_APPEND_MAP(newoption.Params, macro->Params);
 						AddOption(retsection, &newoption);
 					}
 				}
 				if (!macroed)
-					AddOption(retsection, option);
+					AddOption(retsection, &*option);
 			}
 		}
 
-		ret.Patches.Add(disc->Patches.Data(), disc->Patches.Size());
+		STD_APPEND_MAP(ret.Patches, disc->Patches);
 
 		// TODO: Expand folder patches into files now?
 	}
@@ -446,14 +425,14 @@ RiiDisc CombineDiscs(List<RiiDisc>* discs)
 	return ret;
 }
 
-void ParseXMLs(const char* rootpath, const char* rootfs, List<RiiDisc>* discs)
+void ParseXMLs(const char* rootpath, const char* rootfs, vector<RiiDisc>* discs)
 {
 	File_CreateDir(rootpath);
 	int dir = File_OpenDir(rootpath);
 	if (dir < 0)
 		return;
 
-	static char filename[MAXPATHLEN];
+	char filename[MAXPATHLEN];
 	char path[MAXPATHLEN];
 	Stats st;
 	while (!File_NextDir(dir, filename, &st)) {
@@ -469,13 +448,58 @@ void ParseXMLs(const char* rootpath, const char* rootfs, List<RiiDisc>* discs)
 			File_Close(fd);
 			RiiDisc current;
 			if (ParseXML(xmldata, st.Size, &current, rootpath, rootfs))
-				discs->Add(current);
+				discs->push_back(current);
 		}
 	}
 	File_CloseDir(dir);
 }
 
-static RiiConfig Config;
+struct RiiConfig { string ID; int Default; };
+bool ParseConfigXML(const char* xmldata, int length, RiiDisc* disc)
+{
+	TRIM_XML();
+
+	vector<RiiConfig> config;
+	TextReader reader((const u8*)xmldata, length);
+	string attribute;
+
+	reader.read();
+	ELEMENT_START("riivolution")
+		ELEMENT_ATTRIBUTE("version", ELEMENT_INT(attribute) == 2)
+			goto versionisvalid;
+	return false;
+
+versionisvalid:
+	ELEMENT_LOOP {
+		ELEMENT_END("riivolution")
+			break;
+
+		ELEMENT_START("option") {
+			RiiConfig conf;
+
+			ELEMENT_ATTRIBUTE("id", true)
+				conf.ID = attribute;
+			ELEMENT_ATTRIBUTE("default", true)
+				conf.Default = ELEMENT_INT(attribute);
+
+			config.push_back(conf);
+		}
+	}
+
+	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section < disc->Sections.end(); section++) {
+		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
+			for (vector<RiiConfig>::iterator choice = config.begin(); choice != config.end(); choice++) {
+				if (option->ID == choice->ID) {
+					if ((u32)choice->Default <= option->Choices.size())
+						option->Default = choice->Default;
+					break;
+				}
+			}
+		}
+	}
+
+	return true;
+}
 
 void ParseConfigXMLs(RiiDisc* disc)
 {
@@ -498,25 +522,6 @@ void ParseConfigXMLs(RiiDisc* disc)
 
 void SaveConfigXML(RiiDisc* disc)
 {
-	Element* root;
-
-	Document document;
-
-	root = document.create_root_node("riivolution");
-	root->set_attribute("version", "1");
-	char choice[0x10];
-
-	for (RiiSection* section = disc->Sections.Data(); section != disc->Sections.End(); section++) {
-		for (RiiOption* option = section->Options.Data(); option != section->Options.End(); option++) {
-			Element* node = root->add_child("option");
-			node->set_attribute("id", option->ID);
-			sprintf(choice, "%d", option->Default);
-			node->set_attribute("default", choice);
-		}
-	}
-
-	string xml = document.write_to_string_formatted();
-
 	char filename[MAXPATHLEN];
 	strcpy(filename, RIIVOLUTION_CONFIG_PATH);
 	strncat(filename, (const char*)MEM_BASE, 4);
@@ -528,7 +533,27 @@ void SaveConfigXML(RiiDisc* disc)
 	if (fd < 0)
 		return;
 
-	File_Write(fd, xml.c_str(), xml.size());
+	Element* root;
+
+	Document document;
+
+	root = document.create_root_node("riivolution");
+	root->set_attribute("version", "2");
+	char choice[0x10];
+
+	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
+		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
+			Element* node = root->add_child("option");
+			node->set_attribute("id", option->ID);
+			sprintf(choice, "%d", option->Default);
+			node->set_attribute("default", choice);
+		}
+	}
+
+	string xml = document.write_to_string_formatted();
+
+	if (xml.size() > 0x17)
+		File_Write(fd, xml.c_str() + 0x16, xml.size() - 0x17);
 
 	File_Close(fd);
 }

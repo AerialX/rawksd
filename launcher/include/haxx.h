@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mystl.h"
+#include <vector>
 
 int Haxx_Init();
-List<int> Haxx_Mount();
+std::vector<int> Haxx_Mount();

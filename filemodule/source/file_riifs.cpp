@@ -73,20 +73,14 @@ namespace ProxiIOS { namespace Filesystem {
 	static int netrecv(int socket, u8* data, int size, int opts)
 	{
 		int read = 0;
-		static u8 buffer[0x1000] ATTRIBUTE_ALIGN(32);
-		while (size > 0) {
-			//int ret = net_recv(socket, data, size, opts);
-			int ret = net_recv(socket, buffer, MIN(0x1000, size), opts);
+		while (read < size) {
+			int ret = net_recv(socket, data + read, size - read, opts);
 			if (ret < 0)
 				return ret;
 			if (ret == 0)
 				return read;
-			
-			memcpy(data, buffer, ret);
 
 			read += ret;
-			data += ret;
-			size -= ret;
 		}
 
 		return read;
@@ -220,6 +214,7 @@ namespace ProxiIOS { namespace Filesystem {
 	{
 		SendCommand(RII_OPTION_FILE, &((RiiFileInfo*)dir)->File, 4);
 		int len = ReceiveCommand(RII_FILE_NEXTDIR_PATH, filename, MAXPATHLEN);
+		os_sync_after_write(filename, MAXPATHLEN);
 		if (len < 0)
 			return len;
 		return ReceiveCommand(RII_FILE_NEXTDIR_STAT, st, sizeof(Stats));

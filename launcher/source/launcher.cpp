@@ -41,8 +41,28 @@ static int nullprintf(const char* fmt, ...)
 	return 0;
 }
 
+typedef struct {
+    u8 zeroes[128]; // padding
+    u32 imet; // "IMET"
+    u8 unk[8];  // 0x0000060000000003 fixed, unknown purpose
+    u32 sizes[3]; // icon.bin, banner.bin, sound.bin
+    u32 flag1; // unknown
+    u8 names[10][84]; // Japanese, English, German, French, Spanish, Italian, Dutch, unknown, unknown, Korean
+    u8 zeroes_2[588]; // padding
+    u8 crypto[16]; // MD5 of 0x40 to 0x640 in header. crypto should be all 0's when calculating final MD5
+} __attribute__((packed)) IMET;
 const char* Launcher_GetGameName()
 {
+	if (RVL_GetFST()) {
+		DiscNode* node = RVL_FindNode("/opening.bnr");
+		if (node != NULL) {
+			static IMET imet ATTRIBUTE_ALIGN(32);
+			WDVD_LowRead(&imet, sizeof(imet), (u64)node->DataOffset << 2);
+			const char* ret = (const char*)imet.names[CONF_GetLanguage()];
+			if (strlen(ret) > 0)
+				return ret;
+		}
+	}
 	return GameName;
 }
 
@@ -75,7 +95,7 @@ LauncherStatus::Enum Launcher_ReadDisc()
 		return LauncherStatus::ReadError;
 	
 	// read primary partition table
-	WDVD_LowUnencryptedRead(partition_info + 8, max(4, min(8, partition_info[0])) * 8, partition_info[1] << 2);
+	WDVD_LowUnencryptedRead(partition_info + 8, max(4, min(8, partition_info[0])) * 8, (u64)partition_info[1] << 2);
 	for (i = 0; i < partition_info[0]; i++)
 		if (partition_info[i * 2 + 8 + 1] == 0)
 			break;
@@ -132,6 +152,54 @@ LauncherStatus::Enum Launcher_CommitRVL(bool dip)
 		memcpy(*MEM_FSTADDRESS, SYS_GetArena2Lo(), fstdata[2]); // TODO: Account for fstdata changing
 
 	return LauncherStatus::OK;
+}
+
+typedef struct
+{
+	u32 checksum;
+	union
+	{
+		u32 data[0x1f];
+		struct {
+			s16 name[42];
+			u64 ticks_boot;
+			u64 ticks_last;
+			u32 title_id;
+			u16 title_gid;
+			//u8 unknown[18];
+		} ATTRIBUTE_PACKED;
+	};
+} playtime_buf_t;
+
+LauncherStatus::Enum Launcher_AddPlaytimeEntry()
+{
+	u32 titleid = WDVD_GetTMD()->title_id;
+	u16 groupid = WDVD_GetTMD()->group_id;
+	const char* title = Launcher_GetGameName();
+
+	static playtime_buf_t playtime_buf ATTRIBUTE_ALIGN(32);
+	int d = ISFS_Open("/title/00000001/00000002/data/play_rec.dat", ISFS_OPEN_WRITE);
+	if (d >= 0) {
+		u64 tick_now = gettime();
+		memset(&playtime_buf, 0, sizeof(playtime_buf_t));
+		s32 i = 0;
+		while ((playtime_buf.name[i] = title[i++]))
+			;
+		playtime_buf.ticks_boot = tick_now;
+		playtime_buf.ticks_last = tick_now;
+		playtime_buf.title_id = titleid;
+		playtime_buf.title_gid = groupid;
+		for (i = 0; i < 0x1f; i++)
+			playtime_buf.checksum += playtime_buf.data[i];
+
+		bool ret = sizeof(playtime_buf_t) == ISFS_Write(d, (u8*)&playtime_buf, sizeof(playtime_buf_t));
+		ISFS_Close(d);
+		if (ret)
+			return LauncherStatus::OK;
+		return LauncherStatus::IosError;
+	}
+
+	return LauncherStatus::IosError;
 }
 
 static void* app_address = NULL;
