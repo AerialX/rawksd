@@ -18,15 +18,89 @@
 #include "riivolution.h"
 #include "riivolution_config.h"
 #include "launcher.h"
+#include "installer.h"
 
+bool PressA()
+{
+	printf("Press A to continue or press Home to exit.\n");
+	while (true) {
+		WPAD_ScanPads();
+
+		int down = WPAD_ButtonsDown(WPAD_CHAN_0);
+		if (down & WPAD_BUTTON_A)
+			return true;
+		if (down & WPAD_BUTTON_HOME)
+			return false;
+	}
+}
+
+void PressHome()
+{
+	printf("Press Home to exit.\n");
+	while (true) {
+		WPAD_ScanPads();
+
+		if (WPAD_ButtonsDown(WPAD_CHAN_0) & WPAD_BUTTON_HOME)
+			return;
+	}
+}
+
+enum { INSTALL_APPROACH_NOTHING = 0, INSTALL_APPROACH_UPDATE, INSTALL_APPROACH_DOWNGRADE };
 int main(int argc, char *argv[])
 {
 	InitVideo();
-	//videoinit();
 
-	Haxx_Init();
+	if (Haxx_Init() < 0) {
+		int approach = 0;
+		printf("\n\n");
+		if (IOS_GetVersion() != 37) {
+			printf("IOS37 does not seem to be installed on your system.\nIt's perfectly safe to install it; do you want to do so now?\n");
+			if (!PressA())
+				return 0;
+			approach = INSTALL_APPROACH_UPDATE;
+		} else if (IOS_GetRevision() < 3869) {
+			printf("IOS37 must be updated to continue.\nIt's perfectly safe to update it; do you want to do so now?\n");
+			if (!PressA())
+				return 0;
+			approach = INSTALL_APPROACH_UPDATE;
+		} else if (IOS_GetRevision() > 3869) {
+			// Either cIOScrap (which will make the downgrade exploit fail) or a future update
+			printf("IOS37 must be downgraded to continue. Do you want to do this now?\n");
+			if (!PressA())
+				return 0;
+			approach = INSTALL_APPROACH_DOWNGRADE;
+		} else {
+			// Proper version, but a patch failed. RawkSD patcher or DOP-IOS or something.
+			printf("IOS37 must be reinstalled to continue. This is a perfectly safe to do; do you want to reinstall it now?\n");
+			if (!PressA())
+				return 0;
+			approach = INSTALL_APPROACH_UPDATE;
+		}
 
-	//return Everything();
+		int ret = 0;
+		Installer_Initialize();
+		switch (approach) {
+			case INSTALL_APPROACH_UPDATE:
+				ret = Install(HAXX_IOS, HAXX_IOS_VERSION, false);
+				break;
+			case INSTALL_APPROACH_DOWNGRADE:
+				ret = Install(HAXX_IOS, HAXX_IOS_VERSION, true);
+				break;
+			default:
+				return 0;
+		}
+		Installer_Deinitialize();
+
+		if (ret < 0) {
+			printf("The installation did not complete successfully.\n");
+			PressHome();
+			return 0;
+		} else {
+			printf("The installation was completed successfully!\n");
+			WPAD_Shutdown();
+			Haxx_Init();
+		}
+	}
 
 	SetupPads();
 	InitAudio();
@@ -36,62 +110,3 @@ int main(int argc, char *argv[])
 
 	MainMenu(Menus::Init);
 }
-#if 0
-int Everything()
-{
-	printf("\n\nk we're cool.");
-
-	if (Haxx_Mount() < 0)
-		return Menus::Exit;
-
-	printf("1\n");
-	RVL_Initialize();
-	printf("2\n");
-	RVL_SetClusters(false);
-
-	printf("3\n");
-	Launcher_Init();
-	printf("4\n");
-	Launcher_ReadDisc();
-
-	printf("5\n");
-	RiiDisc Disc = ParseXMLs();
-	ParseConfigXMLs(&Disc);
-
-	SaveConfigXML(&Disc);
-
-	if (Launcher_RVL() < 0)
-		return Menus::Exit;
-	RVL_Patch(&Disc);
-
-	// Launcher_CommitRVL(true); // TODO: CommitRVL properly?
-
-	Launcher_RunApploader();
-
-	Launcher_CommitRVL(false);
-
-	RVL_PatchMemory(&Disc);
-
-	Launcher_Launch();
-
-	return 1;
-}
-
-static void *xfb = NULL;
-static GXRModeObj *rmode = NULL;
-void videoinit()
-{
-    VIDEO_Init();
-    WPAD_Init();
-    rmode = VIDEO_GetPreferredMode(NULL);
-    xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
-    console_init(xfb,20,20,rmode->fbWidth,rmode->xfbHeight,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
-    VIDEO_Configure(rmode);
-    VIDEO_SetNextFramebuffer(xfb);
-    VIDEO_SetBlack(FALSE);
-    VIDEO_Flush();
-    VIDEO_WaitVSync();
-    if (rmode->viTVMode & VI_NON_INTERLACE)
-    	VIDEO_WaitVSync();
-}
-#endif

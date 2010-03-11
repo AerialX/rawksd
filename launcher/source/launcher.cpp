@@ -224,6 +224,50 @@ static void ApplyBinaryPatches(s32 app_section_size)
 	}
 }
 
+LauncherStatus::Enum Loader_SetVideoMode()
+{
+	u32 tvmode = CONF_GetVideo();
+	GXRModeObj* vmode = VIDEO_GetPreferredMode(0);
+	u32 videomode = 0;
+	switch (tvmode) {
+		case CONF_VIDEO_PAL:
+			if (CONF_GetEuRGB60() > 0)
+				videomode = VI_EURGB60;
+			else
+				videomode = VI_PAL;
+			break;
+		case CONF_VIDEO_MPAL:
+			videomode = VI_MPAL;
+			break;
+		default:
+			videomode = VI_NTSC;
+			break;
+	}
+
+	// Force system region video mode
+	if (CONF_GetProgressiveScan() > 0 && VIDEO_HaveComponentCable())
+		vmode = &TVNtsc480Prog;
+	else {
+		switch (tvmode) {
+			case CONF_VIDEO_PAL: case CONF_VIDEO_MPAL:
+				if (videomode == VI_EURGB60)
+					vmode = &TVEurgb60Hz480IntDf;
+				else if (videomode == VI_MPAL)
+					vmode = &TVMpal480IntDf;
+				else
+					vmode = &TVPal528IntDf;
+				break;
+			case CONF_VIDEO_NTSC:
+				vmode = &TVNtsc480IntDf;
+			break;
+		}
+	}
+	VIDEO_Configure(vmode); VIDEO_SetBlack(true); VIDEO_Flush(); VIDEO_WaitVSync(); VIDEO_WaitVSync();
+	*(u32*)MEM_VIDEOMODE = vmode->viTVMode >> 2;
+
+	return LauncherStatus::OK;
+}
+
 LauncherStatus::Enum Launcher_RunApploader()
 {
 	AppEnter app_enter = NULL;

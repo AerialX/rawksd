@@ -32,9 +32,6 @@ static s64 ELEMENT_INT(string str)
 
 static void HexToBytes(void* mem, const char* source)
 {
-	if (!strncmp(source, "0x", 2)) // For compatibility with the old format
-		source += 2;
-
 	u8* dest = (u8*)mem;
 	bool mod = true;
     while (*source) {
@@ -335,13 +332,22 @@ versionisvalid:
 						memory.Offset = ELEMENT_INT(attribute);
 
 					ELEMENT_ATTRIBUTE("value", true) {
+						if (!attribute.compare(0, 2, "0x"))
+							attribute = attribute.substr(2);
 						int length = attribute.size() / 2;
 						memory.Value = new u8[length];
+						if (!memory.Value)
+							continue;
 						HexToBytes(memory.Value, attribute.c_str());
+						memory.Length = length;
 					}
 					ELEMENT_ATTRIBUTE("original", true) {
+						if (!attribute.compare(0, 2, "0x"))
+							attribute = attribute.substr(2);
 						int length = attribute.size() / 2;
 						memory.Original = new u8[length];
+						if (!memory.Original)
+							continue;
 						HexToBytes(memory.Original, attribute.c_str());
 					}
 

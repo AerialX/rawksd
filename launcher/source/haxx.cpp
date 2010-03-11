@@ -43,15 +43,15 @@ int Haxx_Init()
 	if (!do_exploit())
 		return -1;
 	
-	usleep(1000);
+	usleep(4000);
 	if (load_module_code(filemodule_dat, filemodule_dat_size) < 0)
 		return -1;
 	
-	usleep(2000);
+	usleep(4000);
 	if (load_module_code(dipmodule_dat, dipmodule_dat_size) < 0)
 		return -1;
 	
-	usleep(1000);
+	usleep(4000);
 	
 	return 0;
 }
@@ -292,7 +292,7 @@ static const u32 ios_ret[] =
 
 int disable_mem2_protection(s32 fd)
 {
-	u64 title = 0x0000000100000025llu;
+	u64 title = HAXX_IOS;
 	ioctlv vec[3];
 	u32 cnt;
 	u8 lowmem_save[0x20];
@@ -836,9 +836,9 @@ static int do_sig_check_patch()
 static bool do_exploit()
 {
 	s32 es_fd = -1;
-	const u64 ios_title = 0x0000000100000025llu;
+	const u64 ios_title = HAXX_IOS;
 
-	if (IOS_GetVersion() != 37 || IOS_GetRevision() != 3869)
+	if (IOS_GetVersion() != 37 || IOS_GetRevision() != HAXX_IOS_VERSION)
 	{
 		printf("Wrong IOS version. Update IOS37 to the latest version.\n");
 		return false;

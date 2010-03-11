@@ -320,20 +320,20 @@ XMLPUBFUN int XMLCALL
  * Default 'http://' protocol callbacks 
  */
 #ifdef LIBXML_HTTP_ENABLED
-XMLPUBFUN int XMLCALL	
+int
 	xmlIOHTTPMatch 			(const char *filename);
-XMLPUBFUN void * XMLCALL	
+void *
 	xmlIOHTTPOpen 			(const char *filename);
 #ifdef LIBXML_OUTPUT_ENABLED
-XMLPUBFUN void * XMLCALL	
+void *
 	xmlIOHTTPOpenW			(const char * post_uri,
 					 int   compression );
 #endif /* LIBXML_OUTPUT_ENABLED */
-XMLPUBFUN int XMLCALL 	
+int
 	xmlIOHTTPRead			(void * context, 
 					 char * buffer, 
 					 int len);
-XMLPUBFUN int XMLCALL	
+int
 	xmlIOHTTPClose 			(void * context);
 #endif /* LIBXML_HTTP_ENABLED */
 

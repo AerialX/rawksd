@@ -493,6 +493,8 @@ Menus::Enum MenuLaunch()
 
 	Launcher_AddPlaytimeEntry();
 
+	Loader_SetVideoMode();
+
 	Launcher_Launch();
 
 	return Menus::Exit;

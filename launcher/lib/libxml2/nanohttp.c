@@ -91,6 +91,9 @@
 #include <libxml/uri.h>
 
 #include <network.h>
+#define close net_close
+#define write net_write
+#define read net_read
 #define socket net_socket
 #define recv net_recv
 #define select net_select
@@ -99,9 +102,10 @@
 #define listen net_listen
 #define connect net_connect
 #define gethostbyname net_gethostbyname
+#define fcntl net_fcntl
+#define ioctl net_ioctl
 #define getsockname(x, y, z) //WARNING: getsockname(x, y, z);
 #define getsockopt(...) /* WARNING: getsockopt(); */ 0
-#undef SUPPORT_IP6
 
 /**
  * A couple portability macros
@@ -125,12 +129,15 @@
 #ifndef SOCKET
 #define SOCKET int
 #endif
-
+//#define STANDALONE
 #ifdef STANDALONE
 #define DEBUG_HTTP
 #define xmlStrncasecmp(a, b, n) strncasecmp((char *)a, (char *)b, n)
 #define xmlStrcasecmpi(a, b) strcasecmp((char *)a, (char *)b)
 #endif
+#define DEBUG_HTTP
+#define xmlStrncasecmp(a, b, n) strncasecmp((char *)a, (char *)b, n)
+#define xmlStrcasecmpi(a, b) strcasecmp((char *)a, (char *)b)
 
 #define XML_NANO_HTTP_MAX_REDIR	10
 
@@ -390,21 +397,17 @@ xmlNanoHTTPScanProxy(const char *URL) {
 static xmlNanoHTTPCtxtPtr
 xmlNanoHTTPNewCtxt(const char *URL) {
     xmlNanoHTTPCtxtPtr ret;
-
     ret = (xmlNanoHTTPCtxtPtr) xmlMalloc(sizeof(xmlNanoHTTPCtxt));
     if (ret == NULL) {
         xmlHTTPErrMemory("allocating context");
         return(NULL);
     }
-
     memset(ret, 0, sizeof(xmlNanoHTTPCtxt));
     ret->port = 80;
     ret->returnValue = 0;
     ret->fd = -1;
     ret->ContentLength = -1;
-
     xmlNanoHTTPScanURL(ret, URL);
-
     return(ret);
 }
 
@@ -1291,7 +1294,6 @@ xmlNanoHTTPMethodRedir(const char *URL, const char *method, const char *input,
 #ifdef DEBUG_HTTP
     int xmt_bytes;
 #endif
-    
     if (URL == NULL) return(NULL);
     if (method == NULL) method = "GET";
     xmlNanoHTTPInit();
@@ -1303,7 +1305,6 @@ retry:
 	ctxt = xmlNanoHTTPNewCtxt(redirURL);
 	ctxt->location = xmlMemStrdup(redirURL);
     }
-
     if ( ctxt == NULL ) {
 	return ( NULL );
     }
@@ -1335,7 +1336,6 @@ retry:
         return(NULL);
     }
     ctxt->fd = ret;
-
     if (input == NULL)
 	ilen = 0;
     else
@@ -1393,7 +1393,6 @@ retry:
         p += snprintf( p, blen - (p - bp), " HTTP/1.0\r\nHost: %s:%d\r\n",
 		    ctxt->hostname, ctxt->port);
     }
-
 #ifdef HAVE_ZLIB_H
     p += snprintf(p, blen - (p - bp), "Accept-Encoding: gzip\r\n");
 #endif

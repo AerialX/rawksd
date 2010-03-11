@@ -12,13 +12,12 @@ namespace ProxiIOS { namespace Filesystem {
 		if (length != 0x14)
 			return Errors::Unrecognized;
 
-		while (net_init() < 0)
-			;
-
-		/*
-		if (!net_init())
+		int ret;
+		while ((ret = net_init()) == -EAGAIN)
+			usleep(10000);
+		if (ret < 0)
 			return NULL;
-		 */
+
 		strcpy(IP, (const char*)options);
 		Port = *(int*)((u8*)options + 0x10);
 
