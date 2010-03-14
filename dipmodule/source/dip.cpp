@@ -15,6 +15,10 @@
 
 #include <files.h>
 
+#include "fileprovider.h"
+
+#include "logging.h"
+
 #define OPEN_MODE_BYPASS 0x80
 
 struct TemporaryPatch
@@ -38,6 +42,11 @@ namespace ProxiIOS { namespace DIP {
 		Clusters = false;
 		
 		Provider = NULL;
+
+		ShiftBase = 0x200000000ULL;
+		PatchPartition = 0;
+
+		LogInit();
 	}
 	
 	int DIP::HandleOpen(ipcmessage* message)
@@ -69,6 +78,7 @@ namespace ProxiIOS { namespace DIP {
 		switch (message->ioctl.command) {
 			case Ioctl::Allocate: {
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
+				LogPrintf("IOCTL: Allocate(0x%08x);\n", message->ioctl.buffer_in[0]);
 				if (Reallocate(message->ioctl.buffer_in[0], message->ioctl.buffer_in[1]))
 					return 1;
 				return -1;
@@ -76,8 +86,9 @@ namespace ProxiIOS { namespace DIP {
 			case Ioctl::AddShift: {
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				u32 len = message->ioctl.buffer_in[0];
-				u64 originaloffset = *(u64*)&message->ioctl.buffer_in[1];
-				u64 newoffset = *(u64*)&message->ioctl.buffer_in[3];
+				u64 originaloffset = ((u64)message->ioctl.buffer_in[1] << 32) | message->ioctl.buffer_in[2];
+				u64 newoffset = ((u64)message->ioctl.buffer_in[3] << 32) | message->ioctl.buffer_in[4];
+				LogPrintf("IOCTL: AddShift(0x%08x, ?, ?);\n", len);
 				
 				Shift shift;
 				shift.Length = len;
@@ -90,9 +101,12 @@ namespace ProxiIOS { namespace DIP {
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				s32 id = message->ioctl.buffer_in[0];
 				//u32 fileoffset = message->ioctl.buffer_in[1];
-				u64 offset = *(u64*)&message->ioctl.buffer_in[2];
+				u64 offset = ((u64)message->ioctl.buffer_in[2] << 32) | message->ioctl.buffer_in[3];
 				u32 length = message->ioctl.buffer_in[4];
+				PatchPartition = CurrentPartition;
 				
+				LogPrintf("IOCTL: AddPatch(0x%08x, 0x%08x%08x, 0x%08x);\n", id, (u32)(offset >> 32), (u32)offset, length);
+
 				if (id < 0)
 					return -1;
 
@@ -108,13 +122,17 @@ namespace ProxiIOS { namespace DIP {
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				char* filename = (char*)message->ioctl.buffer_in;
 				int len = message->ioctl.length_in;
+				LogPrintf("IOCTL: AddFile(\"%s\");\n", filename);
 				
 				FileDesc file;
 				
 				if (Clusters) {
 					if (message->ioctl.length_io > 0) {
 						os_sync_before_read(message->ioctl.buffer_io, message->ioctl.length_io);
-						file.Cluster = *(u64*)message->ioctl.buffer_io;
+						file.Cluster = *(u64*)message->ioctl.buffer_io; // TODO: Casting u64 to u32... Saving memory but could be bad.
+						LogPrintf("\t Cluster: 0x%08x%08x;\n", message->ioctl.buffer_io[0], (u32)file.Cluster);
+						if (message->ioctl.buffer_io[0])
+							LogPrintf("\tWARNING! Cluster too large for cluster hack to work (u64).\n");
 					} else {
 						Stats st;
 						if (File_Stat(filename, &st) != 0)
@@ -129,16 +147,38 @@ namespace ProxiIOS { namespace DIP {
 				return AddPatch(PatchType::File, &file);
 			}
 			case Ioctl::AddEmu: {
+				LogPrintf("IOCTL: AddEmu();\n");
 				return -1;
+			}
+			case Ioctl::SetFileProvider: {
+				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
+				LogPrintf("IOCTL: SetFileProvider(\"%s\");\n", (const char*)message->ioctl.buffer_in);
+				int file = File_Open((const char*)message->ioctl.buffer_in, O_RDONLY);
+				if (!file)
+					return -1;
+				Provider = new FileProvider(this, file);
+				if (!Provider)
+					return -1;
+				return 1;
+			}
+			case Ioctl::SetShiftBase: {
+				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
+				ShiftBase = ((u64)message->ioctl.buffer_in[0] << 32) | message->ioctl.buffer_in[1];
+				LogPrintf("IOCTL: SetShiftBase(0x%08x%08x);\n", ShiftBase >> 32, ShiftBase);
 			}
 			case Ioctl::SetClusters:
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				Clusters = message->ioctl.buffer_in[0];
+				LogPrintf("IOCTL: SetClusters(%s);\n", Clusters ? "true" : "false");
 				return 1;
 			case Ioctl::Read: {
+				if (CurrentPartition != PatchPartition)
+					return ForwardIoctl(message);
+
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				u32 len = message->ioctl.buffer_in[1];
 				s64 pos = (s64)message->ioctl.buffer_in[2] << 2;
+				LogPrintf("IOCTL: Read(0x%08x%08x, 0x%08x);\n", (u32)(pos >> 32), (u32)pos, len);
 
 				Shift* shifts[MAX_FOUND];
 				int foundshifts = FindPatch(PatchType::Shift, pos, len, (void**)shifts, MAX_FOUND);
@@ -166,6 +206,8 @@ namespace ProxiIOS { namespace DIP {
 				if (foundpatches == 0)
 					return ForwardIoctl(message);
 
+				LogPrintf("\tFound 0x%08x patches\n", foundpatches);
+
 				TemporaryPatch patches[MAX_FOUND];
 				bool filecover = false;
 				for (int i = 0; i < foundpatches; i++) {
@@ -178,18 +220,19 @@ namespace ProxiIOS { namespace DIP {
 						patches[i].FileOffset -= patches[i].Offset; // Increase the file offset
 						patches[i].Offset = 0;
 					}
-					patches[i].Length = MIN(patches[i].Length, len) - patches[i].Offset;
+					patches[i].Length = MIN(patches[i].Length, len - patches[i].Offset);
 					
 					// Fuck it, too lazy to map every patch
 					if (patches[i].Offset == 0 && patches[i].Length == len)
 						filecover = true;
 				}
 				if (!filecover) {
-					if (((u32)(pos >> 2)) < 0xA0000000)
+					if ((u64)pos < ShiftBase)
 						ForwardIoctl(message);
 					os_sync_before_read(message->ioctl.buffer_io, message->ioctl.length_io);
 				}
 				for (int i = 0; i < foundpatches; i++) {
+					LogPrintf("\tBuffer Offset: 0x%08x%08x\n", (u32)(patches[i].Offset >> 32), (u32)patches[i].Offset);
 					if (!ReadFile(found[i]->File, patches[i].FileOffset, (u8*)message->ioctl.buffer_io + patches[i].Offset, patches[i].Length))
 						return 2; // File error
 				}
@@ -208,8 +251,12 @@ namespace ProxiIOS { namespace DIP {
 	{
 		switch (message->ioctlv.command) {
 			case Ioctl::OpenPartition:
-				CurrentPartition = ((u32*)message->ioctlv.vector[0].data)[1];
-				return ForwardIoctlv(message);
+				os_sync_before_read(message->ioctlv.vector[0].data, message->ioctlv.vector[0].len);
+				CurrentPartition = (u64)((u32*)message->ioctlv.vector[0].data)[1] << 2;
+				int ret = ForwardIoctlv(message);
+				if (ret < 0 || ret == 2)
+					CurrentPartition = 0;
+				return ret;
 		}
 		
 		return ForwardIoctlv(message);
@@ -299,13 +346,17 @@ namespace ProxiIOS { namespace DIP {
 				return false;
 			}
 		}
-		
+
 		File_Seek(OpenFds[openindex], offset, SEEK_SET);
 		
 		int ret = File_Read(OpenFds[openindex], (u8*)data, length);
 		
+		LogPrintf("\tReadFile(0x%04x, 0x%08x, 0x%08x) : 0x%08x\n", (u32)fileid, offset, length, ret);
+
 		if (ret > 0)
-			os_sync_after_write(data, ret);
+			os_sync_after_write(data, length);
+		else
+			LogPrintf("\t\tFile read error!");
 		
 		return ret >= 0;
 	}

@@ -30,18 +30,17 @@ static int file_fd = -1;
 
 int File_Init()
 {
-	if (file_fd < 0) {
+	if (file_fd < 0)
 		file_fd = os_open(FILE_MODULE_NAME, 0);
-		if (file_fd < 0)
-			return file_fd;
-	}
-	return 0;
+
+	return file_fd;
 }
 
 int File_Deinit()
 {
 	if (file_fd >= 0)
 		os_close(file_fd);
+	file_fd = -1;
 	
 	return 0;
 }

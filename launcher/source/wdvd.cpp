@@ -33,7 +33,7 @@ static union {
 
 int WDVD_Init() { 
     if (di_fd >= 0)
-		return 1;
+		return di_fd;
 
     di_fd = IOS_Open("/dev/do", 0);
 	//di_fd = IOS_Open("/dev/di", 0);

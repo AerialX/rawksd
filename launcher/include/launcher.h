@@ -1,5 +1,7 @@
 #pragma once
 
+#include <gctypes.h>
+
 #define MEM_BASE			((u8*)0x80000000)
 #define MEM_BOOTCODE		((u32*)0x80000020)
 #define MEM_VERSION			((u32*)0x80000024)
@@ -35,5 +37,8 @@ LauncherStatus::Enum Launcher_Launch();
 LauncherStatus::Enum Launcher_RVL();
 LauncherStatus::Enum Launcher_CommitRVL(bool dip);
 LauncherStatus::Enum Launcher_AddPlaytimeEntry();
-LauncherStatus::Enum Loader_SetVideoMode();
+LauncherStatus::Enum Launcher_SetVideoMode();
+bool Launcher_DiscInserted();
 const char* Launcher_GetGameName();
+const s16* Launcher_GetGameNameWide();
+const u32* Launcher_GetFstData();

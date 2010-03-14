@@ -125,6 +125,7 @@ void MainMenu(Menus::Enum menu)
 	Background = new GuiImage(BackgroundImage);
 	Background->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 	Background->SetPosition(0, 0);
+	Window->SetFocus(true);
 	Window->Append(Background);
 	
 	Title = new GuiText("Riivolution", 32, (GXColor){255, 255, 255, 255});
@@ -143,10 +144,10 @@ void MainMenu(Menus::Enum menu)
 	Trigger[Triggers::Home].SetButtonOnlyTrigger(-1, WPAD_BUTTON_HOME | WPAD_CLASSIC_BUTTON_HOME, PAD_BUTTON_START);
 	Trigger[Triggers::PageLeft].SetButtonOnlyTrigger(-1, WPAD_BUTTON_MINUS | WPAD_CLASSIC_BUTTON_FULL_L | WPAD_CLASSIC_BUTTON_MINUS, PAD_TRIGGER_L);
 	Trigger[Triggers::PageRight].SetButtonOnlyTrigger(-1, WPAD_BUTTON_PLUS | WPAD_CLASSIC_BUTTON_FULL_R | WPAD_CLASSIC_BUTTON_PLUS, PAD_TRIGGER_R);
-	Trigger[Triggers::Up].SetButtonOnlyTrigger(-1, WPAD_BUTTON_UP | WPAD_CLASSIC_BUTTON_UP, PAD_BUTTON_UP);
+	/*Trigger[Triggers::Up].SetButtonOnlyTrigger(-1, WPAD_BUTTON_UP | WPAD_CLASSIC_BUTTON_UP, PAD_BUTTON_UP);
 	Trigger[Triggers::Down].SetButtonOnlyTrigger(-1, WPAD_BUTTON_DOWN | WPAD_CLASSIC_BUTTON_DOWN, PAD_BUTTON_DOWN);
 	Trigger[Triggers::Left].SetButtonOnlyTrigger(-1, WPAD_BUTTON_LEFT | WPAD_CLASSIC_BUTTON_LEFT, PAD_BUTTON_LEFT);
-	Trigger[Triggers::Right].SetButtonOnlyTrigger(-1, WPAD_BUTTON_RIGHT | WPAD_CLASSIC_BUTTON_RIGHT, PAD_BUTTON_RIGHT);
+	Trigger[Triggers::Right].SetButtonOnlyTrigger(-1, WPAD_BUTTON_RIGHT | WPAD_CLASSIC_BUTTON_RIGHT, PAD_BUTTON_RIGHT);*/
 	
 	ButtonList::InitImageData();
 
@@ -158,6 +159,9 @@ void MainMenu(Menus::Enum menu)
 	*/
 	while (menu != Menus::Exit) {
 		switch (menu) {
+			case Menus::Mount:
+				menu = MenuMount();
+				break;
 			case Menus::Init:
 				menu = MenuInit();
 				break;

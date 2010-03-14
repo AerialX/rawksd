@@ -2,9 +2,6 @@
 
 #include "filemodule.h"
 
-#define RII_VERSION 		"1.0"
-#define RII_VERSION_RET		0x01
-
 // Actions
 #define RII_SEND 0x01
 #define RII_RECEIVE 0x02
@@ -28,6 +25,7 @@
 #define RII_FILE_CLOSEDIR		0x22
 #define RII_FILE_NEXTDIR_PATH 	0x23
 #define RII_FILE_NEXTDIR_STAT 	0x24
+#define RII_FILE_NEXTDIR_CACHE	0x25
 
 // Options
 #define RII_OPTION_FILE					0x01
@@ -40,11 +38,38 @@
 #define RII_OPTION_RENAME_SOURCE		0x08
 #define RII_OPTION_RENAME_DESTINATION	0x09
 
+#define RIIFS_LOCAL_OPTIONS
+#define RIIFS_LOCAL_SEEKING
+//#define RIIFS_LOCAL_DIRNEXT
+#define RIIFS_LOCAL_DIRNEXT_SIZE 0x1000
+
+#ifdef RIIFS_LOCAL_DIRNEXT
+#define RII_VERSION 		"1.1"
+#else
+#define RII_VERSION 		"1.0"
+#endif
+#define RII_VERSION_RET		0x02
+
 namespace ProxiIOS { namespace Filesystem {
 	struct RiiFileInfo : public FileInfo
 	{
-		RiiFileInfo(FilesystemHandler* system, int fd) : FileInfo(system) { File = fd; }
+		RiiFileInfo(FilesystemHandler* system, int fd) : FileInfo(system)
+		{
+			File = fd;
+#ifdef RIIFS_LOCAL_SEEKING
+			Position = 0;
+#endif
+#ifdef RIIFS_LOCAL_DIRNEXT
+			DirCache = NULL;
+#endif
+		}
 
+#ifdef RIIFS_LOCAL_SEEKING
+		u64 Position;
+#endif
+#ifdef RIIFS_LOCAL_DIRNEXT
+		void* DirCache;
+#endif
 		int File;
 	};
 	
@@ -54,6 +79,12 @@ namespace ProxiIOS { namespace Filesystem {
 			char IP[0x10];
 			int Port;
 			int Socket;
+			int ServerVersion;
+
+#ifdef RIIFS_LOCAL_OPTIONS
+			int Options[RII_OPTION_RENAME_DESTINATION];
+			u8 OptionsInit[RII_OPTION_RENAME_DESTINATION];
+#endif
 		
 			bool SendCommand(int type, const void* data, int size);
 			int ReceiveCommand(int type, void* data, int size);
@@ -61,7 +92,13 @@ namespace ProxiIOS { namespace Filesystem {
 			int ReceiveCommand(int type);
 		
 		public:
-			RiiHandler(Filesystem* fs) : FilesystemHandler(fs) { }
+			RiiHandler(Filesystem* fs) : FilesystemHandler(fs)
+			{
+#ifdef RIIFS_LOCAL_OPTIONS
+			memset(Options, 0, sizeof(Options));
+			memset(OptionsInit, 0, sizeof(OptionsInit));
+#endif
+			}
 			
 			int Mount(const void* options, int length);
 			int Unmount();
@@ -82,5 +119,9 @@ namespace ProxiIOS { namespace Filesystem {
 			FileInfo* OpenDir(const char* path);
 			int NextDir(FileInfo* dir, char* filename, Stats* st);
 			int CloseDir(FileInfo* dir);
+
+#ifdef RIIFS_LOCAL_DIRNEXT
+			int NextDirCache(RiiFileInfo* dir, char* filename, Stats* st);
+#endif
 	};
 } }

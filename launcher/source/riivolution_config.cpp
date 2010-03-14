@@ -34,8 +34,9 @@ static void HexToBytes(void* mem, const char* source)
 {
 	u8* dest = (u8*)mem;
 	bool mod = true;
-    while (*source) {
-    	u8 chr = *source - ((*source > '9') ? ('a' - 10) : '0');
+	while (*source) {
+    	u8 chr = tolower(*source);
+    	chr = chr - ((chr > '9') ? ('a' - 10) : '0');
     	if (mod)
     		*dest = chr << 4;
     	else {
@@ -111,9 +112,11 @@ static string AbsolutePathCombine(string path, string file, string rootfs)
 	if (length == 0) \
 		return false; // Not an xml document
 
-bool ParseXML(const char* xmldata, int length, RiiDisc* disc, const char* rootpath, const char* rootfs)
+bool ParseXML(const char* xmldata, int length, vector<RiiDisc>* discs, const char* rootpath, const char* rootfs)
 {
 	TRIM_XML();
+
+	RiiDisc disc;
 
 	string xmlroot = rootpath;
 	TextReader reader((const u8*)xmldata, length);
@@ -161,6 +164,32 @@ versionisvalid:
 				return false;
 		}
 
+		ELEMENT_START("network") {
+			string ip;
+			int port = 1137;
+			string protocol = "riifs";
+			ELEMENT_ATTRIBUTE("protocol", true)
+				protocol = attribute;
+			ELEMENT_ATTRIBUTE("address", true)
+				ip = attribute;
+			ELEMENT_ATTRIBUTE("port", true)
+				port = ELEMENT_INT(attribute);
+
+			int mnt = -1;
+			if (protocol == "riifs")
+				mnt = File_RiiFS_Mount(ip.c_str(), port);
+			if (mnt >= 0) {
+				char mountpoint[MAXPATHLEN];
+				if (File_GetMountPoint(mnt, mountpoint, sizeof(mountpoint)) >= 0) {
+					char mountpath[MAXPATHLEN];
+					strcpy(mountpath, mountpoint);
+					strcat(mountpath, RIIVOLUTION_PATH);
+
+					ParseXMLs(mountpath, mountpoint, discs);
+				}
+			}
+		}
+
 		ELEMENT_START("options") {
 			ELEMENT_LOOP {
 				ELEMENT_END("options")
@@ -180,7 +209,7 @@ versionisvalid:
 						ELEMENT_PARAM(macro.Params);
 					}
 
-					disc->Macros.push_back(macro);
+					disc.Macros.push_back(macro);
 				}
 
 				ELEMENT_START("section") {
@@ -254,7 +283,7 @@ versionisvalid:
 						} // </option>
 					}
 
-					disc->Sections.push_back(section);
+					disc.Sections.push_back(section);
 				} // </section>
 			}
 		} // </options>
@@ -336,28 +365,29 @@ versionisvalid:
 							attribute = attribute.substr(2);
 						int length = attribute.size() / 2;
 						memory.Value = new u8[length];
-						if (!memory.Value)
-							continue;
-						HexToBytes(memory.Value, attribute.c_str());
-						memory.Length = length;
+						if (memory.Value) {
+							HexToBytes(memory.Value, attribute.c_str());
+							memory.Length = length;
+						}
 					}
 					ELEMENT_ATTRIBUTE("original", true) {
 						if (!attribute.compare(0, 2, "0x"))
 							attribute = attribute.substr(2);
 						int length = attribute.size() / 2;
 						memory.Original = new u8[length];
-						if (!memory.Original)
-							continue;
-						HexToBytes(memory.Original, attribute.c_str());
+						if (memory.Original)
+							HexToBytes(memory.Original, attribute.c_str());
 					}
 
 					patch.Memory.push_back(memory);
 				}
 			}
 
-			disc->Patches[id] = patch;
+			disc.Patches[id] = patch;
 		} // </patch>
 	}
+
+	discs->push_back(disc);
 
 	return true;
 }
@@ -433,7 +463,6 @@ RiiDisc CombineDiscs(vector<RiiDisc>* discs)
 
 void ParseXMLs(const char* rootpath, const char* rootfs, vector<RiiDisc>* discs)
 {
-	File_CreateDir(rootpath);
 	int dir = File_OpenDir(rootpath);
 	if (dir < 0)
 		return;
@@ -450,11 +479,9 @@ void ParseXMLs(const char* rootpath, const char* rootfs, vector<RiiDisc>* discs)
 			int fd = File_Open(path, O_RDONLY);
 			if (fd < 0)
 				continue;
-			File_Read(fd, xmldata, st.Size);
+			int read = File_Read(fd, xmldata, st.Size);
 			File_Close(fd);
-			RiiDisc current;
-			if (ParseXML(xmldata, st.Size, &current, rootpath, rootfs))
-				discs->push_back(current);
+			ParseXML(xmldata, read, discs, rootpath, rootfs);
 		}
 	}
 	File_CloseDir(dir);
@@ -521,9 +548,9 @@ void ParseConfigXMLs(RiiDisc* disc)
 	int fd = File_Open(filename, O_RDONLY);
 	if (fd < 0)
 		return;
-	File_Read(fd, xmldata, st.Size);
+	int read = File_Read(fd, xmldata, st.Size);
 	File_Close(fd);
-	ParseConfigXML(xmldata, st.Size, disc);
+	ParseConfigXML(xmldata, read, disc);
 }
 
 void SaveConfigXML(RiiDisc* disc)
@@ -533,6 +560,7 @@ void SaveConfigXML(RiiDisc* disc)
 	strncat(filename, (const char*)MEM_BASE, 4);
 	strcat(filename, ".xml");
 
+	File_CreateDir(RIIVOLUTION_PATH);
 	File_CreateDir(RIIVOLUTION_CONFIG_PATH);
 	File_CreateFile(filename);
 	int fd = File_Open(filename, O_WRONLY | O_TRUNC);

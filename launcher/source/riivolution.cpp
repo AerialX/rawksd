@@ -1,5 +1,6 @@
 #include "riivolution.h"
 #include "riivolution_config.h"
+#include "launcher.h"
 
 #include <files.h>
 
@@ -25,8 +26,11 @@ namespace Ioctl { enum Enum {
 	AddShift		= 0xC3,
 	SetClusters		= 0xC4,
 	Allocate		= 0xC5,
-	AddEmu			= 0xC6
+	AddEmu			= 0xC6,
+	SetShiftBase	= 0xC8
 }; }
+
+static u32 ioctlbuffer[0x08] ATTRIBUTE_ALIGN(32);
 
 int RVL_Initialize()
 {
@@ -52,6 +56,19 @@ void RVL_SetFST(void* address, u32 size)
 {
 	fst = (DiscNode*)address;
 	fstsize = size;
+
+	if (fst != NULL && size) {
+		const void* nametable = (const void*)(fst + fst->Size);
+		u32 offset = 0;
+		for (DiscNode* node = fst; node < nametable; node++) {
+			if (!node->Type)
+				offset = MAX(offset, node->DataOffset);
+		}
+		shift = (u64)offset << 2;
+		RVL_GetShiftOffset(0); // Round up
+
+		RVL_SetShiftBase(shift);
+	}
 }
 
 u32 RVL_GetFSTSize()
@@ -61,7 +78,15 @@ u32 RVL_GetFSTSize()
 
 int RVL_SetClusters(bool clusters)
 {
-	return IOS_Ioctl(fd, Ioctl::SetClusters, &clusters, sizeof(clusters), NULL, 0);
+	ioctlbuffer[0] = clusters;
+	return IOS_Ioctl(fd, Ioctl::SetClusters, ioctlbuffer, 4, NULL, 0);
+}
+
+int RVL_SetShiftBase(u64 shift)
+{
+	ioctlbuffer[0] = shift >> 32;
+	ioctlbuffer[1] = shift;
+	return IOS_Ioctl(fd, Ioctl::SetShiftBase, ioctlbuffer, 8, NULL, 0);
 }
 
 void RVL_SetAlwaysShift(bool shift)
@@ -71,10 +96,9 @@ void RVL_SetAlwaysShift(bool shift)
 
 int RVL_Allocate(PatchType::Enum type, int num)
 {
-	u32 command[2];
-	command[0] = type;
-	command[1] = num;
-	return IOS_Ioctl(fd, Ioctl::Allocate, command, 8, NULL, 0);
+	ioctlbuffer[0] = type;
+	ioctlbuffer[1] = num;
+	return IOS_Ioctl(fd, Ioctl::Allocate, ioctlbuffer, 8, NULL, 0);
 }
 
 int RVL_AddFile(const char* filename)
@@ -89,24 +113,22 @@ int RVL_AddFile(const char* filename, u64 identifier)
 
 int RVL_AddShift(u64 original, u64 offset, u32 length)
 {
-	u32 command[8];
-	command[0] = length;
-	command[1] = original >> 32;
-	command[2] = original;
-	command[3] = offset >> 32;
-	command[4] = offset;
-	return IOS_Ioctl(fd, Ioctl::AddShift, command, 0x20, NULL, 0);
+	ioctlbuffer[0] = length;
+	ioctlbuffer[1] = original >> 32;
+	ioctlbuffer[2] = original;
+	ioctlbuffer[3] = offset >> 32;
+	ioctlbuffer[4] = offset;
+	return IOS_Ioctl(fd, Ioctl::AddShift, ioctlbuffer, 0x20, NULL, 0);
 }
 
 int RVL_AddPatch(int file, u64 offset, u32 fileoffset, u32 length)
 {
-	u32 command[8];
-	command[0] = file;
-	command[1] = fileoffset;
-	command[2] = offset >> 32;
-	command[3] = offset;
-	command[4] = length;
-	return IOS_Ioctl(fd, Ioctl::AddPatch, command, 0x20, NULL, 0);
+	ioctlbuffer[0] = file;
+	ioctlbuffer[1] = fileoffset;
+	ioctlbuffer[2] = offset >> 32;
+	ioctlbuffer[3] = offset;
+	ioctlbuffer[4] = length;
+	return IOS_Ioctl(fd, Ioctl::AddPatch, ioctlbuffer, 0x20, NULL, 0);
 }
 
 int RVL_AddEmu(const char* nandpath, const char* external)
@@ -178,7 +200,7 @@ static DiscNode* RVL_FindNode(const char* name, DiscNode* root, bool recursive)
 	int offset = root - fst;
 	DiscNode* node = root;
 	while ((void*)node < (void*)nametable) {
-		if (!strcmp(nametable + node->GetNameOffset(), name))
+		if (!strcasecmp(nametable + node->GetNameOffset(), name))
 			return node;
 
 		if (recursive || node->Type == 0)
@@ -192,8 +214,18 @@ static DiscNode* RVL_FindNode(const char* name, DiscNode* root, bool recursive)
 
 DiscNode* RVL_FindNode(const char* fstname)
 {
-	if (fstname[0] != '/')
+	if (fstname[0] != '/') {
+		if (!strcasecmp(fstname, "main.dol")) {
+			static DiscNode maindol;
+			maindol.Size = 0;
+			maindol.Type = 0;
+			maindol.SetNameOffset(0);
+			maindol.DataOffset = Launcher_GetFstData()[1];
+			return &maindol;
+		}
+
 		return RVL_FindNode(fstname, fst, true);
+	}
 
 	char namebuffer[MAXPATHLEN];
 	char* name = namebuffer;
@@ -243,6 +275,9 @@ static void RVL_Patch(RiiFilePatch* file, bool stat, u64 externalid, string comm
 		} else
 			return;
 	}
+
+	if (node->Type)
+		return; // Patching a directory will not end well.
 
 	string external = file->External;
 	if (commonfs.size() && !commonfs.compare(0, commonfs.size(), external))
@@ -431,7 +466,8 @@ static void RVL_Patch(RiiMemoryPatch* memory)
 	if (memory->Original && memcmp((void*)memory->Offset, memory->Original, memory->Length))
 		return;
 
-	memcpy((void*)memory->Offset, memory->Value, memory->Length);
+	if (memory->Value && memory->Length)
+		memcpy((void*)memory->Offset, memory->Value, memory->Length);
 }
 
 void RVL_PatchMemory(RiiDisc* disc)

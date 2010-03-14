@@ -4,10 +4,10 @@
 #include <mem.h>
 
 #ifdef DIP_RIIVOLUTION
-static u8 Heapspace[0x2d000] __attribute__ ((aligned (32)));
+static u8 Heapspace[0x2c000] __attribute__ ((aligned (32)));
 #endif
 #ifdef DIP_RAWKSD
-static u8 Heapspace[0x1d000] __attribute__ ((aligned (32)));
+static u8 Heapspace[0x1c000] __attribute__ ((aligned (32)));
 #endif
 
 int main()

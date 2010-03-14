@@ -111,11 +111,12 @@ InitVideo ()
 	VIDEO_Init();
 	vmode = VIDEO_GetPreferredMode(NULL); // get default video mode
 
-	/* // widescreen fix
+	// widescreen fix
 	if(CONF_GetAspectRatio() == CONF_ASPECT_16_9)
 		vmode->viWidth = VI_MAX_WIDTH_PAL;
+
 	VIDEO_Configure (vmode);
-	*/
+
 	screenheight = 480;
 	screenwidth = vmode->fbWidth;
 

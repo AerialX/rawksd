@@ -15,7 +15,7 @@
 #define PATCHMII_HTTP
 
 #define ERROR(desc, value) \
-	printf("Error %s. (%d)\n", desc, value)
+	printf("\tError %s. (%d)\n", desc, value)
 
 #define NUS_URL_BASE "http://nus.cdn.shop.wii.com/ccs/download"
 
@@ -36,7 +36,7 @@ static void SetCerts(const signed_blob* certs, u32 certsLength)
 
 static bool netinit()
 {
-	printf("Initializing network... ");
+	printf("\tInitializing network... ");
 
 	int ret;
 	while ((ret = net_init()) == -EAGAIN)
@@ -57,7 +57,7 @@ static bool netinit()
 void Installer_Initialize()
 {
 	SetCerts((const signed_blob*)certs_dat, certs_dat_size);
-	printf("Mounting SD/USB... ");
+	printf("\tMounting SD/USB... ");
 	initfat = fatInitDefault();
 	if (!initfat) {
 		printf("Failed.\n");
@@ -275,6 +275,14 @@ int Install(u64 titleid, int version, bool comexploit)
 		return -1;
 	}
 
+	printf("\tInstalling...");
+
+	ret = InstallTicket(ticket);
+	if (ret < 0) {
+		ERROR("installing ticket", ret);
+		return ret;
+	}
+
 	if (comexploit && version) {
 		ret = StartInstall(newesttmd);
 		if (ret == -1035) {
@@ -291,14 +299,6 @@ int Install(u64 titleid, int version, bool comexploit)
 		}
 		__ES_Close();
 		__ES_Init();
-	}
-
-	printf("Installing...");
-
-	ret = InstallTicket(ticket);
-	if (ret < 0) {
-		ERROR("installing ticket", ret);
-		return ret;
 	}
 
 	ret = StartInstall(meta);

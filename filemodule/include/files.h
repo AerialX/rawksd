@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <gctypes.h>
 #include <fcntl.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 	extern "C" {
@@ -17,7 +18,7 @@ typedef struct _stats
 	u64 Size;
 	s32 Device;
 	s32 Mode;
-} __attribute__((packed)) Stats;
+} Stats;
 
 typedef enum {
 	SD_DISK,

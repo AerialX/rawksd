@@ -15,7 +15,7 @@ using std::vector;
 #define OPTION_FONT_HEIGHT 22
 #define OPTION_ARROW_OFFSET 0
 */
-#define OPTIONS_PER_PAGE 15
+#define OPTIONS_PER_PAGE 12
 #define OPTION_FONT_SIZE 20
 #define OPTION_FONT_HEIGHT 28
 #define OPTION_ARROW_OFFSET 0
@@ -70,7 +70,7 @@ struct PageViewer {
 	{
 		Current = NULL;
 
-		Subtitle->SetText("Riivolution");
+		Subtitle->SetText(RIIVOLUTION_TITLE);
 
 		LeftArrowImageData = new GuiImageData(arrow_left_png);
 		LeftArrowOverImageData = new GuiImageData(arrow_active_left_png);
@@ -80,11 +80,11 @@ struct PageViewer {
 		if (Pages.size() > 1) {
 			PageText = new GuiText("Page", 18, (GXColor){0, 0, 0, 255});
 			PageText->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-			PageText->SetPosition(352, 48);
+			PageText->SetPosition(352, 52);
 			Window->Append(PageText);
 
-			PageNumberText = new GuiText("", 18, (GXColor){0, 0, 0, 255});
-			PageNumberText->SetAlignment(ALIGN_CENTRE, ALIGN_TOP);
+			PageNumberText = new GuiText(" ", 26, (GXColor){0, 0, 0, 255});
+			PageNumberText->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 			PageNumberText->SetPosition(400 + 48 / 2, 48);
 			Window->Append(PageNumberText);
 
@@ -280,11 +280,11 @@ struct PageViewer {
 	{
 		if (Pages.size() > 1) {
 			if (LeftButton->GetState() == STATE_CLICKED) {
-				LeftButton->ResetState();
+				LeftButton->SetState(STATE_SELECTED, LeftButton->GetStateChan());
 				SetPage(Wrap(PageNumber - 1, Pages.size()));
 			}
 			if (RightButton->GetState() == STATE_CLICKED) {
-				RightButton->ResetState();
+				RightButton->SetState(STATE_SELECTED, RightButton->GetStateChan());
 				SetPage(Wrap(PageNumber + 1, Pages.size()));
 			}
 		}
@@ -294,12 +294,14 @@ struct PageViewer {
 
 		for (u32 i = 0; i < Current->Options.size(); i++) {
 			if (RightArrow[i]->GetState() == STATE_CLICKED || Choice[i]->GetState() == STATE_CLICKED) {
-				RightArrow[i]->ResetState();
-				Choice[i]->ResetState();
+				if (RightArrow[i]->GetState() == STATE_CLICKED)
+					RightArrow[i]->SetState(STATE_SELECTED, RightArrow[i]->GetStateChan());
+				if (Choice[i]->GetState() == STATE_CLICKED)
+					Choice[i]->SetState(STATE_SELECTED, Choice[i]->GetStateChan());
 				SetOption(i, Current->Options[i], Wrap(Current->Options[i]->Default + 1, Current->Options[i]->Choices.size() + 1));
 			}
 			if (LeftArrow[i]->GetState() == STATE_CLICKED) {
-				LeftArrow[i]->ResetState();
+				LeftArrow[i]->SetState(STATE_SELECTED, LeftArrow[i]->GetStateChan());
 				SetOption(i, Current->Options[i], Wrap(Current->Options[i]->Default - 1, Current->Options[i]->Choices.size() + 1));
 			}
 		}
@@ -334,8 +336,11 @@ struct PageViewer {
 		case 1: \
 			return Menus::Settings; \
 	} \
+	CheckShutdown(); \
 }
-Menus::Enum MenuInit()
+
+static vector<int> Mounted;
+Menus::Enum MenuMount()
 {
 	HaltGui();
 	ButtonList buttons(Window, 1);
@@ -343,44 +348,52 @@ Menus::Enum MenuInit()
 	buttons.GetButton(0)->SetTrigger(&Trigger[Triggers::Home]);
 	ResumeGui();
 
-	vector<int> mounted;
 	do {
-		mounted = Haxx_Mount();
-		if (!mounted.size()) {
-			HaltGui();
-			Subtitle->SetText("No SD/USB Mounted");
-			ResumeGui();
+		Haxx_Mount(&Mounted);
+		if (!Mounted.size()) {
+			HaltGui(); Subtitle->SetText("Insert SD/USB..."); ResumeGui();
 		}
 
 		MENUINIT_CHECKBUTTONS();
-	} while (!mounted.size());
-
-	RVL_Initialize();
+	} while (!Mounted.size());
+	HaltGui(); Subtitle->SetText("Loading..."); ResumeGui();
 
 	LauncherStatus::Enum status;
 
 	do {
-		status = Launcher_Init();
-		switch (status) {
-			case LauncherStatus::IosError:
-				Subtitle->SetText("IOS Error!");
-				break;
-			default:
-				break;
+		if (RVL_Initialize() < 0 || (status = Launcher_Init()) == LauncherStatus::IosError) {
+				HaltGui(); Subtitle->SetText("IOS Error!"); ResumeGui();
+				status = LauncherStatus::IosError;
 		}
 
 		MENUINIT_CHECKBUTTONS();
 	} while (status != LauncherStatus::OK);
 
+	return Menus::Init;
+}
+
+Menus::Enum MenuInit()
+{
+	HaltGui();
+	ButtonList buttons(Window, 1);
+	buttons.SetButton(0, "Exit", ButtonList::ExitImage);
+	buttons.GetButton(0)->SetTrigger(&Trigger[Triggers::Home]);
+	Title->SetText(RIIVOLUTION_TITLE);
+	ResumeGui();
+
+	RVL_SetFST(NULL, 0);
+
+	LauncherStatus::Enum status = LauncherStatus::NoDisc;
+	HaltGui(); Subtitle->SetText("Loading..."); ResumeGui();
+
 	do {
 		status = Launcher_ReadDisc();
 		switch (status) {
 			case LauncherStatus::NoDisc:
-				Subtitle->SetText("Insert Disc...");
-				//TODO: Launcher_WaitForDisc() maybe, also MENUINIT_CHECKBUTTONS during it >.>
+				HaltGui(); Subtitle->SetText("Insert Disc..."); ResumeGui();
 				break;
 			case LauncherStatus::ReadError:
-				Subtitle->SetText("Disc Read Error!");
+				HaltGui(); Subtitle->SetText("Disc Read Error!"); ResumeGui();
 				sleep(3); // TODO: Repeatedly MENUINIT_CHECKBUTTONS during this sleep
 				break;
 			default:
@@ -390,25 +403,26 @@ Menus::Enum MenuInit()
 		MENUINIT_CHECKBUTTONS();
 	} while (status != LauncherStatus::OK);
 
-	Title->SetText(Launcher_GetGameName());
+	HaltGui(); Title->SetText(Launcher_GetGameName()); ResumeGui();
 
 	vector<RiiDisc> discs;
-	for (vector<int>::iterator mount = mounted.begin(); mount != mounted.end(); mount++) {
+	for (vector<int>::iterator mount = Mounted.begin(); mount != Mounted.end(); mount++) {
 		char mountpoint[MAXPATHLEN];
 		char mountpath[MAXPATHLEN];
 		if (File_GetMountPoint(*mount, mountpoint, sizeof(mountpoint)) < 0)
 			continue;
 		strcpy(mountpath, mountpoint);
 		strcat(mountpath, RIIVOLUTION_PATH);
+
 		ParseXMLs(mountpath, mountpoint, &discs);
 	}
 	Disc = CombineDiscs(&discs);
 	ParseConfigXMLs(&Disc);
 
-	if (Launcher_RVL() < 0)
+	if (Launcher_RVL() != LauncherStatus::OK)
 		return Menus::Exit;
 
-	Title->SetText(Launcher_GetGameName());
+	HaltGui(); Title->SetText(Launcher_GetGameName()); ResumeGui();
 
 	MENUINIT_CHECKBUTTONS();
 
@@ -451,6 +465,7 @@ Menus::Enum MenuMain()
 	buttons.SetButton(0, "Exit", ButtonList::ExitImage);
 	buttons.GetButton(0)->SetTrigger(&Trigger[Triggers::Home]);
 	buttons.SetButton(1, "Launch", ButtonList::LaunchImage);
+	buttons.GetButton(1)->SetState(STATE_SELECTED, 0);
 	ResumeGui();
 
 	PreparePages();
@@ -468,6 +483,11 @@ Menus::Enum MenuMain()
 			case 1:
 				return Menus::Launch;
 		}
+
+		CheckShutdown();
+
+		if (!Launcher_DiscInserted())
+			return Menus::Init;
 	}
 }
 
@@ -491,10 +511,12 @@ Menus::Enum MenuLaunch()
 
 	RVL_PatchMemory(&Disc);
 
-	Launcher_AddPlaytimeEntry();
+	if (Launcher_AddPlaytimeEntry() != LauncherStatus::OK)
+		return Menus::Exit;
 
-	Loader_SetVideoMode();
+	Launcher_SetVideoMode();
 
+	File_Deinit();
 	Launcher_Launch();
 
 	return Menus::Exit;

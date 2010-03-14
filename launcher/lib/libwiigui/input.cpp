@@ -19,11 +19,11 @@
 #include "input.h"
 #include "libwiigui/gui.h"
 
-//#define GCN_PAD
+#define GCN_PAD
 
 int rumbleRequest[4] = {0,0,0,0};
 GuiTrigger userInput[4];
-static int rumbleCount[4] = {0,0,0,0};
+static volatile int rumbleCount[4] = {0,0,0,0};
 
 /****************************************************************************
  * UpdatePads

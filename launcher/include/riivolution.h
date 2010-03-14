@@ -29,6 +29,7 @@ void* RVL_GetFST();
 int RVL_SetClusters(bool clusters);
 void RVL_SetAlwaysShift(bool shift);
 int RVL_Allocate(PatchType::Enum type, int num);
+int RVL_SetShiftBase(u64 shift);
 int RVL_AddFile(const char* filename);
 int RVL_AddFile(const char* filename, u64 identifier);
 int RVL_AddShift(u64 original, u64 offset, u32 length);

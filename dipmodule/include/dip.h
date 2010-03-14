@@ -42,6 +42,8 @@ namespace ProxiIOS { namespace DIP {
 			SetClusters		= 0xC4,
 			Allocate		= 0xC5,
 			AddEmu			= 0xC6,
+			SetFileProvider = 0xC7,
+			SetShiftBase	= 0xC8,
 			
 			// Ioctlv
 			OpenPartition	= 0x8B
@@ -81,7 +83,9 @@ namespace ProxiIOS { namespace DIP {
 	class DIP : public ProxiIOS::ProxyModule
 	{
 		public:
-			s32 CurrentPartition;
+			u64 CurrentPartition;
+			u64 ShiftBase;
+			u64 PatchPartition;
 			
 			u32 AllocatedPatches[MAX_PATCH_TYPES];
 			u32 PatchCount[MAX_PATCH_TYPES];

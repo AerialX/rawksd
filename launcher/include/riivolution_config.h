@@ -84,6 +84,13 @@ struct RiiSavegamePatch {
 };
 
 struct RiiMemoryPatch {
+	RiiMemoryPatch()
+	{
+		Offset = 0;
+		Value = NULL;
+		Original = NULL;
+		Length = 0;
+	}
 	int Offset;
 	u8* Value;
 	u8* Original;

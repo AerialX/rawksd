@@ -51,8 +51,7 @@ int FatHandler::Mount(const void* options, int length)
 	} else
 		strcpy(Name, __fatName);
 
-	//if (fatMount(Name, Module->Disk[disk], 0, 8, 4) < 0)
-	if (fatMount(Name, Module->Disk[disk], 0, 2, 4) < 0)
+	if (fatMount(Name, Module->Disk[disk], 0, 3, 4) < 0)
 		return Errors::DiskNotMounted;
 
 	strcpy(MountPoint, "/mnt/");
@@ -172,7 +171,7 @@ FileInfo* FatHandler::OpenDir(const char* path)
 
 	int fd = FAT_OpenDir(path);
 	
-	if (!fd)
+	if (fd < 0)
 		return null;
 	
 	return new FatFileInfo(this, fd);

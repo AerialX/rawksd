@@ -28,14 +28,14 @@ namespace ProxiIOS { namespace DIP {
 		virtual int GetCover() { return ForwardIoctl(); }
 		virtual int Reset(int param) { return ForwardIoctl(); }
 		virtual int ClosePartition() { return ForwardIoctl(); }
-		virtual int UnencryptedRead(void* buffer, int size, int offset) { return ForwardIoctl(); }
+		virtual int UnencryptedRead(void* buffer, u32 size, u32 offset) { return ForwardIoctl(); }
 		virtual int EnableDVD(bool enable) { return ForwardIoctl(); }
 		virtual int ReportKey() { return ForwardIoctl(); }
 		virtual int Seek() { return ForwardIoctl(); }
 		virtual int ReadDVD(int zero1, int zero2, int sectors, int sector) { return ForwardIoctl(); }
 		virtual int StopLaser() { return ForwardIoctl(); }
 		virtual int Offset(int param1, int param2) { return ForwardIoctl(); }
-		virtual int ReadBCA(void* buffer, int length) { return ForwardIoctl(); }
+		virtual int ReadBCA(void* buffer, u32 length) { return ForwardIoctl(); }
 		virtual int VerifyCover(u32* output) { return ForwardIoctl(); }
 		virtual int RequestError(u32* errorcode) { return ForwardIoctl(); }
 		virtual int StopMotor(bool eject, bool kill) { return ForwardIoctl(); }

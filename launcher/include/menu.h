@@ -5,9 +5,12 @@
 
 #define THREAD_SLEEP 100
 
+#define RIIVOLUTION_TITLE "Riivolution v1.0"
+
 namespace Menus { enum Enum
 {
 	Exit = 0,
+	Mount,
 	Init,
 	Main,
 	Settings,
@@ -34,6 +37,9 @@ void MainMenu(Menus::Enum menu);
 void ResumeGui();
 void HaltGui();
 
+void CheckShutdown();
+
+Menus::Enum MenuMount();
 Menus::Enum MenuInit();
 Menus::Enum MenuMain();
 Menus::Enum MenuLaunch();

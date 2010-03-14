@@ -27,7 +27,9 @@ static union {
 	app_info app;
 } ATTRIBUTE_ALIGN(32);
 
-static char GameName[0x100];
+static char GameName[0x100] ATTRIBUTE_ALIGN(32);
+static s16 BannerName[42];
+static bool BannerNameRead = false;
 
 #define PART_OFFSET			0x00040000
 #define APP_INFO_OFFSET		0x2440
@@ -42,28 +44,56 @@ static int nullprintf(const char* fmt, ...)
 }
 
 typedef struct {
-    u8 zeroes[128]; // padding
+    u8 zeroes[64]; // padding
     u32 imet; // "IMET"
     u8 unk[8];  // 0x0000060000000003 fixed, unknown purpose
     u32 sizes[3]; // icon.bin, banner.bin, sound.bin
     u32 flag1; // unknown
-    u8 names[10][84]; // Japanese, English, German, French, Spanish, Italian, Dutch, unknown, unknown, Korean
+    s16 names[10][42]; // Japanese, English, German, French, Spanish, Italian, Dutch, unknown, unknown, Korean
     u8 zeroes_2[588]; // padding
     u8 crypto[16]; // MD5 of 0x40 to 0x640 in header. crypto should be all 0's when calculating final MD5
 } __attribute__((packed)) IMET;
-const char* Launcher_GetGameName()
+
+const s16* Launcher_GetGameNameWide()
 {
 	if (RVL_GetFST()) {
+		if (BannerNameRead)
+			return BannerName;
 		DiscNode* node = RVL_FindNode("/opening.bnr");
 		if (node != NULL) {
 			static IMET imet ATTRIBUTE_ALIGN(32);
-			WDVD_LowRead(&imet, sizeof(imet), (u64)node->DataOffset << 2);
-			const char* ret = (const char*)imet.names[CONF_GetLanguage()];
-			if (strlen(ret) > 0)
-				return ret;
+			if (WDVD_LowRead(&imet, sizeof(imet), (u64)node->DataOffset << 2) >= 0 && imet.imet == 0x494D4554) {
+				memcpy(BannerName, imet.names[CONF_GetLanguage()], sizeof(BannerName));
+				if (BannerName[0]) {
+					BannerNameRead = true;
+					return BannerName;
+				}
+			}
 		}
 	}
-	return GameName;
+
+	for (int i = 0; i < 42; i++)
+		BannerName[i] = GameName[i];
+	return BannerName;
+}
+
+const char* Launcher_GetGameName()
+{
+	if (!RVL_GetFST())
+		return GameName;
+
+	static char gamename[42];
+	const s16* name = Launcher_GetGameNameWide();
+	// Find the last non-null char
+	int end = 41;
+	while (!name[end])
+		end--;
+	end = MIN(end, 40);
+	for (int i = 0; i <= end; i++)
+		gamename[i] = (char)(name[i] ? name[i] : ' ');
+	gamename[end + 1] = '\0';
+
+	return gamename;
 }
 
 LauncherStatus::Enum Launcher_Init()
@@ -77,18 +107,33 @@ LauncherStatus::Enum Launcher_Init()
 	return LauncherStatus::OK;
 }
 
+bool Launcher_DiscInserted()
+{
+	bool cover;
+	WDVD_VerifyCover(&cover);
+	return cover;
+}
+
 LauncherStatus::Enum Launcher_ReadDisc()
 {
 	u32 i;
+	static bool subsequent = false;
 	
-	if (!WDVD_CheckCover())
+	BannerNameRead = false;
+
+	if (!Launcher_DiscInserted())
 		return LauncherStatus::NoDisc;
 	
-	WDVD_Reset();
-	
+	if (subsequent) // In case of re-inserted discs, needs to be called again
+		WDVD_Reset();
+	else
+		subsequent = true;
+
 	WDVD_LowReadDiskId();
 	WDVD_LowUnencryptedRead(MEM_BASE, 0x20, 0x00000000); // Just to make sure...
 	
+	WDVD_LowUnencryptedRead(GameName, 0x40, 0x20);
+
 	WDVD_LowUnencryptedRead(partition_info, 0x20, PART_OFFSET);
 	// make sure there is at least one primary partition
 	if (partition_info[0] == 0)
@@ -107,13 +152,15 @@ LauncherStatus::Enum Launcher_ReadDisc()
 	if (WDVD_LowOpenPartition((u64)partition_info[i * 2 + 8] << 2) != 1)
 		return LauncherStatus::ReadError;
 
-	// TODO: Read Game title from opening.bnr on primary partition
-	WDVD_LowUnencryptedRead(GameName, 0x40, 0x20);
-
 	return LauncherStatus::OK;
 }
 
 static u32 fstdata[0x10] ATTRIBUTE_ALIGN(32);
+
+const u32* Launcher_GetFstData()
+{
+	return fstdata;
+}
 
 LauncherStatus::Enum Launcher_RVL()
 {
@@ -175,7 +222,6 @@ LauncherStatus::Enum Launcher_AddPlaytimeEntry()
 {
 	u32 titleid = WDVD_GetTMD()->title_id;
 	u16 groupid = WDVD_GetTMD()->group_id;
-	const char* title = Launcher_GetGameName();
 
 	static playtime_buf_t playtime_buf ATTRIBUTE_ALIGN(32);
 	int d = ISFS_Open("/title/00000001/00000002/data/play_rec.dat", ISFS_OPEN_WRITE);
@@ -183,8 +229,7 @@ LauncherStatus::Enum Launcher_AddPlaytimeEntry()
 		u64 tick_now = gettime();
 		memset(&playtime_buf, 0, sizeof(playtime_buf_t));
 		s32 i = 0;
-		while ((playtime_buf.name[i] = title[i++]))
-			;
+		memcpy(playtime_buf.name, Launcher_GetGameNameWide(), sizeof(playtime_buf.name));
 		playtime_buf.ticks_boot = tick_now;
 		playtime_buf.ticks_last = tick_now;
 		playtime_buf.title_id = titleid;
@@ -220,11 +265,11 @@ static void ApplyBinaryPatches(s32 app_section_size)
 
 	// DIP
 	while ((found = FindInBuffer(app_address, app_section_size, "/dev/di", 7))) {
-		memcpy(found, "/dev/do", 7);
+		((u8*)found)[6] = 'o'; // "/dev/di" to "/dev/do"
 	}
 }
 
-LauncherStatus::Enum Loader_SetVideoMode()
+LauncherStatus::Enum Launcher_SetVideoMode()
 {
 	u32 tvmode = CONF_GetVideo();
 	GXRModeObj* vmode = VIDEO_GetPreferredMode(0);

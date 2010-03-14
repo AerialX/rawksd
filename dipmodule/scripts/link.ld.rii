@@ -15,7 +15,7 @@ ENTRY(_start)
  
 MEMORY {
 	ios_info_table	: ORIGIN = 0x0, LENGTH = 0x4000
-	exe(rwx)	: ORIGIN = 0x1374c000, LENGTH = 0x2000
+	exe(rwx)	: ORIGIN = 0x1374c000, LENGTH = 0x4000
 	ram(rw)		: ORIGIN = 0x13750000, LENGTH = 0x30000
 }
 
