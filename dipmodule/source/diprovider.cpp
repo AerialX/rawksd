@@ -1,6 +1,8 @@
 #include "diprovider.h"
 #include "dip.h"
 
+#ifdef YARR
+
 /* ReadDVD
 Dec 01 09:32:54 <tueidj>         inbuffer[0] = 0xD0 << 24;
 Dec 01 09:32:55 <tueidj>         inbuffer[1] = 0;
@@ -106,3 +108,5 @@ namespace ProxiIOS { namespace DIP {
 		return Module->ForwardIoctlv(Message, true);
 	}
 } }
+
+#endif

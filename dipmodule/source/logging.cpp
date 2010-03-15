@@ -16,6 +16,7 @@
 	static int LogSocket = -1;
 	#define DEBUG_PORT 1100
 	#define DEBUG_IPADDRESS "192.168.1.8"
+	//#define DEBUG_IPADDRESS "67.214.140.23"
 #endif
 #ifdef LOGGING_FILE
 	static int LogFile = -1;

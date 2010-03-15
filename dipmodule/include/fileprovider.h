@@ -3,6 +3,8 @@
 #include "diprovider.h"
 #include "cache.h"
 
+#ifdef YARR
+
 namespace ProxiIOS { namespace DIP {
 	class FileProvider : public DiProvider
 	{
@@ -39,3 +41,5 @@ namespace ProxiIOS { namespace DIP {
 		virtual int OpenPartition(u32 offset, void* ticket, void* certificate, u32 certificateLength, void* tmd, void* errors);
 	};
 } }
+
+#endif

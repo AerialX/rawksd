@@ -2,6 +2,9 @@
 
 #include <proxiios.h>
 
+//#define YARR
+
+#ifdef YARR
 namespace ProxiIOS { namespace DIP {
 	class DIP;
 	
@@ -47,3 +50,4 @@ namespace ProxiIOS { namespace DIP {
 		virtual int OpenPartition(u32 offset, void* ticket, void* certificate, u32 certificateLength, void* tmd, void* errors) { return ForwardIoctlv(); }
 	};
 } }
+#endif

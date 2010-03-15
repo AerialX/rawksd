@@ -95,9 +95,9 @@ namespace ProxiIOS { namespace DIP {
 			s32 OpenFds[MAX_OPEN_FILES];
 			
 			bool Clusters;
-			
+#ifdef YARR
 			DiProvider* Provider;
-			
+#endif
 			DIP();
 			
 			int HandleOpen(ipcmessage* message);

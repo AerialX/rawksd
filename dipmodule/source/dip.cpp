@@ -41,7 +41,9 @@ namespace ProxiIOS { namespace DIP {
 		memset(AllocatedPatches, 0, sizeof(AllocatedPatches));
 		Clusters = false;
 		
+#ifdef YARR
 		Provider = NULL;
+#endif
 
 		ShiftBase = 0x200000000ULL;
 		PatchPartition = 0;
@@ -150,6 +152,7 @@ namespace ProxiIOS { namespace DIP {
 				LogPrintf("IOCTL: AddEmu();\n");
 				return -1;
 			}
+#ifdef YARR
 			case Ioctl::SetFileProvider: {
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				LogPrintf("IOCTL: SetFileProvider(\"%s\");\n", (const char*)message->ioctl.buffer_in);
@@ -161,10 +164,11 @@ namespace ProxiIOS { namespace DIP {
 					return -1;
 				return 1;
 			}
+#endif
 			case Ioctl::SetShiftBase: {
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				ShiftBase = ((u64)message->ioctl.buffer_in[0] << 32) | message->ioctl.buffer_in[1];
-				LogPrintf("IOCTL: SetShiftBase(0x%08x%08x);\n", ShiftBase >> 32, ShiftBase);
+				LogPrintf("IOCTL: SetShiftBase(0x%08x%08x);\n", (u32)(ShiftBase >> 32), (u32)ShiftBase);
 			}
 			case Ioctl::SetClusters:
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
@@ -316,6 +320,8 @@ namespace ProxiIOS { namespace DIP {
 	
 	bool DIP::ReadFile(s16 fileid, u32 offset, void* data, u32 length)
 	{
+		LogPrintf("\tReadFile(0x%04x, 0x%08x, 0x%08x) : ", (u32)fileid, offset, length);
+
 		FileDesc* file = (FileDesc*)Patches[PatchType::File] + fileid;
 		int openindex = IsFileOpen(fileid);
 		if (openindex < 0) { // Re-open it
@@ -343,6 +349,7 @@ namespace ProxiIOS { namespace DIP {
 			
 			if (OpenFds[openindex] < 0) {
 				OpenFiles[openindex] = -1;
+				LogPrintf("0x%08x\n\t\tFile_Open failed!\n", OpenFds[openindex]);
 				return false;
 			}
 		}
@@ -351,12 +358,12 @@ namespace ProxiIOS { namespace DIP {
 		
 		int ret = File_Read(OpenFds[openindex], (u8*)data, length);
 		
-		LogPrintf("\tReadFile(0x%04x, 0x%08x, 0x%08x) : 0x%08x\n", (u32)fileid, offset, length, ret);
+		LogPrintf("0x%08x\n", ret);
 
 		if (ret > 0)
 			os_sync_after_write(data, length);
 		else
-			LogPrintf("\t\tFile read error!");
+			LogPrintf("\t\tFile_Read error!\n");
 		
 		return ret >= 0;
 	}
@@ -379,16 +386,21 @@ namespace ProxiIOS { namespace DIP {
 	}
 	int DIP::ForwardIoctl(ipcmessage* message, bool bypass)
 	{
-		if (!Provider || bypass)
-			return ProxyModule::ForwardIoctl(message);
-		else
+#ifdef YARR
+		if (Provider && !bypass)
 			return Provider->HandleIoctl(message);
+		else
+#endif
+			return ProxyModule::ForwardIoctl(message);
+
 	}
 	int DIP::ForwardIoctlv(ipcmessage* message, bool bypass)
 	{
-		if (!Provider || bypass)
-			return ProxyModule::ForwardIoctlv(message);
-		else
+#ifdef YARR
+		if (Provider && !bypass)
 			return Provider->HandleIoctl(message);
+		else
+#endif
+			return ProxyModule::ForwardIoctlv(message);
 	}
 } }

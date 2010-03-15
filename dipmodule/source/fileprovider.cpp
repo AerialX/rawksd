@@ -6,6 +6,8 @@
 
 #include "es.h"
 
+#ifdef YARR
+
 namespace ProxiIOS { namespace DIP {
 	bool FileProvider::ReadSectors(void* userdata, sec_t sector, sec_t numSectors, void* buffer)
 	{
@@ -115,3 +117,5 @@ namespace ProxiIOS { namespace DIP {
 		return 0;
 	}
 } }
+
+#endif

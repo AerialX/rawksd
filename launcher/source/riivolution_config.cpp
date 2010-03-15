@@ -232,7 +232,7 @@ versionisvalid:
 							ELEMENT_ATTRIBUTE("name", true)
 								option.Name = attribute;
 							ELEMENT_ATTRIBUTE("id", true)
-								option.ID = attribute;
+								option.ID = section.ID + attribute;
 							else
 								option.ID = section.ID + option.Name;
 							ELEMENT_ATTRIBUTE("default", true)

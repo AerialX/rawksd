@@ -117,8 +117,6 @@ void MainMenu(Menus::Enum menu)
 	BackgroundImage = new GuiImageData(background_png);
 
 	Window = new GuiWindow(screenwidth, screenheight);
-	//Window->SetPosition((screenwidth - BackgroundImage->GetWidth()) / 2, (screenheight - BackgroundImage->GetHeight()) / 2);
-	//Window = new GuiWindow(BackgroundImage->GetWidth(), BackgroundImage->GetHeight());
 	Window->SetPosition(0, 0);
 	Window->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 	
@@ -128,7 +126,7 @@ void MainMenu(Menus::Enum menu)
 	Window->SetFocus(true);
 	Window->Append(Background);
 	
-	Title = new GuiText("Riivolution", 32, (GXColor){255, 255, 255, 255});
+	Title = new GuiText(RIIVOLUTION_TITLE, 32, (GXColor){255, 255, 255, 255});
 	Title->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 	Title->SetPosition(56, 32);
 	// TODO: Title->SetItalic(true);
@@ -144,10 +142,6 @@ void MainMenu(Menus::Enum menu)
 	Trigger[Triggers::Home].SetButtonOnlyTrigger(-1, WPAD_BUTTON_HOME | WPAD_CLASSIC_BUTTON_HOME, PAD_BUTTON_START);
 	Trigger[Triggers::PageLeft].SetButtonOnlyTrigger(-1, WPAD_BUTTON_MINUS | WPAD_CLASSIC_BUTTON_FULL_L | WPAD_CLASSIC_BUTTON_MINUS, PAD_TRIGGER_L);
 	Trigger[Triggers::PageRight].SetButtonOnlyTrigger(-1, WPAD_BUTTON_PLUS | WPAD_CLASSIC_BUTTON_FULL_R | WPAD_CLASSIC_BUTTON_PLUS, PAD_TRIGGER_R);
-	/*Trigger[Triggers::Up].SetButtonOnlyTrigger(-1, WPAD_BUTTON_UP | WPAD_CLASSIC_BUTTON_UP, PAD_BUTTON_UP);
-	Trigger[Triggers::Down].SetButtonOnlyTrigger(-1, WPAD_BUTTON_DOWN | WPAD_CLASSIC_BUTTON_DOWN, PAD_BUTTON_DOWN);
-	Trigger[Triggers::Left].SetButtonOnlyTrigger(-1, WPAD_BUTTON_LEFT | WPAD_CLASSIC_BUTTON_LEFT, PAD_BUTTON_LEFT);
-	Trigger[Triggers::Right].SetButtonOnlyTrigger(-1, WPAD_BUTTON_RIGHT | WPAD_CLASSIC_BUTTON_RIGHT, PAD_BUTTON_RIGHT);*/
 	
 	ButtonList::InitImageData();
 
@@ -183,6 +177,9 @@ void MainMenu(Menus::Enum menu)
 	}
 	
 	ShutoffRumble();
+
+	if (*(vu32*)0x80001804 != 0x53545542) // "STUB" - Check for whether the HBC (or other loader) reload stub is in place or not
+		SYS_ResetSystem(SYS_RETURNTOMENU, 0, 0);
 
 	ResumeGui();
 	RequestExit();

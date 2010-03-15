@@ -12,10 +12,6 @@
 
 using std::vector;
 
-#define RIIFS_MYIP "192.168.1.113"
-#define RIIFS_SERVERIP "67.214.140.23"
-#define RIIFS_PORT 1137
-
 #define printf(...)
 
 extern "C" {
@@ -77,19 +73,6 @@ void Haxx_Mount(vector<int>* mounted)
 		mounted->push_back(ret);
 		DEFAULT();
 	}
-/*
-	ret = File_RiiFS_Mount(RIIFS_SERVERIP, RIIFS_PORT);
-	if (ret >= 0) {
-		mounted->push_back(ret);
-		DEFAULT();
-	}
-
-	ret = File_RiiFS_Mount("192.168.1.113", RIIFS_PORT);
-	if (ret >= 0) {
-		mounted->push_back(ret);
-		DEFAULT();
-	}
-*/
 }
 
 extern "C" void udelay(int us);

@@ -233,7 +233,7 @@ struct PageViewer {
 
 			GuiText* title = new GuiText(option->Name.c_str(), OPTION_FONT_SIZE, (GXColor){0, 0, 0, 255}); Title[i] = title;
 			title->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-			title->SetPosition(24, y);
+			title->SetPosition(38, y);
 			Window->Append(title);
 
 			GuiText* choiceText = new GuiText(GetChoiceText(option), OPTION_FONT_SIZE, (GXColor){0, 0, 0, 255}); ChoiceText[i] = choiceText;
@@ -511,8 +511,7 @@ Menus::Enum MenuLaunch()
 
 	RVL_PatchMemory(&Disc);
 
-	if (Launcher_AddPlaytimeEntry() != LauncherStatus::OK)
-		return Menus::Exit;
+	Launcher_AddPlaytimeEntry();
 
 	Launcher_SetVideoMode();
 

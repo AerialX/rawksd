@@ -57,17 +57,19 @@ void RVL_SetFST(void* address, u32 size)
 	fst = (DiscNode*)address;
 	fstsize = size;
 
-	if (fst != NULL && size) {
+	if (fst && size) {
 		const void* nametable = (const void*)(fst + fst->Size);
-		u32 offset = 0;
+		DiscNode* largest = NULL;
 		for (DiscNode* node = fst; node < nametable; node++) {
-			if (!node->Type)
-				offset = MAX(offset, node->DataOffset);
+			if (!node->Type && (!largest || largest->DataOffset < node->DataOffset))
+					largest = node;
 		}
-		shift = (u64)offset << 2;
-		RVL_GetShiftOffset(0); // Round up
+		if (largest) {
+			shift = (u64)largest->DataOffset << 2;
+			RVL_GetShiftOffset(largest->Size); // Round up
 
-		RVL_SetShiftBase(shift);
+			RVL_SetShiftBase(shift);
+		}
 	}
 }
 

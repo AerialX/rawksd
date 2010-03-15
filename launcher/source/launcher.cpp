@@ -218,13 +218,15 @@ typedef struct
 	};
 } playtime_buf_t;
 
+#define PLAYLOG_FILE "/mnt/isfs/title/00000001/00000002/data/play_rec.dat"
 LauncherStatus::Enum Launcher_AddPlaytimeEntry()
 {
 	u32 titleid = WDVD_GetTMD()->title_id;
 	u16 groupid = WDVD_GetTMD()->group_id;
 
 	static playtime_buf_t playtime_buf ATTRIBUTE_ALIGN(32);
-	int d = ISFS_Open("/title/00000001/00000002/data/play_rec.dat", ISFS_OPEN_WRITE);
+	File_CreateFile(PLAYLOG_FILE);
+	int d = File_Open(PLAYLOG_FILE, O_WRONLY);
 	if (d >= 0) {
 		u64 tick_now = gettime();
 		memset(&playtime_buf, 0, sizeof(playtime_buf_t));
@@ -237,8 +239,8 @@ LauncherStatus::Enum Launcher_AddPlaytimeEntry()
 		for (i = 0; i < 0x1f; i++)
 			playtime_buf.checksum += playtime_buf.data[i];
 
-		bool ret = sizeof(playtime_buf_t) == ISFS_Write(d, (u8*)&playtime_buf, sizeof(playtime_buf_t));
-		ISFS_Close(d);
+		bool ret = sizeof(playtime_buf_t) == File_Write(d, (u8*)&playtime_buf, sizeof(playtime_buf_t));
+		File_Close(d);
 		if (ret)
 			return LauncherStatus::OK;
 		return LauncherStatus::IosError;

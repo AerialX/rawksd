@@ -16,7 +16,7 @@ namespace ProxiIOS { namespace Filesystem {
 		while ((ret = net_init()) == -EAGAIN)
 			usleep(10000);
 		if (ret < 0)
-			return NULL;
+			return Errors::DiskNotMounted;
 
 		strcpy(IP, (const char*)options);
 		Port = *(int*)((u8*)options + 0x10);
@@ -30,7 +30,6 @@ namespace ProxiIOS { namespace Filesystem {
 			return Errors::DiskNotMounted;
 		if (net_connect(Socket, (struct sockaddr*)(const void *)&address, sizeof(address)) < 0)
 			return Errors::DiskNotMounted;
-		
 		if (!SendCommand(RII_HANDSHAKE, (const u8*)RII_VERSION, strlen(RII_VERSION))) {
 			Unmount();
 			return Errors::DiskNotMounted;
@@ -64,13 +63,14 @@ namespace ProxiIOS { namespace Filesystem {
 				return true;
 		}
 #endif
-		int sendcommand = RII_SEND;
 		bool fail = false;
-		fail |= net_send(Socket, &sendcommand, 4, 0) < 0;
-		fail |= net_send(Socket, &type, 4, 0) < 0;
-		fail |= net_send(Socket, &size, 4, 0) < 0;
+		static u32 message[0x03] ATTRIBUTE_ALIGN(32);
+		message[0] = RII_SEND;
+		message[1] = type;
+		message[2] = size;
+		fail |= net_send(Socket, message, 12, 0) != 12;
 		if (size && data)
-			fail |= net_send(Socket, data, size, 0) < 0;
+			fail |= net_send(Socket, data, size, 0) != size;
 #ifdef RIIFS_LOCAL_OPTIONS
 		if (size == 4 && !fail) {
 			Options[type - 1] = value;
@@ -83,22 +83,13 @@ namespace ProxiIOS { namespace Filesystem {
 	static int netrecv(int socket, u8* data, int size, int opts)
 	{
 		int read = 0;
-		static u8 buffer[0x1000] ATTRIBUTE_ALIGN(32);
-		bool misaligned = (u32)data & 0x1F;
 		while (read < size) {
-			int ret;
-			if (misaligned)
-				ret = net_recv(socket, buffer, MIN(0x1000, size - read), opts);
-			else
-				ret = net_recv(socket, data + read, MIN(0x2000, size - read), opts);
+			int ret = net_recv(socket, data + read, MIN(0x400, size - read), opts);
 
 			if (ret < 0)
 				return ret;
 			if (ret == 0)
 				return read;
-
-			if (misaligned)
-				memcpy(data + read, buffer, ret);
 
 			read += ret;
 		}
@@ -113,21 +104,23 @@ namespace ProxiIOS { namespace Filesystem {
 
 	int RiiHandler::ReceiveCommand(int type, void* data, int size)
 	{
-		int sendcommand = RII_RECEIVE;
 		bool fail = false;
-		fail |= net_send(Socket, &sendcommand, 4, 0) < 0;
-		fail |= net_send(Socket, &type, 4, 0) < 0;
-		int ret = 0;
+		static u32 message[0x02] ATTRIBUTE_ALIGN(32);
+		message[0] = RII_RECEIVE;
+		message[1] = type;
+		fail |= net_send(Socket, message, 0x08, 0) != 8;
+		static int ret ATTRIBUTE_ALIGN(32);
+		ret = 0;
 		if (size) {
 			if (data)
-				fail |= netrecv(Socket, (u8*)data, size, 0) < 0;
+				fail |= netrecv(Socket, (u8*)data, size, 0) != size;
 			else {
 				void* temp = Alloc(size);
 				netrecv(Socket, (u8*)temp, size, 0);
 				Dealloc(temp);
 			}
 		}
-		fail |= netrecv(Socket, (u8*)&ret, 4, 0) < 0;
+		fail |= netrecv(Socket, (u8*)&ret, 4, 0) != 4;
 		
 		if (fail)
 			return -1;
@@ -196,6 +189,8 @@ namespace ProxiIOS { namespace Filesystem {
 		if (!ret) {
 			if (whence == SEEK_CUR)
 				info->Position += where;
+			else if (whence == SEEK_SET)
+				info->Position = where;
 			else
 				info->Position = ReceiveCommand(RII_FILE_TELL);
 		}
