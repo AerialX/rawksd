@@ -37,6 +37,11 @@ extern "C" {
 	extern u8 arrow_active_right_png[];
 }
 
+#define UNSELECT_ALL() { \
+	for (int unselect = Window->GetSelected(); unselect >= 0; unselect = Window->GetSelected()) \
+		Window->GetGuiElementAt(unselect)->ResetState(); \
+}
+
 struct PageViewer {
 	u32 PageNumber;
 	Page* Current;
@@ -280,10 +285,12 @@ struct PageViewer {
 	{
 		if (Pages.size() > 1) {
 			if (LeftButton->GetState() == STATE_CLICKED) {
+				UNSELECT_ALL();
 				LeftButton->SetState(STATE_SELECTED, LeftButton->GetStateChan());
 				SetPage(Wrap(PageNumber - 1, Pages.size()));
 			}
 			if (RightButton->GetState() == STATE_CLICKED) {
+				UNSELECT_ALL();
 				RightButton->SetState(STATE_SELECTED, RightButton->GetStateChan());
 				SetPage(Wrap(PageNumber + 1, Pages.size()));
 			}
@@ -294,6 +301,7 @@ struct PageViewer {
 
 		for (u32 i = 0; i < Current->Options.size(); i++) {
 			if (RightArrow[i]->GetState() == STATE_CLICKED || Choice[i]->GetState() == STATE_CLICKED) {
+				UNSELECT_ALL();
 				if (RightArrow[i]->GetState() == STATE_CLICKED)
 					RightArrow[i]->SetState(STATE_SELECTED, RightArrow[i]->GetStateChan());
 				if (Choice[i]->GetState() == STATE_CLICKED)
@@ -301,6 +309,7 @@ struct PageViewer {
 				SetOption(i, Current->Options[i], Wrap(Current->Options[i]->Default + 1, Current->Options[i]->Choices.size() + 1));
 			}
 			if (LeftArrow[i]->GetState() == STATE_CLICKED) {
+				UNSELECT_ALL();
 				LeftArrow[i]->SetState(STATE_SELECTED, LeftArrow[i]->GetStateChan());
 				SetOption(i, Current->Options[i], Wrap(Current->Options[i]->Default - 1, Current->Options[i]->Choices.size() + 1));
 			}
