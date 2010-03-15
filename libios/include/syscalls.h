@@ -7,12 +7,10 @@
    extern "C" {
 #endif /* __cplusplus */
 
-typedef s32 (*async_cb)(s32 result, void *cb_data);
-
-/*  0 */ u32       os_thread_create( u32 (*entry)(void* arg), void* arg, void* stack, u32 stacksize, u32 priority, s32 autostart);
+/*  0 */ u32       os_thread_create( u32 (*entry)(void* _arg), void* arg, void* stack, u32 stacksize, u32 priority, s32 autostart);
 
 /*  3 */ int       os_get_thread_id(void);
-/*  4 */ int       os_get_parent_thread_id(void);
+/*  4 */ int       os_get_process_id(void);
 /*  5 */ int       os_thread_continue(int id);
 /*  6 */ int       os_thread_stop(int id);
 

@@ -2,7 +2,7 @@
 
 #include <gccore.h>
 
-#include <string>
+#include <string.h>
 #include <vector>
 
 struct DiscNode

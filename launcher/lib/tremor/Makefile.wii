@@ -9,17 +9,17 @@ endif
 
 include $(DEVKITPPC)/wii_rules
 
-
+#not needed, should be defined in wii_rules
 #---------------------------------------------------------------------------------
-PREFIX	:=	powerpc-gekko
+#PREFIX	:=	powerpc-eabi
 #---------------------------------------------------------------------------------
 
-CC		:=	$(PREFIX)-gcc
-CXX		:=	$(PREFIX)-g++
-AS		:=	$(PREFIX)-as
-AR		:=	$(PREFIX)-ar
-LD		:=	$(PREFIX)-ld
-OBJCOPY		:=	$(PREFIX)-objcopy
+#CC		:=	$(PREFIX)-gcc
+#CXX		:=	$(PREFIX)-g++
+#AS		:=	$(PREFIX)-as
+#AR		:=	$(PREFIX)-ar
+#LD		:=	$(PREFIX)-ld
+#OBJCOPY		:=	$(PREFIX)-objcopy
 
 BUILD		:=	build
 

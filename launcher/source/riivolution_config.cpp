@@ -5,6 +5,7 @@ using std::string;
 using std::vector;
 using std::map;
 
+#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 

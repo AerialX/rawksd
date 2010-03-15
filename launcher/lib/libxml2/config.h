@@ -50,6 +50,7 @@
 /* #undef HAVE_DL_H */
 
 /* Define to 1 if you have the <errno.h> header file. */
+#define __LINUX_ERRNO_EXTENSIONS__
 #define HAVE_ERRNO_H 1
 
 /* Define to 1 if you have the <fcntl.h> header file. */
