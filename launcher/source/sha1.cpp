@@ -162,11 +162,11 @@ unsigned char finalcount[8];
 #endif
 }
 
-void SHA1(unsigned char *ptr, unsigned int size, unsigned char *outbuf) {
+void SHA1(const unsigned char *ptr, unsigned int size, unsigned char *outbuf) {
   SHA1_CTX ctx;
-  
+
   SHA1Init(&ctx);
-  SHA1Update(&ctx, ptr, size);
+  SHA1Update(&ctx, (unsigned char*)ptr, size);
   SHA1Final(outbuf, &ctx);
 }
 

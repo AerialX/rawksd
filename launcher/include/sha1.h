@@ -9,4 +9,4 @@ void SHA1Init(SHA1_CTX* context);
 void SHA1Update(SHA1_CTX* context, unsigned char* data, unsigned int len);
 void SHA1Final(unsigned char digest[20], SHA1_CTX* context);
 
-void SHA1(unsigned char *ptr, unsigned int size, unsigned char *outbuf);
+void SHA1(const unsigned char *ptr, unsigned int size, unsigned char *outbuf);
