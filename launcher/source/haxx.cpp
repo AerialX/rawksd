@@ -632,65 +632,56 @@ static int patch_ios37_sd_load(void* buf, s32 size)
 static u8 *load_tmd_content(tmd* title_tmd, u16 index)
 {
 	u8 *content = NULL;
-	s32 fd;
 	char filename[65];
-	u32 j;
-	u32 size=0;
+	u32 size;
 
-	fd = IOS_Open("/shared1/content.map", ISFS_OPEN_READ);
-	if (fd>=0)
+	filename[0] = '\0';
+
+	if (title_tmd->contents[index].type & 0x8000) // shared content
 	{
-		size = IOS_Seek(fd, 0, SEEK_END);
+		// make sure it's at least 32 bytes long for IOS_read
+		static union
+		{
+			cmap_entry cmap;
+			u8 unused[32];
+		} shared ATTRIBUTE_ALIGN(32);
+
+		s32 fd = IOS_Open("/shared1/content.map", ISFS_OPEN_READ);
+
+		if (fd<0)
+			return NULL;
+
+		while (IOS_Read(fd, &shared, sizeof(cmap_entry))==sizeof(cmap_entry))
+		{
+			if (!memcmp(shared.cmap.hash, title_tmd->contents[index].hash, sizeof(sha1)))
+			{
+				strcpy(filename, "/shared1/00000000.app");
+				memcpy(filename+9, shared.cmap.name, 8);
+				break;
+			}
+		}
+
 		IOS_Close(fd);
 	}
+	else
+		sprintf(filename, "/title/%08x/%08x/content/%08x.app", (u32)(title_tmd->title_id>>32), (u32)(title_tmd->title_id), title_tmd->contents[index].cid);
 
-	if (size>0)
+	size = title_tmd->contents[index].size;
+	content = fetch_file(filename, size);
+
+	if (content)
 	{
-		u8 *content_map;
-		u32 content_map_entries=0;
-
-		content_map = fetch_file("/shared1/content.map", size);
-		if (content_map)
+		u8 real_hash[20];
+		SHA1(content, size, real_hash);
+		if (memcmp(title_tmd->contents[index].hash, real_hash, sizeof(sha1)))
 		{
-			content_map_entries = size / sizeof(cmap_entry);
-			if (title_tmd->contents[index].type & 0x8000)
-			{
-				// shared
-				filename[0] = 0;
-				for (j=0; j < content_map_entries; j++)
-				{
-					cmap_entry *shared = (cmap_entry*)(content_map+j*sizeof(cmap_entry));
-					if (!memcmp(shared->hash, title_tmd->contents[index].hash, sizeof(sha1)))
-					{
-						strcpy(filename, "/shared1/00000000.app");
-						memcpy(filename+9, shared->name, 8);
-						break;
-					}
-				}
-			}
-			else
-				sprintf(filename, "/title/%08x/%08x/content/%08x.app", (u32)(title_tmd->title_id>>32), (u32)(title_tmd->title_id), title_tmd->contents[index].cid);
-
-			free(content_map);
-
-			size = title_tmd->contents[index].size;
-			content = fetch_file(filename, size);
-
-			if (content)
-			{
-				u8 real_hash[20];
-				SHA1(content, size, real_hash);
-				if (memcmp(title_tmd->contents[index].hash, real_hash, sizeof(sha1)))
-				{
-					printf("Content file %s had bad hash\n", filename);
-					free(content);
-					content = NULL;
-				}
-			}
-			else
-				printf("Couldn't fetch content %s\n", filename);
+			printf("Content file %s had bad hash\n", filename);
+			free(content);
+			content = NULL;
 		}
 	}
+	else
+		printf("Couldn't fetch content %s\n", filename);
 
 	return content;
 }
