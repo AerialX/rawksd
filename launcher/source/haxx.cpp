@@ -978,6 +978,7 @@ static bool do_exploit()
 {
 	s32 es_fd = -1;
 	const u64 ios_title = HAXX_IOS;
+	int patch_failed = 0;
 
 	printf("Grabbin' HAXX\n");
 
@@ -996,7 +997,6 @@ static bool do_exploit()
 
 	if (disable_mem2_protection(es_fd))
 	{
-		int patch_failed = 0;
 		printf("MEM2 protection disabled\n");
 
 		if (!check_for_sneek(es_fd))
@@ -1053,7 +1053,7 @@ static bool do_exploit()
 	if (es_fd >= 0)
 		IOS_Close(es_fd);
 
-	return true;
+	return !patch_failed;
 }
 
 /******* BEGIN SIGNATURE CHECKING STUF ******/

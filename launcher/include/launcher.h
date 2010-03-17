@@ -20,8 +20,9 @@
 #define MEM_FSTADDRESS		((void**)0x80000038)
 #define MEM_APPLOADER		((u32*)0x81200000)
 
-#define MEM_ARENA1HIGH		((u32*)0x80000034)
+#define MEM_ARENA1HIGH		((void**)0x80000034)
 #define MEM_FSTSIZE			((u32*)0x8000003C)
+#define MEM_EXE				((void*)0x80003F00)
 
 namespace LauncherStatus { enum Enum {
 	OK = 0,

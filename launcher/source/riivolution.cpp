@@ -463,16 +463,52 @@ no_common_fs:
 	}
 }
 
+static void* FindInBuffer(void* memory, void* end, void* pattern, int patternlength, int align)
+{
+	for (end = (u8*)end - patternlength; memory < end; memory = (u8*)memory + align) {
+		if (!memcmp(memory, pattern, patternlength))
+			return memory;
+	}
+
+	return NULL;
+}
 static void RVL_Patch(RiiMemoryPatch* memory)
 {
-	if (memory->Original && memcmp((void*)memory->Offset, memory->Original, memory->Length))
+	if (memory->Ocarina || memory->Search || !memory->Offset || !memory->GetValue() || !memory->GetLength())
 		return;
 
-	if (memory->Value && memory->Length)
-		memcpy((void*)memory->Offset, memory->Value, memory->Length);
+	if (memory->Original && memcmp((void*)memory->Offset, memory->Original, memory->GetLength()))
+		return;
+
+	memcpy((void*)memory->Offset, memory->GetValue(), memory->GetLength());
+	DCFlushRange((void*)memory->Offset, memory->GetLength());
 }
 
-void RVL_PatchMemory(RiiDisc* disc)
+static void RVL_Patch(RiiMemoryPatch* memory, void* mem, u32 length)
+{
+	if ((!memory->Ocarina && !memory->Search) || (memory->Search && !memory->Align) || !memory->Offset || !memory->GetValue() || !memory->GetLength())
+		return;
+
+	if (memory->Ocarina) {
+		// TODO: Wiibrew says 0x81330000 is convention for apploaders, maybe we should start using that + MEM2? >.>
+		void* ocarina = FindInBuffer(mem, (u8*)mem + length, memory->GetValue(), memory->GetLength(), 4);
+		if (ocarina) {
+			u32* blr;
+			for (blr = (u32*)ocarina; (u8*)blr < (u8*)mem + length && *blr != 0x4E800020; blr++)
+				;
+			if ((u8*)blr != (u8*)mem + length)
+				*blr = ((int)blr - memory->Offset & 0x03FFFFFF) | 0x48000000;
+		}
+	} else /* if (memory->Search) */ {
+		memory->Offset = (int)MEM_PHYSICAL_TO_K0(memory->Offset);
+		// TODO: Searching in MEM2? Too bad.
+		void* ret = FindInBuffer((void*)memory->Offset, *MEM_ARENA1HIGH, memory->Original, memory->Length, memory->Align);
+		if (ret)
+			memcpy(ret, memory->GetValue(), memory->GetLength());
+	}
+}
+
+void RVL_PatchMemory(RiiDisc* disc, void* memory, u32 length)
 {
 	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
 		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
@@ -481,10 +517,18 @@ void RVL_PatchMemory(RiiDisc* disc)
 			RiiChoice* choice = &option->Choices[option->Default - 1];
 			for (vector<RiiChoice::Patch>::iterator patch = choice->Patches.begin(); patch != choice->Patches.end(); patch++) {
 				RiiPatch* mem = &disc->Patches[patch->ID];
-				for (vector<RiiMemoryPatch>::iterator memory = mem->Memory.begin(); memory != mem->Memory.end(); memory++) {
-					RVL_Patch(&*memory);
+				for (vector<RiiMemoryPatch>::iterator mempatch = mem->Memory.begin(); mempatch != mem->Memory.end(); mempatch++) {
+					if (memory)
+						RVL_Patch(&*mempatch, memory, length);
+					else
+						RVL_Patch(&*mempatch);
 				}
 			}
 		}
 	}
+}
+
+void RVL_PatchMemory(RiiDisc* disc)
+{
+	RVL_PatchMemory(disc, NULL, 0);
 }

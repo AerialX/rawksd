@@ -261,6 +261,7 @@ static void* FindInBuffer(void* buffer, s32 size, const void* tofind, s32 findsi
 	return NULL;
 }
 
+extern RiiDisc Disc;
 static void ApplyBinaryPatches(s32 app_section_size)
 {
 	void* found;
@@ -269,6 +270,8 @@ static void ApplyBinaryPatches(s32 app_section_size)
 	while ((found = FindInBuffer(app_address, app_section_size, "/dev/di", 7))) {
 		((u8*)found)[6] = 'o'; // "/dev/di" to "/dev/do"
 	}
+
+	RVL_PatchMemory(&Disc, app_address, app_section_size);
 }
 
 LauncherStatus::Enum Launcher_SetVideoMode()
@@ -326,7 +329,7 @@ LauncherStatus::Enum Launcher_RunApploader()
 	settime(secs_to_ticks(time(NULL) - 946684800));
 	
 	// Avoid a flash of green
-	VIDEO_SetBlack(true); VIDEO_Flush(); VIDEO_WaitVSync(); VIDEO_WaitVSync();
+	//VIDEO_SetBlack(true); VIDEO_Flush(); VIDEO_WaitVSync(); VIDEO_WaitVSync();
 	
 	// put crap in memory to keep the apploader/dol happy
 	*MEM_VIRTUALSIZE = 0x01800000;
@@ -353,8 +356,8 @@ LauncherStatus::Enum Launcher_RunApploader()
 	
 	while (app_loader(&app_address, &app_section_size, &app_disc_offset)) {
 		WDVD_LowRead(app_address, app_section_size, (u64)app_disc_offset << 2);
-		DCFlushRange(app_address, app_section_size);
 		ApplyBinaryPatches(app_section_size);
+		DCFlushRange(app_address, app_section_size);
 		app_address = NULL;
 		app_section_size = 0;
 		app_disc_offset = 0;

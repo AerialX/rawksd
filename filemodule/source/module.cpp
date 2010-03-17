@@ -180,7 +180,10 @@ namespace ProxiIOS { namespace Filesystem {
 				FilePathDesc descriptor(this, (const char*)message->ioctl.buffer_in);
 				if (!descriptor.System)
 					return Errors::NotMounted;
-				return (int)descriptor.System->OpenDir(descriptor.Path); }
+				int ret = (int)descriptor.System->OpenDir(descriptor.Path);
+				if (!ret)
+					return Errors::NotOpened;
+				return ret; }
 			case Ioctl::CloseDir: {
 				FileInfo* dir = (FileInfo*)message->ioctl.buffer_in[0];
 				return dir->System->CloseDir(dir); }

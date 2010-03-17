@@ -27,7 +27,7 @@ struct Page {
 	vector<RiiOption*> Options;
 };
 
-static RiiDisc Disc;
+RiiDisc Disc;
 static vector<Page> Pages;
 
 extern "C" {
@@ -404,6 +404,7 @@ Menus::Enum MenuInit()
 			case LauncherStatus::ReadError:
 				HaltGui(); Subtitle->SetText("Disc Read Error!"); ResumeGui();
 				sleep(3); // TODO: Repeatedly MENUINIT_CHECKBUTTONS during this sleep
+				HaltGui(); Subtitle->SetText("Loading..."); ResumeGui();
 				break;
 			default:
 				break;
@@ -428,9 +429,7 @@ Menus::Enum MenuInit()
 	Disc = CombineDiscs(&discs);
 	ParseConfigXMLs(&Disc);
 
-	if (Launcher_RVL() != LauncherStatus::OK)
-		return Menus::Exit;
-
+	Launcher_RVL();
 	HaltGui(); Title->SetText(Launcher_GetGameName()); ResumeGui();
 
 	MENUINIT_CHECKBUTTONS();
@@ -518,11 +517,11 @@ Menus::Enum MenuLaunch()
 
 	Launcher_CommitRVL(false);
 
-	RVL_PatchMemory(&Disc);
-
 	Launcher_AddPlaytimeEntry();
 
 	Launcher_SetVideoMode();
+
+	RVL_PatchMemory(&Disc);
 
 	File_Deinit();
 	Launcher_Launch();

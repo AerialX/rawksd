@@ -233,7 +233,7 @@ versionisvalid:
 							ELEMENT_ATTRIBUTE("name", true)
 								option.Name = attribute;
 							ELEMENT_ATTRIBUTE("id", true)
-								option.ID = section.ID + attribute;
+								option.ID = attribute;
 							else
 								option.ID = section.ID + option.Name;
 							ELEMENT_ATTRIBUTE("default", true)
@@ -292,11 +292,12 @@ versionisvalid:
 		ELEMENT_START("patch") {
 			RiiPatch patch;
 			string id;
+			std::string patchroot;
 
 			ELEMENT_ATTRIBUTE("id", true)
 				id = rootpath + attribute;
 			ELEMENT_ATTRIBUTE("root", true)
-				xmlroot = AbsolutePathCombine(xmlroot, attribute, rootfs);
+				patchroot = AbsolutePathCombine(xmlroot, attribute, rootfs);
 
 			ELEMENT_LOOP {
 				ELEMENT_END("patch")
@@ -313,7 +314,7 @@ versionisvalid:
 					ELEMENT_ATTRIBUTE("offset", true)
 						file.Offset = ELEMENT_INT(attribute);
 					ELEMENT_ATTRIBUTE("external", true)
-						file.External = AbsolutePathCombine(xmlroot, attribute, rootfs);
+						file.External = AbsolutePathCombine(patchroot, attribute, rootfs);
 					ELEMENT_ATTRIBUTE("fileoffset", true)
 						file.FileOffset = ELEMENT_INT(attribute);
 					ELEMENT_ATTRIBUTE("length", true)
@@ -333,7 +334,7 @@ versionisvalid:
 					ELEMENT_ATTRIBUTE("disc", true)
 						folder.Disc = attribute;
 					ELEMENT_ATTRIBUTE("external", true)
-						folder.External = AbsolutePathCombine(xmlroot, attribute, rootfs);
+						folder.External = AbsolutePathCombine(patchroot, attribute, rootfs);
 
 					patch.Folders.push_back(folder);
 				}
@@ -351,7 +352,7 @@ versionisvalid:
 				ELEMENT_START("savegame") {
 					RiiSavegamePatch savegame;
 					ELEMENT_ATTRIBUTE("external", true)
-						savegame.External = AbsolutePathCombine(xmlroot, attribute, rootfs);
+						savegame.External = AbsolutePathCombine(patchroot, attribute, rootfs);
 
 					patch.Savegames.push_back(savegame);
 				}
@@ -361,6 +362,14 @@ versionisvalid:
 					ELEMENT_ATTRIBUTE("offset", true)
 						memory.Offset = ELEMENT_INT(attribute);
 
+					ELEMENT_ATTRIBUTE("search", true)
+						memory.Search = ELEMENT_BOOL();
+					ELEMENT_ATTRIBUTE("ocarina", true)
+						memory.Ocarina = ELEMENT_BOOL();
+					ELEMENT_ATTRIBUTE("align", true)
+						memory.Align = ELEMENT_INT(attribute);
+					ELEMENT_ATTRIBUTE("valuefile", true)
+						memory.ValueFile = AbsolutePathCombine(patchroot, attribute, rootfs);
 					ELEMENT_ATTRIBUTE("value", true) {
 						if (!attribute.compare(0, 2, "0x"))
 							attribute = attribute.substr(2);
@@ -544,7 +553,7 @@ void ParseConfigXMLs(RiiDisc* disc)
 
 	Stats st;
 	char* xmldata = (char*)SYS_GetArena2Lo(); // Borrowing MEM2, lulz
-	if (File_Stat(filename, &st) < 0)
+	if (File_Stat(filename, &st) != 0)
 		return;
 	int fd = File_Open(filename, O_RDONLY);
 	if (fd < 0)
@@ -579,16 +588,34 @@ void SaveConfigXML(RiiDisc* disc)
 	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
 		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
 			Element* node = root->add_child("option");
-			node->set_attribute("id", option->ID);
+			node->set_attribute("id", option->ID); // TODO: Save section as well
 			sprintf(choice, "%d", option->Default);
 			node->set_attribute("default", choice);
 		}
 	}
 
 	string xml = document.write_to_string_formatted();
-
+	// <? crap
 	if (xml.size() > 0x17)
 		File_Write(fd, xml.c_str() + 0x16, xml.size() - 0x17);
 
 	File_Close(fd);
+}
+
+u8* RiiMemoryPatch::GetValue()
+{
+	Stats st;
+	if (!Value && ValueFile.size() && !File_Stat(ValueFile.c_str(), &st)) {
+		int fd = File_Open(ValueFile.c_str(), O_RDONLY);
+		if (fd >= 0) {
+			Value = new u8[st.Size];
+			if (Value) {
+				File_Read(fd, Value, st.Size);
+				Length = st.Size;
+			}
+			File_Close(fd);
+		}
+	}
+
+	return Value;
 }

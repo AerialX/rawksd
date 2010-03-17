@@ -90,11 +90,26 @@ struct RiiMemoryPatch {
 		Value = NULL;
 		Original = NULL;
 		Length = 0;
+		Align = 1;
+		Search = false;
+		Ocarina = false;
 	}
 	int Offset;
 	u8* Value;
 	u8* Original;
 	u32 Length;
+	bool Search;
+	bool Ocarina;
+	u32 Align;
+
+	std::string ValueFile;
+
+	u8* GetValue();
+
+	u32 GetLength()
+	{
+		return Length;
+	}
 };
 
 struct RiiPatch {

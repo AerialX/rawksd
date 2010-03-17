@@ -43,5 +43,6 @@ struct RiiDisc;
 
 void RVL_Patch(RiiDisc* disc);
 void RVL_PatchMemory(RiiDisc* disc);
+void RVL_PatchMemory(RiiDisc* disc, void* memory, u32 length);
 
 static inline u64 RVL_GetShiftOffset() { return RVL_GetShiftOffset(0); }
