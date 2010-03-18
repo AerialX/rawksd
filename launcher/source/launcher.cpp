@@ -309,44 +309,42 @@ static void ApplyBinaryPatches(s32 app_section_size)
 
 LauncherStatus::Enum Launcher_SetVideoMode()
 {
+	GXRModeObj* vmode;
 	u32 tvmode = CONF_GetVideo();
-	GXRModeObj* vmode = VIDEO_GetPreferredMode(0);
-	u32 videomode = 0;
-	switch (tvmode) {
-		case CONF_VIDEO_PAL:
-			if (CONF_GetEuRGB60() > 0)
-				videomode = VI_EURGB60;
-			else
-				videomode = VI_PAL;
-			break;
-		case CONF_VIDEO_MPAL:
-			videomode = VI_MPAL;
-			break;
-		default:
-			videomode = VI_NTSC;
-			break;
-	}
-
-	// Force system region video mode
-	if (CONF_GetProgressiveScan() > 0 && VIDEO_HaveComponentCable())
-		vmode = &TVNtsc480Prog;
-	else {
-		switch (tvmode) {
-			case CONF_VIDEO_PAL: case CONF_VIDEO_MPAL:
-				if (videomode == VI_EURGB60)
-					vmode = &TVEurgb60Hz480IntDf;
-				else if (videomode == VI_MPAL)
-					vmode = &TVMpal480IntDf;
-				else
-					vmode = &TVPal528IntDf;
-				break;
-			case CONF_VIDEO_NTSC:
-				vmode = &TVNtsc480IntDf;
-			break;
+	if (tvmode==CONF_VIDEO_PAL)
+	{
+		*MEM_VIDEOMODE = VI_EURGB60;
+		if (CONF_GetProgressiveScan() > 0 && VIDEO_HaveComponentCable())
+		{
+			// wtf, why does this cause a DSI?
+			//vmode = &TVEurgb60Hz480Prog;
+			vmode = &TVNtsc480Prog;
+		}
+		else if (CONF_GetEuRGB60() > 0)
+			vmode = &TVEurgb60Hz480IntDf;
+		else
+		{
+			vmode = &TVPal528IntDf;
+			*MEM_VIDEOMODE = VI_PAL;
 		}
 	}
-	VIDEO_Configure(vmode); VIDEO_SetBlack(true); VIDEO_Flush(); VIDEO_WaitVSync(); VIDEO_WaitVSync();
-	*(u32*)MEM_VIDEOMODE = vmode->viTVMode >> 2;
+	else
+	{
+		if (CONF_GetProgressiveScan() > 0 && VIDEO_HaveComponentCable())
+			vmode = &TVNtsc480Prog;
+		else
+			vmode = &TVNtsc480IntDf;
+		if (tvmode==CONF_VIDEO_NTSC)
+			*MEM_VIDEOMODE = VI_NTSC;
+		else
+			*MEM_VIDEOMODE = VI_MPAL;
+	}
+
+	VIDEO_Configure(vmode);
+	VIDEO_SetBlack(true);
+	VIDEO_Flush();
+	VIDEO_WaitVSync();
+	VIDEO_WaitVSync();
 
 	return LauncherStatus::OK;
 }
@@ -411,6 +409,7 @@ LauncherStatus::Enum Launcher_RunApploader()
 LauncherStatus::Enum Launcher_Launch()
 {
 	if (app_address) {
+		WPAD_Shutdown();
 		WDVD_Close();
 		__ES_Close();
 		DCFlushRange(MEM_BASE, 0x17FFFFFF);
