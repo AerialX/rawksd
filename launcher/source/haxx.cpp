@@ -550,7 +550,7 @@ int disable_mem2_protection(s32 fd)
 }
 
 // this function will only work once after reloading IOS, so use sparingly. Make sure ES has been patched before calling!
-static int identify_as_title(u64 title)
+int identify_as_title(u64 title)
 {
 	s32 ret;
 	u32 *tmd_blob = NULL;

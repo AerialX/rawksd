@@ -3,8 +3,8 @@
 #include "wdvd.h"
 #include "riivolution.h"
 
-#include <stdio.h>
 #include <ogc/lwp_watchdog.h>
+#include <ogc/lwp_threads.h>
 
 #include <files.h>
 
@@ -62,7 +62,7 @@ const s16* Launcher_GetGameNameWide()
 		DiscNode* node = RVL_FindNode("/opening.bnr");
 		if (node != NULL) {
 			static IMET imet ATTRIBUTE_ALIGN(32);
-			if (WDVD_LowRead(&imet, sizeof(imet), (u64)node->DataOffset << 2) >= 0 && imet.imet == 0x494D4554) {
+			if (!WDVD_LowRead(&imet, sizeof(imet), (u64)node->DataOffset << 2) && imet.imet == 0x494D4554) {
 				memcpy(BannerName, imet.names[CONF_GetLanguage()], sizeof(BannerName));
 				if (BannerName[0]) {
 					BannerNameRead = true;
@@ -102,7 +102,8 @@ LauncherStatus::Enum Launcher_Init()
 	if (fd < 0)
 		return LauncherStatus::IosError;
 
-	WDVD_Reset();
+	if (!WDVD_Reset())
+		return LauncherStatus::IosError;
 
 	return LauncherStatus::OK;
 }
@@ -110,46 +111,78 @@ LauncherStatus::Enum Launcher_Init()
 bool Launcher_DiscInserted()
 {
 	bool cover;
-	WDVD_VerifyCover(&cover);
-	return cover;
+	if (!WDVD_VerifyCover(&cover))
+		return cover;
+	return false;
 }
 
+static bool subsequent = false;
 LauncherStatus::Enum Launcher_ReadDisc()
 {
 	u32 i;
-	static bool subsequent = false;
-	
+
 	BannerNameRead = false;
 
 	if (!Launcher_DiscInserted())
 		return LauncherStatus::NoDisc;
-	
-	if (subsequent) // In case of re-inserted discs, needs to be called again
-		WDVD_Reset();
-	else
-		subsequent = true;
 
-	WDVD_LowReadDiskId();
-	WDVD_LowUnencryptedRead(MEM_BASE, 0x20, 0x00000000); // Just to make sure...
-	
-	WDVD_LowUnencryptedRead(GameName, 0x40, 0x20);
+	if (subsequent && !WDVD_Reset()) // In case of re-inserted discs, needs to be called again
+		return LauncherStatus::IosError;
 
-	WDVD_LowUnencryptedRead(partition_info, 0x20, PART_OFFSET);
-	// make sure there is at least one primary partition
-	if (partition_info[0] == 0)
+	subsequent = true;
+
+	if (WDVD_LowReadDiskId())
 		return LauncherStatus::ReadError;
-	
+
+	memset(GameName, 0xFF, sizeof(64));
+	if (WDVD_LowReadBCA((u8*)GameName, 0x40))
+		return LauncherStatus::ReadError;
+
+	for (i=0; i < 52; i++)
+	{
+		if (GameName[i])
+			return LauncherStatus::ReadError;
+	}
+
+	memset(GameName, 0xFF, sizeof(64));
+	if (WDVD_LowUnencryptedRead(GameName, 0x40, 0x100))
+		return LauncherStatus::ReadError;
+
+	for (i=0; i < 64; i++)
+	{
+		if (GameName[i])
+			return LauncherStatus::ReadError;
+	}
+
+	// check if it returns a key when it shouldn't (001 error)
+	if (WDVD_ReportKey(4, 0, GameName) != -2)
+		return LauncherStatus::ReadError;
+
+	// make sure LowUnenencryptedRead lba table hasn't been patched
+	WDVD_SetDVDMode(0);
+	if (WDVD_LowUnencryptedRead(0, 0, (0x2EE00000llu<<2)) != -32)
+		return LauncherStatus::ReadError;
+
+	if (WDVD_LowUnencryptedRead(GameName, 0x40, 0x20))
+		return LauncherStatus::ReadError;
+
+	memset(partition_info, 0, sizeof(partition_info));
+	// make sure there is at least one primary partition
+	if (WDVD_LowUnencryptedRead(partition_info, 0x20, PART_OFFSET) || partition_info[0]==0)
+		return LauncherStatus::ReadError;
+
 	// read primary partition table
-	WDVD_LowUnencryptedRead(partition_info + 8, max(4, min(8, partition_info[0])) * 8, (u64)partition_info[1] << 2);
+	if (WDVD_LowUnencryptedRead(partition_info + 8, max(4, min(8, partition_info[0])) * 8, (u64)partition_info[1] << 2))
+		return LauncherStatus::ReadError;
 	for (i = 0; i < partition_info[0]; i++)
 		if (partition_info[i * 2 + 8 + 1] == 0)
 			break;
-	
+
 	// make sure we found a game partition
 	if (i >= partition_info[0])
 		return LauncherStatus::ReadError;
-	
-	if (WDVD_LowOpenPartition((u64)partition_info[i * 2 + 8] << 2) != 1)
+
+	if (WDVD_LowOpenPartition((u64)partition_info[i * 2 + 8] << 2))
 		return LauncherStatus::ReadError;
 
 	return LauncherStatus::OK;
@@ -164,10 +197,10 @@ const u32* Launcher_GetFstData()
 
 LauncherStatus::Enum Launcher_RVL()
 {
-	if (WDVD_LowRead(fstdata, 0x40, 0x420) < 0)
+	if (WDVD_LowRead(fstdata, 0x40, 0x420))
 		return LauncherStatus::ReadError;
 	fstdata[2] <<= 2;
-	if (WDVD_LowRead(SYS_GetArena2Lo(), fstdata[2], (u64)fstdata[1] << 2) < 0) // MEM2
+	if (WDVD_LowRead(SYS_GetArena2Lo(), fstdata[2], (u64)fstdata[1] << 2)) // MEM2
 		return LauncherStatus::ReadError;
 	RVL_SetFST(SYS_GetArena2Lo(), fstdata[2]);
 
@@ -213,7 +246,7 @@ typedef struct
 			u64 ticks_last;
 			u32 title_id;
 			u16 title_gid;
-			//u8 unknown[18];
+			//u8 padding[18];
 		} ATTRIBUTE_PACKED;
 	};
 } playtime_buf_t;
@@ -249,7 +282,7 @@ LauncherStatus::Enum Launcher_AddPlaytimeEntry()
 	return LauncherStatus::IosError;
 }
 
-static void* app_address = NULL;
+static void *app_address = NULL;
 
 static void* FindInBuffer(void* buffer, s32 size, const void* tofind, s32 findsize)
 {
@@ -325,12 +358,12 @@ LauncherStatus::Enum Launcher_RunApploader()
 	AppExit app_exit = NULL;
 	s32 app_section_size = 0;
 	s32 app_disc_offset = 0;
-	
+
 	settime(secs_to_ticks(time(NULL) - 946684800));
-	
+
 	// Avoid a flash of green
 	//VIDEO_SetBlack(true); VIDEO_Flush(); VIDEO_WaitVSync(); VIDEO_WaitVSync();
-	
+
 	// put crap in memory to keep the apploader/dol happy
 	*MEM_VIRTUALSIZE = 0x01800000;
 	*MEM_PHYSICALSIZE = 0x01800000;
@@ -340,32 +373,36 @@ LauncherStatus::Enum Launcher_RunApploader()
 	*MEM_ARENA1LOW = 0;
 	*MEM_BUSSPEED = 0x0E7BE2C0;
 	*MEM_CPUSPEED = 0x2B73A840;
-	*MEM_GAMEIDADDRESS = MEM_BASE;
+	*MEM_TITLEFLAGS = 0x80000000;
 	memcpy(MEM_GAMEONLINE, MEM_BASE, 4);
-	//*MEM_GAMEONLINE = (u32)MEM_BASE;
 	DCFlushRange(MEM_BASE, 0x3F00);
-	
+
 	// read the apploader info
-	WDVD_LowRead(&app, sizeof(app_info), APP_INFO_OFFSET);
+	if (WDVD_LowRead(&app, sizeof(app_info), APP_INFO_OFFSET))
+		return LauncherStatus::ReadError;
 	DCFlushRange(&app, sizeof(app_info));
 	// read the apploader into memory
-	WDVD_LowRead(MEM_APPLOADER, app.loader_size + app.data_size, APP_DATA_OFFSET);
+	if (WDVD_LowRead(MEM_APPLOADER, app.loader_size + app.data_size, APP_DATA_OFFSET))
+		return LauncherStatus::ReadError;
 	DCFlushRange(MEM_APPLOADER, app.loader_size + app.data_size);
 	app.start(&app_enter, &app_loader, &app_exit);
 	app_enter((AppReport)nullprintf);
-	
+
 	while (app_loader(&app_address, &app_section_size, &app_disc_offset)) {
-		WDVD_LowRead(app_address, app_section_size, (u64)app_disc_offset << 2);
+		if (WDVD_LowRead(app_address, app_section_size, (u64)app_disc_offset << 2))
+			return LauncherStatus::ReadError;
 		ApplyBinaryPatches(app_section_size);
 		DCFlushRange(app_address, app_section_size);
 		app_address = NULL;
 		app_section_size = 0;
 		app_disc_offset = 0;
 	}
-	
+
 	// copy the IOS version over the expected IOS version
 	memcpy(MEM_IOSEXPECTED, MEM_IOSVERSION, 4);
-	
+
+	*(u32*)0xCD006C00 = 0x00000000;	// deinit audio due to libogc fail
+
 	app_address = app_exit();
 
 	return LauncherStatus::OK;
@@ -375,15 +412,11 @@ LauncherStatus::Enum Launcher_Launch()
 {
 	if (app_address) {
 		WDVD_Close();
+		__ES_Close();
 		DCFlushRange(MEM_BASE, 0x17FFFFFF);
-		
+
 		SYS_ResetSystem(SYS_SHUTDOWN, 0, 0);
-		__asm__ __volatile__ (
-			"mtlr %0;"
-			"blr"
-			:
-			: "r" (app_address)
-		);
+		__lwp_thread_stopmultitasking((void(*)())app_address);
 	}
 
 	// We shouldn't get to here
