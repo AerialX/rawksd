@@ -89,7 +89,6 @@ int WDVD_LowReadDiskId() {
 // ugh. Don't even need this tmd shit.
 static u8 tmd_data[0x49e4] ATTRIBUTE_ALIGN(32);
 static u8 errorbuffer[0x40] ATTRIBUTE_ALIGN(32);
-static u32 commandbuffer[0x08] ATTRIBUTE_ALIGN(32);
 int WDVD_LowOpenPartition(u64 offset) {
 	int result;
 
@@ -98,10 +97,11 @@ int WDVD_LowOpenPartition(u64 offset) {
 
 	WDVD_LowClosePartition();
 
-	commandbuffer[0] = 0x8b000000;
-	commandbuffer[1] = offset >> 2;
+	inbuffer[12] = 0x8b000000;
+	inbuffer[13] = offset >> 2;
+	inbuffer[14] = inbuffer[15] = 0;
 
-	iovector[0].data = commandbuffer;
+	iovector[0].data = inbuffer+12;
 	iovector[0].len = 0x20;
 	iovector[1].data = 0;
 	iovector[1].len = 0x24a;

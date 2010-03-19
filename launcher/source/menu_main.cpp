@@ -503,6 +503,8 @@ Menus::Enum MenuLaunch()
 {
 	Subtitle->SetText("Loading...");
 
+	HaltGui();
+
 	ShutoffRumble();
 
 	SaveConfigXML(&Disc);
@@ -510,8 +512,6 @@ Menus::Enum MenuLaunch()
 	RVL_Patch(&Disc);
 
 	// Launcher_CommitRVL(true); // TODO: CommitRVL properly?
-
-	HaltGui();
 
 	Launcher_RunApploader();
 

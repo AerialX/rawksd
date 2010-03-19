@@ -292,7 +292,7 @@ versionisvalid:
 		ELEMENT_START("patch") {
 			RiiPatch patch;
 			string id;
-			std::string patchroot;
+			std::string patchroot = xmlroot;
 
 			ELEMENT_ATTRIBUTE("id", true)
 				id = rootpath + attribute;
@@ -566,14 +566,19 @@ void ParseConfigXMLs(RiiDisc* disc)
 void SaveConfigXML(RiiDisc* disc)
 {
 	char filename[MAXPATHLEN];
+
+	strcpy(filename, RIIVOLUTION_PATH);
+	filename[strlen(filename)-1]=0;
+	File_CreateDir(filename);
+
+	strcpy(filename, RIIVOLUTION_CONFIG_PATH);
+	filename[strlen(filename)-1]=0;
+	File_CreateDir(filename);
+
 	strcpy(filename, RIIVOLUTION_CONFIG_PATH);
 	strncat(filename, (const char*)MEM_BASE, 4);
 	strcat(filename, ".xml");
-
-	File_CreateDir(RIIVOLUTION_PATH);
-	File_CreateDir(RIIVOLUTION_CONFIG_PATH);
-	File_CreateFile(filename);
-	int fd = File_Open(filename, O_WRONLY | O_TRUNC);
+	int fd = File_Open(filename, O_CREAT | O_WRONLY | O_TRUNC);
 	if (fd < 0)
 		return;
 

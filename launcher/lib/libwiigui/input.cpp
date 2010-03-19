@@ -21,7 +21,7 @@
 
 #define GCN_PAD
 
-int rumbleRequest[4] = {0,0,0,0};
+int rumbleRequest[4];
 GuiTrigger userInput[4];
 static volatile int rumbleCount[4] = {0,0,0,0};
 
@@ -58,6 +58,7 @@ void UpdatePads()
  ***************************************************************************/
 void SetupPads()
 {
+	int rumbleAllowed = CONF_GetPadMotorMode() > 0;
 #ifdef GCN_PAD
 	PAD_Init();
 #endif
@@ -72,6 +73,7 @@ void SetupPads()
 	{
 		userInput[i].chan = i;
 		userInput[i].wpad = WPAD_Data(i);
+		rumbleRequest[i] = rumbleAllowed<<1;
 	}
 }
 
@@ -83,8 +85,9 @@ void ShutoffRumble()
 {
 	for(int i=0;i<4;i++)
 	{
-		WPAD_Rumble(i, 0);
 		rumbleCount[i] = 0;
+		rumbleRequest[i] &= 2;
+		WPAD_Rumble(i, 0);
 	}
 }
 
@@ -94,15 +97,15 @@ void ShutoffRumble()
 
 void DoRumble(int i)
 {
-	if(rumbleRequest[i] && rumbleCount[i] < 3)
+	if(rumbleRequest[i]==3 && rumbleCount[i] < 3)
 	{
 		WPAD_Rumble(i, 1); // rumble on
 		rumbleCount[i]++;
 	}
-	else if(rumbleRequest[i])
+	else if(rumbleRequest[i]&1)
 	{
 		rumbleCount[i] = 12;
-		rumbleRequest[i] = 0;
+		rumbleRequest[i] &= 2;
 	}
 	else
 	{
