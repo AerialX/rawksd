@@ -341,11 +341,18 @@ void forge_sig(u8 *data, u32 length)
 
 	if (STD_SIGNED_TIK_SIZE == length)
 	{
+		memcpy(data, tik_sig, sizeof(tik_sig));
 		payload_junk = (u16*)(data+0x262); // padding
 		fixed_hash = tik_hash;
 	}
 	else // TMD
 	{
+		if (length < SIGNED_TMD_SIZE((u32*)data))
+		{
+			printf("Bad payload length (%08X)\n", length);
+			return;
+		}
+		memcpy(data, tmd_sig, sizeof(tmd_sig));
 		payload_junk = (u16*)(data+0x1E2); // fill 3
 		fixed_hash = tmd_hash;
 	}
@@ -376,7 +383,7 @@ u8 *make_ticket(u64 title)
 	{
 		tik *fake_ticket;
 		memset(ticket, 0, STD_SIGNED_TIK_SIZE);
-		memcpy(ticket, tik_sig, sizeof(tik_sig));
+		*ticket = ES_SIG_RSA2048;
 
 		fake_ticket = (tik*)(SIGNATURE_PAYLOAD(ticket));
 
@@ -400,7 +407,7 @@ u8 *make_tmd(u64 title)
 	{
 		tmd *fake_tmd;
 		memset(TMD, 0, 0x208);
-		memcpy(TMD, tmd_sig, sizeof(tmd_sig));
+		*TMD = ES_SIG_RSA2048;
 
 		fake_tmd = (tmd*)(SIGNATURE_PAYLOAD(TMD));
 
