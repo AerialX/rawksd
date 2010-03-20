@@ -367,7 +367,7 @@ void forge_sig(u8 *data, u32 length)
 			{
 				if (hash[j]==fixed_hash[j])
 				{
-					//printf("Fakesigned ok, junk %04X\n", i);
+					printf("Fakesigned ok, junk %04X\n", i);
 					return;
 				}
 			}
@@ -782,7 +782,7 @@ static void shutdown_for_reload()
 	WPAD_Shutdown();
 	__IOS_ShutdownSubsystems();
 	// change ios version in lowmem so we know when the new one has loaded
-	*MEM1_IOSVERSION = 0x00050000;
+	*MEM1_IOSVERSION = 0x00020000;
 }
 
 static void load_patched_ios(s32 fd, const char* filename)
@@ -870,6 +870,8 @@ static void recover_from_reload(s32 version)
 
 	__IOS_InitializeSubsystems();
 	WPAD_Init();
+	__ES_Init();
+	__STM_Init();
 }
 
 static int load_module_code(void *module_code, s32 module_size)
