@@ -40,6 +40,7 @@ LauncherStatus::Enum Launcher_RVL();
 LauncherStatus::Enum Launcher_CommitRVL(bool dip);
 LauncherStatus::Enum Launcher_AddPlaytimeEntry();
 LauncherStatus::Enum Launcher_SetVideoMode();
+LauncherStatus::Enum Launcher_ScrubPlaytimeEntry();
 bool Launcher_DiscInserted();
 const char* Launcher_GetGameName();
 const s16* Launcher_GetGameNameWide();

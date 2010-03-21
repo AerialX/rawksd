@@ -269,6 +269,18 @@ static void ResizeFST(DiscNode* node, u32 length, bool telldip)
 		RVL_AddShift(oldoffset, (u64)node->DataOffset << 2, oldsize);
 }
 
+static void RVL_Patch(RiiShiftPatch* shift)
+{
+	DiscNode* source = RVL_FindNode(shift->Source.c_str());
+	DiscNode* destination = RVL_FindNode(shift->Destination.c_str());
+
+	if (!source || !destination || source->Type || destination->Type)
+		return;
+
+	destination->DataOffset = source->DataOffset;
+	destination->Size = source->Size;
+}
+
 static DiscNode ZeroNode;
 static void RVL_Patch(RiiFilePatch* file, bool stat, u64 externalid, string commonfs)
 {
@@ -416,36 +428,50 @@ static void RVL_Patch(RiiPatch* patch, map<string, string>* params, string commo
 		ApplyParams(&temp.Disc, params);
 		RVL_Patch(&temp, commonfs);
 	}
+	for (vector<RiiShiftPatch>::iterator shift = patch->Shifts.begin(); shift != patch->Shifts.end(); shift++) {
+		RVL_Patch(&*shift);
+	}
 	for (vector<RiiSavegamePatch>::iterator save = patch->Savegames.begin(); save != patch->Savegames.end(); save++) {
 		RiiSavegamePatch temp = *save;
 		ApplyParams(&temp.External, params);
 		RVL_Patch(&temp, commonfs);
 	}
 }
-
+extern vector<int> Mounted;
 void RVL_Patch(RiiDisc* disc)
 {
 	// Search for a common filesystem so we can optimize memory
+	int fs = -1;
 	string filesystem;
+	map<int, int> usedfilesystems;
 	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
 		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
-			if (option->Default == 0)
+			if (!option->Default)
 				continue;
 			RiiChoice* choice = &option->Choices[option->Default - 1];
-			if (!filesystem.size()) {
-				filesystem = choice->Filesystem;
-			}
-			else if (filesystem != choice->Filesystem) {
-				filesystem = string();
+			usedfilesystems[choice->Filesystem] = 1;
+			if (fs == -1)
+				fs = choice->Filesystem;
+			else if (fs != choice->Filesystem) {
+				fs = -1;
 				goto no_common_fs;
 			}
 		}
 	}
 no_common_fs:
 
-	if (filesystem.size()) {
-		File_SetDefaultPath(filesystem.c_str());
-		RVL_SetClusters(true);
+	for (vector<int>::iterator mount = Mounted.begin(); mount != Mounted.end(); mount++) {
+		if (usedfilesystems.find(*mount) == usedfilesystems.end())
+			File_Unmount(*mount);
+	}
+
+	if (fs >= 0) {
+		char mountpoint[MAXPATHLEN];
+		if (File_GetMountPoint(fs, mountpoint, sizeof(mountpoint)) >= 0) {
+			filesystem = mountpoint;
+			File_SetDefaultPath(mountpoint);
+			RVL_SetClusters(true);
+		}
 	} else
 		RVL_SetClusters(false);
 
@@ -488,8 +514,18 @@ static void* FindInBuffer(void* memory, void* end, void* pattern, int patternlen
 }
 static void RVL_Patch(RiiMemoryPatch* memory)
 {
-	if (memory->Ocarina || memory->Search || !memory->Offset || !memory->GetValue() || !memory->GetLength())
+	if (memory->Ocarina || (memory->Search && !memory->Original) || !memory->Offset || !memory->GetValue() || !memory->GetLength())
 		return;
+
+	memory->Offset = (int)MEM_PHYSICAL_TO_K0(memory->Offset);
+
+	if (memory->Search) {
+		// TODO: Searching in MEM2? Too bad.
+		void* ret = FindInBuffer((void*)memory->Offset, (void*)0x817FFFFF, memory->Original, memory->Length, memory->Align);
+		if (!ret)
+			return;
+		memory->Offset = (int)ret;
+	}
 
 	if (memory->Original && memcmp((void*)memory->Offset, memory->Original, memory->GetLength()))
 		return;
@@ -500,8 +536,10 @@ static void RVL_Patch(RiiMemoryPatch* memory)
 
 static void RVL_Patch(RiiMemoryPatch* memory, void* mem, u32 length)
 {
-	if ((!memory->Ocarina && !memory->Search) || (memory->Search && !memory->Align) || !memory->Offset || !memory->GetValue() || !memory->GetLength())
+	if ((!memory->Ocarina && !memory->Search) || (memory->Search && !memory->Align) || (memory->Ocarina && !memory->Offset) || !memory->GetValue() || !memory->GetLength())
 		return;
+
+	memory->Offset = (int)MEM_PHYSICAL_TO_K0(memory->Offset);
 
 	if (memory->Ocarina) {
 		void* ocarina = FindInBuffer(mem, (u8*)mem + length, memory->GetValue(), memory->GetLength(), 4);
@@ -513,9 +551,7 @@ static void RVL_Patch(RiiMemoryPatch* memory, void* mem, u32 length)
 				*blr = ((memory->Offset - (int)blr) & 0x03FFFFFC) | 0x48000000;
 		}
 	} else /* if (memory->Search) */ {
-		memory->Offset = (int)MEM_PHYSICAL_TO_K0(memory->Offset);
-		// TODO: Searching in MEM2? Too bad.
-		void* ret = FindInBuffer((void*)memory->Offset, (void*)0x817FFFFF, memory->Original, memory->Length, memory->Align);
+		void* ret = FindInBuffer(mem, (u8*)mem + length, memory->Original, memory->Length, memory->Align);
 		if (ret)
 			memcpy(ret, memory->GetValue(), memory->GetLength());
 	}

@@ -278,7 +278,20 @@ LauncherStatus::Enum Launcher_AddPlaytimeEntry()
 		File_Close(d);
 		if (ret)
 			return LauncherStatus::OK;
-		return LauncherStatus::IosError;
+	}
+
+	return LauncherStatus::IosError;
+}
+LauncherStatus::Enum Launcher_ScrubPlaytimeEntry()
+{
+	int d = File_Open(PLAYLOG_FILE, O_WRONLY);
+	if (d >= 0) {
+		static int zero ATTRIBUTE_ALIGN(32);
+		zero = 0;
+		bool ret = sizeof(zero) == File_Write(d, &zero, sizeof(zero));
+		File_Close(d);
+		if (ret)
+			return LauncherStatus::OK;
 	}
 
 	return LauncherStatus::IosError;

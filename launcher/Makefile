@@ -110,6 +110,9 @@ clean:
 run: $(BUILD)
 	wiiload $(OUTPUT).dol
 
+z: $(BUILD)
+	./dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol -m
+
 #---------------------------------------------------------------------------------
 reload:
 	wiiload -r $(OUTPUT).dol

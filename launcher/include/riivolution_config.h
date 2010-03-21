@@ -23,7 +23,7 @@ struct RiiChoice {
 	std::string ID;
 	std::map<std::string, std::string> Params;
 	std::vector<Patch> Patches;
-	std::string Filesystem;
+	int Filesystem;
 };
 
 struct RiiOption {
@@ -127,8 +127,8 @@ struct RiiDisc
 	std::map<std::string, RiiPatch> Patches;
 };
 
-void ParseXMLs(const char* rootpath, const char* rootfs, std::vector<RiiDisc>* discs);
-bool ParseXML(const char* xmldata, int length, std::vector<RiiDisc>* discs, const char* rootpath, const char* rootfs);
+void ParseXMLs(const char* rootpath, const char* rootfs, int fs, std::vector<RiiDisc>* discs);
+bool ParseXML(const char* xmldata, int length, std::vector<RiiDisc>* discs, const char* rootpath, const char* rootfs, int fs);
 RiiDisc CombineDiscs(std::vector<RiiDisc>* discs);
 void ParseConfigXMLs(RiiDisc* disc);
 bool ParseConfigXML(const char* xmldata, int length, RiiDisc* disc);

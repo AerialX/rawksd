@@ -209,7 +209,7 @@ namespace ConsoleHaxx.RiiFS
 								string clientversion = Util.Encoding.GetString(Options[Option.Handshake]);
 								Console.WriteLine("Handshake: Client Version \"" + clientversion + "\"");
 
-								if (clientversion != "1.0" && clientversion != "1.1")
+								if (clientversion != "1.1")
 									Return(-1);
 								else
 									Return(ServerVersion);

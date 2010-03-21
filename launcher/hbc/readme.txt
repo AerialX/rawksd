@@ -30,7 +30,7 @@ Q: What does the "Install" button do?
 A: It will install a Riivolution channel onto your System Menu for easy access. This can always be uninstalled.
 
 Q: Can I use Ocarina / Gecko codes with it?
-A: Normally, Riivolution just supports direct memory patches. However, Riivolution supports a patching method that ccan be used with the Gecko OS code handler.
+A: Normally, Riivolution just supports direct memory patches. However, Riivolution supports a patching method that can be used with the Gecko OS code handler.
    Read more about that here: http://rvlution.net/riiv/Ocarina_Codes
 
 Q: Can I add new files to a disc with Riivolution?
@@ -43,3 +43,5 @@ A: As a user, you need to either download patch packages made by someone else or
 
 Q: Can I see it in action?
 A: Sure. http://rvlution.net/riiv/Media
+
+Special thanks to everyone that contributed! Tempus, Treeki, Omega, Pop006, TobiasAmaranth, megazig, Mooseknuckle2000, Skawo, and everyone else who helped out!

@@ -349,7 +349,7 @@ struct PageViewer {
 	CheckShutdown(); \
 }
 
-static vector<int> Mounted;
+vector<int> Mounted;
 Menus::Enum MenuMount()
 {
 	HaltGui();
@@ -391,6 +391,8 @@ Menus::Enum MenuInit()
 	Title->SetText(RIIVOLUTION_TITLE);
 	ResumeGui();
 
+	Launcher_ScrubPlaytimeEntry();
+
 	RVL_SetFST(NULL, 0);
 
 	LauncherStatus::Enum status = LauncherStatus::NoDisc;
@@ -425,7 +427,7 @@ Menus::Enum MenuInit()
 		strcpy(mountpath, mountpoint);
 		strcat(mountpath, RIIVOLUTION_PATH);
 
-		ParseXMLs(mountpath, mountpoint, &discs);
+		ParseXMLs(mountpath, mountpoint, *mount, &discs);
 	}
 	Disc = CombineDiscs(&discs);
 	ParseConfigXMLs(&Disc);

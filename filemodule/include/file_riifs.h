@@ -39,15 +39,12 @@
 #define RII_OPTION_RENAME_DESTINATION	0x09
 
 #define RIIFS_LOCAL_OPTIONS
-#define RIIFS_LOCAL_SEEKING
+//#define RIIFS_LOCAL_SEEKING
 //#define RIIFS_LOCAL_DIRNEXT
 #define RIIFS_LOCAL_DIRNEXT_SIZE 0x1000
 
-#ifdef RIIFS_LOCAL_DIRNEXT
 #define RII_VERSION 		"1.1"
-#else
-#define RII_VERSION 		"1.0"
-#endif
+
 #define RII_VERSION_RET		0x02
 
 namespace ProxiIOS { namespace Filesystem {

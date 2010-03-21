@@ -113,7 +113,7 @@ static string AbsolutePathCombine(string path, string file, string rootfs)
 	if (length == 0) \
 		return false; // Not an xml document
 
-bool ParseXML(const char* xmldata, int length, vector<RiiDisc>* discs, const char* rootpath, const char* rootfs)
+bool ParseXML(const char* xmldata, int length, vector<RiiDisc>* discs, const char* rootpath, const char* rootfs, int fs)
 {
 	TRIM_XML();
 
@@ -187,7 +187,7 @@ versionisvalid:
 					strcpy(mountpath, mountpoint);
 					strcat(mountpath, RIIVOLUTION_PATH);
 
-					ParseXMLs(mountpath, mountpoint, discs);
+					ParseXMLs(mountpath, mountpoint, fs, discs);
 				}
 			}
 		}
@@ -248,7 +248,7 @@ versionisvalid:
 
 								ELEMENT_START("choice") {
 									RiiChoice choice;
-									choice.Filesystem = rootfs;
+									choice.Filesystem = fs;
 									ELEMENT_ATTRIBUTE("name", true)
 										choice.Name = attribute;
 									ELEMENT_ATTRIBUTE("id", true)
@@ -472,7 +472,7 @@ RiiDisc CombineDiscs(vector<RiiDisc>* discs)
 	return ret;
 }
 
-void ParseXMLs(const char* rootpath, const char* rootfs, vector<RiiDisc>* discs)
+void ParseXMLs(const char* rootpath, const char* rootfs, int fs, vector<RiiDisc>* discs)
 {
 	int dir = File_OpenDir(rootpath);
 	if (dir < 0)
@@ -482,7 +482,7 @@ void ParseXMLs(const char* rootpath, const char* rootfs, vector<RiiDisc>* discs)
 	char path[MAXPATHLEN];
 	Stats st;
 	while (!File_NextDir(dir, filename, &st)) {
-		if (!(st.Mode & S_IFDIR) && strcasestr(filename, ".xml")) {
+		if (!(st.Mode & S_IFDIR) && strlen(filename) > 4 && !strcasecmp(filename + strlen(filename) - 4, ".xml")) {
 			strcpy(path, rootpath);
 			strcat(path, "/");
 			strcat(path, filename);
@@ -495,7 +495,7 @@ void ParseXMLs(const char* rootpath, const char* rootfs, vector<RiiDisc>* discs)
 				continue;
 			int read = File_Read(fd, xmldata, st.Size);
 			File_Close(fd);
-			ParseXML(xmldata, read, discs, rootpath, rootfs);
+			ParseXML(xmldata, read, discs, rootpath, rootfs, fs);
 			free(xmldata);
 		}
 	}
