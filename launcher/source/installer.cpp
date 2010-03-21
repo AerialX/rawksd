@@ -11,17 +11,31 @@
 #include <http.h>
 #include <malloc.h>
 
+#include "haxx.h"
+#include <files.h>
+
+extern "C" {
+	void aes_set_key(const u8 *key);
+	void aes_decrypt(u8 *iv, const u8 *inbuf, u8 *outbuf, unsigned long long len);
+	void aes_encrypt(u8 *iv, const u8 *inbuf, u8 *outbuf, unsigned long long len);
+}
+
 //#define NANOHTTP
 #define PATCHMII_HTTP
 
 #define ERROR(desc, value) \
-	printf("\tError %s. (%d)\n", desc, value)
+	printf("\n\tError %s. (%d)\n", desc, value)
 
 #define NUS_URL_BASE "http://nus.cdn.shop.wii.com/ccs/download"
 
 extern "C" {
 	extern u8 certs_dat[];
 	extern u32 certs_dat_size;
+
+	extern u8 banner_tmd_dat[];
+	extern u32 banner_tmd_dat_size;
+	extern u8 banner_tik_dat[];
+	extern u32 banner_tik_dat_size;
 }
 
 static bool initfat = false;
@@ -197,38 +211,54 @@ static int EndInstall()
 
 #define ROUND_UP(p, round) \
 	((p + round - 1) & ~(round - 1))
-static int InstallContent(const tmd* meta, u16 index)
+static int InstallContent(const tmd* meta, u16 index, const u8* data, u32 size, u8* key = NULL)
 {
 	static u8 buffer[0x1000] ATTRIBUTE_ALIGN(32);
+	u8 iv[0x10];
+	int fd = ES_AddContentStart(meta->title_id, meta->contents[index].cid);
+	if (fd < 0)
+		return fd;
+
+	if (key) {
+		aes_set_key(key);
+		memset(iv, 0, sizeof(iv));
+		memcpy(iv, &index, 2);
+	}
+
+	u32 written = 0;
+	while (written < size) {
+		if (!key) // Hack, but whatever. This is only installed with encryption when the GUI is running
+			printf(".");
+		int towrite = MIN(0x1000, size - written);
+		if (key)
+			aes_encrypt(iv, (u8*)data + written, buffer, towrite);
+		else
+			memcpy(buffer, data + written, towrite);
+		written += towrite;
+		towrite = ROUND_UP(towrite, 0x20);
+		int ret = ES_AddContentData(fd, buffer, towrite);
+		if (ret < 0) {
+			ES_AddContentFinish(fd);
+			return ret;
+		}
+	}
+
+	return ES_AddContentFinish(fd);
+}
+
+static int InstallContent(const tmd* meta, u16 index)
+{
 	u32 size = ROUND_UP(meta->contents[index].size, 32);
 	u8* data = (u8*)GetContent(meta->title_id, meta->contents[index].cid, &size);
 	if (!data) {
 		ERROR("downloading content", 0);
 		return -1;
 	}
-	int fd = ES_AddContentStart(meta->title_id, meta->contents[index].cid);
-	if (fd < 0)
-		return fd;
 
-	u32 written = 0;
-	while (written < size) {
-		printf(".");
-		int towrite = MIN(0x1000, size - written);
-		memcpy(buffer, data + written, towrite);
-		towrite = ROUND_UP(towrite, 32);
-		int ret = ES_AddContentData(fd, buffer, towrite);
-		if (ret < 0) {
-			free(data);
-			ES_AddContentFinish(fd);
-			return ret;
-		}
-
-		written += towrite;
-	}
+	int ret = InstallContent(meta, index, data, size);
 
 	free(data);
-
-	return ES_AddContentFinish(fd);
+	return ret;
 }
 
 static int InstallContents(const signed_blob* stmd)
@@ -243,19 +273,20 @@ static int InstallContents(const signed_blob* stmd)
 	return 0;
 }
 
-static void FakesignTMD(signed_blob* blob)
+static bool FakesignTMD(signed_blob* blob)
 {
 	memset((u8*)blob + 4, 0, SIGNATURE_SIZE(blob) - 4);
 	tmd* meta = (tmd*)SIGNATURE_PAYLOAD(blob);
+	u32 size = TMD_SIZE(meta);
 	for(u32 fill = 0; fill < 0xFFFF; fill++) {
 		meta->fill3 = fill;
-		sha1 hash; SHA1((u8*)meta, TMD_SIZE(meta), hash);
+		sha1 hash; SHA1((u8*)meta, size, hash);
 
 		if (hash[0] == 0)
-			return;
+			return true;
 	}
 
-	// Unable to fakesign it, fuck cIOScrap
+	return false; // Unable to fakesign it, fuck cIOScrap
 }
 
 int Install(u64 titleid, int version, bool comexploit)
@@ -321,6 +352,120 @@ int Install(u64 titleid, int version, bool comexploit)
 	}
 
 	printf("\n");
+
+	return 0;
+}
+
+static u8* ReadChannelData(int index, u32* size)
+{
+	char filename[MAXPATHLEN];
+	if (index == 2)
+		strcpy(filename, "/apps/riivolution/boot.dol");
+	else
+		sprintf(filename, "/apps/riivolution/banner.%d", index);
+
+	Stats st;
+	if (File_Stat(filename, &st))
+		return NULL;
+	int fd = File_Open(filename, O_RDONLY);
+	if (fd < 0)
+		return NULL;
+
+	*size = (u32)st.Size;
+	u8* ret = (u8*)memalign(0x20, ROUND_UP(*size, 0x20));
+	if (File_Read(fd, ret, *size) != (int)*size) {
+		free(ret);
+		return NULL;
+	}
+	File_Close(fd);
+
+	return ret;
+}
+
+const u8 commonkey[0x10] = { 0xeb, 0xe4, 0x2a, 0x22, 0x5e, 0x85, 0x93, 0xe4, 0x48, 0xd9, 0xc5, 0x45, 0x73, 0x81, 0xaa, 0xf7 };
+
+static void GetTitleKey(const signed_blob *s_tik, u8 *key)
+{
+	u8 iv[0x10];
+	u8 keyin[0x10];
+
+	const tik* p_tik = (const tik*)SIGNATURE_PAYLOAD(s_tik);
+	memcpy(keyin, p_tik->cipher_title_key, sizeof(keyin));
+	memset(key, 0, sizeof(keyin));
+	memset(iv, 0, sizeof(iv));
+	memcpy(iv, &p_tik->titleid, sizeof(p_tik->titleid));
+
+	aes_set_key(commonkey);
+	aes_decrypt(iv, keyin, key, sizeof(keyin));
+}
+
+
+int InstallChannel()
+{
+	int ret;
+	static u8 metadata[MAX_SIGNED_TMD_SIZE] ATTRIBUTE_ALIGN(32);
+	static u8 tikdata[STD_SIGNED_TIK_SIZE] ATTRIBUTE_ALIGN(32);
+	u8 key[0x10];
+
+	signed_blob* meta = (signed_blob*)&metadata;
+	signed_blob* ticket = (signed_blob*)&tikdata;
+	memcpy(meta, banner_tmd_dat, banner_tmd_dat_size);
+	memcpy(ticket, banner_tik_dat, banner_tik_dat_size);
+	tmd* metatmd = (tmd*)SIGNATURE_PAYLOAD(meta);
+
+	u32 banner_dat_size[3];
+	u8* banner_dat[3];
+	for (int i = 0; i < 3; i++) {
+		banner_dat[i] = ReadChannelData(i, &banner_dat_size[i]);
+		if (!banner_dat[i] || !banner_dat_size[i]) {
+			for (int k = 0; k < i; k++)
+				free(banner_dat[k]);
+			return -2;
+		}
+
+		metatmd->contents[i].index = i;
+		metatmd->contents[i].cid = i;
+		metatmd->contents[i].size = banner_dat_size[i];
+		SHA1(banner_dat[i], banner_dat_size[i], metatmd->contents[i].hash);
+	}
+
+	if (!forge_sig((u8*)ticket, banner_tik_dat_size) || !forge_sig((u8*)meta, banner_tmd_dat_size))
+		return -3;
+
+	SetCerts((const signed_blob*)certs_dat, certs_dat_size);
+
+	ret = InstallTicket(ticket);
+	if (ret < 0) {
+		for (int i = 0; i < 3; i++)
+			free(banner_dat[i]);
+		return ret;
+	}
+
+	ret = StartInstall(meta);
+	if (ret < 0) {
+		for (int i = 0; i < 3; i++)
+			free(banner_dat[i]);
+		return ret;
+	}
+
+	GetTitleKey(ticket, key);
+
+	for (int i = 0; i < 3; i++) {
+		ret = InstallContent(metatmd, i, banner_dat[i], banner_dat_size[i], key);
+		if (ret < 0) {
+			for (int i = 0; i < 3; i++)
+				free(banner_dat[i]);
+			CancelInstall();
+			return ret;
+		}
+	}
+
+	for (int i = 0; i < 3; i++)
+		free(banner_dat[i]);
+
+	ret = EndInstall();
+	if (ret < 0)
+		return ret;
 
 	return 0;
 }

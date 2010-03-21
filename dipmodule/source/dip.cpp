@@ -176,13 +176,13 @@ namespace ProxiIOS { namespace DIP {
 				LogPrintf("IOCTL: SetClusters(%s);\n", Clusters ? "true" : "false");
 				return 1;
 			case Ioctl::Read: {
-				if (CurrentPartition != PatchPartition)
-					return ForwardIoctl(message);
-
 				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				u32 len = message->ioctl.buffer_in[1];
 				s64 pos = (s64)message->ioctl.buffer_in[2] << 2;
 				LogPrintf("IOCTL: Read(0x%08x%08x, 0x%08x);\n", (u32)(pos >> 32), (u32)pos, len);
+
+				if (CurrentPartition != PatchPartition)
+					return ForwardIoctl(message);
 
 				Shift* shifts[MAX_FOUND];
 				int foundshifts = FindPatch(PatchType::Shift, pos, len, (void**)shifts, MAX_FOUND);
@@ -317,9 +317,11 @@ namespace ProxiIOS { namespace DIP {
 		
 		return count;
 	}
-	
-	bool DIP::ReadFile(s16 fileid, u32 offset, void* data, u32 length)
+
+	bool DIP::ReadFile(s16 fileid, u32 offset, void* buffer, u32 length)
 	{
+		void* data = buffer;
+
 		LogPrintf("\tReadFile(0x%04x, 0x%08x, 0x%08x) : ", (u32)fileid, offset, length);
 
 		FileDesc* file = (FileDesc*)Patches[PatchType::File] + fileid;
@@ -354,15 +356,25 @@ namespace ProxiIOS { namespace DIP {
 			}
 		}
 
+		if ((int)buffer & 0x1F) { // Just in case...
+			data = Memalign(0x20, ROUND_UP(length, 0x20));
+			if (!data)
+				data = buffer;
+		}
+
 		File_Seek(OpenFds[openindex], offset, SEEK_SET);
 		
 		int ret = File_Read(OpenFds[openindex], (u8*)data, length);
 		
 		LogPrintf("0x%08x\n", ret);
 
-		if (ret > 0)
-			os_sync_after_write(data, length);
-		else
+		if (ret > 0) {
+			if (data != buffer) {
+				memcpy(buffer, data, ret);
+				Dealloc(data);
+			}
+			os_sync_after_write(buffer, length);
+		} else
 			LogPrintf("\t\tFile_Read error!\n");
 		
 		return ret >= 0;

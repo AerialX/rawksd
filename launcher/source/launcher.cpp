@@ -8,6 +8,8 @@
 
 #include <files.h>
 
+#include <malloc.h>
+
 typedef void (*AppReport) (const char*, ...);
 typedef void (*AppEnter) (AppReport);
 typedef int  (*AppLoad) (void**, s32*, s32*);
@@ -27,9 +29,8 @@ static union {
 	app_info app;
 } ATTRIBUTE_ALIGN(32);
 
-static char GameName[0x100] ATTRIBUTE_ALIGN(32);
+static char GameName[0x40] ATTRIBUTE_ALIGN(32);
 static s16 BannerName[42];
-static bool BannerNameRead = false;
 
 #define PART_OFFSET			0x00040000
 #define APP_INFO_OFFSET		0x2440
@@ -57,7 +58,7 @@ typedef struct {
 const s16* Launcher_GetGameNameWide()
 {
 	if (RVL_GetFST()) {
-		if (BannerNameRead)
+		if (BannerName[0])
 			return BannerName;
 		DiscNode* node = RVL_FindNode("/opening.bnr");
 		if (node != NULL) {
@@ -65,7 +66,6 @@ const s16* Launcher_GetGameNameWide()
 			if (!WDVD_LowRead(&imet, sizeof(imet), (u64)node->DataOffset << 2) && imet.imet == 0x494D4554) {
 				memcpy(BannerName, imet.names[CONF_GetLanguage()], sizeof(BannerName));
 				if (BannerName[0]) {
-					BannerNameRead = true;
 					return BannerName;
 				}
 			}
@@ -121,7 +121,7 @@ LauncherStatus::Enum Launcher_ReadDisc()
 {
 	u32 i;
 
-	BannerNameRead = false;
+	BannerName[0] = 0;
 
 	if (!Launcher_DiscInserted())
 		return LauncherStatus::NoDisc;
@@ -134,25 +134,21 @@ LauncherStatus::Enum Launcher_ReadDisc()
 	if (WDVD_LowReadDiskId())
 		return LauncherStatus::ReadError;
 
-	memset(GameName, 0xFF, sizeof(64));
+	memset(GameName, 0xFF, 0x40);
 	if (WDVD_LowReadBCA((u8*)GameName, 0x40))
 		return LauncherStatus::ReadError;
 
-	for (i=0; i < 52; i++)
-	{
+	for (i=0; i < 51; i++)
 		if (GameName[i])
 			return LauncherStatus::ReadError;
-	}
 
-	memset(GameName, 0xFF, sizeof(64));
+	memset(GameName, 0xFF, 0x40);
 	if (WDVD_LowUnencryptedRead(GameName, 0x40, 0x100))
 		return LauncherStatus::ReadError;
 
-	for (i=0; i < 64; i++)
-	{
+	for (i=0; i < 0x40; i++)
 		if (GameName[i])
 			return LauncherStatus::ReadError;
-	}
 
 	// check if it returns a key when it shouldn't (001 error)
 	if (WDVD_ReportKey(4, 0, GameName) != -2)
@@ -160,7 +156,7 @@ LauncherStatus::Enum Launcher_ReadDisc()
 
 	// make sure LowUnenencryptedRead lba table hasn't been patched
 	WDVD_SetDVDMode(0);
-	if (WDVD_LowUnencryptedRead(0, 0, (0x2EE00000llu<<2)) != -32)
+	if (WDVD_LowUnencryptedRead(0, 0, 0x2EE00000llu << 2) != -32)
 		return LauncherStatus::ReadError;
 
 	if (WDVD_LowUnencryptedRead(GameName, 0x40, 0x20))
@@ -188,7 +184,7 @@ LauncherStatus::Enum Launcher_ReadDisc()
 	return LauncherStatus::OK;
 }
 
-static u32 fstdata[0x10] ATTRIBUTE_ALIGN(32);
+static u32 fstdata[0x40] ATTRIBUTE_ALIGN(32);
 
 const u32* Launcher_GetFstData()
 {
@@ -199,11 +195,17 @@ LauncherStatus::Enum Launcher_RVL()
 {
 	if (WDVD_LowRead(fstdata, 0x40, 0x420))
 		return LauncherStatus::ReadError;
-	fstdata[2] <<= 2;
-	if (WDVD_LowRead(SYS_GetArena2Lo(), fstdata[2], (u64)fstdata[1] << 2)) // MEM2
-		return LauncherStatus::ReadError;
-	RVL_SetFST(SYS_GetArena2Lo(), fstdata[2]);
 
+	fstdata[2] <<= 2;
+	u8* fstbuffer = (u8*)memalign(32, fstdata[2]);
+	if (!fstbuffer)
+		return LauncherStatus::OutOfMemory;
+
+	if (WDVD_LowRead(fstbuffer, fstdata[2], (u64)fstdata[1] << 2))
+		return LauncherStatus::ReadError;
+
+	RVL_SetFST(fstbuffer, fstdata[2]);
+	free(fstbuffer);
 	return LauncherStatus::OK;
 }
 
@@ -215,7 +217,7 @@ LauncherStatus::Enum Launcher_CommitRVL(bool dip)
 		int tmpfd = File_Open("/riivolution/temp/fst", O_WRONLY | O_TRUNC);
 		if (tmpfd < 0)
 			return LauncherStatus::IosError;
-		File_Write(tmpfd, SYS_GetArena2Lo(), fstdata[2]);
+		File_Write(tmpfd, RVL_GetFST(), RVL_GetFSTSize());
 		File_Close(tmpfd);
 		fstdata[1] = (u32)(RVL_GetShiftOffset(fstdata[2]) >> 2);
 		RVL_AddPatch(RVL_AddFile("/riivolution/temp/fst"), 0, (u64)fstdata[1] << 2, fstdata[2]);
@@ -229,7 +231,7 @@ LauncherStatus::Enum Launcher_CommitRVL(bool dip)
 		File_Close(tmpfd);
 		RVL_AddPatch(RVL_AddFile("/riivolution/temp/fst.header"), 0, 0x420, 0x40);
 	} else
-		memcpy(*MEM_FSTADDRESS, SYS_GetArena2Lo(), fstdata[2]); // TODO: Account for fstdata changing
+		memcpy(*MEM_FSTADDRESS, RVL_GetFST(), RVL_GetFSTSize()); // TODO: Account for fstdata changing
 
 	return LauncherStatus::OK;
 }
@@ -311,30 +313,24 @@ LauncherStatus::Enum Launcher_SetVideoMode()
 {
 	GXRModeObj* vmode;
 	u32 tvmode = CONF_GetVideo();
-	if (tvmode==CONF_VIDEO_PAL)
-	{
+	if (tvmode==CONF_VIDEO_PAL) {
 		*MEM_VIDEOMODE = VI_EURGB60;
-		if (CONF_GetProgressiveScan() > 0 && VIDEO_HaveComponentCable())
-		{
+		if (CONF_GetProgressiveScan() > 0 && VIDEO_HaveComponentCable()) {
 			// wtf, why does this cause a DSI?
 			//vmode = &TVEurgb60Hz480Prog;
 			vmode = &TVNtsc480Prog;
-		}
-		else if (CONF_GetEuRGB60() > 0)
+		} else if (CONF_GetEuRGB60() > 0)
 			vmode = &TVEurgb60Hz480IntDf;
-		else
-		{
+		else {
 			vmode = &TVPal528IntDf;
 			*MEM_VIDEOMODE = VI_PAL;
 		}
-	}
-	else
-	{
+	} else {
 		if (CONF_GetProgressiveScan() > 0 && VIDEO_HaveComponentCable())
 			vmode = &TVNtsc480Prog;
 		else
 			vmode = &TVNtsc480IntDf;
-		if (tvmode==CONF_VIDEO_NTSC)
+		if (tvmode == CONF_VIDEO_NTSC)
 			*MEM_VIDEOMODE = VI_NTSC;
 		else
 			*MEM_VIDEOMODE = VI_MPAL;
@@ -360,7 +356,7 @@ LauncherStatus::Enum Launcher_RunApploader()
 	settime(secs_to_ticks(time(NULL) - 946684800));
 
 	// Avoid a flash of green
-	//VIDEO_SetBlack(true); VIDEO_Flush(); VIDEO_WaitVSync(); VIDEO_WaitVSync();
+	VIDEO_SetBlack(true); VIDEO_Flush(); VIDEO_WaitVSync(); VIDEO_WaitVSync();
 
 	// put crap in memory to keep the apploader/dol happy
 	*MEM_VIRTUALSIZE = 0x01800000;

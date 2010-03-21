@@ -8,14 +8,14 @@ using std::map;
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-
+#include <malloc.h>
 #include <files.h>
 
 #include <libxml++/libxml++.h>
 #include <libxml++/parsers/textreader.h>
 using namespace xmlpp;
 
-#define RIIVOLUTION_CONFIG_PATH (RIIVOLUTION_PATH "config/")
+#define RIIVOLUTION_CONFIG_PATH (RIIVOLUTION_PATH "/config")
 
 #define ELEMENT_START(str) if (reader.get_node_type() == TextReader::Element && !reader.get_name().compare(str))
 #define ELEMENT_END(str) if (reader.get_node_type() == TextReader::EndElement && !reader.get_name().compare(str))
@@ -122,7 +122,8 @@ bool ParseXML(const char* xmldata, int length, vector<RiiDisc>* discs, const cha
 	string xmlroot = rootpath;
 	TextReader reader((const u8*)xmldata, length);
 	string attribute;
-	reader.read();
+	if (!reader.read())
+		return false;
 
 	ELEMENT_START("wiidisc")
 		ELEMENT_ATTRIBUTE("version", ELEMENT_INT(attribute) == 1)
@@ -292,7 +293,7 @@ versionisvalid:
 		ELEMENT_START("patch") {
 			RiiPatch patch;
 			string id;
-			std::string patchroot = xmlroot;
+			string patchroot = xmlroot;
 
 			ELEMENT_ATTRIBUTE("id", true)
 				id = rootpath + attribute;
@@ -483,15 +484,19 @@ void ParseXMLs(const char* rootpath, const char* rootfs, vector<RiiDisc>* discs)
 	while (!File_NextDir(dir, filename, &st)) {
 		if (!(st.Mode & S_IFDIR) && strcasestr(filename, ".xml")) {
 			strcpy(path, rootpath);
+			strcat(path, "/");
 			strcat(path, filename);
 
-			char* xmldata = (char*)SYS_GetArena2Lo(); // Borrowing MEM2, lulz
 			int fd = File_Open(path, O_RDONLY);
 			if (fd < 0)
+				continue;
+			char* xmldata = (char*)memalign(0x20, ROUND_UP(st.Size, 0x20));
+			if (!xmldata)
 				continue;
 			int read = File_Read(fd, xmldata, st.Size);
 			File_Close(fd);
 			ParseXML(xmldata, read, discs, rootpath, rootfs);
+			free(xmldata);
 		}
 	}
 	File_CloseDir(dir);
@@ -548,37 +553,37 @@ void ParseConfigXMLs(RiiDisc* disc)
 {
 	char filename[MAXPATHLEN];
 	strcpy(filename, RIIVOLUTION_CONFIG_PATH);
+	strcat(filename, "/");
 	strncat(filename, (const char*)MEM_BASE, 4);
 	strcat(filename, ".xml");
 
 	Stats st;
-	char* xmldata = (char*)SYS_GetArena2Lo(); // Borrowing MEM2, lulz
-	if (File_Stat(filename, &st) != 0)
+	if (File_Stat(filename, &st))
 		return;
 	int fd = File_Open(filename, O_RDONLY);
 	if (fd < 0)
 		return;
+	char* xmldata = (char*)memalign(0x20, ROUND_UP(st.Size, 0x20));
+	if (!xmldata)
+		return;
 	int read = File_Read(fd, xmldata, st.Size);
 	File_Close(fd);
 	ParseConfigXML(xmldata, read, disc);
+	free(xmldata);
 }
 
 void SaveConfigXML(RiiDisc* disc)
 {
 	char filename[MAXPATHLEN];
-
-	strcpy(filename, RIIVOLUTION_PATH);
-	filename[strlen(filename)-1]=0;
-	File_CreateDir(filename);
-
 	strcpy(filename, RIIVOLUTION_CONFIG_PATH);
-	filename[strlen(filename)-1]=0;
-	File_CreateDir(filename);
-
-	strcpy(filename, RIIVOLUTION_CONFIG_PATH);
+	strcat(filename, "/");
 	strncat(filename, (const char*)MEM_BASE, 4);
 	strcat(filename, ".xml");
-	int fd = File_Open(filename, O_CREAT | O_WRONLY | O_TRUNC);
+
+	File_CreateDir(RIIVOLUTION_PATH);
+	File_CreateDir(RIIVOLUTION_CONFIG_PATH);
+	File_CreateFile(filename);
+	int fd = File_Open(filename, O_WRONLY | O_TRUNC);
 	if (fd < 0)
 		return;
 
@@ -613,10 +618,10 @@ u8* RiiMemoryPatch::GetValue()
 	if (!Value && ValueFile.size() && !File_Stat(ValueFile.c_str(), &st)) {
 		int fd = File_Open(ValueFile.c_str(), O_RDONLY);
 		if (fd >= 0) {
-			Value = new u8[st.Size];
+			Value = (u8*)memalign(0x20, ROUND_UP(st.Size, 0x20));
 			if (Value) {
-				File_Read(fd, Value, st.Size);
-				Length = st.Size;
+				int read = File_Read(fd, Value, st.Size);
+				Length = read;
 			}
 			File_Close(fd);
 		}

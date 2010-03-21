@@ -171,6 +171,12 @@ void MainMenu(Menus::Enum menu)
 			case Menus::Launch:
 				menu = MenuLaunch();
 				break;
+			case Menus::Install:
+				menu = MenuInstall();
+				break;
+			case Menus::Uninstall:
+				menu = MenuUninstall();
+				break;
 			default:
 				break;
 		}

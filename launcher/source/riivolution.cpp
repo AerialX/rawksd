@@ -2,10 +2,10 @@
 #include "riivolution_config.h"
 #include "launcher.h"
 
-#include <files.h>
-
 #include <unistd.h>
+#include <malloc.h>
 
+#include <files.h>
 #include <wdvd.h>
 
 #define OPEN_MODE_BYPASS 0x80
@@ -54,22 +54,28 @@ void* RVL_GetFST()
 
 void RVL_SetFST(void* address, u32 size)
 {
-	fst = (DiscNode*)address;
+	if (!size || !address) {
+		fst = NULL;
+		size = 0;
+		return;
+	}
+	fst = (DiscNode*)memalign(32, size);
+	if (!fst)
+		return;
 	fstsize = size;
+	memcpy(fst, address, size);
 
-	if (fst && size) {
-		const void* nametable = (const void*)(fst + fst->Size);
-		DiscNode* largest = NULL;
-		for (DiscNode* node = fst; node < nametable; node++) {
-			if (!node->Type && (!largest || largest->DataOffset < node->DataOffset))
-					largest = node;
-		}
-		if (largest) {
-			shift = (u64)largest->DataOffset << 2;
-			RVL_GetShiftOffset(largest->Size); // Round up
+	const void* nametable = (const void*)(fst + fst->Size);
+	DiscNode* largest = NULL;
+	for (DiscNode* node = fst; node < nametable; node++) {
+		if (!node->Type && (!largest || largest->DataOffset < node->DataOffset))
+			largest = node;
+	}
+	if (largest) {
+		shift = (u64)largest->DataOffset << 2;
+		RVL_GetShiftOffset(largest->Size); // Round up
 
-			RVL_SetShiftBase(shift);
-		}
+		RVL_SetShiftBase(shift);
 	}
 }
 
@@ -137,9 +143,6 @@ int RVL_AddEmu(const char* nandpath, const char* external)
 {
 	return IOS_Ioctl(fd, Ioctl::AddEmu, (void*)nandpath, strlen(nandpath) + 1, (void*)external, strlen(external) + 1);
 }
-
-#define ROUND_UP(p, round) \
-	((p + round - 1) & ~(round - 1))
 
 u64 RVL_GetShiftOffset(u32 length)
 {
@@ -266,9 +269,20 @@ static void ResizeFST(DiscNode* node, u32 length, bool telldip)
 		RVL_AddShift(oldoffset, (u64)node->DataOffset << 2, oldsize);
 }
 
+static DiscNode ZeroNode;
 static void RVL_Patch(RiiFilePatch* file, bool stat, u64 externalid, string commonfs)
 {
-	DiscNode* node = RVL_FindNode(file->Disc.c_str());
+	DiscNode* node;
+	if (file->Disc.size())
+		node = RVL_FindNode(file->Disc.c_str());
+	else {
+		ZeroNode.Type = 0;
+		ZeroNode.NameOffsetMSB = 0;
+		ZeroNode.NameOffset = 0;
+		ZeroNode.DataOffset = 0;
+		ZeroNode.Size = 0xFFFFFFFF;
+		node = &ZeroNode;
+	}
 
 	if (!node) {
 		if (file->Create) {
@@ -282,12 +296,12 @@ static void RVL_Patch(RiiFilePatch* file, bool stat, u64 externalid, string comm
 		return; // Patching a directory will not end well.
 
 	string external = file->External;
-	if (commonfs.size() && !commonfs.compare(0, commonfs.size(), external))
+	if (commonfs.size() && !external.compare(0, commonfs.size(), commonfs, 0, commonfs.size()))
 		external = external.substr(commonfs.size());
 
 	if (!stat && file->Length == 0) {
 		Stats st;
-		if (File_Stat(external.c_str(), &st) == 0) {
+		if (!File_Stat(external.c_str(), &st)) {
 			file->Length = st.Size - file->FileOffset;
 			stat = true;
 			externalid = st.Identifier;
@@ -327,7 +341,7 @@ static void RVL_Patch(RiiFilePatch* file, string commonfs)
 static void RVL_Patch(RiiFolderPatch* folder, string commonfs)
 {
 	string external = folder->External;
-	if (commonfs.size() && !commonfs.compare(0, commonfs.size(), external))
+	if (commonfs.size() && !external.compare(0, commonfs.size(), commonfs, 0, commonfs.size()))
 		external = external.substr(commonfs.size());
 
 	char fdirname[MAXPATHLEN];
@@ -490,19 +504,18 @@ static void RVL_Patch(RiiMemoryPatch* memory, void* mem, u32 length)
 		return;
 
 	if (memory->Ocarina) {
-		// TODO: Wiibrew says 0x81330000 is convention for apploaders, maybe we should start using that + MEM2? >.>
 		void* ocarina = FindInBuffer(mem, (u8*)mem + length, memory->GetValue(), memory->GetLength(), 4);
 		if (ocarina) {
 			u32* blr;
 			for (blr = (u32*)ocarina; (u8*)blr < (u8*)mem + length && *blr != 0x4E800020; blr++)
 				;
-			if ((u8*)blr != (u8*)mem + length)
-				*blr = ((int)blr - memory->Offset & 0x03FFFFFF) | 0x48000000;
+			if ((u8*)blr < (u8*)mem + length)
+				*blr = ((memory->Offset - (int)blr) & 0x03FFFFFC) | 0x48000000;
 		}
 	} else /* if (memory->Search) */ {
 		memory->Offset = (int)MEM_PHYSICAL_TO_K0(memory->Offset);
 		// TODO: Searching in MEM2? Too bad.
-		void* ret = FindInBuffer((void*)memory->Offset, *MEM_ARENA1HIGH, memory->Original, memory->Length, memory->Align);
+		void* ret = FindInBuffer((void*)memory->Offset, (void*)0x817FFFFF, memory->Original, memory->Length, memory->Align);
 		if (ret)
 			memcpy(ret, memory->GetValue(), memory->GetLength());
 	}
@@ -526,9 +539,4 @@ void RVL_PatchMemory(RiiDisc* disc, void* memory, u32 length)
 			}
 		}
 	}
-}
-
-void RVL_PatchMemory(RiiDisc* disc)
-{
-	RVL_PatchMemory(disc, NULL, 0);
 }

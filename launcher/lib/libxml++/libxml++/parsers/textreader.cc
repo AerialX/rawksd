@@ -349,8 +349,10 @@ int TextReader::PropertyReader::Int(
 bool TextReader::PropertyReader::Bool(
     int value)
 {
-  if(value == -1)
+  if(value == -1) {
     owner_.check_for_exceptions();
+    value = 0;
+  }
     
   return value;
 }

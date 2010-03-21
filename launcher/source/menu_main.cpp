@@ -2,6 +2,7 @@
 #include "launcher.h"
 #include "haxx.h"
 #include "riivolution_config.h"
+#include "installer.h"
 
 #include <unistd.h>
 #include <files.h>
@@ -466,14 +467,27 @@ static void PreparePages()
 	}
 }
 
+#define BANNER_TICKET_PATH "/ticket/00010001/52494956.tik"
+#define BANNER_CONTENT_PATH "/title/00010001/52494956"
+
 Menus::Enum MenuMain()
 {
+	bool installed = false;
+
+	int fd = ISFS_Open(BANNER_TICKET_PATH, 0);
+	if (fd >= 0) {
+		installed = true;
+		ISFS_Close(fd);
+	}
+
 	HaltGui();
-	ButtonList buttons(Window, 2);
+	Title->SetText(Launcher_GetGameName());
+	ButtonList buttons(Window, 3);
 	buttons.SetButton(0, "Exit", ButtonList::ExitImage);
 	buttons.GetButton(0)->SetTrigger(&Trigger[Triggers::Home]);
 	buttons.SetButton(1, "Launch", ButtonList::LaunchImage);
 	buttons.GetButton(1)->SetState(STATE_SELECTED, 0);
+	buttons.SetButton(2, installed ? "Uninstall" : "Install", ButtonList::UninstallImage);
 	ResumeGui();
 
 	PreparePages();
@@ -490,6 +504,11 @@ Menus::Enum MenuMain()
 				return Menus::Exit;
 			case 1:
 				return Menus::Launch;
+			case 2:
+				if (installed)
+					return Menus::Uninstall;
+				else
+					return Menus::Install;
 		}
 
 		CheckShutdown();
@@ -499,10 +518,50 @@ Menus::Enum MenuMain()
 	}
 }
 
+Menus::Enum MenuInstall()
+{
+	HaltGui(); Subtitle->SetText("Installing..."); ResumeGui();
+	int ret = InstallChannel();
+	HaltGui();
+	if (ret == 0)
+		Subtitle->SetText("Installed");
+	else {
+		char failed[0x20];
+		sprintf(failed, "Failed (%d)", ret);
+		Subtitle->SetText(failed);
+	}
+	ResumeGui();
+
+	sleep(3);
+
+	return Menus::Main;
+}
+
+Menus::Enum MenuUninstall()
+{
+	HaltGui(); Subtitle->SetText("Uninstalling..."); ResumeGui();
+
+	bool fail = false;
+	if (ISFS_Delete(BANNER_CONTENT_PATH) < 0)
+		fail = true;
+	if (ISFS_Delete(BANNER_TICKET_PATH) < 0)
+		fail = true;
+
+	if (fail) {
+		HaltGui();
+		Subtitle->SetText("Failed");
+		ResumeGui();
+		sleep(3);
+	}
+
+	return Menus::Main;
+}
+
 Menus::Enum MenuLaunch()
 {
-	Subtitle->SetText("Loading...");
+	HaltGui(); Subtitle->SetText("Loading..."); ResumeGui();
 
+	usleep(1000);
 	HaltGui();
 
 	ShutoffRumble();

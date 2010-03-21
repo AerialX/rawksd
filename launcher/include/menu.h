@@ -15,7 +15,9 @@ namespace Menus { enum Enum
 	Main,
 	Settings,
 	Connect,
-	Launch
+	Launch,
+	Install,
+	Uninstall
 }; }
 
 namespace Triggers { enum Enum
@@ -45,6 +47,8 @@ Menus::Enum MenuMain();
 Menus::Enum MenuLaunch();
 Menus::Enum MenuSettings();
 Menus::Enum MenuConnect();
+Menus::Enum MenuInstall();
+Menus::Enum MenuUninstall();
 
 extern GuiTrigger Trigger[];
 

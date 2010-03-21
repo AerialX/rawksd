@@ -68,6 +68,7 @@ void CheckShutdown()
 		SYS_ResetSystem(ShutdownParam, 0, 0);
 }
 
+u32 MALLOC_MEM2 = 1;
 enum { INSTALL_APPROACH_NOTHING = 0, INSTALL_APPROACH_UPDATE, INSTALL_APPROACH_DOWNGRADE };
 int main(int argc, char *argv[])
 {
@@ -77,12 +78,12 @@ int main(int argc, char *argv[])
 		int approach = 0;
 		printf("\n\n");
 		if (IOS_GetVersion() != 37) {
-			printf("\tIOS37 does not seem to be installed on your system.\nIt's perfectly safe to install it; do you want to do so now?\n");
+			printf("\tIOS37 does not seem to be installed on your system.\n\tIt's perfectly safe to install it; do you want to do so now?\n");
 			if (!PressA())
 				return 0;
 			approach = INSTALL_APPROACH_UPDATE;
 		} else if (IOS_GetRevision() < 3869) {
-			printf("\tIOS37 must be updated to continue.\nIt's perfectly safe to update it; do you want to do so now?\n");
+			printf("\tIOS37 must be updated to continue.\n\tIt's perfectly safe to update it; do you want to do so now?\n");
 			if (!PressA())
 				return 0;
 			approach = INSTALL_APPROACH_UPDATE;
@@ -94,7 +95,7 @@ int main(int argc, char *argv[])
 			approach = INSTALL_APPROACH_DOWNGRADE;
 		} else {
 			// Proper version, but a patch failed. RawkSD patcher or DOP-IOS or something.
-			printf("\tIOS37 must be reinstalled to continue. This is a perfectly safe to do; do you want to reinstall it now?\n");
+			printf("\tIOS37 must be reinstalled to continue.\n\tThis is a perfectly safe to do; do you want to reinstall it now?\n");
 			if (!PressA())
 				return 0;
 			approach = INSTALL_APPROACH_UPDATE;

@@ -222,8 +222,9 @@ void GuiButton::Update(GuiTrigger * t)
 					(cc_btns == cc_btns_trig && t->wpad->exp.type == EXP_CLASSIC))) ||
 					(t->pad.btns_d == trigger[i]->pad.btns_d && t->pad.btns_d > 0))
 				{
-					if(t->chan == stateChan || stateChan == -1)
-					{
+					// Allow any wiimote to click on anything
+					//if(t->chan == stateChan || stateChan == -1)
+					//{
 						if(state == STATE_SELECTED)
 						{
 							if(!t->wpad->ir.valid ||	this->IsInside(t->wpad->ir.x, t->wpad->ir.y))
@@ -243,7 +244,7 @@ void GuiButton::Update(GuiTrigger * t)
 						{
 							this->SetState(STATE_CLICKED, t->chan);
 						}
-					}
+					//}
 				}
 			}
 		}

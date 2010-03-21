@@ -28,7 +28,7 @@ INCLUDES	:=	include lib/libwiigui lib lib/tremor \
 
 CFLAGS		=	-g -O2 -Wall $(MACHDEP) $(INCLUDE)
 CXXFLAGS	=	-save-temps -Xassembler -aln=$@.lst $(CFLAGS)
-LDFLAGS		=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map,--section-start,.init=0x80A00000
+LDFLAGS		=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map,--section-start,.init=0x80a00000 -T ../lib/rvl.ld
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project

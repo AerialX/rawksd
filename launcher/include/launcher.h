@@ -27,6 +27,7 @@
 namespace LauncherStatus { enum Enum {
 	OK = 0,
 	NoDisc = -0x100,
+	OutOfMemory = -0x400,
 	IosError = -0x200,
 	ReadError = -0x201
 }; }

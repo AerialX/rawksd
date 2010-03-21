@@ -329,7 +329,7 @@ static const u32 ios_ret[] =
 	0x20107084+1, // ret_address
 };
 
-void forge_sig(u8 *data, u32 length)
+bool forge_sig(u8 *data, u32 length)
 {
 	const u8* fixed_hash;
 	u8 hash[20];
@@ -350,7 +350,7 @@ void forge_sig(u8 *data, u32 length)
 		if (length < SIGNED_TMD_SIZE((u32*)data))
 		{
 			printf("Bad payload length (%08X)\n", length);
-			return;
+			return false;
 		}
 		memcpy(data, tmd_sig, sizeof(tmd_sig));
 		payload_junk = (u16*)(data+0x1E2); // fill 3
@@ -368,12 +368,13 @@ void forge_sig(u8 *data, u32 length)
 				if (hash[j]==fixed_hash[j])
 				{
 					printf("Fakesigned ok, junk %04X\n", i);
-					return;
+					return true;
 				}
 			}
 		}
 	}
 	printf("Fakesigning failed\n");
+	return false;
 }
 
 u8 *make_ticket(u64 title)
