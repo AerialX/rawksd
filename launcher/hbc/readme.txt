@@ -1,6 +1,6 @@
-Riivolution v1.0
-Saturday March 20th, 2010
-by Aaron and tueidj
+Riivolution v1.01
+Monday March 22nd, 2010
+by Aaron, tueidj and Tempus
 riivolution@japaneatahand.com
 
 Homepage: http://rvlution.net/riivolution
@@ -41,7 +41,23 @@ A: As a user, you need to either download patch packages made by someone else or
    A basic template and packages for common games can be found here: http://rvlution.net/riiv/Patch_Templates
    For a more detailed explanation about Riivolution's patch XML files, check out the instructions: http://rvlution.net/riiv/Patch_Format
 
+Q: Network support? Awesome, how do I use it?
+A: Read more about all of Riivolution's network features here: http://rvlution.net/riiv/Network
+   You can also check out our list of all the known public Riivolution servers: http://rvlution.net/riiv/List_of_RiiFS_servers
+
 Q: Can I see it in action?
 A: Sure. http://rvlution.net/riiv/Media
 
-Special thanks to everyone that contributed! Tempus, Treeki, Omega, Pop006, TobiasAmaranth, megazig, Mooseknuckle2000, Skawo, and everyone else who helped out!
+Special thanks to everyone that contributed! Treeki, Omega, Pop006, TobiasAmaranth, megazig, Mooseknuckle2000, Skawo, and everyone else who helped out!
+
+Changelog
+
+v1.01
+ - March 22nd, 2010
+ - Memory patch improvements
+ - Mounted disk improvements
+ - Added network support
+
+v1.0
+ - March 20th, 2010
+ - Inital release

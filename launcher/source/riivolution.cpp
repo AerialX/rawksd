@@ -281,6 +281,11 @@ static void RVL_Patch(RiiShiftPatch* shift)
 	destination->Size = source->Size;
 }
 
+static DiscNode* RVL_CreateNode(string path, u32 length)
+{
+	return NULL; // TODO: This.
+}
+
 static DiscNode ZeroNode;
 static void RVL_Patch(RiiFilePatch* file, bool stat, u64 externalid, string commonfs)
 {
@@ -298,8 +303,9 @@ static void RVL_Patch(RiiFilePatch* file, bool stat, u64 externalid, string comm
 
 	if (!node) {
 		if (file->Create) {
-			// TODO: Add FST entries
-			return;
+			node = RVL_CreateNode(file->Disc, file->Length);
+			if (!node)
+				return;
 		} else
 			return;
 	}
@@ -441,39 +447,47 @@ extern vector<int> Mounted;
 void RVL_Patch(RiiDisc* disc)
 {
 	// Search for a common filesystem so we can optimize memory
-	int fs = -1;
 	string filesystem;
-	map<int, int> usedfilesystems;
+	vector<int> usedfilesystems;
 	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
 		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
 			if (!option->Default)
 				continue;
 			RiiChoice* choice = &option->Choices[option->Default - 1];
-			usedfilesystems[choice->Filesystem] = 1;
-			if (fs == -1)
-				fs = choice->Filesystem;
-			else if (fs != choice->Filesystem) {
-				fs = -1;
-				goto no_common_fs;
+
+			bool found = false;
+			for (vector<int>::iterator used = usedfilesystems.begin(); used != usedfilesystems.end(); used++) {
+				if (*used == choice->Filesystem) {
+					found = true;
+					break;
+				}
 			}
+			if (!found)
+				usedfilesystems.push_back(choice->Filesystem);
 		}
 	}
-no_common_fs:
 
 	for (vector<int>::iterator mount = Mounted.begin(); mount != Mounted.end(); mount++) {
-		if (usedfilesystems.find(*mount) == usedfilesystems.end())
+		bool found = false;
+		for (vector<int>::iterator used = usedfilesystems.begin(); used != usedfilesystems.end(); used++) {
+			if (*used == *mount) {
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
 			File_Unmount(*mount);
 	}
 
-	if (fs >= 0) {
+	if (usedfilesystems.size() == 1) {
 		char mountpoint[MAXPATHLEN];
-		if (File_GetMountPoint(fs, mountpoint, sizeof(mountpoint)) >= 0) {
+		if (File_GetMountPoint(usedfilesystems[0], mountpoint, sizeof(mountpoint)) >= 0) {
 			filesystem = mountpoint;
 			File_SetDefaultPath(mountpoint);
 			RVL_SetClusters(true);
 		}
-	} else
-		RVL_SetClusters(false);
+	}
 
 	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
 		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {

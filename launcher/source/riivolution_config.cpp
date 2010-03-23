@@ -187,7 +187,7 @@ versionisvalid:
 					strcpy(mountpath, mountpoint);
 					strcat(mountpath, RIIVOLUTION_PATH);
 
-					ParseXMLs(mountpath, mountpoint, fs, discs);
+					ParseXMLs(mountpath, mountpoint, mnt, discs);
 				}
 			}
 		}

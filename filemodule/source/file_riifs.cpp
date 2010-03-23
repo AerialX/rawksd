@@ -36,7 +36,7 @@ namespace ProxiIOS { namespace Filesystem {
 		}
 		
 		ServerVersion = ReceiveCommand(RII_HANDSHAKE);
-		if (ServerVersion > RII_VERSION_RET) {
+		if (ServerVersion != RII_VERSION_RET) {
 			Unmount();
 			return Errors::DiskNotMounted;
 		}
@@ -93,6 +93,9 @@ namespace ProxiIOS { namespace Filesystem {
 
 			read += ret;
 		}
+
+		if (read & 3)
+			memset(data + read, 0, 4 - (read & 3));
 
 		return read;
 	}
