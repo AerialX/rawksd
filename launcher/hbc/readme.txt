@@ -50,14 +50,15 @@ A: Sure. http://rvlution.net/riiv/Media
 
 Special thanks to everyone that contributed! Treeki, Omega, Pop006, TobiasAmaranth, megazig, Mooseknuckle2000, Skawo, and everyone else who helped out!
 
+
 Changelog
 
 v1.01
- - March 22nd, 2010
+March 22nd, 2010
  - Memory patch improvements
  - Mounted disk improvements
  - Added network support
 
 v1.0
- - March 20th, 2010
+March 20th, 2010
  - Inital release

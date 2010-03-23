@@ -94,8 +94,8 @@ namespace ProxiIOS { namespace Filesystem {
 			read += ret;
 		}
 
-		if (read & 3)
-			memset(data + read, 0, 4 - (read & 3));
+		if ((int)data < 0x10000000)
+			memset(data + read, 0, -read & 3);
 
 		return read;
 	}

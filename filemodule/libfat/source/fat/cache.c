@@ -193,8 +193,8 @@ bool _FAT_cache_readPartialSector (CACHE* cache, void* buffer, sec_t sector, uns
 
 	sec = sector - entry->sector;
 	memcpy(buffer,entry->cache + ((sec*BYTES_PER_READ) + offset), size);
-	if (size & 3)
-		memset((u8*)buffer + size, 0, 4 - (size & 3));
+	if ((int)buffer < 0x10000000)
+		memset((u8*)buffer + size, 0, -size & 3);
 
 	return true;
 }
