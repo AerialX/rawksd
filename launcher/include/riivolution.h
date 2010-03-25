@@ -14,6 +14,7 @@ struct DiscNode
 	u32 Size;
 	u32 GetNameOffset() { return ((u32)NameOffsetMSB << 16) | NameOffset; }
 	void SetNameOffset(u32 offset) { NameOffset = (u16)offset; NameOffsetMSB = offset >> 16; }
+	DiscNode* GetParent();
 } __attribute__((packed));
 
 namespace PatchType { enum Enum {

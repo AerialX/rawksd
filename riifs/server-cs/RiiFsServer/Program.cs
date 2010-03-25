@@ -243,7 +243,7 @@ namespace ConsoleHaxx.RiiFS
 									fmode = FileMode.Append;
 
 								try {
-									Stream fstream = new FileStream(path, fmode, faccess);
+									Stream fstream = new FileStream(path, fmode, faccess, FileShare.ReadWrite);
 									fd = OpenFileFD++;
 
 									OpenFiles.Add(fd, fstream);

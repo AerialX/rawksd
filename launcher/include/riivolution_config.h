@@ -65,6 +65,7 @@ struct RiiFolderPatch {
 		Resize = true;
 		Create = false;
 		Recursive = true;
+		Length = 0;
 	}
 
 	bool Create;
@@ -72,6 +73,7 @@ struct RiiFolderPatch {
 	bool Recursive;
 	std::string Disc;
 	std::string External;
+	u32 Length;
 };
 
 struct RiiShiftPatch {

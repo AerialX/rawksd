@@ -18,6 +18,7 @@
 #define MEM_BI2				((u32*)0x800000F4)
 
 #define MEM_FSTADDRESS		((void**)0x80000038)
+#define MEM_FSTADDRESS2		((void**)0x80003110)
 #define MEM_APPLOADER		((u32*)0x81200000)
 
 #define MEM_ARENA1HIGH		((void**)0x80000034)

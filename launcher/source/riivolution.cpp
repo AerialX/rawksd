@@ -32,6 +32,17 @@ namespace Ioctl { enum Enum {
 
 static u32 ioctlbuffer[0x08] ATTRIBUTE_ALIGN(32);
 
+DiscNode* DiscNode::GetParent()
+{
+	u32 offset = this - fst;
+	for (DiscNode* node = this - 1; node >= fst; node--) {
+		if (node->Type && node->Size > offset)
+			return node;
+	}
+
+	return NULL;
+}
+
 int RVL_Initialize()
 {
 	if (fd < 0)
@@ -161,57 +172,18 @@ u64 RVL_GetShiftOffset(u32 length)
 	pos = strlen(curpath); \
 }
 
-#if 0 // Old filenode
-DiscNode* RVL_FindNode(const char* fstname)
+static DiscNode* RVL_FindNode(DiscNode* root, const char* name, bool recursive = false)
 {
 	const char* nametable = (const char*)(fst + fst->Size);
-	
-	u32 count = 1;
-	DiscNode*> nodes;
-	char curpath[MAXPATHLEN];
-	int pos = 0;
-	
-	REFRESH_PATH();
-	
-	for (DiscNode* node = fst; (void*)node < (void*)nametable; node++, count++) {
-		const char* name = nametable + node->GetNameOffset();
-		
-		if (node->Type == 0x01) {
-			nodes.push_back(node);
-			
-			REFRESH_PATH();
-		} else if (node->Type == 0x00) {
-			curpath[pos] = '\0'; // Null-terminate it to the path
-			strcat(curpath, name);
-			
-			if (!strcasecmp(curpath, fstname) || !strcasecmp(name, fstname))
-				return node;
-		}
-		
-		while (nodes.size() > 0 && count == nodes.back()->Size) {
-			nodes.pop_back();
-			
-			REFRESH_PATH();
-		}
-	}
-	
-	return NULL;
-}
-#endif
-
-static DiscNode* RVL_FindNode(const char* name, DiscNode* root, bool recursive)
-{
-	const char* nametable = (const char*)(fst + fst->Size);
-	int offset = root - fst;
-	DiscNode* node = root;
+	DiscNode* node = root + 1;
 	while ((void*)node < (void*)nametable) {
 		if (!strcasecmp(nametable + node->GetNameOffset(), name))
 			return node;
 
-		if (recursive || node->Type == 0)
+		if (recursive || !node->Type)
 			node++;
 		else
-			node = root + node->Size - offset;
+			node = fst + node->Size;
 	}
 
 	return NULL;
@@ -222,14 +194,14 @@ DiscNode* RVL_FindNode(const char* fstname)
 	if (fstname[0] != '/') {
 		if (!strcasecmp(fstname, "main.dol")) {
 			static DiscNode maindol;
-			maindol.Size = 0;
+			maindol.Size = 0xFFFFFFFF;
 			maindol.Type = 0;
 			maindol.SetNameOffset(0);
 			maindol.DataOffset = Launcher_GetFstData()[1];
 			return &maindol;
 		}
 
-		return RVL_FindNode(fstname, fst, true);
+		return RVL_FindNode(fst, fstname, true);
 	}
 
 	char namebuffer[MAXPATHLEN];
@@ -241,10 +213,10 @@ DiscNode* RVL_FindNode(const char* fstname)
 	while (root) {
 		char* slash = strchr(name, '/');
 		if (!slash)
-			return RVL_FindNode(name, root + 1, false);
+			return RVL_FindNode(root, name);
 
 		*slash = '\0';
-		root = RVL_FindNode(name, root + 1, false);
+		root = RVL_FindNode(root, name);
 		name = slash + 1;
 	}
 
@@ -281,9 +253,94 @@ static void RVL_Patch(RiiShiftPatch* shift)
 	destination->Size = source->Size;
 }
 
+static DiscNode* RVL_CreateFileNode(DiscNode* root, const char* name, u32 size = 0)
+{
+	u32 rootoffset = root - fst;
+	u32 nametablesize = fstsize - sizeof(DiscNode) * fst->Size;
+	char* nametable = (char*)fst + fstsize - nametablesize;
+
+	// Place the new node alphabetically within the parent
+	DiscNode* node = root + 1;
+	for (node = root + 1; node < fst + root->Size && strcmp(name, nametable + node->GetNameOffset()) > 0; node++)
+		;
+	u32 nodeoffset = node - fst;
+
+	// Resize fstsize down to the second-last null byte
+	for (; !((u8*)fst)[fstsize - 2]; fstsize--)
+		;
+
+	u32 newfstsize = ROUND_UP(fstsize + sizeof(DiscNode) + strlen(name) + 1, 4);
+	DiscNode* newfst = (DiscNode*)memalign(32, newfstsize);
+	if (!newfst)
+		return NULL;
+
+	memcpy(newfst, fst, nodeoffset * sizeof(DiscNode));
+	memcpy(newfst + nodeoffset + 1, node, fstsize - nodeoffset * sizeof(DiscNode));
+	free(fst);
+	fst = newfst;
+
+	root = fst + rootoffset;
+	node = fst + nodeoffset;
+
+	nametable = (char*)(fst + fst->Size + 1);
+
+	node->Size = size;
+	node->Type = 0;
+	node->DataOffset = RVL_GetShiftOffset(size) >> 2;
+	node->SetNameOffset(nametablesize);
+	strcpy(nametable + nametablesize, name);
+
+	for (DiscNode* parent = root; parent; parent = parent->GetParent())
+		parent->Size++;
+
+	for (DiscNode* folder = node + 1; folder < fst + fst->Size; folder++)
+		if (folder->Type)
+			folder->Size++;
+
+	fstsize = newfstsize;
+
+	return node;
+}
+
+static DiscNode* RVL_CreateDirectoryNode(DiscNode* root, const char* name)
+{
+	DiscNode* node = RVL_CreateFileNode(root, name);
+	if (node != NULL) {
+		node->Type = 1;
+		node->DataOffset = node->GetParent()->DataOffset + 1;
+		node->Size = node - fst + 1; // Always create an empty directory
+	}
+	return node;
+}
+
 static DiscNode* RVL_CreateNode(string path, u32 length)
 {
-	return NULL; // TODO: This.
+	if (!path.size() || path[0] != '/')
+		return NULL;
+
+	char namebuffer[MAXPATHLEN];
+	char* name = namebuffer;
+	strcpy(name, path.c_str() + 1);
+
+	DiscNode* root = fst;
+	while (root) {
+		char* slash = strchr(name, '/');
+		if (!slash) {
+			if (strlen(name))
+				return RVL_CreateFileNode(root, name, length);
+			break;
+		}
+
+		*slash = '\0';
+		DiscNode* newroot = RVL_FindNode(root, name);
+		if (newroot)
+			root = newroot;
+		else
+			root = RVL_CreateDirectoryNode(root, name);
+		name = slash + 1;
+	}
+
+	return root;
 }
 
 static DiscNode ZeroNode;
@@ -383,7 +440,7 @@ static void RVL_Patch(RiiFolderPatch* folder, string commonfs)
 			file.Resize = folder->Resize;
 			file.Offset = 0;
 			file.FileOffset = 0;
-			file.Length = stats.Size;
+			file.Length = folder->Length ? folder->Length : stats.Size;
 			file.Disc = PathCombine(folder->Disc, fdirname);
 			file.External = PathCombine(external, fdirname);
 			RVL_Patch(&file, true, stats.Identifier, commonfs);
@@ -517,6 +574,8 @@ void RVL_Patch(RiiDisc* disc)
 	}
 }
 
+#define MEM_PHYSICAL_OR_K0(addr) ((addr) | 0x80000000)
+
 static void* FindInBuffer(void* memory, void* end, void* pattern, int patternlength, int align)
 {
 	for (end = (u8*)end - patternlength; memory < end; memory = (u8*)memory + align) {
@@ -531,7 +590,7 @@ static void RVL_Patch(RiiMemoryPatch* memory)
 	if (memory->Ocarina || (memory->Search && !memory->Original) || !memory->Offset || !memory->GetValue() || !memory->GetLength())
 		return;
 
-	memory->Offset = (int)MEM_PHYSICAL_TO_K0(memory->Offset);
+	memory->Offset = (int)MEM_PHYSICAL_OR_K0(memory->Offset);
 
 	if (memory->Search) {
 		// TODO: Searching in MEM2? Too bad.
@@ -553,7 +612,7 @@ static void RVL_Patch(RiiMemoryPatch* memory, void* mem, u32 length)
 	if ((!memory->Ocarina && !memory->Search) || (memory->Search && !memory->Align) || (memory->Ocarina && !memory->Offset) || !memory->GetValue() || !memory->GetLength())
 		return;
 
-	memory->Offset = (int)MEM_PHYSICAL_TO_K0(memory->Offset);
+	memory->Offset = (int)MEM_PHYSICAL_OR_K0(memory->Offset);
 
 	if (memory->Ocarina) {
 		void* ocarina = FindInBuffer(mem, (u8*)mem + length, memory->GetValue(), memory->GetLength(), 4);

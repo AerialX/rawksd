@@ -136,9 +136,12 @@ versionisvalid:
 	ELEMENT_ATTRIBUTE("shiftfiles", true)
 		RVL_SetAlwaysShift(ELEMENT_BOOL());
 
+	bool cleanexit = false;
 	ELEMENT_LOOP {
-		ELEMENT_END("wiidisc")
+		ELEMENT_END("wiidisc") {
+			cleanexit = true;
 			break;
+		}
 
 		ELEMENT_START("id") {
 			ELEMENT_ATTRIBUTE("game", memcmp(MEM_BASE, attribute.c_str(), attribute.length()))
@@ -332,6 +335,8 @@ versionisvalid:
 						folder.Resize = ELEMENT_BOOL();
 					ELEMENT_ATTRIBUTE("recursive", true)
 						folder.Recursive = ELEMENT_BOOL();
+					ELEMENT_ATTRIBUTE("length", true)
+						folder.Length = ELEMENT_INT(attribute);
 					ELEMENT_ATTRIBUTE("disc", true)
 						folder.Disc = attribute;
 					ELEMENT_ATTRIBUTE("external", true)
@@ -398,7 +403,8 @@ versionisvalid:
 		} // </patch>
 	}
 
-	discs->push_back(disc);
+	if (cleanexit)
+		discs->push_back(disc);
 
 	return true;
 }

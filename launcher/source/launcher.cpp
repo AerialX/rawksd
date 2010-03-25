@@ -230,8 +230,18 @@ LauncherStatus::Enum Launcher_CommitRVL(bool dip)
 		File_Write(tmpfd, fstdata, 0x40);
 		File_Close(tmpfd);
 		RVL_AddPatch(RVL_AddFile("/riivolution/temp/fst.header"), 0, 0x420, 0x40);
-	} else
-		memcpy(*MEM_FSTADDRESS, RVL_GetFST(), RVL_GetFSTSize()); // TODO: Account for fstdata changing
+	} else {
+		int difference = RVL_GetFSTSize() - fstdata[2];
+		if (difference > 0) {
+			difference = ROUND_UP(difference, 0x40);
+			// TODO: Check that these two are equal first
+			*MEM_ARENA1HIGH = (u8*)*MEM_ARENA1HIGH - difference;
+			*MEM_FSTADDRESS = (u8*)*MEM_FSTADDRESS - difference;
+			*MEM_FSTADDRESS2 = (u8*)*MEM_FSTADDRESS2 - difference;
+			*MEM_FSTSIZE = RVL_GetFSTSize();
+		}
+		memcpy(*MEM_FSTADDRESS, RVL_GetFST(), RVL_GetFSTSize());
+	}
 
 	return LauncherStatus::OK;
 }

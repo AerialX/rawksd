@@ -6,6 +6,8 @@
 
 #include <print.h>
 
+#define CONNECT_SLEEP_INTERVAL 100000 // 0.1 seconds
+
 namespace ProxiIOS { namespace Filesystem {
 	int RiiHandler::Mount(const void* options, int length)
 	{
@@ -26,10 +28,35 @@ namespace ProxiIOS { namespace Filesystem {
 		memset(&address, 0, sizeof(address));
 		address.sin_family = PF_INET;
 		address.sin_port = htons(Port);
-		if (inet_aton(IP, &address.sin_addr) < 0)
+		if (inet_aton(IP, &address.sin_addr) < 0) {
+			net_close(Socket);
 			return Errors::DiskNotMounted;
-		if (net_connect(Socket, (struct sockaddr*)(const void *)&address, sizeof(address)) < 0)
+		}
+
+		// Non-blocking
+		if ((ret = net_fcntl(Socket, F_GETFL, 0)) < 0 || (net_fcntl(Socket, F_SETFL, ret | 4) < 0)) {
+			net_close(Socket);
 			return Errors::DiskNotMounted;
+		}
+
+		for (u32 i = 0; i < 100; i++) { // 10 second timeout
+			ret = net_connect(Socket, (struct sockaddr*)(const void *)&address, sizeof(address));
+			if (ret == -EINPROGRESS || ret == -EALREADY)
+				usleep(CONNECT_SLEEP_INTERVAL);
+			else
+				break;
+		}
+		if (ret < 0 && ret != -EISCONN) {
+			net_close(Socket);
+			return Errors::DiskNotMounted;
+		}
+
+		// Back to blocking
+		if ((ret = net_fcntl(Socket, F_GETFL, 0)) < 0 || (net_fcntl(Socket, F_SETFL, ret & ~4) < 0)) {
+			Unmount();
+			return Errors::DiskNotMounted;
+		}
+
 		if (!SendCommand(RII_HANDSHAKE, (const u8*)RII_VERSION, strlen(RII_VERSION))) {
 			Unmount();
 			return Errors::DiskNotMounted;

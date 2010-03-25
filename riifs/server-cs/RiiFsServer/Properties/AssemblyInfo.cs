@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("RiiFsServer")]
+[assembly: AssemblyTitle("RiiFS Server")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("SnipeR's Redemption Network")]
-[assembly: AssemblyProduct("RiiFsServer")]
-[assembly: AssemblyCopyright("Copyright © SnipeR's Redemption Network 2010")]
+[assembly: AssemblyCompany("Riivolution")]
+[assembly: AssemblyProduct("RiiFS Server")]
+[assembly: AssemblyCopyright("AerialX 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
