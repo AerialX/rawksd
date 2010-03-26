@@ -56,12 +56,14 @@ namespace ConsoleHaxx.Common
 
 		public static long StreamCopy(Stream destination, Stream source, ulong len)
 		{
-			//byte[] buffer = new byte[0x400 * 512]; // 512KB buffer
 			byte[] buffer = new byte[0x400 * 0x400 * 2]; // 2MB buffer
 
 			ulong pos = 0;
 			while (pos < len) {
-				int read = source.Read(buffer, 0, buffer.Length);
+				int read = 0;
+				try {
+					read = source.Read(buffer, 0, buffer.Length);
+				} catch { }
 				pos += (uint)read;
 				if (pos > len)
 					read -= (int)(pos - len);

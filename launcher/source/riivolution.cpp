@@ -176,7 +176,7 @@ static DiscNode* RVL_FindNode(DiscNode* root, const char* name, bool recursive =
 {
 	const char* nametable = (const char*)(fst + fst->Size);
 	DiscNode* node = root + 1;
-	while ((void*)node < (void*)nametable) {
+	while ((void*)node < (void*)(fst + root->Size)) {
 		if (!strcasecmp(nametable + node->GetNameOffset(), name))
 			return node;
 
@@ -197,7 +197,7 @@ DiscNode* RVL_FindNode(const char* fstname)
 			maindol.Size = 0xFFFFFFFF;
 			maindol.Type = 0;
 			maindol.SetNameOffset(0);
-			maindol.DataOffset = Launcher_GetFstData()[1];
+			maindol.DataOffset = Launcher_GetFstData()[0];
 			return &maindol;
 		}
 
@@ -256,31 +256,42 @@ static void RVL_Patch(RiiShiftPatch* shift)
 static DiscNode* RVL_CreateFileNode(DiscNode* root, const char* name, u32 size = 0)
 {
 	u32 rootoffset = root - fst;
-	u32 nametablesize = fstsize - sizeof(DiscNode) * fst->Size;
-	char* nametable = (char*)fst + fstsize - nametablesize;
+	char* nametable = (char*)(fst + fst->Size);
 
 	// Place the new node alphabetically within the parent
 	DiscNode* node = root + 1;
-	for (node = root + 1; node < fst + root->Size && strcmp(name, nametable + node->GetNameOffset()) > 0; node++)
+	for (node = root + 1; node < fst + root->Size && strcasecmp(name, nametable + node->GetNameOffset()) > 0; node = (node->Type ? (fst + node->Size) : (node + 1)))
 		;
 	u32 nodeoffset = node - fst;
+	u32 oldfstsize = fstsize;
 
 	// Resize fstsize down to the second-last null byte
-	for (; !((u8*)fst)[fstsize - 2]; fstsize--)
+	for (; !((u8*)fst)[fstsize - 1]; fstsize--)
 		;
+	fstsize++;
 
-	u32 newfstsize = ROUND_UP(fstsize + sizeof(DiscNode) + strlen(name) + 1, 4);
-	DiscNode* newfst = (DiscNode*)memalign(32, newfstsize);
-	if (!newfst)
-		return NULL;
+	u32 nametablesize = fstsize - sizeof(DiscNode) * fst->Size;
 
-	memcpy(newfst, fst, nodeoffset * sizeof(DiscNode));
-	memcpy(newfst + nodeoffset + 1, node, fstsize - nodeoffset * sizeof(DiscNode));
-	free(fst);
-	fst = newfst;
+	u32 newfstsize = fstsize + sizeof(DiscNode) + strlen(name) + 1;
+	if (newfstsize > oldfstsize) {
+		newfstsize = ROUND_UP(newfstsize, 0x100);
+		DiscNode* newfst = (DiscNode*)memalign(32, newfstsize);
+		if (!newfst)
+			return NULL;
 
-	root = fst + rootoffset;
-	node = fst + nodeoffset;
+		memset(newfst, 0, newfstsize);
+
+		memcpy(newfst, fst, nodeoffset * sizeof(DiscNode));
+		memcpy(newfst + nodeoffset + 1, node, fstsize - nodeoffset * sizeof(DiscNode));
+		free(fst);
+		fst = newfst;
+		root = fst + rootoffset;
+		node = fst + nodeoffset;
+		fstsize = newfstsize;
+	} else {
+		memmove(node + 1, node, fstsize - nodeoffset * sizeof(DiscNode));
+		fstsize = oldfstsize;
+	}
 
 	nametable = (char*)(fst + fst->Size + 1);
 
@@ -296,8 +307,6 @@ static DiscNode* RVL_CreateFileNode(DiscNode* root, const char* name, u32 size =
 	for (DiscNode* folder = node + 1; folder < fst + fst->Size; folder++)
 		if (folder->Type)
 			folder->Size++;
-
-	fstsize = newfstsize;
 
 	return node;
 }
@@ -500,6 +509,12 @@ static void RVL_Patch(RiiPatch* patch, map<string, string>* params, string commo
 		RVL_Patch(&temp, commonfs);
 	}
 }
+
+#define ADD_DEFAULT_PARAMS(params) { \
+	params["__gameid"] = string((char*)MEM_BASE, 4); \
+	params["__region"] = string((char*)MEM_BASE + 3, 1); \
+}
+
 extern vector<int> Mounted;
 void RVL_Patch(RiiDisc* disc)
 {
@@ -524,6 +539,15 @@ void RVL_Patch(RiiDisc* disc)
 		}
 	}
 
+	if (usedfilesystems.size() == 1) {
+		char mountpoint[MAXPATHLEN];
+		if (File_GetMountPoint(usedfilesystems[0], mountpoint, sizeof(mountpoint)) >= 0) {
+			filesystem = mountpoint;
+			File_SetDefaultPath(mountpoint);
+			RVL_SetClusters(true);
+		}
+	}
+
 	for (vector<int>::iterator mount = Mounted.begin(); mount != Mounted.end(); mount++) {
 		bool found = false;
 		for (vector<int>::iterator used = usedfilesystems.begin(); used != usedfilesystems.end(); used++) {
@@ -537,20 +561,12 @@ void RVL_Patch(RiiDisc* disc)
 			File_Unmount(*mount);
 	}
 
-	if (usedfilesystems.size() == 1) {
-		char mountpoint[MAXPATHLEN];
-		if (File_GetMountPoint(usedfilesystems[0], mountpoint, sizeof(mountpoint)) >= 0) {
-			filesystem = mountpoint;
-			File_SetDefaultPath(mountpoint);
-			RVL_SetClusters(true);
-		}
-	}
-
 	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
 		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
 			if (option->Default == 0)
 				continue;
 			map<string, string> params;
+			ADD_DEFAULT_PARAMS(params);
 			params.insert(option->Params.begin(), option->Params.end());
 			RiiChoice* choice = &option->Choices[option->Default - 1];
 			params.insert(choice->Params.begin(), choice->Params.end());

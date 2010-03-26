@@ -426,7 +426,8 @@ int InstallChannel()
 		metatmd->contents[i].index = i;
 		metatmd->contents[i].cid = i;
 		metatmd->contents[i].size = banner_dat_size[i];
-		SHA1(banner_dat[i], banner_dat_size[i], metatmd->contents[i].hash);
+		if (i == 2) // Only rehash the main.dol
+			SHA1(banner_dat[i], banner_dat_size[i], metatmd->contents[i].hash);
 	}
 
 	if (!forge_sig((u8*)ticket, banner_tik_dat_size) || !forge_sig((u8*)meta, banner_tmd_dat_size))

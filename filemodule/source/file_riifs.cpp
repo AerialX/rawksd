@@ -70,8 +70,6 @@ namespace ProxiIOS { namespace Filesystem {
 
 		_sprintf(MountPoint, "/mnt/net/%s/%d", IP, Port);
 
-		// TODO: Add a timer for pinging the server every 30 seconds; don't wait for a response
-
 		return Errors::Success;
 	}
 
@@ -352,5 +350,10 @@ namespace ProxiIOS { namespace Filesystem {
 #endif
 		delete dir;
 		return ReceiveCommand(RII_FILE_CLOSEDIR);
+	}
+
+	int RiiHandler::Idle()
+	{
+		return SendCommand(RII_OPTION_PING);
 	}
 } }

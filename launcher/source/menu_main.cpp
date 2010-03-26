@@ -350,6 +350,7 @@ struct PageViewer {
 }
 
 vector<int> Mounted;
+vector<int> ToMount;
 Menus::Enum MenuMount()
 {
 	HaltGui();
@@ -429,6 +430,7 @@ Menus::Enum MenuInit()
 
 		ParseXMLs(mountpath, mountpoint, *mount, &discs);
 	}
+	Mounted.insert(Mounted.end(), ToMount.begin(), ToMount.end());
 	Disc = CombineDiscs(&discs);
 	ParseConfigXMLs(&Disc);
 

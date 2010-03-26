@@ -113,6 +113,8 @@ static string AbsolutePathCombine(string path, string file, string rootfs)
 	if (length == 0) \
 		return false; // Not an xml document
 
+extern vector<int> Mounted;
+extern vector<int> ToMount;
 bool ParseXML(const char* xmldata, int length, vector<RiiDisc>* discs, const char* rootpath, const char* rootfs, int fs)
 {
 	TRIM_XML();
@@ -131,10 +133,11 @@ bool ParseXML(const char* xmldata, int length, vector<RiiDisc>* discs, const cha
 	return false;
 
 versionisvalid:
+	int shiftfiles = -1;
 	ELEMENT_ATTRIBUTE("root", true)
 		xmlroot = AbsolutePathCombine(xmlroot, attribute, rootfs);
 	ELEMENT_ATTRIBUTE("shiftfiles", true)
-		RVL_SetAlwaysShift(ELEMENT_BOOL());
+		shiftfiles = ELEMENT_BOOL() ? 1 : 0;
 
 	bool cleanexit = false;
 	ELEMENT_LOOP {
@@ -186,6 +189,7 @@ versionisvalid:
 			if (mnt >= 0) {
 				char mountpoint[MAXPATHLEN];
 				if (File_GetMountPoint(mnt, mountpoint, sizeof(mountpoint)) >= 0) {
+					ToMount.push_back(mnt);
 					char mountpath[MAXPATHLEN];
 					strcpy(mountpath, mountpoint);
 					strcat(mountpath, RIIVOLUTION_PATH);
@@ -403,8 +407,11 @@ versionisvalid:
 		} // </patch>
 	}
 
-	if (cleanexit)
+	if (cleanexit) {
+		if (shiftfiles >= 0)
+			RVL_SetAlwaysShift(shiftfiles);
 		discs->push_back(disc);
+	}
 
 	return true;
 }

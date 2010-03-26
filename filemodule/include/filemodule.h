@@ -128,6 +128,8 @@ namespace ProxiIOS { namespace Filesystem {
 			virtual FileInfo* OpenDir(const char* path) { return null; };
 			virtual int NextDir(FileInfo* dir, char* dirname, Stats* st) { return -1; };
 			virtual int CloseDir(FileInfo* dir) { return -1; };
+			virtual int Idle() { return -1; }
+			virtual int GetIdleTime() { return -1; }
 	};
 
 	class Filesystem : public ProxiIOS::Module
@@ -135,6 +137,7 @@ namespace ProxiIOS { namespace Filesystem {
 	public:
 		DISC_INTERFACE* Disk[FILE_MAX_DISKS];
 		FilesystemHandler* Mounted[FILE_MAX_MOUNTED];
+		int Timer[FILE_MAX_MOUNTED];
 		int Default;
 		
 		Filesystem();
@@ -146,5 +149,6 @@ namespace ProxiIOS { namespace Filesystem {
 		int HandleRead(ipcmessage* message);
 		int HandleWrite(ipcmessage* message);
 		int HandleSeek(ipcmessage* message);
+		bool HandleOther(u32 message, int &result, bool &ack);
 	};
 } }

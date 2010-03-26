@@ -38,14 +38,16 @@
 #define RII_OPTION_RENAME_SOURCE		0x08
 #define RII_OPTION_RENAME_DESTINATION	0x09
 
+#define RII_OPTION_PING					0x10
+
 #define RIIFS_LOCAL_OPTIONS
 #define RIIFS_LOCAL_SEEKING
 //#define RIIFS_LOCAL_DIRNEXT
 #define RIIFS_LOCAL_DIRNEXT_SIZE 0x1000
 
-#define RII_VERSION 		"1.1"
+#define RII_VERSION 		"1.02"
 
-#define RII_VERSION_RET		0x02
+#define RII_VERSION_RET		0x03
 
 namespace ProxiIOS { namespace Filesystem {
 	struct RiiFileInfo : public FileInfo
@@ -116,6 +118,9 @@ namespace ProxiIOS { namespace Filesystem {
 			FileInfo* OpenDir(const char* path);
 			int NextDir(FileInfo* dir, char* filename, Stats* st);
 			int CloseDir(FileInfo* dir);
+
+			int Idle();
+			int GetIdleTime() { return 30000000; } // 30 seconds
 
 #ifdef RIIFS_LOCAL_DIRNEXT
 			int NextDirCache(RiiFileInfo* dir, char* filename, Stats* st);

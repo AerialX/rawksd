@@ -96,6 +96,9 @@ namespace ProxiIOS { namespace Filesystem {
 					return ret;
 				}
 
+				int idle = system->GetIdleTime();
+				if (idle > 0)
+					Timer[index] = os_create_timer(idle, 0, queuehandle, 0x500 + index);
 				Mounted[index] = system;
 
 				return index; }
@@ -272,6 +275,22 @@ namespace ProxiIOS { namespace Filesystem {
 		if (!file)
 			return Errors::NotOpened;
 		return file->System->Write(file, (const u8*)message->write.data, message->write.length);
+	}
+
+	bool Filesystem::HandleOther(u32 message, int &result, bool &ack)
+	{
+		if (message >= 0x500 && message < 0x500 + FILE_MAX_MOUNTED) {
+			int index = message - 0x500;
+			os_stop_timer(Timer[index]);
+			Mounted[index]->Idle();
+			int idle = Mounted[index]->GetIdleTime();
+			if (idle > 0)
+				os_restart_timer(Timer[index], idle, 0);
+			ack = false;
+			return true;
+		}
+
+		return false;
 	}
 
 	FilePathDesc::FilePathDesc(Filesystem* module, const char* path)
