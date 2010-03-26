@@ -18,9 +18,9 @@ namespace ProxiIOS { namespace Filesystem {
 	{
 		memset(Mounted, null, sizeof(Mounted));
 		memset(Disk, null, sizeof(Disk));
-		
+
 		Timer_Init();
-		
+
 		Mounted[0] = new IsfsHandler(this);
 		Mounted[0]->Mount(null, 0);
 
@@ -30,16 +30,16 @@ namespace ProxiIOS { namespace Filesystem {
 	int Filesystem::HandleIoctl(ipcmessage* message)
 	{
 		os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
-		
+
 		switch (message->ioctl.command) {
 			case Ioctl::InitDisc: {
 				int index = 0;
 				for (index = 0; Disk[index] != null && index < FILE_MAX_DISKS; index++)
 					;
-				
+
 				if (index == FILE_MAX_DISKS)
 					return Errors::OutOfMemory;
-				
+
 				int diskid = message->ioctl.buffer_in[0];
 				switch (diskid) {
 					case Disks::SD:
@@ -54,7 +54,7 @@ namespace ProxiIOS { namespace Filesystem {
 					default:
 						return Errors::Unrecognized;
 				}
-				
+
 				if (!Disk[index]->startup()) {
 					Disk[index] = null;
 					return Errors::DiskNotStarted;
@@ -63,7 +63,7 @@ namespace ProxiIOS { namespace Filesystem {
 					Disk[index] = null;
 					return Errors::DiskNotInserted;
 				}
-				
+
 				return index;
 				break; }
 			case Ioctl::Mount: {
@@ -72,7 +72,7 @@ namespace ProxiIOS { namespace Filesystem {
 					;
 				if (index == FILE_MAX_MOUNTED)
 					return Errors::OutOfMemory;
-				
+
 				FilesystemHandler* system = null;
 				Filesystems::Enum fs = (Filesystems::Enum)message->ioctl.buffer_in[0];
 				switch (fs) {
@@ -85,7 +85,7 @@ namespace ProxiIOS { namespace Filesystem {
 					default:
 						break;
 				}
-				
+
 				if (!system)
 					return Errors::Unrecognized;
 
@@ -95,7 +95,7 @@ namespace ProxiIOS { namespace Filesystem {
 					delete system;
 					return ret;
 				}
-				
+
 				Mounted[index] = system;
 
 				return index; }
@@ -215,31 +215,31 @@ namespace ProxiIOS { namespace Filesystem {
 	{
 		if (!strcmp(message->open.device, FILE_MODULE_NAME))
 			return FILE_IOCTL_FD;
-		
+
 		FilePathDesc descriptor(this, message->open.device + FILE_MODULE_NAME_LENGTH);
-		
+
 		if (!descriptor.System)
 			return Errors::NotMounted;
-		
+
 		int ret = (int)descriptor.System->Open(descriptor.Path, message->open.mode);
-		
+
 		if (!ret)
 			return Errors::NotOpened;
 
 		return ret;
 	}
-	
+
 	int Filesystem::HandleClose(ipcmessage* message)
 	{
 		if (message->fd == FILE_IOCTL_FD)
 			return 1;
-		
+
 		FileInfo* file = (FileInfo*)message->fd;
 		if (!file)
 			return Errors::NotOpened;
 		return file->System->Close(file);
 	}
-	
+
 	int Filesystem::HandleSeek(ipcmessage* message)
 	{
 		FileInfo* file = (FileInfo*)message->fd;
@@ -254,7 +254,7 @@ namespace ProxiIOS { namespace Filesystem {
 				return file->System->Seek(file, message->seek.offset, message->seek.origin);
 		}
 	}
-	
+
 	int Filesystem::HandleRead(ipcmessage* message)
 	{
 		FileInfo* file = (FileInfo*)message->fd;
@@ -264,7 +264,7 @@ namespace ProxiIOS { namespace Filesystem {
 		os_sync_after_write(message->read.data, message->read.length);
 		return ret;
 	}
-	
+
 	int Filesystem::HandleWrite(ipcmessage* message)
 	{
 		os_sync_before_read(message->write.data, message->write.length);
@@ -273,7 +273,7 @@ namespace ProxiIOS { namespace Filesystem {
 			return Errors::NotOpened;
 		return file->System->Write(file, (const u8*)message->write.data, message->write.length);
 	}
-	
+
 	FilePathDesc::FilePathDesc(Filesystem* module, const char* path)
 	{
 		Path = path;

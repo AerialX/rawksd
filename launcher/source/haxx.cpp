@@ -28,6 +28,15 @@ extern "C" {
 	extern const u8 root_dat[];
 }
 
+// our haxxed ios, IOS37v3870
+#ifndef YARR
+#define HAXX_IOS_VERSION     0x00250F1E
+#else
+#undef HAXX_IOS
+#define HAXX_IOS_VERSION     0x00890F1E
+#define HAXX_IOS 0x0000000100000089ULL
+#endif
+
 #define dipmodule_dat dipmodule_rii_dat
 #define dipmodule_dat_size dipmodule_rii_dat_size
 
@@ -36,7 +45,7 @@ static bool do_exploit();
 
 int Haxx_Init()
 {
-	IOS_ReloadIOS(37);
+	IOS_ReloadIOS((u32)HAXX_IOS);
 	WPAD_Init();
 
 	if (!do_exploit())
@@ -51,6 +60,7 @@ int Haxx_Init()
 		return -1;
 
 	usleep(4000);
+
 #if 0
 	printf("Press home to exit\n");
 	while(1) {
@@ -110,9 +120,6 @@ int check_cert_chain(const u8 *data, const u32 data_len);
 #define MEM1_BASE_UNCACHED  ((u32*)0xC0000000)
 #define MEM_PROT            ((u16*)0xCD8B420A)
 #define MEM1_IOSVERSION     ((u32*)0xC0003140)
-
-// our haxxed ios, IOS37v3870
-#define HAX_IOS_VERSION     0x00250F1E
 
 // the filename used to load modules
 static const char LOAD_MODULE_PATH[] = "/tmp/patch.bin";
@@ -296,8 +303,8 @@ static const u16 ios_boot[] =
 	0x4798, // blx r3
 	0x46C0,
 
-	(u16)(HAX_IOS_VERSION>>16),
-	(u16)HAX_IOS_VERSION,
+	(u16)(HAXX_IOS_VERSION>>16),
+	(u16)HAXX_IOS_VERSION,
 	0x0000, // es_syscall_ios_boot
 	0x0000,
 	0x0000, // kernel_name
@@ -679,6 +686,7 @@ static u8 *load_tmd_content(tmd* title_tmd, u16 index)
 
 	if (content)
 	{
+#ifndef YARR
 		u8 real_hash[20];
 		SHA1(content, size, real_hash);
 		if (memcmp(title_tmd->contents[index].hash, real_hash, sizeof(sha1)))
@@ -687,6 +695,7 @@ static u8 *load_tmd_content(tmd* title_tmd, u16 index)
 			free(content);
 			content = NULL;
 		}
+#endif
 	}
 	else
 		printf("Couldn't fetch content %s\n", filename);
@@ -978,12 +987,11 @@ static int do_sig_check_patch()
 static bool do_exploit()
 {
 	s32 es_fd = -1;
-	const u64 ios_title = HAXX_IOS;
 	int patch_failed = 0;
 
 	printf("Grabbin' HAXX\n");
 
-	if (IOS_GetVersion() != (u32)HAXX_IOS || IOS_GetRevision() != HAXX_IOS_VERSION)
+	if (IOS_GetVersion() != (u32)HAXX_IOS || IOS_GetRevision() != HAXX_IOS_REVISION)
 	{
 		printf("Wrong IOS version. Update IOS%d to the latest version.\n", (u32)HAXX_IOS);
 		return false;
@@ -1015,7 +1023,7 @@ static bool do_exploit()
 
 		if (!patch_failed)
 		{
-			patch_failed = !prepare_new_kernel(ios_title);
+			patch_failed = !prepare_new_kernel(HAXX_IOS);
 			if (patch_failed)
 				printf("Failed to prepare new kernel\n");
 		}
@@ -1025,8 +1033,8 @@ static bool do_exploit()
 			shutdown_for_reload();
 			load_patched_ios(es_fd, LOAD_KERNEL_PATH);
 			es_fd = 0;
-			recover_from_reload(HAX_IOS_VERSION>>16);
-			if (IOS_GetVersion() != (HAX_IOS_VERSION>>16) || IOS_GetRevision() != (HAX_IOS_VERSION&0xFFFF))
+			recover_from_reload(HAXX_IOS_VERSION>>16);
+			if (IOS_GetVersion() != (HAXX_IOS_VERSION>>16) || IOS_GetRevision() != (HAXX_IOS_VERSION&0xFFFF))
 				patch_failed = 1;
 		}
 
@@ -1044,11 +1052,18 @@ static bool do_exploit()
 			}
 		}
 
+#ifndef YARR
 		if (!patch_failed)
 			patch_failed = !do_sig_check_patch();
+#else
+		*(u16*)0x93A752E6 = 0x2000;
+		DCFlushRange((void*)0x93A752E0, 32);
+#endif
+
 
 		if (!patch_failed)
 			printf("All patching done!\n");
+
 	}
 
 	if (es_fd >= 0)
@@ -1058,22 +1073,22 @@ static bool do_exploit()
 }
 
 /******* BEGIN SIGNATURE CHECKING STUF ******/
-static u32 be32(const u8 *p)
+static inline u32 be32(const u8 *p)
 {
 	return (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
 }
 
-static void bn_zero(u8 *d, const u32 n)
+static inline void bn_zero(u8 *d, const u32 n)
 {
 	memset(d, 0, n);
 }
 
-static void bn_copy(u8 *d, const u8 *a, const u32 n)
+static inline void bn_copy(u8 *d, const u8 *a, const u32 n)
 {
 	memcpy(d, a, n);
 }
 
-static int bn_compare(const u8 *a, const u8 *b, const u32 n)
+static inline int bn_compare(const u8 *a, const u8 *b, const u32 n)
 {
 	u32 i;
 
@@ -1087,7 +1102,7 @@ static int bn_compare(const u8 *a, const u8 *b, const u32 n)
 	return 0;
 }
 
-static void bn_sub_modulus(u8 *a, const u8 *N, const u32 n)
+static inline void bn_sub_modulus(u8 *a, const u8 *N, const u32 n)
 {
 	u32 i;
 	u32 dig;
@@ -1101,7 +1116,7 @@ static void bn_sub_modulus(u8 *a, const u8 *N, const u32 n)
 	}
 }
 
-static void bn_add(u8 *d, const u8 *a, const u8 *b, const u8 *N, const u32 n)
+static inline void bn_add(u8 *d, const u8 *a, const u8 *b, const u8 *N, const u32 n)
 {
 	u32 i;
 	u32 dig;
@@ -1269,6 +1284,7 @@ static const u8* find_cert_in_chain(const u8 *sub, const u8 *cert, const u32 cer
 
 int check_cert_chain(const u8 *data, const u32 data_len)
 {
+#ifndef YARR
 	const u8* key;
 	const u8 *sig, *sub, *key_cert;
 	u32 sig_len, sub_len;
@@ -1319,5 +1335,8 @@ int check_cert_chain(const u8 *data, const u32 data_len)
 		if (sub_len==0)
 			return -5;
 	}
+#else
+	return 0;
+#endif
 }
 /*********** SIGNATURE CHECKING STUFF ENDS */

@@ -2,6 +2,8 @@
 
 #include <gctypes.h>
 
+//#define YARR
+
 #define MEM_BASE			((u8*)0x80000000)
 #define MEM_BOOTCODE		((u32*)0x80000020)
 #define MEM_VERSION			((u32*)0x80000024)

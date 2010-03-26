@@ -61,25 +61,25 @@ namespace ProxiIOS { namespace Filesystem {
 			Unmount();
 			return Errors::DiskNotMounted;
 		}
-		
+
 		ServerVersion = ReceiveCommand(RII_HANDSHAKE);
 		if (ServerVersion != RII_VERSION_RET) {
 			Unmount();
 			return Errors::DiskNotMounted;
 		}
-		
+
 		_sprintf(MountPoint, "/mnt/net/%s/%d", IP, Port);
 
 		// TODO: Add a timer for pinging the server every 30 seconds; don't wait for a response
 
 		return Errors::Success;
 	}
-	
+
 	bool RiiHandler::SendCommand(int type)
 	{
 		return SendCommand(type, NULL, 0);
 	}
-	
+
 	bool RiiHandler::SendCommand(int type, const void* data, int size)
 	{
 #ifdef RIIFS_LOCAL_OPTIONS
@@ -106,7 +106,7 @@ namespace ProxiIOS { namespace Filesystem {
 #endif
 		return !fail;
 	}
-	
+
 	static int netrecv(int socket, u8* data, int size, int opts)
 	{
 		int read = 0;
@@ -121,12 +121,9 @@ namespace ProxiIOS { namespace Filesystem {
 			read += ret;
 		}
 
-		if ((int)data < 0x10000000)
-			memset(data + read, 0, -read & 3);
-
 		return read;
 	}
-	
+
 	int RiiHandler::ReceiveCommand(int type)
 	{
 		return ReceiveCommand(type, NULL, 0);
@@ -151,31 +148,31 @@ namespace ProxiIOS { namespace Filesystem {
 			}
 		}
 		fail |= netrecv(Socket, (u8*)&ret, 4, 0) != 4;
-		
+
 		if (fail)
 			return -1;
-		
+
 		return ret;
 	}
-	
+
 	int RiiHandler::Unmount()
 	{
 		ReceiveCommand(RII_GOODBYE);
 		net_close(Socket);
 		return 0;
 	}
-	
+
 	FileInfo* RiiHandler::Open(const char* path, int mode)
 	{
 		SendCommand(RII_OPTION_PATH, path, strlen(path));
 		SendCommand(RII_OPTION_MODE, &mode, 4);
-		
+
 		int ret = ReceiveCommand(RII_FILE_OPEN);
 		if (ret < 0)
 			return NULL;
 		return new RiiFileInfo(this, ret);
 	}
-	
+
 	int RiiHandler::Read(FileInfo* file, u8* buffer, int length)
 	{
 		RiiFileInfo* info = (RiiFileInfo*)file;
@@ -189,7 +186,7 @@ namespace ProxiIOS { namespace Filesystem {
 #endif
 		return ret;
 	}
-	
+
 	int RiiHandler::Write(FileInfo* file, const u8* buffer, int length)
 	{
 		RiiFileInfo* info = (RiiFileInfo*)file;
@@ -203,7 +200,7 @@ namespace ProxiIOS { namespace Filesystem {
 #endif
 		return ret;
 	}
-	
+
 	int RiiHandler::Seek(FileInfo* file, int where, int whence)
 	{
 		RiiFileInfo* info = (RiiFileInfo*)file;
@@ -227,7 +224,7 @@ namespace ProxiIOS { namespace Filesystem {
 #endif
 		return ret;
 	}
-	
+
 	int RiiHandler::Tell(FileInfo* file)
 	{
 #ifdef RIIFS_LOCAL_SEEKING
@@ -237,13 +234,13 @@ namespace ProxiIOS { namespace Filesystem {
 		return ReceiveCommand(RII_FILE_TELL);
 #endif
 	}
-	
+
 	int RiiHandler::Sync(FileInfo* file)
 	{
 		SendCommand(RII_OPTION_FILE, &((RiiFileInfo*)file)->File, 4);
 		return ReceiveCommand(RII_FILE_SYNC);
 	}
-	
+
 	int RiiHandler::Close(FileInfo* file)
 	{
 		SendCommand(RII_OPTION_FILE, &((RiiFileInfo*)file)->File, 4);
@@ -251,38 +248,38 @@ namespace ProxiIOS { namespace Filesystem {
 		delete file;
 		return ret;
 	}
-	
+
 	int RiiHandler::Stat(const char* path, Stats* st)
 	{
 		SendCommand(RII_OPTION_PATH, path, strlen(path));
 		return ReceiveCommand(RII_FILE_STAT, st, sizeof(Stats));
 	}
-	
+
 	int RiiHandler::CreateFile(const char* path)
 	{
 		SendCommand(RII_OPTION_PATH, path, strlen(path));
 		return ReceiveCommand(RII_FILE_CREATE);
 	}
-	
+
 	int RiiHandler::Delete(const char* path)
 	{
 		SendCommand(RII_OPTION_PATH, path, strlen(path));
 		return ReceiveCommand(RII_FILE_DELETE);
 	}
-	
+
 	int RiiHandler::Rename(const char* source, const char* dest)
 	{
 		SendCommand(RII_OPTION_RENAME_SOURCE, source, strlen(source));
 		SendCommand(RII_OPTION_RENAME_DESTINATION, dest, strlen(dest));
 		return ReceiveCommand(RII_FILE_RENAME);
 	}
-	
+
 	int RiiHandler::CreateDir(const char* path)
 	{
 		SendCommand(RII_OPTION_PATH, path, strlen(path));
 		return ReceiveCommand(RII_FILE_CREATEDIR);
 	}
-	
+
 	FileInfo* RiiHandler::OpenDir(const char* path)
 	{
 		SendCommand(RII_OPTION_PATH, path, strlen(path));
@@ -344,7 +341,7 @@ namespace ProxiIOS { namespace Filesystem {
 			return len;
 		return ReceiveCommand(RII_FILE_NEXTDIR_STAT, st, sizeof(Stats));
 	}
-	
+
 	int RiiHandler::CloseDir(FileInfo* dir)
 	{
 		RiiFileInfo* info = (RiiFileInfo*)dir;

@@ -134,6 +134,7 @@ LauncherStatus::Enum Launcher_ReadDisc()
 	if (WDVD_LowReadDiskId())
 		return LauncherStatus::ReadError;
 
+#ifndef YARR
 	memset(GameName, 0xFF, 0x40);
 	if (WDVD_LowReadBCA((u8*)GameName, 0x40))
 		return LauncherStatus::ReadError;
@@ -158,6 +159,7 @@ LauncherStatus::Enum Launcher_ReadDisc()
 	WDVD_SetDVDMode(0);
 	if (WDVD_LowUnencryptedRead(0, 0, 0x2EE00000llu << 2) != -32)
 		return LauncherStatus::ReadError;
+#endif
 
 	if (WDVD_LowUnencryptedRead(GameName, 0x40, 0x20))
 		return LauncherStatus::ReadError;
@@ -337,7 +339,10 @@ LauncherStatus::Enum Launcher_SetVideoMode()
 	GXRModeObj* vmode;
 	u32 tvmode = CONF_GetVideo();
 	if (tvmode==CONF_VIDEO_PAL) {
-		*MEM_VIDEOMODE = VI_EURGB60;
+		if (MEM_BASE[3]=='P')
+			*MEM_VIDEOMODE = VI_EURGB60;
+		else
+			*MEM_VIDEOMODE = VI_NTSC;
 		if (CONF_GetProgressiveScan() > 0 && VIDEO_HaveComponentCable()) {
 			// wtf, why does this cause a DSI?
 			//vmode = &TVEurgb60Hz480Prog;
@@ -353,7 +358,7 @@ LauncherStatus::Enum Launcher_SetVideoMode()
 			vmode = &TVNtsc480Prog;
 		else
 			vmode = &TVNtsc480IntDf;
-		if (tvmode == CONF_VIDEO_NTSC)
+		if (tvmode==CONF_VIDEO_NTSC)
 			*MEM_VIDEOMODE = VI_NTSC;
 		else
 			*MEM_VIDEOMODE = VI_MPAL;
@@ -427,6 +432,10 @@ LauncherStatus::Enum Launcher_RunApploader()
 
 LauncherStatus::Enum Launcher_Launch()
 {
+#ifdef YARR
+	if (!memcmp(MEM_BASE, "SMN", 3))
+		*(u32*)(0x800CA0B8) = 0x60000000;
+#endif
 	if (app_address) {
 		WPAD_Shutdown();
 		WDVD_Close();

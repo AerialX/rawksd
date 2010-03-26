@@ -620,7 +620,7 @@ s32 net_recvfrom(s32 s, void *mem, s32 len, u32 flags, struct sockaddr *from, so
 		from->sa_len = *fromlen;
 	}
 
-	if ((u32)mem & 0x1F)
+	if ((u32)mem & 0x1F || (u32)mem < 0x10000000)
 	{
 		message_buf = net_malloc(len);
 		if (message_buf == NULL)
@@ -659,7 +659,7 @@ s32 net_recvfrom(s32 s, void *mem, s32 len, u32 flags, struct sockaddr *from, so
 		os_sync_after_write(message_buf, ret);
 
 		if (mem != message_buf) {
-			memcpy(mem, message_buf, ret);
+			memcpy(mem, message_buf, (ret+3)&~3);
 			os_sync_after_write(mem, ret);
 		}
 	}
@@ -667,7 +667,7 @@ s32 net_recvfrom(s32 s, void *mem, s32 len, u32 flags, struct sockaddr *from, so
 	if (fromlen && from) *fromlen = from->sa_len;
 
 done:
-	if (message_buf != mem)
+	if (mem != message_buf)
 		net_free(message_buf);
 	return ret;
 }

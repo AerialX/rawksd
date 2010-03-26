@@ -20,6 +20,8 @@
 #include "launcher.h"
 #include "installer.h"
 
+extern "C" void Init_DebugConsole();
+
 bool PressA()
 {
 	printf("\tPress A to continue or press Home to exit.\n");
@@ -105,10 +107,10 @@ int main(int argc, char *argv[])
 		Installer_Initialize();
 		switch (approach) {
 			case INSTALL_APPROACH_UPDATE:
-				ret = Install(HAXX_IOS, HAXX_IOS_VERSION, false);
+				ret = Install(HAXX_IOS, HAXX_IOS_REVISION, false);
 				break;
 			case INSTALL_APPROACH_DOWNGRADE:
-				ret = Install(HAXX_IOS, HAXX_IOS_VERSION, true);
+				ret = Install(HAXX_IOS, HAXX_IOS_REVISION, true);
 				break;
 			default:
 				return 0;
@@ -125,6 +127,9 @@ int main(int argc, char *argv[])
 			Haxx_Init();
 		}
 	}
+
+	// uncomment to redirect stdout/stderr over wifi
+	//Init_DebugConsole();
 
 	SetupPads();
 	InitAudio();
