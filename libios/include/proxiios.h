@@ -35,13 +35,7 @@ namespace ProxiIOS {
 		osqueue_t queuehandle;
 
 	public:
-		Module(const char* device)
-		{
-			strncpy(Device, device, 0x20);
-			Device[0x20 - 1] = '\0';
-			Fd = -1;
-			queuehandle = -1;
-		}
+		Module(const char* device);
 
 		virtual int Loop();
 

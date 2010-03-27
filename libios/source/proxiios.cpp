@@ -3,14 +3,21 @@
 #include <string.h>
 
 namespace ProxiIOS {
-	int Module::Loop()
+	Module::Module(const char* device)
 	{
+		strncpy(Device, device, 0x20);
+		Device[0x20 - 1] = '\0';
+		Fd = -1;
+
 		os_thread_set_priority(os_get_thread_id(), 1);
 
 		queuehandle = os_message_queue_create(queue, 8);
 
 		os_device_register(Device, queuehandle);
+	}
 
+	int Module::Loop()
+	{
 		while (true) {
 			ipcmessage* message;
 			int result = 1;

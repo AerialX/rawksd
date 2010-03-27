@@ -37,8 +37,9 @@
 #define RII_OPTION_SEEK_WHENCE			0x07
 #define RII_OPTION_RENAME_SOURCE		0x08
 #define RII_OPTION_RENAME_DESTINATION	0x09
-
 #define RII_OPTION_PING					0x10
+
+#define RII_IDLE_TIME 30*1000*1000
 
 #define RIIFS_LOCAL_OPTIONS
 #define RIIFS_LOCAL_SEEKING
@@ -71,7 +72,7 @@ namespace ProxiIOS { namespace Filesystem {
 #endif
 		int File;
 	};
-	
+
 	class RiiHandler : public FilesystemHandler
 	{
 		protected:
@@ -79,29 +80,29 @@ namespace ProxiIOS { namespace Filesystem {
 			int Port;
 			int Socket;
 			int ServerVersion;
+			int IdleCount;
 
 #ifdef RIIFS_LOCAL_OPTIONS
 			int Options[RII_OPTION_RENAME_DESTINATION];
 			u8 OptionsInit[RII_OPTION_RENAME_DESTINATION];
 #endif
-		
-			bool SendCommand(int type, const void* data, int size);
-			int ReceiveCommand(int type, void* data, int size);
-			bool SendCommand(int type);
-			int ReceiveCommand(int type);
-		
+
+			bool SendCommand(int type, const void* data=NULL, int size=0);
+			int ReceiveCommand(int type, void* data=NULL, int size=0);
+
 		public:
-			RiiHandler(Filesystem* fs) : FilesystemHandler(fs)
+			RiiHandler(Filesystem* fs) : FilesystemHandler(fs),
+			IdleCount(-1)
 			{
 #ifdef RIIFS_LOCAL_OPTIONS
 			memset(Options, 0, sizeof(Options));
 			memset(OptionsInit, 0, sizeof(OptionsInit));
 #endif
 			}
-			
+
 			int Mount(const void* options, int length);
 			int Unmount();
-			
+
 			FileInfo* Open(const char* path, int mode);
 			int Read(FileInfo* file, u8* buffer, int length);
 			int Write(FileInfo* file, const u8* buffer, int length);
@@ -109,7 +110,7 @@ namespace ProxiIOS { namespace Filesystem {
 			int Tell(FileInfo* file);
 			int Sync(FileInfo* file);
 			int Close(FileInfo* file);
-			
+
 			int Stat(const char* path, Stats* st);
 			int CreateFile(const char* path);
 			int Delete(const char* path);
@@ -119,8 +120,7 @@ namespace ProxiIOS { namespace Filesystem {
 			int NextDir(FileInfo* dir, char* filename, Stats* st);
 			int CloseDir(FileInfo* dir);
 
-			int Idle();
-			int GetIdleTime() { return 30000000; } // 30 seconds
+			int IdleTick();
 
 #ifdef RIIFS_LOCAL_DIRNEXT
 			int NextDirCache(RiiFileInfo* dir, char* filename, Stats* st);

@@ -27,6 +27,8 @@
 #define FILE_MAX_MOUNTED		0x20
 #define FILE_MAX_DISKS			0x20
 
+#define FSIDLE_TICK		200000 // 200ms, minimum FilesystemHandler Idle() tick
+
 namespace ProxiIOS { namespace Filesystem {
 	namespace Ioctl {
 		enum Enum {
@@ -36,18 +38,18 @@ namespace ProxiIOS { namespace Filesystem {
 			Unmount			= IOCTL_Unmount,
 			GetMountPoint	= IOCTL_MountPoint,
 			SetDefault		= IOCTL_SetDefault,
-			
+
 			// File Operations
 			Stat			= IOCTL_Stat,
 			CreateFile		= IOCTL_CreateFile,
 			Delete			= IOCTL_Delete,
 			Rename			= IOCTL_Rename,
-			
+
 			// These are actually done in os_seek
 			// Because we need IOSP to translate the FD for us
 			Tell			= SEEK_Tell,
 			Sync			= SEEK_Sync,
-			
+
 			// Directory Operations
 			CreateDir		= IOCTL_CreateDir,
 			OpenDir			= IOCTL_OpenDir,
@@ -55,7 +57,7 @@ namespace ProxiIOS { namespace Filesystem {
 			CloseDir		= IOCTL_CloseDir
 		};
 	}
-	
+
 	namespace Filesystems {
 		enum Enum {
 			FAT				= FS_FAT,
@@ -67,7 +69,7 @@ namespace ProxiIOS { namespace Filesystem {
 			RiiFS			= FS_RIIFS
 		};
 	}
-	
+
 	namespace Disks {
 		enum Enum {
 			SD				= SD_DISK,
@@ -75,7 +77,7 @@ namespace ProxiIOS { namespace Filesystem {
 			USB2			= USB2_DISK
 		};
 	}
-	
+
 	namespace Errors {
 		enum Enum {
 			Success			= ERROR_SUCCESS,
@@ -85,13 +87,13 @@ namespace ProxiIOS { namespace Filesystem {
 			DiskNotStarted	= ERROR_DISKNOTSTARTED,
 			DiskNotInserted	= ERROR_DISKNOTINSERTED,
 			DiskNotMounted	= ERROR_DISKNOTMOUNTED,
-			
+
 			OutOfMemory		= ERROR_OUTOFMEMORY,
 
 			NotOpened		= ERROR_NOTOPENED
 		};
 	}
-	
+
 	class FilesystemHandler;
 	struct FileInfo
 	{
@@ -106,9 +108,9 @@ namespace ProxiIOS { namespace Filesystem {
 		public:
 			Filesystem* Module;
 			char MountPoint[0x40];
-			
+
 			FilesystemHandler(Filesystem* fs) { Module = fs; memset(MountPoint, 0, 0x40); }
-			
+
 			virtual int Mount(const void* options, int length) { return -1; };
 			virtual int Unmount() { return -1; };
 			virtual FileInfo* Open(const char* path, int mode) { return null; };
@@ -128,8 +130,7 @@ namespace ProxiIOS { namespace Filesystem {
 			virtual FileInfo* OpenDir(const char* path) { return null; };
 			virtual int NextDir(FileInfo* dir, char* dirname, Stats* st) { return -1; };
 			virtual int CloseDir(FileInfo* dir) { return -1; };
-			virtual int Idle() { return -1; }
-			virtual int GetIdleTime() { return -1; }
+			virtual int IdleTick() { return -1; }
 	};
 
 	class Filesystem : public ProxiIOS::Module
@@ -137,11 +138,11 @@ namespace ProxiIOS { namespace Filesystem {
 	public:
 		DISC_INTERFACE* Disk[FILE_MAX_DISKS];
 		FilesystemHandler* Mounted[FILE_MAX_MOUNTED];
-		int Timer[FILE_MAX_MOUNTED];
 		int Default;
-		
+		ostimer_t Idle_Timer;
+
 		Filesystem();
-		
+
 		int HandleOpen(ipcmessage* message);
 		int HandleClose(ipcmessage* message);
 		int HandleIoctl(ipcmessage* message);

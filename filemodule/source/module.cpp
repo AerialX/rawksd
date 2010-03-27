@@ -5,6 +5,7 @@
 #include "file_isfs.h"
 
 #define FILE_IOCTL_FD 0x123
+#define FSIDLE_MSG 0x500
 
 namespace ProxiIOS { namespace Filesystem {
 	struct FilePathDesc {
@@ -23,6 +24,8 @@ namespace ProxiIOS { namespace Filesystem {
 
 		Mounted[0] = new IsfsHandler(this);
 		Mounted[0]->Mount(null, 0);
+
+		Idle_Timer = os_create_timer(FSIDLE_TICK, 0, queuehandle, FSIDLE_MSG);
 
 		Default = 0;
 	}
@@ -96,9 +99,6 @@ namespace ProxiIOS { namespace Filesystem {
 					return ret;
 				}
 
-				int idle = system->GetIdleTime();
-				if (idle > 0)
-					Timer[index] = os_create_timer(idle, 0, queuehandle, 0x500 + index);
 				Mounted[index] = system;
 
 				return index; }
@@ -279,13 +279,15 @@ namespace ProxiIOS { namespace Filesystem {
 
 	bool Filesystem::HandleOther(u32 message, int &result, bool &ack)
 	{
-		if (message >= 0x500 && message < 0x500 + FILE_MAX_MOUNTED) {
-			int index = message - 0x500;
-			os_stop_timer(Timer[index]);
-			Mounted[index]->Idle();
-			int idle = Mounted[index]->GetIdleTime();
-			if (idle > 0)
-				os_restart_timer(Timer[index], idle, 0);
+		if (message == FSIDLE_MSG)
+		{
+			os_stop_timer(Idle_Timer);
+			for (int index = 0; index < FILE_MAX_MOUNTED; index++)
+			{
+				if (Mounted[index])
+					Mounted[index]->IdleTick();
+			}
+			os_restart_timer(Idle_Timer, FSIDLE_TICK, 0);
 			ack = false;
 			return true;
 		}

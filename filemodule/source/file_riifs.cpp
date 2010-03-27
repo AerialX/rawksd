@@ -73,11 +73,6 @@ namespace ProxiIOS { namespace Filesystem {
 		return Errors::Success;
 	}
 
-	bool RiiHandler::SendCommand(int type)
-	{
-		return SendCommand(type, NULL, 0);
-	}
-
 	bool RiiHandler::SendCommand(int type, const void* data, int size)
 	{
 #ifdef RIIFS_LOCAL_OPTIONS
@@ -102,6 +97,7 @@ namespace ProxiIOS { namespace Filesystem {
 			OptionsInit[type - 1] = 1;
 		}
 #endif
+		IdleCount = 0;
 		return !fail;
 	}
 
@@ -120,11 +116,6 @@ namespace ProxiIOS { namespace Filesystem {
 		}
 
 		return read;
-	}
-
-	int RiiHandler::ReceiveCommand(int type)
-	{
-		return ReceiveCommand(type, NULL, 0);
 	}
 
 	int RiiHandler::ReceiveCommand(int type, void* data, int size)
@@ -147,6 +138,7 @@ namespace ProxiIOS { namespace Filesystem {
 		}
 		fail |= netrecv(Socket, (u8*)&ret, 4, 0) != 4;
 
+		IdleCount = 0;
 		if (fail)
 			return -1;
 
@@ -157,6 +149,7 @@ namespace ProxiIOS { namespace Filesystem {
 	{
 		ReceiveCommand(RII_GOODBYE);
 		net_close(Socket);
+		IdleCount = -1;
 		return 0;
 	}
 
@@ -352,8 +345,13 @@ namespace ProxiIOS { namespace Filesystem {
 		return ReceiveCommand(RII_FILE_CLOSEDIR);
 	}
 
-	int RiiHandler::Idle()
+	int RiiHandler::IdleTick()
 	{
-		return SendCommand(RII_OPTION_PING);
+		if (ServerVersion < 0x03 || IdleCount < 0)
+			return -1;
+
+		if (IdleCount++ > (RII_IDLE_TIME/FSIDLE_TICK))
+			return SendCommand(RII_OPTION_PING);
+		return 0;
 	}
 } }
