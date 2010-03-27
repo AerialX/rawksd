@@ -511,7 +511,7 @@ static void RVL_Patch(RiiPatch* patch, map<string, string>* params, string commo
 }
 
 #define ADD_DEFAULT_PARAMS(params) { \
-	params["__gameid"] = string((char*)MEM_BASE, 4); \
+	params["__gameid"] = string((char*)MEM_BASE, 3); \
 	params["__region"] = string((char*)MEM_BASE + 3, 1); \
 }
 

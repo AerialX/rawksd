@@ -421,14 +421,7 @@ Menus::Enum MenuInit()
 
 	vector<RiiDisc> discs;
 	for (vector<int>::iterator mount = Mounted.begin(); mount != Mounted.end(); mount++) {
-		char mountpoint[MAXPATHLEN];
-		char mountpath[MAXPATHLEN];
-		if (File_GetMountPoint(*mount, mountpoint, sizeof(mountpoint)) < 0)
-			continue;
-		strcpy(mountpath, mountpoint);
-		strcat(mountpath, RIIVOLUTION_PATH);
-
-		ParseXMLs(mountpath, mountpoint, *mount, &discs);
+		ParseXMLs(*mount, &discs);
 	}
 	Mounted.insert(Mounted.end(), ToMount.begin(), ToMount.end());
 	Disc = CombineDiscs(&discs);

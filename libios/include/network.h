@@ -276,6 +276,7 @@ s32 net_poll(struct pollsd *sds,s32 nsds,s32 timeout);
 s32 net_shutdown(s32 s, u32 how);
 
 struct hostent * net_gethostbyname(const char *addrString);
+struct hostent * net_gethostbyname_async(const char *addrString, u32 timeout);
 
 #ifdef __cplusplus
 	}

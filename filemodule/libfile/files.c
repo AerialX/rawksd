@@ -263,15 +263,13 @@ int File_Open_ID(u64 id, int mode)
 	return File_Open(path, mode);
 }
 
-int File_RiiFS_Mount(const char* ip, int port)
+int File_RiiFS_Mount(const char* host, int port)
 {
-	if (strlen(ip) >= 0x10)
-		return ERROR_UNRECOGNIZED;
+	char data[MAXPATHLEN];
 
-	char data[0x20];
-	strcpy(data, ip);
-	*(int*)(data + 0x10) = port;
-	return File_Mount(FS_RIIFS, data, 0x14);
+	*(int*)data = port;
+	strcpy(data + sizeof(int), host);
+	return File_Mount(FS_RIIFS, data, sizeof(int) + strlen(host) + 1);
 }
 
 int File_Fat_Mount(disk_phys disk, const char* name)

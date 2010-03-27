@@ -97,7 +97,7 @@ int File_Sync(int fd);
 #define FILE_ID_PATH "/mnt/identifier/"
 #define FILE_ID_PATH_LEN 16
 int File_Open_ID(u64 id, int mode);
-int File_RiiFS_Mount(const char* ip, int port);
+int File_RiiFS_Mount(const char* host, int port);
 int File_Fat_Mount(disk_phys disk, const char* name);
 
 #ifdef __cplusplus

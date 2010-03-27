@@ -76,7 +76,7 @@ namespace ProxiIOS { namespace Filesystem {
 	class RiiHandler : public FilesystemHandler
 	{
 		protected:
-			char IP[0x10];
+			char Host[0x40];
 			int Port;
 			int Socket;
 			int ServerVersion;
@@ -91,13 +91,15 @@ namespace ProxiIOS { namespace Filesystem {
 			int ReceiveCommand(int type, void* data=NULL, int size=0);
 
 		public:
-			RiiHandler(Filesystem* fs) : FilesystemHandler(fs),
-			IdleCount(-1)
-			{
+			RiiHandler(Filesystem* fs) : FilesystemHandler(fs), Socket(-1), IdleCount(-1) {
 #ifdef RIIFS_LOCAL_OPTIONS
-			memset(Options, 0, sizeof(Options));
-			memset(OptionsInit, 0, sizeof(OptionsInit));
+				memset(Options, 0, sizeof(Options));
+				memset(OptionsInit, 0, sizeof(OptionsInit));
 #endif
+			}
+
+			~RiiHandler() {
+				Unmount();
 			}
 
 			int Mount(const void* options, int length);

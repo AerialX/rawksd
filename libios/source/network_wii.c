@@ -55,6 +55,8 @@ distribution.
 
 #define NET_UNKNOWN_ERROR_OFFSET	-10000
 
+#define SO_TIMER_MESSAGE			0x1337
+
 enum {
 	IOCTL_SO_ACCEPT	= 1,
 	IOCTL_SO_BIND,
@@ -345,8 +347,13 @@ void net_deinit() {
 	net_ip_top_fd = -1;
 }
 
-/* Returned value is a static buffer -- this function is not threadsafe! */
 struct hostent * net_gethostbyname(const char *addrString)
+{
+	return net_gethostbyname_async(addrString, 0);
+}
+
+/* Returned value is a static buffer -- this function is not threadsafe! */
+struct hostent * net_gethostbyname_async(const char *addrString, u32 timeout)
 {
 	s32 ret, len, i;
 	u8 *params;
@@ -382,7 +389,30 @@ struct hostent * net_gethostbyname(const char *addrString)
 
 	os_sync_after_write(params, len);
 
-	ret = _net_convert_error(os_ioctl(net_ip_top_fd, IOCTL_SO_GETHOSTBYNAME, params, len, ipBuffer, 0x460));
+	if (timeout == 0) {
+		ret = _net_convert_error(os_ioctl(net_ip_top_fd, IOCTL_SO_GETHOSTBYNAME, params, len, ipBuffer, 0x460));
+	} else {
+		u32 queuedata[0x02];
+		static ipcmessage cbdata ATTRIBUTE_ALIGN(32);
+		int queue = os_message_queue_create(queuedata, 0x10);
+		int timer = os_create_timer(timeout, 0, queue, SO_TIMER_MESSAGE);
+		u32 message;
+
+		os_ioctl_async(net_ip_top_fd, IOCTL_SO_GETHOSTBYNAME, params, len, ipBuffer, 0x460, queue, &cbdata);
+
+		while (!(ret = os_message_queue_receive(queue, &message, 0))) {
+			if (message == SO_TIMER_MESSAGE) {
+				ret = -ETIMEDOUT;
+				break;
+			} else if (&cbdata == (ipcmessage*)message) {
+				ret = _net_convert_error(cbdata.result);
+				os_message_queue_ack(&cbdata, 0);
+				break;
+			}
+		}
+		os_destroy_timer(timer);
+		os_message_queue_destroy(queue);
+	}
 
 	if(params != (u8*)addrString)
 		net_free(params);

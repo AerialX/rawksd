@@ -19,9 +19,9 @@ using namespace xmlpp;
 
 #define ELEMENT_START(str) if (reader.get_node_type() == TextReader::Element && !reader.get_name().compare(str))
 #define ELEMENT_END(str) if (reader.get_node_type() == TextReader::EndElement && !reader.get_name().compare(str))
-#define ELEMENT_ATTRIBUTE(str, condition) attribute = reader.get_attribute(str); if (!attribute.empty() && (condition))
+#define ELEMENT_ATTRIBUTE(str, condition) attribute = UTF8ToLatin1(reader.get_attribute(str)); if (!attribute.empty() && (condition))
 #define ELEMENT_LOOP if (!reader.is_empty_element()) while (reader.read())
-#define ELEMENT_VALUE() reader.get_value()
+#define ELEMENT_VALUE() UTF8ToLatin1(reader.get_value())
 #define ELEMENT_BOOL() !strcasecmp(attribute.c_str(), "yes") || !strcasecmp(attribute.c_str(), "true")
 static s64 ELEMENT_INT(string str)
 {
@@ -47,6 +47,30 @@ static void HexToBytes(void* mem, const char* source)
     	mod = !mod;
     	source++;
     }
+}
+
+static string UTF8ToLatin1(string str)
+{
+	// Bleh, maybe we should only bother running this when the encoding has been specified as latin-1
+	bool utf8 = false;
+	for (u32 i = 0; i < str.size(); i++) {
+		if (str[i] & 0x80) {
+			utf8 = true;
+			break;
+		}
+	}
+	if (!utf8)
+		return str;
+
+	string ret;
+	for (u32 i = 0; i < str.size(); i++) {
+		if (str[i] & 0x80) {
+			ret += ((str[i] & 0x1F) << 6) + (str[i + 1] & 0x3f);
+			i++;
+		} else
+			ret += str[i];
+	}
+	return ret;
 }
 
 string PathCombine(string path, string file)
@@ -113,7 +137,26 @@ static string AbsolutePathCombine(string path, string file, string rootfs)
 	if (length == 0) \
 		return false; // Not an xml document
 
-extern vector<int> Mounted;
+
+bool ParseXMLs(int mnt, vector<RiiDisc>* discs)
+{
+	char mountpoint[MAXPATHLEN];
+	if (File_GetMountPoint(mnt, mountpoint, sizeof(mountpoint)) >= 0) {
+		char mountpath[MAXPATHLEN];
+
+		strcpy(mountpath, mountpoint);
+		strcat(mountpath, RIIVOLUTION_PATH);
+		ParseXMLs(mountpath, mountpoint, mnt, discs);
+
+		strcpy(mountpath, mountpoint);
+		strcat(mountpath, RIIVOLUTION_PATH2);
+		ParseXMLs(mountpath, mountpoint, mnt, discs);
+	} else
+		return false;
+
+	return true;
+}
+
 extern vector<int> ToMount;
 bool ParseXML(const char* xmldata, int length, vector<RiiDisc>* discs, const char* rootpath, const char* rootfs, int fs)
 {
@@ -124,12 +167,12 @@ bool ParseXML(const char* xmldata, int length, vector<RiiDisc>* discs, const cha
 	string xmlroot = rootpath;
 	TextReader reader((const u8*)xmldata, length);
 	string attribute;
-	if (!reader.read())
-		return false;
 
-	ELEMENT_START("wiidisc")
-		ELEMENT_ATTRIBUTE("version", ELEMENT_INT(attribute) == 1)
-			goto versionisvalid;
+	while (reader.read()) {
+		ELEMENT_START("wiidisc")
+			ELEMENT_ATTRIBUTE("version", ELEMENT_INT(attribute) == 1)
+				goto versionisvalid;
+	}
 	return false;
 
 versionisvalid:
@@ -187,15 +230,8 @@ versionisvalid:
 			if (protocol == "riifs")
 				mnt = File_RiiFS_Mount(ip.c_str(), port);
 			if (mnt >= 0) {
-				char mountpoint[MAXPATHLEN];
-				if (File_GetMountPoint(mnt, mountpoint, sizeof(mountpoint)) >= 0) {
+				if (ParseXMLs(mnt, discs))
 					ToMount.push_back(mnt);
-					char mountpath[MAXPATHLEN];
-					strcpy(mountpath, mountpoint);
-					strcat(mountpath, RIIVOLUTION_PATH);
-
-					ParseXMLs(mountpath, mountpoint, mnt, discs);
-				}
 			}
 		}
 
@@ -407,11 +443,12 @@ versionisvalid:
 		} // </patch>
 	}
 
-	if (cleanexit) {
-		if (shiftfiles >= 0)
-			RVL_SetAlwaysShift(shiftfiles);
-		discs->push_back(disc);
-	}
+	if (!cleanexit)
+		return false;
+
+	if (shiftfiles >= 0)
+		RVL_SetAlwaysShift(shiftfiles);
+	discs->push_back(disc);
 
 	return true;
 }
@@ -524,16 +561,20 @@ bool ParseConfigXML(const char* xmldata, int length, RiiDisc* disc)
 	TextReader reader((const u8*)xmldata, length);
 	string attribute;
 
-	reader.read();
-	ELEMENT_START("riivolution")
-		ELEMENT_ATTRIBUTE("version", ELEMENT_INT(attribute) == 2)
-			goto versionisvalid;
+	while (reader.read()) {
+		ELEMENT_START("riivolution")
+			ELEMENT_ATTRIBUTE("version", ELEMENT_INT(attribute) == 2)
+				goto versionisvalid;
+	}
 	return false;
 
 versionisvalid:
+	bool cleanexit = false;
 	ELEMENT_LOOP {
-		ELEMENT_END("riivolution")
+		ELEMENT_END("riivolution") {
+			cleanexit = true;
 			break;
+		}
 
 		ELEMENT_START("option") {
 			RiiConfig conf;
@@ -546,6 +587,9 @@ versionisvalid:
 			config.push_back(conf);
 		}
 	}
+
+	if (!cleanexit)
+		return false;
 
 	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section < disc->Sections.end(); section++) {
 		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
@@ -618,9 +662,7 @@ void SaveConfigXML(RiiDisc* disc)
 	}
 
 	string xml = document.write_to_string_formatted();
-	// <? crap
-	if (xml.size() > 0x17)
-		File_Write(fd, xml.c_str() + 0x16, xml.size() - 0x17);
+	File_Write(fd, xml.c_str(), xml.size());
 
 	File_Close(fd);
 }

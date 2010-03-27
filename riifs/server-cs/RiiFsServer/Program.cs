@@ -135,6 +135,8 @@ namespace ConsoleHaxx.RiiFS
 
 		public DateTime LastPing;
 
+		public string Name;
+
 		public Connection(string root, TcpClient client)
 		{
 			OpenFileFD = 1;
@@ -149,6 +151,8 @@ namespace ConsoleHaxx.RiiFS
 			Writer = new EndianReader(Stream, Endianness.BigEndian);
 
 			LastPing = DateTime.Now;
+
+			Name = client.Client.RemoteEndPoint.ToString();
 		}
 
 		public void Run()
@@ -193,9 +197,7 @@ namespace ConsoleHaxx.RiiFS
 		public void DebugPrint(string text)
 		{
 			Console.Write("[" + DateTime.Now.ToString() + "]");
-			try {
-				Console.Write(" - " + Client.Client.RemoteEndPoint.ToString() + " - ");
-			} catch { }
+			Console.Write(" - " + Name + " - ");
 			Console.WriteLine(text);
 		}
 
@@ -573,14 +575,16 @@ namespace ConsoleHaxx.RiiFS
 		static void TimeoutThread()
 		{
 			while (true) {
-				Thread.Sleep(TimeSpan.FromSeconds(30));
-				foreach (Connection connection in Connections) {
-					TimeSpan diff = DateTime.Now - connection.LastPing;
-					if (diff > TimeSpan.FromSeconds(120)) {
-						connection.DebugPrint("Ping Timeout (" + diff.TotalSeconds.ToString() + " seconds)");
-						connection.Close();
+				Thread.Sleep(TimeSpan.FromSeconds(15));
+				try {
+					foreach (Connection connection in Connections) {
+						TimeSpan diff = DateTime.Now - connection.LastPing;
+						if (diff > TimeSpan.FromSeconds(120)) {
+							connection.DebugPrint("Ping Timeout (" + diff.TotalSeconds.ToString() + " seconds)");
+							connection.Close();
+						}
 					}
-				}
+				} catch { }
 			}
 		}
 
@@ -592,6 +596,9 @@ namespace ConsoleHaxx.RiiFS
 				Root = args[0];
 			else
 				Root = Environment.CurrentDirectory;
+
+			if (!Path.IsPathRooted(Root))
+				Root = Path.Combine(Environment.CurrentDirectory, Root);
 
 			if (args.Length > 1)
 				port = int.Parse(args[1]);

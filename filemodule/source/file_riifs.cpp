@@ -11,26 +11,30 @@
 namespace ProxiIOS { namespace Filesystem {
 	int RiiHandler::Mount(const void* options, int length)
 	{
-		if (length != 0x14)
-			return Errors::Unrecognized;
-
 		int ret;
 		while ((ret = net_init()) == -EAGAIN)
 			usleep(10000);
 		if (ret < 0)
 			return Errors::DiskNotMounted;
 
-		strcpy(IP, (const char*)options);
-		Port = *(int*)((u8*)options + 0x10);
+		Port = *(int*)options;
 
 		Socket = net_socket(PF_INET, SOCK_STREAM, 0);
 		struct sockaddr_in address;
 		memset(&address, 0, sizeof(address));
 		address.sin_family = PF_INET;
 		address.sin_port = htons(Port);
-		if (inet_aton(IP, &address.sin_addr) < 0) {
-			net_close(Socket);
-			return Errors::DiskNotMounted;
+
+		const char* hoststr = (const char*)options + sizeof(int);
+		strncpy(Host, hoststr, 0x40);
+
+		if (!inet_aton(hoststr, &address.sin_addr)) {
+			hostent* host = net_gethostbyname_async(hoststr, CONNECT_SLEEP_INTERVAL * 50); // 5 second timeout
+			if (!host || !host->h_length || host->h_addrtype != PF_INET) {
+				net_close(Socket);
+				return Errors::DiskNotMounted;
+			} else
+				memcpy((char*)&address.sin_addr, host->h_addr_list[0], host->h_length);
 		}
 
 		// Non-blocking
@@ -39,7 +43,7 @@ namespace ProxiIOS { namespace Filesystem {
 			return Errors::DiskNotMounted;
 		}
 
-		for (u32 i = 0; i < 100; i++) { // 10 second timeout
+		for (u32 i = 0; i < 50; i++) { // 5 second timeout
 			ret = net_connect(Socket, (struct sockaddr*)(const void *)&address, sizeof(address));
 			if (ret == -EINPROGRESS || ret == -EALREADY)
 				usleep(CONNECT_SLEEP_INTERVAL);
@@ -68,7 +72,8 @@ namespace ProxiIOS { namespace Filesystem {
 			return Errors::DiskNotMounted;
 		}
 
-		_sprintf(MountPoint, "/mnt/net/%s/%d", IP, Port);
+		Host[0x30] = '\0';
+		_sprintf(MountPoint, "/mnt/net/%s%d", Host, Port);
 
 		return Errors::Success;
 	}
@@ -147,9 +152,12 @@ namespace ProxiIOS { namespace Filesystem {
 
 	int RiiHandler::Unmount()
 	{
-		ReceiveCommand(RII_GOODBYE);
-		net_close(Socket);
-		IdleCount = -1;
+		if (Socket >= 0) {
+			ReceiveCommand(RII_GOODBYE);
+			net_close(Socket);
+			IdleCount = -1;
+			Socket = -1;
+		}
 		return 0;
 	}
 

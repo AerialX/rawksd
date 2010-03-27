@@ -7,6 +7,7 @@
 #include <vector>
 
 #define RIIVOLUTION_PATH "/riivolution"
+#define RIIVOLUTION_PATH2 "/apps/riivolution" // ... Idiots.
 
 struct RiiMacro {
 	std::string Name;
@@ -130,6 +131,7 @@ struct RiiDisc
 };
 
 void ParseXMLs(const char* rootpath, const char* rootfs, int fs, std::vector<RiiDisc>* discs);
+bool ParseXMLs(int mnt, std::vector<RiiDisc>* discs);
 bool ParseXML(const char* xmldata, int length, std::vector<RiiDisc>* discs, const char* rootpath, const char* rootfs, int fs);
 RiiDisc CombineDiscs(std::vector<RiiDisc>* discs);
 void ParseConfigXMLs(RiiDisc* disc);

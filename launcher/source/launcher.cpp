@@ -90,7 +90,7 @@ const char* Launcher_GetGameName()
 		end--;
 	end = MIN(end, 40);
 	for (int i = 0; i <= end; i++)
-		gamename[i] = (char)(name[i] ? name[i] : ' ');
+		gamename[i] = (char)name[i] ? (char)name[i] : ' ';
 	gamename[end + 1] = '\0';
 
 	return gamename;

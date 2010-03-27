@@ -1,5 +1,5 @@
-Riivolution v1.01
-Monday March 22nd, 2010
+Riivolution v1.02
+Monday March 27th, 2010
 by Aaron, tueidj and Tempus
 riivolution@japaneatahand.com
 
@@ -52,6 +52,10 @@ Special thanks to everyone that contributed! Treeki, Omega, Pop006, TobiasAmaran
 
 
 Changelog
+
+v1.02
+March 27th, 2010
+ - todo
 
 v1.01
 March 22nd, 2010

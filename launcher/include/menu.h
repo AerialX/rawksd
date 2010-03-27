@@ -5,7 +5,7 @@
 
 #define THREAD_SLEEP 100
 
-#define RIIVOLUTION_TITLE "Riivolution v1.0"
+#define RIIVOLUTION_TITLE "Riivolution v1.02"
 
 namespace Menus { enum Enum
 {
