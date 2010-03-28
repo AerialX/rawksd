@@ -13,8 +13,9 @@
 #define os_ioctl IOS_Ioctl
 #define os_ioctlv IOS_Ioctlv
 #define os_seek IOS_Seek
-#define os_sync_after_write DCFlushRange
-#define os_sync_before_read DCInvalidateRange
+// libogc will take care of syncing
+#define os_sync_after_write(a,b)
+#define os_sync_before_read(a,b)
 #define Alloc malloc
 #define Realloc(a, b, c) realloc(a, b)
 #define Dealloc free
@@ -41,7 +42,7 @@ int File_Deinit()
 	if (file_fd >= 0)
 		os_close(file_fd);
 	file_fd = -1;
-	
+
 	return 0;
 }
 
@@ -56,11 +57,11 @@ int File_MountDisk(disk_fs filesystem, disk_phys disk)
 {
 	if (file_fd < 0)
 		return ERROR_NOTOPENED;
-	
+
 	int ret = FileMountDisk(disk);
 	if (ret < 0)
 		return ret;
-	
+
 	return File_Mount(filesystem, &ret, sizeof(ret));
 }
 
@@ -68,7 +69,7 @@ int File_Mount(disk_fs filesystem, const void* options, int optionslen)
 {
 	if (file_fd < 0)
 		return ERROR_NOTOPENED;
-	
+
 	ioctlbuffer[0] = filesystem;
 	os_sync_after_write(ioctlbuffer, 0x04);
 	os_sync_after_write((void*)options, optionslen);
@@ -105,16 +106,17 @@ int File_GetMountPoint(int fs, char* mountpoint, int length)
 	return ret;
 }
 
+
 int File_Stat(const char* path, Stats* st)
 {
 	if (file_fd < 0)
 		return ERROR_NOTOPENED;
-	
+
 	int ret;
 	int len = strlen(path) + 1;
 	os_sync_after_write((void*)path, len);
 	ret = os_ioctl(file_fd, IOCTL_Stat, (void*)path, len, st, sizeof(Stats));
-	
+
 	os_sync_before_read(st, sizeof(Stats));
 	return ret;
 }
@@ -123,7 +125,7 @@ int File_CreateFile(const char* path)
 {
 	if (file_fd < 0)
 		return ERROR_NOTOPENED;
-	
+
 	int len = strlen(path) + 1;
 	os_sync_after_write((void*)path, len);
 	return os_ioctl(file_fd, IOCTL_CreateFile, (void*)path, len, NULL, 0);
@@ -133,7 +135,7 @@ int File_Delete(const char* path)
 {
 	if (file_fd < 0)
 		return ERROR_NOTOPENED;
-	
+
 	int len = strlen(path) + 1;
 	os_sync_after_write((void*)path, len);
 	return os_ioctl(file_fd, IOCTL_Delete, (void*)path, len, NULL, 0);
@@ -143,7 +145,7 @@ int File_Rename(const char* source, const char* dest)
 {
 	if (file_fd < 0)
 		return ERROR_NOTOPENED;
-	
+
 	os_sync_after_write((void*)source, strlen(source) + 1);
 	os_sync_after_write((void*)dest, strlen(dest) + 1);
 	ioctlbuffer[0] = (int)MEM_VIRTUAL_TO_PHYSICAL(source);
@@ -156,7 +158,7 @@ int File_CreateDir(const char* path)
 {
 	if (file_fd < 0)
 		return ERROR_NOTOPENED;
-	
+
 	int len = strlen(path) + 1;
 	os_sync_after_write((void*)path, len);
 	return os_ioctl(file_fd, IOCTL_CreateDir, (void*)path, len, NULL, 0);
@@ -166,7 +168,7 @@ int File_OpenDir(const char* path)
 {
 	if (file_fd < 0)
 		return ERROR_NOTOPENED;
-	
+
 	int len = strlen(path) + 1;
 	os_sync_after_write((void*)path, len);
 	return os_ioctl(file_fd, IOCTL_OpenDir, (void*)path, len, NULL, 0);
@@ -176,7 +178,7 @@ int File_NextDir(int dir, char* path, Stats* st)
 {
 	if (file_fd < 0)
 		return ERROR_NOTOPENED;
-	
+
 	int ret;
 	ioctlbuffer[0] = dir;
 	os_sync_after_write(ioctlbuffer, 0x04);
@@ -199,7 +201,7 @@ int File_CloseDir(int dir)
 {
 	if (file_fd < 0)
 		return ERROR_NOTOPENED;
-	
+
 	ioctlbuffer[0] = dir;
 	os_sync_after_write(ioctlbuffer, 0x04);
 	return os_ioctl(file_fd, IOCTL_CloseDir, ioctlbuffer, sizeof(ioctlbuffer), NULL, 0);
@@ -207,11 +209,20 @@ int File_CloseDir(int dir)
 
 int File_Open(const char* path, int mode)
 {
+	static char short_path[0x20] ATTRIBUTE_ALIGN(32);
 	char fpath[MAXPATHLEN];
+
 	strcpy(fpath, FILE_MODULE_NAME);
 	strcat(fpath, path);
-	os_sync_after_write(fpath, strlen(fpath) + 1);
-	return os_open(fpath, mode);
+
+	path = fpath;
+	if (strlen(fpath)+1 > IPC_MAXPATH_LEN) {
+		if (os_ioctl(file_fd, IOCTL_Shorten, (void*)fpath, strlen(fpath)+1, short_path, sizeof(short_path))>=0)
+			path = short_path;
+	}
+
+	os_sync_after_write(path, strlen(path) + 1);
+	return os_open(path, mode);
 }
 
 int File_Close(int fd)

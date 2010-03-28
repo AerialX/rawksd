@@ -54,7 +54,10 @@ namespace ProxiIOS { namespace Filesystem {
 			CreateDir		= IOCTL_CreateDir,
 			OpenDir			= IOCTL_OpenDir,
 			NextDir			= IOCTL_NextDir, // IOCTLV
-			CloseDir		= IOCTL_CloseDir
+			CloseDir		= IOCTL_CloseDir,
+
+			// Shorten a long path (>64) for IOS_Open
+			Shorten			= IOCTL_Shorten,
 		};
 	}
 
@@ -140,6 +143,7 @@ namespace ProxiIOS { namespace Filesystem {
 		FilesystemHandler* Mounted[FILE_MAX_MOUNTED];
 		int Default;
 		ostimer_t Idle_Timer;
+		void *Long_Path;
 
 		Filesystem();
 

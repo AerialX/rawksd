@@ -43,6 +43,9 @@ DiscNode* RVL_FindNode(const char* fstname);
 
 struct RiiDisc;
 
+extern std::vector<int> ToMount;
+extern RiiDisc Disc;
+
 void RVL_Patch(RiiDisc* disc);
 void RVL_PatchMemory(RiiDisc* disc, void* memory = NULL, u32 length = 0);
 

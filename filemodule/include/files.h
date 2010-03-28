@@ -51,7 +51,8 @@ typedef enum {
 	IOCTL_CreateDir =	0x50,
 	IOCTL_OpenDir =		0x51,
 	IOCTL_NextDir =		0x52,
-	IOCTL_CloseDir =	0x53
+	IOCTL_CloseDir =	0x53,
+	IOCTL_Shorten = 	0x60
 } file_ioctl;
 
 typedef enum {

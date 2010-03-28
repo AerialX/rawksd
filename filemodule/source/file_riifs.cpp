@@ -136,7 +136,7 @@ namespace ProxiIOS { namespace Filesystem {
 			if (data)
 				fail |= netrecv(Socket, (u8*)data, size, 0) != size;
 			else {
-				void* temp = Alloc(size);
+				void* temp = Memalign(32, size);
 				netrecv(Socket, (u8*)temp, size, 0);
 				Dealloc(temp);
 			}

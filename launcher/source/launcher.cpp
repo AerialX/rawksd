@@ -2,14 +2,24 @@
 #include "menu.h"
 #include "wdvd.h"
 #include "riivolution.h"
+#include <files.h>
 
 #include <ogc/lwp_watchdog.h>
 #include <ogc/lwp_threads.h>
 
-#include <files.h>
-
 #include <malloc.h>
 
+// DEFINES
+#define PART_OFFSET			0x00040000
+#define APP_INFO_OFFSET		0x2440
+#define APP_DATA_OFFSET		(APP_INFO_OFFSET + 0x20)
+
+#define min(a,b) ((a)>(b) ? (b) : (a))
+#define max(a,b) ((a)>(b) ? (a) : (b))
+
+#define PLAYLOG_FILE "/mnt/isfs/title/00000001/00000002/data/play_rec.dat"
+
+// TYPEDEFS
 typedef void (*AppReport) (const char*, ...);
 typedef void (*AppEnter) (AppReport);
 typedef int  (*AppLoad) (void**, s32*, s32*);
@@ -24,26 +34,6 @@ typedef struct {
 	u8 unused[4];
 } app_info;
 
-static union {
-	u32 partition_info[24];
-	app_info app;
-} ATTRIBUTE_ALIGN(32);
-
-static char GameName[0x40] ATTRIBUTE_ALIGN(32);
-static s16 BannerName[42];
-
-#define PART_OFFSET			0x00040000
-#define APP_INFO_OFFSET		0x2440
-#define APP_DATA_OFFSET		(APP_INFO_OFFSET + 0x20)
-
-#define min(a,b) ((a)>(b) ? (b) : (a))
-#define max(a,b) ((a)>(b) ? (a) : (b))
-
-static int nullprintf(const char* fmt, ...)
-{
-	return 0;
-}
-
 typedef struct {
     u8 zeroes[64]; // padding
     u32 imet; // "IMET"
@@ -54,6 +44,75 @@ typedef struct {
     u8 zeroes_2[588]; // padding
     u8 crypto[16]; // MD5 of 0x40 to 0x640 in header. crypto should be all 0's when calculating final MD5
 } __attribute__((packed)) IMET;
+
+typedef struct {
+	u32 checksum;
+	union {
+		u32 data[0x1f];
+		struct {
+			s16 name[42];
+			u64 ticks_boot;
+			u64 ticks_last;
+			u32 title_id;
+			u16 title_gid;
+			//u8 padding[18];
+		} ATTRIBUTE_PACKED;
+	};
+} playtime_buf_t;
+
+// CONSTS
+static const u32 SOStartupCode[] = {
+	0x28000021,
+	0x3A40FFE4,
+};
+
+static const u16 NWC24iCleanupSocketCode[] = {
+	0x7c65, 0x1b78,
+	0x3860, 0x0000,
+	0x3880, 0x0007,
+	0x4800
+};
+
+// GLOBALS
+static char GameName[0x40] ATTRIBUTE_ALIGN(32);
+static s16 BannerName[42];
+static bool subsequent = false;
+static u32 fstdata[0x40] ATTRIBUTE_ALIGN(32);
+static void *app_address = NULL;
+
+static union {
+	u32 partition_info[24];
+	app_info app;
+} ATTRIBUTE_ALIGN(32);
+
+// FUNCTIONS
+static int nullprintf(const char* fmt, ...)
+{
+	return 0;
+}
+
+static void* FindInBuffer(void* buffer, s32 size, const void* tofind, s32 findsize)
+{
+	for (int i = 0; i < size - findsize; i++, buffer = (u8*)buffer + 1) {
+		if (!memcmp(buffer, tofind, findsize))
+			return buffer;
+	}
+
+	return NULL;
+}
+
+bool Launcher_DiscInserted()
+{
+	bool cover;
+	if (!WDVD_VerifyCover(&cover))
+		return cover;
+	return false;
+}
+
+const u32* Launcher_GetFstData()
+{
+	return fstdata;
+}
 
 const s16* Launcher_GetGameNameWide()
 {
@@ -108,15 +167,6 @@ LauncherStatus::Enum Launcher_Init()
 	return LauncherStatus::OK;
 }
 
-bool Launcher_DiscInserted()
-{
-	bool cover;
-	if (!WDVD_VerifyCover(&cover))
-		return cover;
-	return false;
-}
-
-static bool subsequent = false;
 LauncherStatus::Enum Launcher_ReadDisc()
 {
 	u32 i;
@@ -186,13 +236,6 @@ LauncherStatus::Enum Launcher_ReadDisc()
 	return LauncherStatus::OK;
 }
 
-static u32 fstdata[0x40] ATTRIBUTE_ALIGN(32);
-
-const u32* Launcher_GetFstData()
-{
-	return fstdata;
-}
-
 LauncherStatus::Enum Launcher_RVL()
 {
 	if (WDVD_LowRead(fstdata, 0x40, 0x420))
@@ -248,24 +291,6 @@ LauncherStatus::Enum Launcher_CommitRVL(bool dip)
 	return LauncherStatus::OK;
 }
 
-typedef struct
-{
-	u32 checksum;
-	union
-	{
-		u32 data[0x1f];
-		struct {
-			s16 name[42];
-			u64 ticks_boot;
-			u64 ticks_last;
-			u32 title_id;
-			u16 title_gid;
-			//u8 padding[18];
-		} ATTRIBUTE_PACKED;
-	};
-} playtime_buf_t;
-
-#define PLAYLOG_FILE "/mnt/isfs/title/00000001/00000002/data/play_rec.dat"
 LauncherStatus::Enum Launcher_AddPlaytimeEntry()
 {
 	u32 titleid = WDVD_GetTMD()->title_id;
@@ -294,6 +319,7 @@ LauncherStatus::Enum Launcher_AddPlaytimeEntry()
 
 	return LauncherStatus::IosError;
 }
+
 LauncherStatus::Enum Launcher_ScrubPlaytimeEntry()
 {
 	int d = File_Open(PLAYLOG_FILE, O_WRONLY);
@@ -309,26 +335,21 @@ LauncherStatus::Enum Launcher_ScrubPlaytimeEntry()
 	return LauncherStatus::IosError;
 }
 
-static void *app_address = NULL;
-
-static void* FindInBuffer(void* buffer, s32 size, const void* tofind, s32 findsize)
-{
-	for (int i = 0; i < size - findsize; i++, buffer = (u8*)buffer + 1) {
-		if (!memcmp(buffer, tofind, findsize))
-			return buffer;
-	}
-
-	return NULL;
-}
-
-extern RiiDisc Disc;
-static void ApplyBinaryPatches(s32 app_section_size)
+static inline void ApplyBinaryPatches(s32 app_section_size)
 {
 	void* found;
 
 	// DIP
-	while ((found = FindInBuffer(app_address, app_section_size, "/dev/di", 7))) {
+	while ((found = FindInBuffer(app_address, app_section_size, "/dev/di", 7)))
 		((u8*)found)[6] = 'o'; // "/dev/di" to "/dev/do"
+
+	// prevent NWC from failing to init or shutting down our sockets
+	if (ToMount.size()) {
+		if ((found = FindInBuffer(app_address, app_section_size, SOStartupCode, sizeof(SOStartupCode))))
+			((u16*)found)[3] = 0;
+
+		if ((found = FindInBuffer(app_address, app_section_size, NWC24iCleanupSocketCode, sizeof(NWC24iCleanupSocketCode))))
+			((u32*)found)[3] = 0x4E800020;
 	}
 
 	RVL_PatchMemory(&Disc, app_address, app_section_size);
@@ -344,7 +365,7 @@ LauncherStatus::Enum Launcher_SetVideoMode()
 		else
 			*MEM_VIDEOMODE = VI_NTSC;
 		if (CONF_GetProgressiveScan() > 0 && VIDEO_HaveComponentCable()) {
-			// wtf, why does this cause a DSI?
+			// avoid libogc VIDEO_Configure() fail
 			//vmode = &TVEurgb60Hz480Prog;
 			vmode = &TVNtsc480Prog;
 		} else if (CONF_GetEuRGB60() > 0)
@@ -437,6 +458,7 @@ LauncherStatus::Enum Launcher_Launch()
 		*(u32*)(0x800CA0B8) = 0x60000000;
 #endif
 	if (app_address) {
+		File_Deinit();
 		WPAD_Shutdown();
 		WDVD_Close();
 		__ES_Close();

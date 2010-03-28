@@ -353,7 +353,7 @@ static DiscNode* RVL_CreateNode(string path, u32 length)
 }
 
 static DiscNode ZeroNode;
-static void RVL_Patch(RiiFilePatch* file, bool stat, u64 externalid, string commonfs)
+static void RVL_Patch(RiiFilePatch* file, string commonfs, bool stat=false, u64 externalid=0)
 {
 	DiscNode* node;
 	if (file->Disc.size())
@@ -417,11 +417,6 @@ static void RVL_Patch(RiiFilePatch* file, bool stat, u64 externalid, string comm
 	}
 }
 
-static void RVL_Patch(RiiFilePatch* file, string commonfs)
-{
-	RVL_Patch(file, false, 0, commonfs);
-}
-
 static void RVL_Patch(RiiFolderPatch* folder, string commonfs)
 {
 	string external = folder->External;
@@ -452,7 +447,7 @@ static void RVL_Patch(RiiFolderPatch* folder, string commonfs)
 			file.Length = folder->Length ? folder->Length : stats.Size;
 			file.Disc = PathCombine(folder->Disc, fdirname);
 			file.External = PathCombine(external, fdirname);
-			RVL_Patch(&file, true, stats.Identifier, commonfs);
+			RVL_Patch(&file, commonfs, true, stats.Identifier);
 		}
 	}
 	File_CloseDir(fdir);

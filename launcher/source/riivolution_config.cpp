@@ -157,7 +157,6 @@ bool ParseXMLs(int mnt, vector<RiiDisc>* discs)
 	return true;
 }
 
-extern vector<int> ToMount;
 bool ParseXML(const char* xmldata, int length, vector<RiiDisc>* discs, const char* rootpath, const char* rootfs, int fs)
 {
 	TRIM_XML();

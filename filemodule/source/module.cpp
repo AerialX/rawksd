@@ -6,6 +6,7 @@
 
 #define FILE_IOCTL_FD 0x123
 #define FSIDLE_MSG 0x500
+#define SHORT_NAME "/......"
 
 namespace ProxiIOS { namespace Filesystem {
 	struct FilePathDesc {
@@ -15,7 +16,7 @@ namespace ProxiIOS { namespace Filesystem {
 		FilesystemHandler* System;
 	};
 
-	Filesystem::Filesystem() : Module(FILE_MODULE_NAME)
+	Filesystem::Filesystem() : Module(FILE_MODULE_NAME), Long_Path(NULL)
 	{
 		memset(Mounted, null, sizeof(Mounted));
 		memset(Disk, null, sizeof(Disk));
@@ -190,6 +191,18 @@ namespace ProxiIOS { namespace Filesystem {
 			case Ioctl::CloseDir: {
 				FileInfo* dir = (FileInfo*)message->ioctl.buffer_in[0];
 				return dir->System->CloseDir(dir); }
+			case Ioctl::Shorten: {
+				if (memcmp(message->ioctl.buffer_in, FILE_MODULE_NAME, FILE_MODULE_NAME_LENGTH))
+					return -1;
+				Dealloc(Long_Path);
+				Long_Path = Alloc(message->ioctl.length_in);
+				if (Long_Path) {
+					memcpy(Long_Path, (u8*)(message->ioctl.buffer_in)+FILE_MODULE_NAME_LENGTH, message->ioctl.length_in-FILE_MODULE_NAME_LENGTH);
+					memcpy(message->ioctl.buffer_io, FILE_MODULE_NAME SHORT_NAME, FILE_MODULE_NAME_LENGTH+strlen(SHORT_NAME)+1);
+					os_sync_after_write(message->ioctl.buffer_io, FILE_MODULE_NAME_LENGTH+strlen(SHORT_NAME)+1);
+					return 1;
+				}
+				return -1; }
 			default:
 				return -1;
 		}
@@ -225,6 +238,9 @@ namespace ProxiIOS { namespace Filesystem {
 			return Errors::NotMounted;
 
 		int ret = (int)descriptor.System->Open(descriptor.Path, message->open.mode);
+
+		Dealloc(Long_Path);
+		Long_Path = NULL;
 
 		if (!ret)
 			return Errors::NotOpened;
@@ -299,6 +315,9 @@ namespace ProxiIOS { namespace Filesystem {
 	{
 		Path = path;
 		System = module->Mounted[module->Default];
+
+		if (!strcmp(path, SHORT_NAME) && module->Long_Path)
+			Path = (char*)(module->Long_Path);
 
 		for (int i = 0; i < FILE_MAX_MOUNTED; i++) {
 			FilesystemHandler* system = module->Mounted[i];

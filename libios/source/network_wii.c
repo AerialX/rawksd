@@ -355,7 +355,7 @@ struct hostent * net_gethostbyname(const char *addrString)
 /* Returned value is a static buffer -- this function is not threadsafe! */
 struct hostent * net_gethostbyname_async(const char *addrString, u32 timeout)
 {
-	s32 ret, len, i;
+	s32 len, i, ret = -ETIMEDOUT;
 	u8 *params;
 	struct hostent *ipData;
 	u32 addrOffset;
@@ -394,17 +394,16 @@ struct hostent * net_gethostbyname_async(const char *addrString, u32 timeout)
 	} else {
 		u32 queuedata[0x02];
 		static ipcmessage cbdata ATTRIBUTE_ALIGN(32);
-		int queue = os_message_queue_create(queuedata, 0x10);
+		int queue = os_message_queue_create(queuedata, sizeof(queuedata)/sizeof(u32));
 		int timer = os_create_timer(timeout, 0, queue, SO_TIMER_MESSAGE);
 		u32 message;
 
 		os_ioctl_async(net_ip_top_fd, IOCTL_SO_GETHOSTBYNAME, params, len, ipBuffer, 0x460, queue, &cbdata);
 
 		while (!(ret = os_message_queue_receive(queue, &message, 0))) {
-			if (message == SO_TIMER_MESSAGE) {
-				ret = -ETIMEDOUT;
+			if (message == SO_TIMER_MESSAGE)
 				break;
-			} else if (&cbdata == (ipcmessage*)message) {
+			else if (&cbdata == (ipcmessage*)message) {
 				ret = _net_convert_error(cbdata.result);
 				os_message_queue_ack(&cbdata, 0);
 				break;
@@ -690,7 +689,7 @@ s32 net_recvfrom(s32 s, void *mem, s32 len, u32 flags, struct sockaddr *from, so
 
 		if (mem != message_buf) {
 			memcpy(mem, message_buf, (ret+3)&~3);
-			os_sync_after_write(mem, ret);
+			os_sync_after_write(mem, (ret+3)&~3);
 		}
 	}
 
