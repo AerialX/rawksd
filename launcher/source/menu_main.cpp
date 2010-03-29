@@ -29,6 +29,9 @@ struct Page {
 };
 
 RiiDisc Disc;
+vector<int> Mounted;
+vector<int> ToMount;
+
 static vector<Page> Pages;
 
 extern "C" {
@@ -349,8 +352,6 @@ struct PageViewer {
 	CheckShutdown(); \
 }
 
-vector<int> Mounted;
-vector<int> ToMount;
 Menus::Enum MenuMount()
 {
 	HaltGui();
@@ -578,6 +579,8 @@ Menus::Enum MenuLaunch()
 	Launcher_SetVideoMode();
 
 	RVL_PatchMemory(&Disc);
+
+	RVL_Unmount();
 
 	File_Deinit();
 	Launcher_Launch();

@@ -115,7 +115,7 @@ namespace ProxiIOS { namespace Filesystem {
 			if (ret < 0)
 				return ret;
 			if (ret == 0)
-				return read;
+				break;
 
 			read += ret;
 		}

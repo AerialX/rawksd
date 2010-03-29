@@ -8,6 +8,10 @@
 #include <files.h>
 #include <wdvd.h>
 
+using std::string;
+using std::map;
+using std::vector;
+
 #define OPEN_MODE_BYPASS 0x80
 
 static int fd = -1;
@@ -15,10 +19,7 @@ static DiscNode* fst = NULL;
 static bool shiftfiles = false;
 static u64 shift = 0;
 static u32 fstsize;
-
-using std::string;
-using std::map;
-using std::vector;
+static map<int, bool> UsedFilesystems;
 
 namespace Ioctl { enum Enum {
 	AddFile			= 0xC1,
@@ -385,7 +386,7 @@ static void RVL_Patch(RiiFilePatch* file, string commonfs, bool stat=false, u64 
 
 	if (!stat && file->Length == 0) {
 		Stats st;
-		if (!File_Stat(external.c_str(), &st)) {
+		if (!File_Stat(external.c_str(), &st) && !(st.Mode & S_IFDIR)) {
 			file->Length = st.Size - file->FileOffset;
 			stat = true;
 			externalid = st.Identifier;
@@ -508,52 +509,38 @@ static void RVL_Patch(RiiPatch* patch, map<string, string>* params, string commo
 #define ADD_DEFAULT_PARAMS(params) { \
 	params["__gameid"] = string((char*)MEM_BASE, 3); \
 	params["__region"] = string((char*)MEM_BASE + 3, 1); \
+	params["__maker"] = string((char*)MEM_BASE + 4, 2); \
 }
 
-extern vector<int> Mounted;
 void RVL_Patch(RiiDisc* disc)
 {
 	// Search for a common filesystem so we can optimize memory
 	string filesystem;
-	vector<int> usedfilesystems;
+
 	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
 		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
 			if (!option->Default)
 				continue;
 			RiiChoice* choice = &option->Choices[option->Default - 1];
 
-			bool found = false;
-			for (vector<int>::iterator used = usedfilesystems.begin(); used != usedfilesystems.end(); used++) {
-				if (*used == choice->Filesystem) {
-					found = true;
+			for (vector<RiiChoice::Patch>::iterator patch = choice->Patches.begin(); patch != choice->Patches.end(); patch++) {
+				map<string, RiiPatch>::iterator currentpatch = disc->Patches.find(patch->ID);
+				if (currentpatch->second.Files.size() || currentpatch->second.Folders.size() || currentpatch->second.Savegames.size()) {
+					// Only keep the filesystem mounted if a patch that needs to be running during the game is using it
+					UsedFilesystems[choice->Filesystem] = true;
 					break;
 				}
 			}
-			if (!found)
-				usedfilesystems.push_back(choice->Filesystem);
 		}
 	}
 
-	if (usedfilesystems.size() == 1) {
+	if (UsedFilesystems.size() == 1) {
 		char mountpoint[MAXPATHLEN];
-		if (File_GetMountPoint(usedfilesystems[0], mountpoint, sizeof(mountpoint)) >= 0) {
+		if (File_GetMountPoint(UsedFilesystems.begin()->first, mountpoint, sizeof(mountpoint)) >= 0) {
 			filesystem = mountpoint;
 			File_SetDefaultPath(mountpoint);
 			RVL_SetClusters(true);
 		}
-	}
-
-	for (vector<int>::iterator mount = Mounted.begin(); mount != Mounted.end(); mount++) {
-		bool found = false;
-		for (vector<int>::iterator used = usedfilesystems.begin(); used != usedfilesystems.end(); used++) {
-			if (*used == *mount) {
-				found = true;
-				break;
-			}
-		}
-
-		if (!found)
-			File_Unmount(*mount);
 	}
 
 	for (vector<RiiSection>::iterator section = disc->Sections.begin(); section != disc->Sections.end(); section++) {
@@ -581,6 +568,32 @@ void RVL_Patch(RiiDisc* disc)
 					}
 				}
 			}
+		}
+	}
+}
+
+void RVL_Unmount()
+{
+	for (vector<int>::iterator mount = Mounted.begin(); mount != Mounted.end(); mount++) {
+		bool found = false;
+		for (map<int, bool>::iterator used = UsedFilesystems.begin(); used != UsedFilesystems.end(); used++) {
+			if (used->first == *mount) {
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+			File_Unmount(*mount);
+	}
+
+	if (!ToMount.size()) { // Deinit all network if we're not using it.
+		static u32 buffer[0x10] ATTRIBUTE_ALIGN(32);
+		s32 fd = IOS_Open("/dev/net/kd/request", 0);
+		if (fd >= 0) {
+			IOS_IoctlAsync(fd, 0x28, buffer, 0x20, buffer + 0x08, 0x20, NULL, NULL);
+			IOS_Ioctl(fd, 0x07, NULL, 0, buffer, 0x20);
+			IOS_Close(fd);
 		}
 	}
 }

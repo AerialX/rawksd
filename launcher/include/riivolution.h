@@ -43,11 +43,13 @@ DiscNode* RVL_FindNode(const char* fstname);
 
 struct RiiDisc;
 
+extern std::vector<int> Mounted;
 extern std::vector<int> ToMount;
 extern RiiDisc Disc;
 
 void RVL_Patch(RiiDisc* disc);
 void RVL_PatchMemory(RiiDisc* disc, void* memory = NULL, u32 length = 0);
+void RVL_Unmount();
 
 static inline u64 RVL_GetShiftOffset() { return RVL_GetShiftOffset(0); }
 

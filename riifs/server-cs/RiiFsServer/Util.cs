@@ -58,26 +58,22 @@ namespace ConsoleHaxx.Common
 		{
 			byte[] buffer = new byte[0x400 * 0x400 * 2]; // 2MB buffer
 
-			ulong pos = 0;
-			while (pos < len) {
-				int read = 0;
+			ulong read = 0;
+			while (read < len) {
+				int ret = 0;
 				try {
-					read = source.Read(buffer, 0, buffer.Length);
+					ret = source.Read(buffer, 0, (int)Math.Min((ulong)buffer.Length, len - read));
 				} catch { }
-				pos += (uint)read;
-				if (pos > len)
-					read -= (int)(pos - len);
 
-				if (read == 0)
+				if (ret == 0)
 					break;
 
-				destination.Write(buffer, 0, read);
+				destination.Write(buffer, 0, ret);
 
-				if (read < buffer.Length)
-					break;
+				read += (uint)ret;
 			}
 
-			return (long)pos;
+			return (long)read;
 		}
 
 		public static string Pad(string str, int num, char ch)

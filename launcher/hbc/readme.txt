@@ -54,8 +54,13 @@ Special thanks to everyone that contributed! Treeki, Omega, Pop006, TobiasAmaran
 Changelog
 
 v1.02
-March 27th, 2010
- - todo
+March 28th, 2010
+ - Disc file addition
+ - Network hostname lookups
+ - Network stability improvements
+ - Games will now connect to the network alongside Riivolution/RiiFS
+ - More memory patch improvements
+ - Foreign character support in XMLs (Latin-1)
 
 v1.01
 March 22nd, 2010

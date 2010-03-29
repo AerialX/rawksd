@@ -91,4 +91,6 @@ void Init_DebugConsole()
 
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
+
+	printf("Debug Console Connected\n");
 }

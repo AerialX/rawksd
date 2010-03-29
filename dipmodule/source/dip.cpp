@@ -137,7 +137,7 @@ namespace ProxiIOS { namespace DIP {
 							LogPrintf("\tWARNING! Cluster too large for cluster hack to work (u64).\n");
 					} else {
 						Stats st;
-						if (File_Stat(filename, &st) != 0)
+						if (File_Stat(filename, &st) || st.Mode & S_IFDIR)
 							return -1; // File doesn't exist
 						file.Cluster = st.Identifier;
 					}

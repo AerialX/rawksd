@@ -161,7 +161,11 @@ namespace ConsoleHaxx.RiiFS
 				try {
 					if (!WaitForAction(Client))
 						break;
-				} catch { }
+				} catch (Exception ex) {
+					for (; ex != null; ex = ex.InnerException) {
+						DebugPrint(ex.GetType().FullName + ": " + ex.Message);
+					}
+				}
 			}
 			Close();
 		}
@@ -216,6 +220,7 @@ namespace ConsoleHaxx.RiiFS
 			foreach (var file in OpenFiles) {
 				try { file.Value.Close(); } catch { }
 			}
+			OpenFiles.Clear();
 		}
 
 		bool WaitForAction(TcpClient client)
@@ -299,7 +304,7 @@ namespace ConsoleHaxx.RiiFS
 							else {
 								int ret = (int)Util.StreamCopy(Stream, OpenFiles[fd], length);
 								Writer.Pad(length - ret);
-								Return(length);
+								Return(ret);
 							}
 
 							break; }
@@ -577,11 +582,13 @@ namespace ConsoleHaxx.RiiFS
 			while (true) {
 				Thread.Sleep(TimeSpan.FromSeconds(15));
 				try {
+					recheck:
 					foreach (Connection connection in Connections) {
 						TimeSpan diff = DateTime.Now - connection.LastPing;
 						if (diff > TimeSpan.FromSeconds(120)) {
 							connection.DebugPrint("Ping Timeout (" + diff.TotalSeconds.ToString() + " seconds)");
 							connection.Close();
+							goto recheck;
 						}
 					}
 				} catch { }
