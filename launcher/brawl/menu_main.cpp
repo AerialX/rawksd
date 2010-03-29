@@ -10,16 +10,17 @@
 #include <vector>
 using std::vector;
 
-/*
-#define OPTIONS_PER_PAGE 15
+
+#define OPTIONS_PER_PAGE 13
 #define OPTION_FONT_SIZE 18
 #define OPTION_FONT_HEIGHT 22
 #define OPTION_ARROW_OFFSET 0
-*/
+/*
 #define OPTIONS_PER_PAGE 12
 #define OPTION_FONT_SIZE 20
 #define OPTION_FONT_HEIGHT 28
 #define OPTION_ARROW_OFFSET 0
+*/
 
 using std::string;
 
@@ -61,8 +62,6 @@ struct PageViewer {
 	GuiButton** LeftArrow;
 	GuiButton** RightArrow;
 
-	GuiText* PageText;
-	GuiText* PageNumberText;
 	GuiImage* LeftButtonImage;
 	GuiImage* LeftButtonOverImage;
 	GuiImage* RightButtonImage;
@@ -87,16 +86,6 @@ struct PageViewer {
 		RightArrowOverImageData = new GuiImageData(arrow_active_right_png);
 
 		if (Pages.size() > 1) {
-			PageText = new GuiText("Page", 18, (GXColor){0, 0, 0, 255});
-			PageText->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-			PageText->SetPosition(352, 52);
-			Window->Append(PageText);
-
-			PageNumberText = new GuiText(" ", 26, (GXColor){0, 0, 0, 255});
-			PageNumberText->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-			PageNumberText->SetPosition(400 + 48 / 2, 48);
-			Window->Append(PageNumberText);
-
 			LeftButtonImage = new GuiImage(LeftArrowImageData);
 			LeftButtonOverImage = new GuiImage(LeftArrowOverImageData);
 			RightButtonImage = new GuiImage(RightArrowImageData);
@@ -106,7 +95,7 @@ struct PageViewer {
 			LeftButton->SetImage(LeftButtonImage);
 			LeftButton->SetImageOver(LeftButtonOverImage);
 			LeftButton->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-			LeftButton->SetPosition(400, 48);
+			LeftButton->SetPosition(68, 49);
 			LeftButton->SetTrigger(&Trigger[Triggers::Select]);
 			LeftButton->SetTrigger(&Trigger[Triggers::PageLeft]);
 			Window->Append(LeftButton);
@@ -115,7 +104,7 @@ struct PageViewer {
 			RightButton->SetImage(RightButtonImage);
 			RightButton->SetImageOver(RightButtonOverImage);
 			RightButton->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-			RightButton->SetPosition(448, 48);
+			RightButton->SetPosition(348, 49);
 			RightButton->SetTrigger(&Trigger[Triggers::Select]);
 			RightButton->SetTrigger(&Trigger[Triggers::PageRight]);
 			Window->Append(RightButton);
@@ -130,8 +119,6 @@ struct PageViewer {
 		if (Pages.size() > 1) {
 			Window->Remove(RightButton);
 			Window->Remove(LeftButton);
-			Window->Remove(PageText);
-			Window->Remove(PageNumberText);
 
 			delete RightButton;
 			delete LeftButton;
@@ -139,8 +126,6 @@ struct PageViewer {
 			delete RightButtonImage;
 			delete LeftButtonOverImage;
 			delete LeftButtonImage;
-			delete PageNumberText;
-			delete PageText;
 			delete LeftArrowImageData;
 			delete LeftArrowOverImageData;
 			delete RightArrowImageData;
@@ -216,12 +201,6 @@ struct PageViewer {
 
 		Subtitle->SetText(Current->Name.c_str());
 
-		if (Pages.size() > 1) {
-			char pagenum[0x10];
-			sprintf(pagenum, "%d", PageNumber + 1);
-			PageNumberText->SetText(pagenum);
-		}
-
 		int options = Current->Options.size();
 		Title = new GuiText*[options];
 		ChoiceText = new GuiText*[options];
@@ -237,27 +216,27 @@ struct PageViewer {
 
 		u32 i = 0;
 		for (vector<RiiOption*>::iterator iter = Current->Options.begin(); iter != Current->Options.end(); iter++, i++) {
-			int y = 112 + i * OPTION_FONT_HEIGHT;
+			int y = 82 + i * OPTION_FONT_HEIGHT;
 			RiiOption* option = *iter;
 
 			GuiText* title = new GuiText(option->Name.c_str(), OPTION_FONT_SIZE, (GXColor){0, 0, 0, 255}); Title[i] = title;
 			title->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-			title->SetPosition(38, y);
+			title->SetPosition(24, y);
 			Window->Append(title);
 
 			GuiText* choiceText = new GuiText(GetChoiceText(option), OPTION_FONT_SIZE, (GXColor){0, 0, 0, 255}); ChoiceText[i] = choiceText;
 			choiceText->SetAlignment(ALIGN_CENTRE, ALIGN_TOP);
 			choiceText->SetPosition(0, 0);
-			GuiText* choiceOverText = new GuiText(GetChoiceText(option), OPTION_FONT_SIZE, (GXColor){128, 0, 0, 255}); ChoiceOverText[i] = choiceOverText;
+			GuiText* choiceOverText = new GuiText(GetChoiceText(option), OPTION_FONT_SIZE, (GXColor){128, 128, 128, 255}); ChoiceOverText[i] = choiceOverText;
 			choiceOverText->SetAlignment(ALIGN_CENTRE, ALIGN_TOP);
 			choiceOverText->SetPosition(0, 0);
 
-			GuiButton* choice = new GuiButton(152, OPTION_FONT_HEIGHT); Choice[i] = choice;
+			GuiButton* choice = new GuiButton(196, OPTION_FONT_HEIGHT); Choice[i] = choice;
 			choice->SetLabel(choiceText);
 			choice->SetLabelOver(choiceOverText);
 			choice->SetTrigger(&Trigger[Triggers::Select]);
 			choice->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-			choice->SetPosition(352, y);
+			choice->SetPosition(392, y);
 			Window->Append(choice);
 
 			GuiImage* leftArrowImage = new GuiImage(LeftArrowImageData); LeftArrowImage[i] = leftArrowImage;
@@ -269,7 +248,7 @@ struct PageViewer {
 			leftArrow->SetImage(leftArrowImage);
 			leftArrow->SetImageOver(leftArrowOverImage);
 			leftArrow->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-			leftArrow->SetPosition(336, y + OPTION_ARROW_OFFSET);
+			leftArrow->SetPosition(368, y + OPTION_ARROW_OFFSET);
 			leftArrow->SetTrigger(&Trigger[Triggers::Select]);
 			Window->Append(leftArrow);
 
@@ -277,7 +256,7 @@ struct PageViewer {
 			rightArrow->SetImage(rightArrowImage);
 			rightArrow->SetImageOver(rightArrowOverImage);
 			rightArrow->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-			rightArrow->SetPosition(504, y + OPTION_ARROW_OFFSET);
+			rightArrow->SetPosition(594, y + OPTION_ARROW_OFFSET);
 			rightArrow->SetTrigger(&Trigger[Triggers::Select]);
 			Window->Append(rightArrow);
 		}
@@ -480,12 +459,12 @@ Menus::Enum MenuMain()
 
 	HaltGui();
 	Title->SetText(Launcher_GetGameName());
-	ButtonList buttons(Window, 3);
+	ButtonList buttons(Window, 2);
 	buttons.SetButton(0, "Exit", ButtonList::ExitImage);
 	buttons.GetButton(0)->SetTrigger(&Trigger[Triggers::Home]);
-	buttons.SetButton(1, "Launch", ButtonList::LaunchImage);
-	buttons.GetButton(1)->SetState(STATE_SELECTED, 0);
-	buttons.SetButton(2, installed ? "Remove" : "Install", ButtonList::UninstallImage);
+	buttons.SetButton(1, installed ? "Remove" : "Install", ButtonList::InstallImage);
+	buttons.SetButtonLaunch(Window, 2, "Launch");
+	buttons.GetButton(2)->SetState(STATE_SELECTED, 0);
 	ResumeGui();
 
 	PreparePages();
@@ -500,9 +479,9 @@ Menus::Enum MenuMain()
 		switch (buttons.Pressed()) {
 			case 0:
 				return Menus::Exit;
-			case 1:
-				return Menus::Launch;
 			case 2:
+				return Menus::Launch;
+			case 1:
 				if (installed)
 					return Menus::Uninstall;
 				else

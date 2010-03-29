@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1.0">
 	<name>Riivolution</name>
-	<coder>Aaron, tueidj</coder>
+	<coder>Aaron, tueidj, Tempus</coder>
 	<version>v1.02</version>
-	<release_date>20100327120000</release_date>
+	<release_date>20100328120000</release_date>
 	<short_description>Riivolution Patcher</short_description>
 	<long_description>Riivolution is an on-the-fly game patcher for use with retail discs. It allows users to place content on their SD or USB devices, which will be read by the game during regular play. Riivolution can be used for custom textures, music, levels, memory patches, game translations, and more.
 

@@ -1,5 +1,5 @@
 Riivolution v1.02
-Monday March 27th, 2010
+Monday March 28th, 2010
 by Aaron, tueidj and Tempus
 riivolution@japaneatahand.com
 
@@ -56,10 +56,10 @@ Changelog
 v1.02
 March 28th, 2010
  - Disc file addition
+ - More memory patch improvements
  - Network hostname lookups
  - Network stability improvements
  - Games will now connect to the network alongside Riivolution/RiiFS
- - More memory patch improvements
  - Foreign character support in XMLs (Latin-1)
 
 v1.01
