@@ -46,7 +46,6 @@ static bool do_exploit();
 int Haxx_Init()
 {
 	IOS_ReloadIOS((u32)HAXX_IOS);
-	WPAD_Init();
 
 	if (!do_exploit())
 		return -1;
@@ -62,6 +61,7 @@ int Haxx_Init()
 	usleep(4000);
 
 #if 0
+	WPAD_Init();
 	printf("Press home to exit\n");
 	while(1) {
 
@@ -870,7 +870,7 @@ static void recover_from_reload(s32 version)
 	{
 		if(IPC_ReadReg(1) & 2)
 			break;
-		udelay(3000);
+		udelay(6000);
 	}
 
 	IRQ_Request(IRQ_PI_ACR, irq_handler, NULL);
@@ -879,7 +879,6 @@ static void recover_from_reload(s32 version)
 	__IPC_Reinitialize();
 
 	__IOS_InitializeSubsystems();
-	WPAD_Init();
 	__ES_Init();
 	__STM_Init();
 }

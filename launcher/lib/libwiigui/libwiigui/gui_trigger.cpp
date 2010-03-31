@@ -95,11 +95,18 @@ s8 GuiTrigger::WPAD_Stick(u8 right, int axis)
 	switch (wpad->exp.type)
 	{
 		case WPAD_EXP_NUNCHUK:
-		case WPAD_EXP_GUITARHERO3:
 			if (right == 0)
 			{
 				mag = wpad->exp.nunchuk.js.mag;
 				ang = wpad->exp.nunchuk.js.ang;
+			}
+			break;
+
+		case WPAD_EXP_GUITARHERO3:
+			if (right == 0)
+			{
+				mag = wpad->exp.gh3.js.mag;
+				ang = wpad->exp.gh3.js.ang;
 			}
 			break;
 
@@ -137,12 +144,17 @@ bool GuiTrigger::Left()
 {
 	u32 wiibtn = WPAD_BUTTON_LEFT;
 
-	if((wpad->btns_d | wpad->btns_h) & (wiibtn | WPAD_CLASSIC_BUTTON_LEFT)
+	if (wpad->exp.type == EXP_CLASSIC)
+		wiibtn |= WPAD_CLASSIC_BUTTON_LEFT;
+	else if (wpad->exp.type == EXP_GUITAR_HERO_3)
+		wiibtn |= WPAD_GUITAR_HERO_3_BUTTON_RED;
+
+	if(((wpad->btns_d | wpad->btns_h) & wiibtn)
 			|| (pad.btns_d | pad.btns_h) & PAD_BUTTON_LEFT
 			|| pad.stickX < -PADCAL
 			|| WPAD_Stick(0,0) < -PADCAL)
 	{
-		if(wpad->btns_d & (wiibtn | WPAD_CLASSIC_BUTTON_LEFT)
+		if(wpad->btns_d & wiibtn
 			|| pad.btns_d & PAD_BUTTON_LEFT)
 		{
 			scrollDelay = SCROLL_INITIAL_DELAY; // reset scroll delay.
@@ -166,12 +178,17 @@ bool GuiTrigger::Right()
 {
 	u32 wiibtn = WPAD_BUTTON_RIGHT;
 
-	if((wpad->btns_d | wpad->btns_h) & (wiibtn | WPAD_CLASSIC_BUTTON_RIGHT)
+	if (wpad->exp.type == EXP_CLASSIC)
+		wiibtn |= WPAD_CLASSIC_BUTTON_RIGHT;
+	else if (wpad->exp.type == EXP_GUITAR_HERO_3)
+		wiibtn |= WPAD_GUITAR_HERO_3_BUTTON_YELLOW;
+
+	if(((wpad->btns_d | wpad->btns_h) & wiibtn)
 			|| (pad.btns_d | pad.btns_h) & PAD_BUTTON_RIGHT
 			|| pad.stickX > PADCAL
 			|| WPAD_Stick(0,0) > PADCAL)
 	{
-		if(wpad->btns_d & (wiibtn | WPAD_CLASSIC_BUTTON_RIGHT)
+		if(wpad->btns_d & wiibtn
 			|| pad.btns_d & PAD_BUTTON_RIGHT)
 		{
 			scrollDelay = SCROLL_INITIAL_DELAY; // reset scroll delay.
@@ -195,12 +212,17 @@ bool GuiTrigger::Up()
 {
 	u32 wiibtn = WPAD_BUTTON_UP;
 
-	if((wpad->btns_d | wpad->btns_h) & (wiibtn | WPAD_CLASSIC_BUTTON_UP)
+	if (wpad->exp.type == EXP_CLASSIC)
+		wiibtn |= WPAD_CLASSIC_BUTTON_UP;
+	else if (wpad->exp.type == EXP_GUITAR_HERO_3)
+		wiibtn |= WPAD_GUITAR_HERO_3_BUTTON_STRUM_UP;
+
+	if(((wpad->btns_d | wpad->btns_h) & wiibtn)
 			|| (pad.btns_d | pad.btns_h) & PAD_BUTTON_UP
 			|| pad.stickY > PADCAL
 			|| WPAD_Stick(0,1) > PADCAL)
 	{
-		if(wpad->btns_d & (wiibtn | WPAD_CLASSIC_BUTTON_UP)
+		if(wpad->btns_d & wiibtn
 			|| pad.btns_d & PAD_BUTTON_UP)
 		{
 			scrollDelay = SCROLL_INITIAL_DELAY; // reset scroll delay.
@@ -224,12 +246,17 @@ bool GuiTrigger::Down()
 {
 	u32 wiibtn = WPAD_BUTTON_DOWN;
 
-	if((wpad->btns_d | wpad->btns_h) & (wiibtn | WPAD_CLASSIC_BUTTON_DOWN)
+	if (wpad->exp.type == EXP_CLASSIC)
+		wiibtn |= WPAD_CLASSIC_BUTTON_DOWN;
+	else if (wpad->exp.type == EXP_GUITAR_HERO_3)
+		wiibtn |= WPAD_GUITAR_HERO_3_BUTTON_STRUM_DOWN;
+
+	if(((wpad->btns_d | wpad->btns_h) & wiibtn)
 			|| (pad.btns_d | pad.btns_h) & PAD_BUTTON_DOWN
 			|| pad.stickY < -PADCAL
 			|| WPAD_Stick(0,1) < -PADCAL)
 	{
-		if(wpad->btns_d & (wiibtn | WPAD_CLASSIC_BUTTON_DOWN)
+		if(wpad->btns_d & wiibtn
 			|| pad.btns_d & PAD_BUTTON_DOWN)
 		{
 			scrollDelay = SCROLL_INITIAL_DELAY; // reset scroll delay.

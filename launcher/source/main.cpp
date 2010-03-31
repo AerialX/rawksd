@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
 
 	if (Haxx_Init() < 0) {
 		int approach = 0;
+		WPAD_Init();
 		printf("\n\n");
 		if (IOS_GetVersion() != 37) {
 			printf("\tIOS37 does not seem to be installed on your system.\n\tIt's perfectly safe to install it; do you want to do so now?\n");

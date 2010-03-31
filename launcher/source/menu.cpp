@@ -57,7 +57,7 @@ void ResumeGui()
 void HaltGui()
 {
 	guiHalt = true;
-	
+
 	while(!LWP_ThreadIsSuspended(guithread))
 		usleep(THREAD_SLEEP);
 }
@@ -74,25 +74,25 @@ void RequestExit()
 static void* UpdateGUI(void* arg)
 {
 	int i;
-	
+
 	while (true) {
 		if(guiHalt)
 			LWP_SuspendThread(guithread);
 		else {
 			UpdatePads();
 			Window->Draw();
-			
+
 			for (i = 3; i >= 0; i--) {
 				if(userInput[i].wpad->ir.valid)
 					Menu_DrawImg(userInput[i].wpad->ir.x - 48, userInput[i].wpad->ir.y - 48, 96, 96, Pointers[i]->GetImage(), userInput[i].wpad->ir.angle, 1, 1, 255);
 				DoRumble(i);
 			}
-			
+
 			Menu_Render();
-			
+
 			for(i = 0; i < 4; i++)
 				Window->Update(&userInput[i]);
-			
+
 			if (exitRequested) {
 				for(i = 0; i < 255; i += 15) {
 					Window->Draw();
@@ -103,7 +103,7 @@ static void* UpdateGUI(void* arg)
 			}
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -113,19 +113,19 @@ void MainMenu(Menus::Enum menu)
 	Pointers[1] = new GuiImageData(player2_point_png);
 	Pointers[2] = new GuiImageData(player3_point_png);
 	Pointers[3] = new GuiImageData(player4_point_png);
-	
+
 	BackgroundImage = new GuiImageData(background_png);
 
 	Window = new GuiWindow(screenwidth, screenheight);
 	Window->SetPosition(0, 0);
 	Window->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-	
+
 	Background = new GuiImage(BackgroundImage);
 	Background->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 	Background->SetPosition(0, 0);
 	Window->SetFocus(true);
 	Window->Append(Background);
-	
+
 	Title = new GuiText(RIIVOLUTION_TITLE, 32, (GXColor){255, 255, 255, 255});
 	Title->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 	Title->SetPosition(56, 32);
@@ -139,10 +139,10 @@ void MainMenu(Menus::Enum menu)
 
 	Trigger[Triggers::Select].SetSimpleTrigger(-1, WPAD_BUTTON_A | WPAD_CLASSIC_BUTTON_A, PAD_BUTTON_A);
 	Trigger[Triggers::Back].SetButtonOnlyTrigger(-1, WPAD_BUTTON_B | WPAD_CLASSIC_BUTTON_B, PAD_BUTTON_B);
-	Trigger[Triggers::Home].SetButtonOnlyTrigger(-1, WPAD_BUTTON_HOME | WPAD_CLASSIC_BUTTON_HOME, PAD_BUTTON_START);
+	Trigger[Triggers::Home].SetButtonOnlyTrigger(-1, WPAD_BUTTON_HOME | WPAD_CLASSIC_BUTTON_HOME | WPAD_GUITAR_HERO_3_BUTTON_ORANGE, PAD_BUTTON_START);
 	Trigger[Triggers::PageLeft].SetButtonOnlyTrigger(-1, WPAD_BUTTON_MINUS | WPAD_CLASSIC_BUTTON_FULL_L | WPAD_CLASSIC_BUTTON_MINUS, PAD_TRIGGER_L);
 	Trigger[Triggers::PageRight].SetButtonOnlyTrigger(-1, WPAD_BUTTON_PLUS | WPAD_CLASSIC_BUTTON_FULL_R | WPAD_CLASSIC_BUTTON_PLUS, PAD_TRIGGER_R);
-	
+
 	ButtonList::InitImageData();
 
 	ResumeGui();
@@ -181,7 +181,7 @@ void MainMenu(Menus::Enum menu)
 				break;
 		}
 	}
-	
+
 	ShutoffRumble();
 
 	if (*(vu32*)0x80001804 != 0x53545542) // "STUB" - Check for whether the HBC (or other loader) reload stub is in place or not
@@ -191,14 +191,14 @@ void MainMenu(Menus::Enum menu)
 	RequestExit();
 	while (true)
 		usleep(THREAD_SLEEP);
-	
+
 	HaltGui();
-	
+
 	Music->Stop();
 	delete Music;
 	delete Background;
 	delete Window;
-	
+
 	delete Pointers[0];
 	delete Pointers[1];
 	delete Pointers[2];
