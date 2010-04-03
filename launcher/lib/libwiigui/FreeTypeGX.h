@@ -238,6 +238,7 @@ const GXColor ftgxWhite = (GXColor){0xff, 0xff, 0xff, 0xff}; /**< Constant color
 void InitFreeType(uint8_t* fontBuffer, FT_Long bufferSize);
 void ChangeFontSize(FT_UInt pixelSize);
 wchar_t* charToWideChar(const char* p);
+wchar_t* shortToWideChar(const short* p);
 void ClearFontData();
 
 /*! \class FreeTypeGX

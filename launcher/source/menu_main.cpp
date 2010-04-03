@@ -429,7 +429,7 @@ Menus::Enum MenuInit()
 	ParseConfigXMLs(&Disc);
 
 	Launcher_RVL();
-	HaltGui(); Title->SetText(Launcher_GetGameName()); ResumeGui();
+	HaltGui(); Title->SetText(Launcher_GetGameNameWide()); ResumeGui();
 
 	MENUINIT_CHECKBUTTONS();
 
@@ -479,7 +479,7 @@ Menus::Enum MenuMain()
 	}
 
 	HaltGui();
-	Title->SetText(Launcher_GetGameName());
+	Title->SetText(Launcher_GetGameNameWide());
 	ButtonList buttons(Window, 3);
 	buttons.SetButton(0, "Exit", ButtonList::ExitImage);
 	buttons.GetButton(0)->SetTrigger(&Trigger[Triggers::Home]);

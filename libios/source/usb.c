@@ -584,54 +584,34 @@ void USB_ResumeDevice(usb_device *dev)
 
 s32 USB_GetDeviceList(const char *devpath,void *descr_buffer,u8 num_descr,u8 b0,u8 *cnt_descr)
 {
-	s32 fd=-1,ret=IPC_ENOMEM;
-	char *path=NULL;
+	s32 fd, ret=IPC_ENOMEM;
 	ioctlv *vec=NULL;
-	u32 cntdevs;
-	STACK_ALIGN(u8, _cntdevs, 1, 32);
-	STACK_ALIGN(u8, _num_descr, 1, 32);
-	STACK_ALIGN(u8, _b0, 1, 32);
+	u8 cntdevs = 0;
 
-	if(devpath==NULL || *devpath=='\0') return IPC_EINVAL;
+	if(devpath==NULL || *devpath=='\0' || descr_buffer==NULL) return IPC_EINVAL;
 
-	path = (char*)Alloc(IPC_MAXPATH_LEN);
-	if(path==NULL) goto done;
+	fd = os_open(devpath,IPC_OPEN_NONE);
+	if(fd<0)
+		return fd;
 
 	vec = Memalign(32, sizeof(ioctlv)*4);
 	if (vec==NULL) goto done;
 
-	strncpy(path,devpath,IPC_MAXPATH_LEN);
-	fd = os_open(path,IPC_OPEN_NONE);
-	if(fd<0) {
-		Dealloc(path);
-		return fd;
-	}
-
-	*_num_descr = num_descr;
-	*_b0 = b0;
-	*_cntdevs = (u32)&cntdevs;
-
-	vec[0].data = _num_descr;
+	vec[0].data = &num_descr;
 	vec[0].len = sizeof(u8);
-	vec[1].data = _b0;
+	vec[1].data = &b0;
 	vec[1].len = sizeof(u8);
-	vec[2].data = _cntdevs;
+	vec[2].data = &cntdevs;
 	vec[2].len = sizeof(u8);
 
 	vec[3].data = descr_buffer;
 	vec[3].len = (num_descr<<3);
 
-	cntdevs = 0;
 	ret = os_ioctlv(fd, USB_IOCTL_GETDEVLIST, 2, 2, vec);
-	//ret = IOS_IoctlvFormat(hId,fd,USB_IOCTL_GETDEVLIST,"bb:bd",num_descr,b0,&cntdevs,descr_buffer,(num_descr<<3));
-	if(ret>=0)
-	{
-		// this doesn't seem to return a value?
+	if (cnt_descr)
 		*cnt_descr = cntdevs;
-	}
 
 done:
-	Dealloc(path);
 	Dealloc(vec);
 
 	if (fd>=0)

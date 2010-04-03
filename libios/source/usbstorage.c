@@ -655,8 +655,7 @@ static bool __usbstorage_Startup(void)
 static bool __usbstorage_IsInserted(void)
 {
    u8 *buffer;
-   u8 dummy;
-   u8 i;
+   u8 i, cnt_device;
    int j;
    u16 vid, pid;
    s32 maxLun;
@@ -669,7 +668,7 @@ static bool __usbstorage_IsInserted(void)
        return false;
    memset(buffer, 0, DEVLIST_MAXSIZE << 3);
 
-   if(USB_GetDeviceList("/dev/usb/oh0", buffer, DEVLIST_MAXSIZE, 0, &dummy) < 0)
+   if(USB_GetDeviceList("/dev/usb/oh0", buffer, DEVLIST_MAXSIZE, 8, &cnt_device) < 0)
    {
 	   debug_printf("Couldn't get USB device list\n");
 		if(__vid!=0 || __pid!=0)
@@ -685,11 +684,13 @@ static bool __usbstorage_IsInserted(void)
        return false;
    }
 
+   debug_printf("Found %d USB Mass Storage devices\n", cnt_device);
+
 	usleep(100);
 
    if(__vid!=0 || __pid!=0)
    {
-       for(i = 0; i < DEVLIST_MAXSIZE; i++)
+       for(i = 0; i < cnt_device; i++)
        {
            memcpy(&vid, (buffer + (i << 3) + 4), 2);
            memcpy(&pid, (buffer + (i << 3) + 6), 2);
@@ -714,7 +715,7 @@ static bool __usbstorage_IsInserted(void)
    __vid = 0;
    __pid = 0;
 
-   for(i = 0; i < DEVLIST_MAXSIZE; i++)
+   for(i = 0; i < cnt_device; i++)
    {
        memcpy(&vid, (buffer + (i << 3) + 4), 2);
        memcpy(&pid, (buffer + (i << 3) + 6), 2);

@@ -73,9 +73,31 @@ static const u16 NWC24iCleanupSocketCode[] = {
 	0x4800
 };
 
+static const u32 __OSLaunchMenuCodeNew[] = {
+	0x38C10008,
+	0x38800002,
+	0x38600001,
+	0x38A00000
+};
+
+static const u32 __OSLaunchMenuCodeOld[] = {
+	0x39010010,
+	0x38C00002,
+	0x38A00001,
+	0x38E00000
+};
+
+static const u32 __OSLaunchRiiv[] = {
+	0x3F400001, // lis r26, 1
+	0x3B5A0001, // addi r26, r26, 1 #0x00010001
+	0x3F605249, // lis r27, 0x5249
+	0x3B7B4956, // addi r27, r27, 0x4956 #0x52494956
+	0x38600000  // li r3, 0
+};
+
 // GLOBALS
 static char GameName[0x40] ATTRIBUTE_ALIGN(32);
-static s16 BannerName[42];
+static s16 BannerName[43];
 static bool subsequent = false;
 static u32 fstdata[0x40] ATTRIBUTE_ALIGN(32);
 static void *app_address = NULL;
@@ -116,6 +138,7 @@ const u32* Launcher_GetFstData()
 
 const s16* Launcher_GetGameNameWide()
 {
+	BannerName[42] = 0;
 	if (RVL_GetFST()) {
 		if (BannerName[0])
 			return BannerName;
@@ -123,7 +146,7 @@ const s16* Launcher_GetGameNameWide()
 		if (node != NULL) {
 			static IMET imet ATTRIBUTE_ALIGN(32);
 			if (!WDVD_LowRead(&imet, sizeof(imet), (u64)node->DataOffset << 2) && imet.imet == 0x494D4554) {
-				memcpy(BannerName, imet.names[CONF_GetLanguage()], sizeof(BannerName));
+				memcpy(BannerName, imet.names[CONF_GetLanguage()], 42*sizeof(BannerName[0]));
 				if (BannerName[0]) {
 					return BannerName;
 				}
@@ -131,6 +154,7 @@ const s16* Launcher_GetGameNameWide()
 		}
 	}
 
+	// couldn't find Banner title, using Disc title instead
 	for (int i = 0; i < 42; i++)
 		BannerName[i] = GameName[i];
 	return BannerName;
@@ -144,10 +168,9 @@ const char* Launcher_GetGameName()
 	static char gamename[42];
 	const s16* name = Launcher_GetGameNameWide();
 	// Find the last non-null char
-	int end = 41;
+	int end = 40;
 	while (!name[end])
 		end--;
-	end = MIN(end, 40);
 	for (int i = 0; i <= end; i++)
 		gamename[i] = (char)name[i] ? (char)name[i] : ' ';
 	gamename[end + 1] = '\0';
@@ -335,6 +358,45 @@ LauncherStatus::Enum Launcher_ScrubPlaytimeEntry()
 	return LauncherStatus::IosError;
 }
 
+static void PatchReturnToMenu(s32 app_section_size, u64 titleID)
+{
+	u32 *found;
+
+	if ((found = (u32*)FindInBuffer(app_address, app_section_size, __OSLaunchMenuCodeNew, sizeof(__OSLaunchMenuCodeNew))))
+	{
+		memcpy(found, __OSLaunchRiiv, sizeof(__OSLaunchRiiv));
+		found[20] = 0x387A0000; // addi r3, r26, 0
+		found[19] = 0x389B0000; // addi r4, r27, 0
+		found[26] = 0x387A0000;
+		found[25] = 0x389B0000;
+		if (titleID != 0x0001000152494956llu)
+		{
+			u16* code = (u16*)found;
+			code[1] = titleID >> 48;
+			code[3] = (titleID >> 32) & 0xFFFF;
+			code[5] = (titleID >> 16) & 0xFFFF;
+			code[7] = titleID & 0xFFFF;
+		}
+	}
+
+	if ((found = (u32*)FindInBuffer(app_address, app_section_size, __OSLaunchMenuCodeOld, sizeof(__OSLaunchMenuCodeOld))))
+	{
+		memcpy(found, __OSLaunchRiiv, sizeof(__OSLaunchRiiv));
+		found[15] = 0x38BA0000; // addi r5, r26, 0
+		found[14] = 0x38DB0000; // addi r6, r27, 0
+		found[22] = 0x38BA0000;
+		found[21] = 0x38DB0000;
+		if (titleID != 0x0001000152494956llu)
+		{
+			u16* code = (u16*)found;
+			code[1] = titleID >> 48;
+			code[3] = (titleID >> 32) & 0xFFFF;
+			code[5] = (titleID >> 16) & 0xFFFF;
+			code[7] = titleID & 0xFFFF;
+		}
+	}
+}
+
 static inline void ApplyBinaryPatches(s32 app_section_size)
 {
 	void* found;
@@ -351,6 +413,9 @@ static inline void ApplyBinaryPatches(s32 app_section_size)
 		if ((found = FindInBuffer(app_address, app_section_size, NWC24iCleanupSocketCode, sizeof(NWC24iCleanupSocketCode))))
 			((u32*)found)[3] = 0x4E800020;
 	}
+
+	// return to HBC
+	// PatchReturnToMenu(app_section_size, 0x000100014A4F4449llu);
 
 	RVL_PatchMemory(&Disc, app_address, app_section_size);
 }
@@ -404,9 +469,6 @@ LauncherStatus::Enum Launcher_RunApploader()
 
 	settime(secs_to_ticks(time(NULL) - 946684800));
 
-	// Avoid a flash of green
-	VIDEO_SetBlack(true); VIDEO_Flush(); VIDEO_WaitVSync(); VIDEO_WaitVSync();
-
 	// put crap in memory to keep the apploader/dol happy
 	*MEM_VIRTUALSIZE = 0x01800000;
 	*MEM_PHYSICALSIZE = 0x01800000;
@@ -453,12 +515,9 @@ LauncherStatus::Enum Launcher_RunApploader()
 
 LauncherStatus::Enum Launcher_Launch()
 {
-#ifdef YARR
-	if (!memcmp(MEM_BASE, "SMN", 3))
-		*(u32*)(0x800CA0B8) = 0x60000000;
-#endif
 	if (app_address) {
-		File_Deinit();
+		RVL_Close();
+		ISFS_Deinitialize();
 		WPAD_Shutdown();
 		WDVD_Close();
 		__ES_Close();

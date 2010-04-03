@@ -599,11 +599,14 @@ class GuiText : public GuiElement
 		//!\Assumes SetPresets() has been called to setup preferred text attributes
 		//!\param t Text
 		GuiText(const char * t);
+		GuiText(const s16 * t, int s, GXColor c);
+		GuiText(const s16 * t);
 		//!Destructor
 		~GuiText();
 		//!Sets the text of the GuiText element
 		//!\param t Text
 		void SetText(const char * t);
+		void SetText(const s16 * t);
 		//!Sets up preset values to be used by GuiText(t)
 		//!Useful when printing multiple text elements, all with the same attributes set
 		//!\param sz Font size
@@ -639,8 +642,7 @@ class GuiText : public GuiElement
 		//!Constantly called to draw the text
 		void Draw();
 	protected:
-		char * origText; //!< Original text data
-		wchar_t* text; //!< Unicode text value
+		wchar_t* origText; //!< Unicode text value
 		int size; //!< Font size
 		int maxWidth; //!< Maximum width of the generated text object (for text wrapping)
 		bool wrap; //!< Wrapping toggle

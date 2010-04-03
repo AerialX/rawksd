@@ -75,6 +75,20 @@ wchar_t* charToWideChar(const char* strChar)
 	return strWChar;
 }
 
+wchar_t* shortToWideChar(const short* strShort)
+{
+	wchar_t *strWChar, *tempDest;
+	int i;
+
+	// get length
+	for (i=0; strShort[i]; i++);
+	tempDest = strWChar = new wchar_t[i+1];
+
+	while((*tempDest++ = *strShort++));
+
+	return strWChar;
+}
+
 /**
  * Default constructor for the FreeTypeGX class.
  *
