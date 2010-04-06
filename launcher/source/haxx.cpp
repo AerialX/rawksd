@@ -609,14 +609,13 @@ static int patch_mem2(void* buf, s32 size)
 	u32 i, count = 0;
 	u8 *kernel = (u8*)buf;
 	const u8 old_table[] = {0xB5,0x00,0x4B,0x09,0x22,0x01,0x80,0x1A,0x22,0xF0};
-	const u8 new_table[] = {0xB5,0x00,0x4B,0x09,0x22,0x00,0x80,0x1A,0x22,0xF0};
 
 	for (i=0; i < size - sizeof(old_table); i++)
 	{
 		if (!memcmp(kernel+i, old_table, sizeof(old_table)))
 		{
-			memcpy(kernel+i, new_table, sizeof(new_table));
-			i += sizeof(new_table);
+			kernel[i+5] = 0;
+			i += sizeof(old_table);
 			count++;
 		}
 	}
@@ -629,19 +628,37 @@ static int patch_ios37_sd_load(void* buf, s32 size)
 	u32 i, count = 0;
 	u8 *kernel = (u8*)buf;
 	const u8 sd_old[] = {0x22, 0xf4, 0x00, 0x52, 0x18, 0x81, 0x27, 0xf0, 0x00, 0x7f, 0x19, 0xf3, 0x88, 0x0a, 0x88, 0x1b, 0x42, 0x9a};
-	const u8 sd_new[] = {0x22, 0xf4, 0x00, 0x52, 0x18, 0x81, 0x27, 0xf0, 0x00, 0x7f, 0x19, 0xf3, 0x88, 0x0a, 0x88, 0x1b, 0x2A, 0x04};
 
 	for (i=0; i < size - sizeof(sd_old); i++)
 	{
 		if (!memcmp(kernel+i, sd_old, sizeof(sd_old)))
 		{
-			memcpy(kernel+i, sd_new, sizeof(sd_new));
-			i += sizeof(sd_new);
+			kernel[i+16] = 0x2A;
+			kernel[i+17] = 0x04;
+			i += sizeof(sd_old);
 			count++;
 		}
 	}
 
 	return count;
+}
+
+static int patch_gpio_stm(void* buf, s32 size)
+{
+	u32 i;
+	u8 *kernel = (u8*)buf;
+	const u8 gpio_orig[8] = {0xD1, 0x0F, 0x28, 0xFC, 0xD0, 0x33, 0x28, 0xFC};
+
+	for (i=0; i < size - sizeof(gpio_orig); i++)
+	{
+		if (!memcmp(kernel+i, gpio_orig, sizeof(gpio_orig)))
+		{
+			kernel[i]   = 0x46;
+			kernel[i+1] = 0xC0;
+			return 1;
+		}
+	}
+	return 0;
 }
 
 static u8 *load_tmd_content(tmd* title_tmd, u16 index)
@@ -756,7 +773,7 @@ static int prepare_new_kernel(u64 title)
 		return 0;
 	}
 
-	if (!patch_mem2(kernel_blob, size) || !patch_ios37_sd_load(kernel_blob, size))
+	if (!patch_mem2(kernel_blob, size) || !patch_ios37_sd_load(kernel_blob, size) || !patch_gpio_stm(kernel_blob, size))
 	{
 		printf("Couldn't patch kernel\n");
 		free(kernel_blob);
@@ -1339,3 +1356,4 @@ int check_cert_chain(const u8 *data, const u32 data_len)
 #endif
 }
 /*********** SIGNATURE CHECKING STUFF ENDS */
+
