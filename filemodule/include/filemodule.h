@@ -27,7 +27,7 @@
 #define FILE_MAX_MOUNTED		0x20
 #define FILE_MAX_DISKS			0x20
 
-#define FSIDLE_TICK		200000 // 200ms, minimum FilesystemHandler Idle() tick
+#define FSIDLE_TICK		1000000 // 1s, minimum FilesystemHandler Idle() tick
 
 namespace ProxiIOS { namespace Filesystem {
 	namespace Ioctl {
@@ -38,6 +38,8 @@ namespace ProxiIOS { namespace Filesystem {
 			Unmount			= IOCTL_Unmount,
 			GetMountPoint	= IOCTL_MountPoint,
 			SetDefault		= IOCTL_SetDefault,
+			SetLogFS		= IOCTL_SetLogFS,
+			GetLogFS		= IOCTL_GetLogFS,
 
 			// File Operations
 			Stat			= IOCTL_Stat,
@@ -58,6 +60,8 @@ namespace ProxiIOS { namespace Filesystem {
 
 			// Shorten a long path (>64) for IOS_Open
 			Shorten			= IOCTL_Shorten,
+			// Emit a log buffer
+			Log				= IOCTL_Log,
 		};
 	}
 
@@ -133,7 +137,8 @@ namespace ProxiIOS { namespace Filesystem {
 			virtual FileInfo* OpenDir(const char* path) { return null; };
 			virtual int NextDir(FileInfo* dir, char* dirname, Stats* st) { return -1; };
 			virtual int CloseDir(FileInfo* dir) { return -1; };
-			virtual int IdleTick() { return -1; }
+			virtual int IdleTick() { return -1; };
+			virtual int Log(void* buffer, int length) { return 0; };
 	};
 
 	class Filesystem : public ProxiIOS::Module
@@ -144,6 +149,7 @@ namespace ProxiIOS { namespace Filesystem {
 		int Default;
 		ostimer_t Idle_Timer;
 		void *Long_Path;
+		int LogFS;
 
 		Filesystem();
 

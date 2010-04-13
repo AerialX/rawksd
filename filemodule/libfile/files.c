@@ -97,6 +97,18 @@ int File_SetDefaultPath(const char* mountpoint)
 	return os_ioctl(file_fd, IOCTL_SetDefault, NULL, 0, (void*)mountpoint, size);
 }
 
+int File_SetLogFS(int fs)
+{
+	ioctlbuffer[0] = fs;
+	os_sync_after_write(ioctlbuffer, 0x04);
+	return os_ioctl(file_fd, IOCTL_SetLogFS, ioctlbuffer, sizeof(ioctlbuffer), NULL, 0);
+}
+
+int File_GetLogFS()
+{
+	return os_ioctl(file_fd, IOCTL_GetLogFS, NULL, 0, NULL, 0);
+}
+
 int File_GetMountPoint(int fs, char* mountpoint, int length)
 {
 	ioctlbuffer[0] = fs;
@@ -258,6 +270,16 @@ int File_Sync(int fd)
 	return os_seek(fd, 0, SEEK_Sync);
 }
 
+int File_Log(const void* buffer, int length)
+{
+	if (file_fd >= 0 && length>0)
+	{
+		os_sync_after_write(buffer, length);
+		return os_ioctl(file_fd, IOCTL_Log, (void*)buffer, length, NULL, 0);
+	}
+	return 0;
+}
+
 static const char HEX_CHARS[] = "0123456789abcdef";
 static void IntToHex(char* dest, u64 num, int length)
 {
@@ -278,7 +300,7 @@ int File_RiiFS_Mount(const char* host, int port)
 {
 	char data[MAXPATHLEN];
 
-	*(int*)data = port;
+	memcpy(data, &port, sizeof(int));
 	strcpy(data + sizeof(int), host);
 	return File_Mount(FS_RIIFS, data, sizeof(int) + strlen(host) + 1);
 }
@@ -290,7 +312,7 @@ int File_Fat_Mount(disk_phys disk, const char* name)
 		return ret;
 
 	char options[0x40];
-	*(u32*)options = ret;
+	memcpy(options, &ret, sizeof(u32));
 	strncpy(options + 4, name, 0x40 - 4);
 	return File_Mount(FS_FAT, options, 4 + strlen(name) + 1);
 }

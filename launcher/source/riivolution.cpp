@@ -583,7 +583,7 @@ void RVL_Unmount()
 			}
 		}
 
-		if (!found)
+		if (!found && File_GetLogFS() != *mount)
 			File_Unmount(*mount);
 	}
 

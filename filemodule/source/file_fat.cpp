@@ -28,7 +28,7 @@ static inline FILE_STRUCT* GenerateReadonlyFile(FatHandler* fs, u32 cluster) {
 	ffile->append = false;
 	ffile->inUse = true;
 	ffile->modified = false;
-	
+
 	return ffile;
 }
 
@@ -44,19 +44,22 @@ int FatHandler::Mount(const void* options, int length)
 	if (length < 4)
 		return Errors::Unrecognized;
 
-	int disk = *(const int*)options;
-	
+	int disk;
+	memcpy(&disk, options, sizeof(int));
+
 	if (length > 4) { // optional forced fs name
 		strcpy(Name, (const char*)options + 4);
 	} else
 		strcpy(Name, __fatName);
 
+	// better performance, but requires a lot more memory
+	// if (fatMount(Name, Module->Disk[disk], 0, 12, 16) < 0)
 	if (fatMount(Name, Module->Disk[disk], 0, 5, 4) < 0)
 		return Errors::DiskNotMounted;
 
 	strcpy(MountPoint, "/mnt/");
 	strcat(MountPoint, Name);
-	
+
 	strcat(Name, ":/");
 
 	return Errors::Success;
@@ -82,10 +85,10 @@ FileInfo* FatHandler::Open(const char* path, int mode)
 		ret = (int)GenerateReadonlyFile(this, cluster);
 	} else
 		ret = FAT_Open(path, mode);
-	
+
 	if (ret < 0)
 		return null;
-	
+
 	return new FatFileInfo(this, ret);
 }
 
@@ -127,9 +130,9 @@ int FatHandler::Stat(const char* path, Stats* stats)
 
 	struct stat st;
 	int ret = FAT_Stat(path, &st);
-	
+
 	StToStats(stats, &st);
-	
+
 	return ret;
 }
 
@@ -170,10 +173,10 @@ FileInfo* FatHandler::OpenDir(const char* path)
 	chdir(Name);
 
 	int fd = FAT_OpenDir(path);
-	
+
 	if (fd < 0)
 		return null;
-	
+
 	return new FatFileInfo(this, fd);
 }
 
@@ -181,9 +184,9 @@ int FatHandler::NextDir(FileInfo* dir, char* filename, Stats* stats)
 {
 	struct stat st;
 	int ret = FAT_NextDir(((FatFileInfo*)dir)->File, filename, &st);
-	
+
 	StToStats(stats, &st);
-	
+
 	return ret;
 }
 

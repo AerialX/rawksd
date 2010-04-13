@@ -1,10 +1,7 @@
 #include "file_riifs.h"
 
 #include <network.h>
-
 #include <syscalls.h>
-
-#include <print.h>
 
 #define CONNECT_SLEEP_INTERVAL 100000 // 0.1 seconds
 
@@ -12,39 +9,84 @@ namespace ProxiIOS { namespace Filesystem {
 	int RiiHandler::Mount(const void* options, int length)
 	{
 		int ret;
+		u32 sock_opt;
 		while ((ret = net_init()) == -EAGAIN)
 			usleep(10000);
 		if (ret < 0)
 			return Errors::DiskNotMounted;
 
-		Port = *(int*)options;
-
-		Socket = net_socket(PF_INET, SOCK_STREAM, 0);
-		struct sockaddr_in address;
-		memset(&address, 0, sizeof(address));
-		address.sin_family = PF_INET;
-		address.sin_port = htons(Port);
+		memcpy(&Port, options, sizeof(int));
 
 		const char* hoststr = (const char*)options + sizeof(int);
 		strncpy(Host, hoststr, 0x40);
 
-		if (!inet_aton(hoststr, &address.sin_addr)) {
-			hostent* host = net_gethostbyname_async(hoststr, CONNECT_SLEEP_INTERVAL * 50); // 5 second timeout
-			if (!host || !host->h_length || host->h_addrtype != PF_INET) {
-				net_close(Socket);
+		struct sockaddr_in address;
+		memset(&address, 0, sizeof(address));
+		address.sin_family = PF_INET;
+
+		if (Port==0 && !strcmp(Host, "")) {
+			// broadcast a ping to try and find a server
+			int found = 0;
+			sock_opt = 1;
+
+			int locate_socket = net_socket(AF_INET, SOCK_DGRAM, 0);
+			if (locate_socket<0)
 				return Errors::DiskNotMounted;
-			} else
+
+			// set to non-blocking (must be done before setting broadcast option)
+			if (net_ioctl(locate_socket, FIONBIO, &sock_opt) < 0) {
+				net_close(locate_socket);
+				return Errors::DiskNotMounted;
+			}
+
+			/* Games do this in a different way, which I call wtf_setbroadcast:
+					net_setsockopt(locate_socket, 1, 0x29A, (char*)&sock_opt, 4);
+			   It still returns -ENOPROTOOPT, but the code I've seen assumes it succeeds
+			   unless it returns -1 (which I think is -E2BIG?) so we do the same. */
+			ret = net_setsockopt(locate_socket, SOL_SOCKET, SO_BROADCAST, (char*)&sock_opt, 4);
+			if (ret!=-E2BIG) {
+				int data = RII_OPTION_PING;
+				address.sin_port = htons(1137);
+				address.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+				ret = net_sendto(locate_socket, &data, sizeof(data), 0, (struct sockaddr*)&address, 8);
+				if (ret>=4) {
+					// wait for up to half a second (5 * CONNECT_SLEEP_INTERVAL)
+					for (int i=0; i < 5; i++) {
+						sock_opt = 8;
+						if (net_recvfrom(locate_socket, &data, sizeof(data), 0, (struct sockaddr*)&address, &sock_opt)==4 && sock_opt>=8) {
+							Port = ntohs(data);
+							found = 1;
+							break;
+						}
+						usleep(CONNECT_SLEEP_INTERVAL);
+					}
+				}
+
+			}
+
+			net_close(locate_socket);
+			if (!found)
+				return Errors::DiskNotMounted;
+		}
+		else if (!inet_aton(hoststr, &address.sin_addr)) {
+			hostent* host = net_gethostbyname_async(hoststr, CONNECT_SLEEP_INTERVAL * 50); // 5 second timeout
+			if (!host || !host->h_length || host->h_addrtype != PF_INET)
+				return Errors::DiskNotMounted;
+			else
 				memcpy((char*)&address.sin_addr, host->h_addr_list[0], host->h_length);
 		}
+		address.sin_port = htons(Port);
 
+		Socket = net_socket(PF_INET, SOCK_STREAM, 0);
 		// Non-blocking
-		if ((ret = net_fcntl(Socket, F_GETFL, 0)) < 0 || (net_fcntl(Socket, F_SETFL, ret | 4) < 0)) {
+		sock_opt = 1;
+		if (net_ioctl(Socket, FIONBIO, &sock_opt) < 0) {
 			net_close(Socket);
 			return Errors::DiskNotMounted;
 		}
 
 		for (u32 i = 0; i < 50; i++) { // 5 second timeout
-			ret = net_connect(Socket, (struct sockaddr*)(const void *)&address, sizeof(address));
+			ret = net_connect(Socket, (struct sockaddr*)&address, sizeof(address));
 			if (ret == -EINPROGRESS || ret == -EALREADY)
 				usleep(CONNECT_SLEEP_INTERVAL);
 			else
@@ -56,7 +98,8 @@ namespace ProxiIOS { namespace Filesystem {
 		}
 
 		// Back to blocking
-		if ((ret = net_fcntl(Socket, F_GETFL, 0)) < 0 || (net_fcntl(Socket, F_SETFL, ret & ~4) < 0)) {
+		sock_opt = 0;
+		if (net_ioctl(Socket, FIONBIO, &sock_opt) < 0) {
 			Unmount();
 			return Errors::DiskNotMounted;
 		}
@@ -67,13 +110,28 @@ namespace ProxiIOS { namespace Filesystem {
 		}
 
 		ServerVersion = ReceiveCommand(RII_HANDSHAKE);
-		if (ServerVersion != RII_VERSION_RET) {
+		if (ServerVersion < RII_VERSION_RET) {
 			Unmount();
 			return Errors::DiskNotMounted;
 		}
 
 		Host[0x30] = '\0';
-		_sprintf(MountPoint, "/mnt/net/%s%d", Host, Port);
+
+		// _sprintf(MountPoint, "/mnt/net/%s%d", Host, Port);
+
+		strcpy(MountPoint, "/mnt/net/");
+		strcat(MountPoint, Host);
+		// find first non-zero digit (assume 100000>Port>0)
+		for (ret=10000; (Port/ret)==0; ret /= 10);
+
+		while (Port) {
+			char digit[2] = {0,0};
+			int value = Port / ret;
+			digit[0] = '0' + value;
+			strcat(MountPoint, digit);
+			Port -= value * ret;
+			ret /= 10;
+		}
 
 		return Errors::Success;
 	}
@@ -81,9 +139,9 @@ namespace ProxiIOS { namespace Filesystem {
 	bool RiiHandler::SendCommand(int type, const void* data, int size)
 	{
 #ifdef RIIFS_LOCAL_OPTIONS
-		int value = 0;
-		if (size == 4) {
-			value = *(int*)data;
+		int value;
+		if (size == 4 && type>0) {
+			memcpy(&value, data, 4);
 			if (OptionsInit[type - 1] && Options[type - 1] == value)
 				return true;
 		}
@@ -94,10 +152,10 @@ namespace ProxiIOS { namespace Filesystem {
 		message[1] = type;
 		message[2] = size;
 		fail |= net_send(Socket, message, 12, 0) != 12;
-		if (size && data)
+		if (!fail && size && data)
 			fail |= net_send(Socket, data, size, 0) != size;
 #ifdef RIIFS_LOCAL_OPTIONS
-		if (size == 4 && !fail) {
+		if (size == 4 && type>0 && !fail) {
 			Options[type - 1] = value;
 			OptionsInit[type - 1] = 1;
 		}
@@ -132,16 +190,17 @@ namespace ProxiIOS { namespace Filesystem {
 		fail |= net_send(Socket, message, 0x08, 0) != 8;
 		static int ret ATTRIBUTE_ALIGN(32);
 		ret = 0;
-		if (size) {
+		if (!fail && size) {
 			if (data)
 				fail |= netrecv(Socket, (u8*)data, size, 0) != size;
 			else {
 				void* temp = Memalign(32, size);
-				netrecv(Socket, (u8*)temp, size, 0);
+				fail |= netrecv(Socket, (u8*)temp, size, 0) != size;
 				Dealloc(temp);
 			}
 		}
-		fail |= netrecv(Socket, (u8*)&ret, 4, 0) != 4;
+		if (!fail)
+			fail |= netrecv(Socket, (u8*)&ret, 4, 0) != 4;
 
 		IdleCount = 0;
 		if (fail)
@@ -158,6 +217,9 @@ namespace ProxiIOS { namespace Filesystem {
 			IdleCount = -1;
 			Socket = -1;
 		}
+		Dealloc(LogBuffer);
+		LogBuffer = NULL;
+		LogSize = 0;
 		return 0;
 	}
 
@@ -355,11 +417,38 @@ namespace ProxiIOS { namespace Filesystem {
 
 	int RiiHandler::IdleTick()
 	{
+		if (LogBuffer && LogSize>0)
+		{
+			SendCommand(RII_OPTION_DATA, LogBuffer, LogSize);
+			ReceiveCommand(RII_LOG);
+			// prevent the buffer from staying too big
+			if (LogSize > 2048)
+			{
+				Dealloc(LogBuffer);
+				LogBuffer = NULL;
+			}
+			LogSize = 0;
+		}
+
 		if (ServerVersion < 0x03 || IdleCount < 0)
 			return -1;
 
 		if (IdleCount++ > (RII_IDLE_TIME/FSIDLE_TICK))
 			return SendCommand(RII_OPTION_PING);
 		return 0;
+	}
+
+	int RiiHandler::Log(void* buffer, int length)
+	{
+		if (ServerVersion >= 0x04)
+		{
+			u8 *NewBuffer = (u8*)Realloc(LogBuffer, length+LogSize, LogSize);
+			if (NewBuffer) { // if Realloc failed LogBuffer should be left untouched
+				LogBuffer = NewBuffer;
+				memcpy(LogBuffer+LogSize, buffer, length);
+				LogSize += length;
+			}
+		}
+		return length;
 	}
 } }

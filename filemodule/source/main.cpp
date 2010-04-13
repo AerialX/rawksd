@@ -3,11 +3,11 @@
 #include "gctypes.h"
 #include "mem.h"
 
-static u8 Heapspace[0x28000] __attribute__ ((aligned (32)));
+static u8 Heapspace[0x28000];
 
 int main()
 {
-	InitializeHeap(Heapspace, sizeof(Heapspace), 32);
+	InitializeHeap(Heapspace, sizeof(Heapspace), 8);
 
 	ProxiIOS::Filesystem::Filesystem filesystem;
 

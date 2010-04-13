@@ -16,7 +16,7 @@ namespace ProxiIOS { namespace Filesystem {
 		FilesystemHandler* System;
 	};
 
-	Filesystem::Filesystem() : Module(FILE_MODULE_NAME), Long_Path(NULL)
+	Filesystem::Filesystem() : Module(FILE_MODULE_NAME)
 	{
 		memset(Mounted, null, sizeof(Mounted));
 		memset(Disk, null, sizeof(Disk));
@@ -29,6 +29,8 @@ namespace ProxiIOS { namespace Filesystem {
 		Idle_Timer = os_create_timer(FSIDLE_TICK, 0, queuehandle, FSIDLE_MSG);
 
 		Default = 0;
+		Long_Path = NULL;
+		LogFS = -1;
 	}
 
 	int Filesystem::HandleIoctl(ipcmessage* message)
@@ -114,6 +116,8 @@ namespace ProxiIOS { namespace Filesystem {
 				if (ret >= 0) {
 					delete system;
 					Mounted[index] = null;
+					if (index == LogFS)
+						LogFS = -1;
 				}
 				return ret;
 			}
@@ -147,6 +151,16 @@ namespace ProxiIOS { namespace Filesystem {
 
 				return Errors::Success;
 			}
+			case Ioctl::SetLogFS: {
+				int index = message->ioctl.buffer_in[0];
+				if (index>0 && !Mounted[index])
+					return Errors::NotMounted;
+
+				LogFS = index;
+				return Errors::Success;
+			}
+			case Ioctl::GetLogFS:
+				return LogFS;
 			case Ioctl::Stat: {
 				FilePathDesc descriptor(this, (const char*)message->ioctl.buffer_in);
 				if (!descriptor.System)
@@ -203,6 +217,11 @@ namespace ProxiIOS { namespace Filesystem {
 					return 1;
 				}
 				return -1; }
+			case Ioctl::Log: {
+				if (LogFS >= 0 && Mounted[LogFS] && message->ioctl.length_in) {
+					return Mounted[LogFS]->Log(message->ioctl.buffer_in, message->ioctl.length_in);
+				}
+				return 0; }
 			default:
 				return -1;
 		}
@@ -326,7 +345,7 @@ namespace ProxiIOS { namespace Filesystem {
 			int mountlength = strlen(system->MountPoint);
 			if (!strncmp(Path, system->MountPoint, mountlength)) {
 				System = system;
-				Path = Path + mountlength;
+				Path += mountlength;
 				return;
 			}
 		}

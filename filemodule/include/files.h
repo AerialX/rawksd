@@ -42,6 +42,8 @@ typedef enum {
 	IOCTL_Unmount	=	0x32,
 	IOCTL_MountPoint = 	0x33,
 	IOCTL_SetDefault = 	0x34,
+	IOCTL_SetLogFS =	0x35,
+	IOCTL_GetLogFS =	0x36,
 	IOCTL_Stat =		0x40,
 	IOCTL_CreateFile =	0x41,
 	IOCTL_Delete =		0x42,
@@ -52,7 +54,8 @@ typedef enum {
 	IOCTL_OpenDir =		0x51,
 	IOCTL_NextDir =		0x52,
 	IOCTL_CloseDir =	0x53,
-	IOCTL_Shorten = 	0x60
+	IOCTL_Shorten = 	0x60,
+	IOCTL_Log =         0x61
 } file_ioctl;
 
 typedef enum {
@@ -75,6 +78,8 @@ int File_Unmount(int fs);
 int File_SetDefault(int fs);
 int File_SetDefaultPath(const char* mountpoint);
 int File_GetMountPoint(int fs, char* mountpoint, int length);
+int File_SetLogFS(int fs);
+int File_GetLogFS();
 
 int File_Stat(const char* path, Stats* st);
 int File_CreateFile(const char* path);
@@ -93,6 +98,7 @@ int File_Write(int fd, const void* buffer, int length);
 int File_Seek(int fd, int whence, int where);
 int File_Tell(int fd);
 int File_Sync(int fd);
+int File_Log(const void* buffer, int length);
 
 // Filesystem-specific Prototypes
 #define FILE_ID_PATH "/mnt/identifier/"

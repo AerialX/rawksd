@@ -9,6 +9,7 @@
 // Commands
 #define RII_HANDSHAKE			0x00
 #define RII_GOODBYE				0x01
+#define RII_LOG					0x02
 #define RII_FILE_OPEN			0x10
 #define RII_FILE_READ			0x11
 #define RII_FILE_WRITE			0x12
@@ -81,6 +82,8 @@ namespace ProxiIOS { namespace Filesystem {
 			int Socket;
 			int ServerVersion;
 			int IdleCount;
+			u8 *LogBuffer;
+			int LogSize;
 
 #ifdef RIIFS_LOCAL_OPTIONS
 			int Options[RII_OPTION_RENAME_DESTINATION];
@@ -91,11 +94,15 @@ namespace ProxiIOS { namespace Filesystem {
 			int ReceiveCommand(int type, void* data=NULL, int size=0);
 
 		public:
-			RiiHandler(Filesystem* fs) : FilesystemHandler(fs), Socket(-1), IdleCount(-1) {
+			RiiHandler(Filesystem* fs) : FilesystemHandler(fs) {
 #ifdef RIIFS_LOCAL_OPTIONS
 				memset(Options, 0, sizeof(Options));
 				memset(OptionsInit, 0, sizeof(OptionsInit));
 #endif
+				Socket = -1;
+				IdleCount = -1;
+				LogBuffer = NULL;
+				LogSize = 0;
 			}
 
 			~RiiHandler() {
@@ -123,6 +130,7 @@ namespace ProxiIOS { namespace Filesystem {
 			int CloseDir(FileInfo* dir);
 
 			int IdleTick();
+			int Log(void* buffer, int length);
 
 #ifdef RIIFS_LOCAL_DIRNEXT
 			int NextDirCache(RiiFileInfo* dir, char* filename, Stats* st);

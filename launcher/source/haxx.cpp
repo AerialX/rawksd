@@ -28,6 +28,8 @@ extern "C" {
 	extern const u8 root_dat[];
 }
 
+extern vector<int> ToMount;
+
 // our haxxed ios, IOS37v3870
 #ifndef YARR
 #define HAXX_IOS_VERSION     0x00250F1E
@@ -102,6 +104,16 @@ void Haxx_Mount(vector<int>* mounted)
 	ret = File_Fat_Mount(USB_DISK, "usb");
 	if (ret >= 0) {
 		mounted->push_back(ret);
+		DEFAULT();
+	}
+
+	ret = File_RiiFS_Mount("", 0);
+	if (ret >= 0) {
+		mounted->push_back(ret);
+		if (!hasdefault) {
+			ToMount.push_back(ret);
+			//File_SetLogFS(ret);
+		}
 		DEFAULT();
 	}
 }

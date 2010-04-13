@@ -582,7 +582,9 @@ Menus::Enum MenuLaunch()
 
 	RVL_Unmount();
 
-	File_Deinit();
+	if (File_GetLogFS()<0)
+		File_Deinit();
+
 	Launcher_Launch();
 
 	return Menus::Exit;

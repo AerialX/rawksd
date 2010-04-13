@@ -61,6 +61,7 @@ struct linger {
 #define PF_INET				AF_INET
 #define PF_UNSPEC			AF_UNSPEC
 
+// net_socket only seems to accept 0(IPPROTO_IP)
 #define IPPROTO_IP			0
 #define IPPROTO_TCP			6
 #define IPPROTO_UDP			17

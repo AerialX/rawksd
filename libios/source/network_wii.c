@@ -745,7 +745,7 @@ s32 net_setsockopt(s32 s, u32 level, u32 optname, const void *optval, socklen_t 
 s32 net_ioctl(s32 s, u32 cmd, void *argp)
 {
 	u32 flags;
-	u32 *intp = (u32 *)argp;
+	const u32 *intp = (const u32 *)argp;
 
 	if (net_ip_top_fd < 0) return -ENXIO;
 	if (!intp) return -EINVAL;

@@ -218,18 +218,27 @@ versionisvalid:
 			string ip;
 			int port = 1137;
 			string protocol = "riifs";
+			bool log = false;
 			ELEMENT_ATTRIBUTE("protocol", true)
 				protocol = attribute;
 			ELEMENT_ATTRIBUTE("address", true)
 				ip = attribute;
 			ELEMENT_ATTRIBUTE("port", true)
 				port = ELEMENT_INT(attribute);
+			ELEMENT_ATTRIBUTE("log", true)
+				log = ELEMENT_BOOL();
 
 			int mnt = -1;
 			if (protocol == "riifs")
 				mnt = File_RiiFS_Mount(ip.c_str(), port);
 			if (mnt >= 0) {
-				if (ParseXMLs(mnt, discs))
+				if (log) {
+					char buffer[100];
+					File_SetLogFS(mnt);
+					sprintf(buffer, "Logging started (%d spatulas)\n", File_Init());
+					File_Log(buffer, strlen(buffer));
+				}
+				if (ParseXMLs(mnt, discs) || log)
 					ToMount.push_back(mnt);
 			}
 		}
