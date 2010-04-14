@@ -18,7 +18,7 @@ namespace ProxiIOS { namespace Filesystem {
 		memcpy(&Port, options, sizeof(int));
 
 		const char* hoststr = (const char*)options + sizeof(int);
-		strncpy(Host, hoststr, 0x40);
+		strncpy(Host, hoststr, 0x30);
 
 		struct sockaddr_in address;
 		memset(&address, 0, sizeof(address));
@@ -55,6 +55,7 @@ namespace ProxiIOS { namespace Filesystem {
 						sock_opt = 8;
 						if (net_recvfrom(locate_socket, &data, sizeof(data), 0, (struct sockaddr*)&address, &sock_opt)==4 && sock_opt>=8) {
 							Port = ntohs(data);
+							strcpy(Host, inet_ntoa(address.sin_addr));
 							found = 1;
 							break;
 						}
