@@ -67,11 +67,17 @@ cacheSize specifies the number of pages to allocate for the cache.
 This will not startup the disc, so you need to call interface->startup(); first.
 */
 extern bool fatMount (const char* name, const DISC_INTERFACE* interface, sec_t startSector, uint32_t cacheSize, uint32_t SectorsPerPage);
+
 /*
 Unmount the partition specified by name.
 If there are open files, it will attempt to synchronise them to disc.
 */
 extern void fatUnmount (const char* name);
+
+/*
+Sync all files for the named partition
+*/
+extern void fatSync (const char* name);
 
 /*
 Get Volume Label

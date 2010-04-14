@@ -44,6 +44,7 @@ typedef enum {
 	IOCTL_SetDefault = 	0x34,
 	IOCTL_SetLogFS =	0x35,
 	IOCTL_GetLogFS =	0x36,
+	IOCTL_Epoch =		0x37,
 	IOCTL_Stat =		0x40,
 	IOCTL_CreateFile =	0x41,
 	IOCTL_Delete =		0x42,

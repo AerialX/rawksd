@@ -1,11 +1,14 @@
 #include "filemodule.h"
 
+#include "rtc.h"
+
 #include "file_fat.h"
 #include "file_riifs.h"
 #include "file_isfs.h"
 
 #define FILE_IOCTL_FD 0x123
 #define FSIDLE_MSG 0x500
+#define FSRTC_MSG  0x501
 #define SHORT_NAME "/......"
 
 namespace ProxiIOS { namespace Filesystem {
@@ -38,6 +41,13 @@ namespace ProxiIOS { namespace Filesystem {
 		os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 
 		switch (message->ioctl.command) {
+			case Ioctl::Epoch: {
+				time_t epoch;
+				memcpy(&epoch, message->ioctl.buffer_in, sizeof(time_t));
+				RTC_Init(epoch);
+				// update (approximately) every 10 minutes
+				os_create_timer(0, 600000000, queuehandle, FSRTC_MSG);
+				return Errors::Success; }
 			case Ioctl::InitDisc: {
 				int index = 0;
 				for (index = 0; Disk[index] != null && index < FILE_MAX_DISKS; index++)
@@ -70,8 +80,7 @@ namespace ProxiIOS { namespace Filesystem {
 					return Errors::DiskNotInserted;
 				}
 
-				return index;
-				break; }
+				return index; }
 			case Ioctl::Mount: {
 				int index = 0;
 				for (index = 0; Mounted[index] != null && index < FILE_MAX_MOUNTED; index++)
@@ -119,8 +128,7 @@ namespace ProxiIOS { namespace Filesystem {
 					if (index == LogFS)
 						LogFS = -1;
 				}
-				return ret;
-			}
+				return ret; }
 			case Ioctl::GetMountPoint: {
 				int index = message->ioctl.buffer_in[0];
 				FilesystemHandler* system = Mounted[index];
@@ -130,8 +138,7 @@ namespace ProxiIOS { namespace Filesystem {
 				strncpy((char*)message->ioctl.buffer_io, system->MountPoint, message->ioctl.length_io);
 				os_sync_after_write(message->ioctl.buffer_io, message->ioctl.length_io);
 
-				return Errors::Success;
-			}
+				return Errors::Success; }
 			case Ioctl::SetDefault: {
 				FilesystemHandler* system;
 				if (message->ioctl.length_io) {
@@ -149,16 +156,14 @@ namespace ProxiIOS { namespace Filesystem {
 					;
 				Default = index;
 
-				return Errors::Success;
-			}
+				return Errors::Success; }
 			case Ioctl::SetLogFS: {
 				int index = message->ioctl.buffer_in[0];
 				if (index>0 && !Mounted[index])
 					return Errors::NotMounted;
 
 				LogFS = index;
-				return Errors::Success;
-			}
+				return Errors::Success; }
 			case Ioctl::GetLogFS:
 				return LogFS;
 			case Ioctl::Stat: {
@@ -207,21 +212,20 @@ namespace ProxiIOS { namespace Filesystem {
 				return dir->System->CloseDir(dir); }
 			case Ioctl::Shorten: {
 				if (memcmp(message->ioctl.buffer_in, FILE_MODULE_NAME, FILE_MODULE_NAME_LENGTH))
-					return -1;
+					return Errors::Unrecognized;
 				Dealloc(Long_Path);
 				Long_Path = Alloc(message->ioctl.length_in);
 				if (Long_Path) {
 					memcpy(Long_Path, (u8*)(message->ioctl.buffer_in)+FILE_MODULE_NAME_LENGTH, message->ioctl.length_in-FILE_MODULE_NAME_LENGTH);
 					memcpy(message->ioctl.buffer_io, FILE_MODULE_NAME SHORT_NAME, FILE_MODULE_NAME_LENGTH+strlen(SHORT_NAME)+1);
 					os_sync_after_write(message->ioctl.buffer_io, FILE_MODULE_NAME_LENGTH+strlen(SHORT_NAME)+1);
-					return 1;
+					return Errors::Success;
 				}
-				return -1; }
+				return Errors::OutOfMemory; }
 			case Ioctl::Log: {
-				if (LogFS >= 0 && Mounted[LogFS] && message->ioctl.length_in) {
+				if (LogFS >= 0 && Mounted[LogFS] && message->ioctl.length_in)
 					return Mounted[LogFS]->Log(message->ioctl.buffer_in, message->ioctl.length_in);
-				}
-				return 0; }
+				return Errors::Success; }
 			default:
 				return -1;
 		}
@@ -323,6 +327,10 @@ namespace ProxiIOS { namespace Filesystem {
 					Mounted[index]->IdleTick();
 			}
 			os_restart_timer(Idle_Timer, FSIDLE_TICK, 0);
+			ack = false;
+			return true;
+		} else if (message == FSRTC_MSG) {
+			RTC_Update();
 			ack = false;
 			return true;
 		}

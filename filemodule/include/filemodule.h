@@ -62,6 +62,8 @@ namespace ProxiIOS { namespace Filesystem {
 			Shorten			= IOCTL_Shorten,
 			// Emit a log buffer
 			Log				= IOCTL_Log,
+			// Set RTC epoch
+			Epoch			= IOCTL_Epoch,
 		};
 	}
 
@@ -138,7 +140,7 @@ namespace ProxiIOS { namespace Filesystem {
 			virtual int NextDir(FileInfo* dir, char* dirname, Stats* st) { return -1; };
 			virtual int CloseDir(FileInfo* dir) { return -1; };
 			virtual int IdleTick() { return -1; };
-			virtual int Log(void* buffer, int length) { return 0; };
+			virtual int Log(const void* buffer, int length) { return 0; };
 	};
 
 	class Filesystem : public ProxiIOS::Module

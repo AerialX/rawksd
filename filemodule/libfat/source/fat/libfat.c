@@ -141,6 +141,27 @@ void fatUnmount (const char* name) {
 	disc->shutdown();
 }
 
+void fatSync (const char* name) {
+	devoptab_t *devops;
+	PARTITION* partition;
+
+	if (!name)
+		return;
+
+	devops = (devoptab_t*)GetDeviceOpTab (name);
+	if (!devops) {
+		return;
+	}
+
+	if (devops->open_r != dotab_fat.open_r) {
+		return;
+	}
+
+	partition = (PARTITION*)devops->deviceData;
+	if (partition->cache)
+		_FAT_cache_flush(partition->cache);
+}
+
 bool fatInit (uint32_t cacheSize, bool setAsDefaultDevice) {
 	int i;
 	int defaultDevice = -1;

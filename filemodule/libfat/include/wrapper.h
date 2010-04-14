@@ -36,7 +36,7 @@ s32 FAT_Stat(const char *path, struct stat *stats);
 s32 FAT_GetVfsStats(const char *path, void *stats);
 s32 FAT_GetFileStats(s32 fd, fstats *stats);
 s32 FAT_GetUsage(const char *dirpath, u64 *size, u32 *files);
-s32 FAT_Sync(s32 fd);
+s32 FAT_Flush(s32 fd);
 s32 FAT_OpenDir(const char* path);
 s32 FAT_NextDir(s32 state, char* filename, struct stat* st);
 s32 FAT_CloseDir(s32 dir);

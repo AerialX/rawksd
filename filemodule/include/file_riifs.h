@@ -130,7 +130,7 @@ namespace ProxiIOS { namespace Filesystem {
 			int CloseDir(FileInfo* dir);
 
 			int IdleTick();
-			int Log(void* buffer, int length);
+			int Log(const void* buffer, int length);
 
 #ifdef RIIFS_LOCAL_DIRNEXT
 			int NextDirCache(RiiFileInfo* dir, char* filename, Stats* st);

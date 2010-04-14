@@ -62,6 +62,8 @@ int FatHandler::Mount(const void* options, int length)
 
 	strcat(Name, ":/");
 
+	IdleCount = 0;
+
 	return Errors::Success;
 }
 
@@ -69,6 +71,7 @@ int FatHandler::Unmount()
 {
 	Name[strlen(Name) - 1] = '\0'; // Get rid of the '/'
 	fatUnmount(Name);
+	IdleCount = -1;
 	return 0;
 }
 
@@ -86,6 +89,8 @@ FileInfo* FatHandler::Open(const char* path, int mode)
 	} else
 		ret = FAT_Open(path, mode);
 
+	IdleCount = 0;
+
 	if (ret < 0)
 		return null;
 
@@ -94,11 +99,13 @@ FileInfo* FatHandler::Open(const char* path, int mode)
 
 int FatHandler::Read(FileInfo* file, u8* buffer, int length)
 {
+	IdleCount = 0;
 	return FAT_Read(((FatFileInfo*)file)->File, buffer, length);
 }
 
 int FatHandler::Write(FileInfo* file, const u8* buffer, int length)
 {
+	IdleCount = 0;
 	return FAT_Write(((FatFileInfo*)file)->File, (void*)buffer, length);
 }
 
@@ -114,13 +121,15 @@ int FatHandler::Tell(FileInfo* file)
 
 int FatHandler::Sync(FileInfo* file)
 {
-	return FAT_Sync(((FatFileInfo*)file)->File);
+	IdleCount = 0;
+	return FAT_Flush(((FatFileInfo*)file)->File);
 }
 
 int FatHandler::Close(FileInfo* file)
 {
 	int ret = FAT_Close(((FatFileInfo*)file)->File);
 	delete file;
+	IdleCount = 0;
 	return ret;
 }
 
@@ -141,6 +150,7 @@ int FatHandler::CreateFile(const char* path)
 	chdir(Name);
 
 	int fd = FAT_Open(path, O_CREAT);
+	IdleCount = 0;
 	if (fd < 0)
 		return fd;
 	FAT_Close(fd);
@@ -150,21 +160,21 @@ int FatHandler::CreateFile(const char* path)
 int FatHandler::Delete(const char* path)
 {
 	chdir(Name);
-
+	IdleCount = 0;
 	return FAT_Delete(path);
 }
 
 int FatHandler::Rename(const char* path, const char* destination)
 {
 	chdir(Name);
-
+	IdleCount = 0;
 	return FAT_Rename(path, destination);
 }
 
 int FatHandler::CreateDir(const char* path)
 {
 	chdir(Name);
-
+	IdleCount = 0;
 	return FAT_CreateDir(path);
 }
 
@@ -173,7 +183,7 @@ FileInfo* FatHandler::OpenDir(const char* path)
 	chdir(Name);
 
 	int fd = FAT_OpenDir(path);
-
+	IdleCount = 0;
 	if (fd < 0)
 		return null;
 
@@ -194,7 +204,20 @@ int FatHandler::CloseDir(FileInfo* dir)
 {
 	int ret = FAT_CloseDir(((FatFileInfo*)dir)->File);
 	delete dir;
+	IdleCount = 0;
 	return ret;
+}
+
+int FatHandler::IdleTick()
+{
+	if (IdleCount < 0)
+		return -1;
+
+	if (IdleCount++ > (FAT_IDLE_TIME/FSIDLE_TICK)) {
+		fatSync(Name);
+		IdleCount = 0;
+	}
+	return 0;
 }
 
 } }

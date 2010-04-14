@@ -439,7 +439,7 @@ namespace ProxiIOS { namespace Filesystem {
 		return 0;
 	}
 
-	int RiiHandler::Log(void* buffer, int length)
+	int RiiHandler::Log(const void* buffer, int length)
 	{
 		if (ServerVersion >= 0x04)
 		{

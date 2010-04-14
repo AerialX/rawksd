@@ -177,14 +177,14 @@ s32 FAT_Write(s32 fd, void *buffer, u32 len)
 	return ret;
 }
 
-s32 FAT_Sync(s32 fd)
+s32 FAT_Flush(s32 fd)
 {
 	s32 ret;
 
 	/* Clear error code */
 	fReent._errno = 0;
 
-	/* Write file */
+	/* Sync file */
 	ret = _FAT_fsync_r(&fReent, fd);
 	if (ret < 0)
 		ret = __FAT_GetError();

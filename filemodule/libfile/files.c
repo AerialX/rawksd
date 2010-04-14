@@ -31,8 +31,16 @@ static int file_fd = -1;
 
 int File_Init()
 {
-	if (file_fd < 0)
+	if (file_fd < 0) {
 		file_fd = os_open(FILE_MODULE_NAME, 0);
+#ifdef GEKKO
+		if (file_fd >= 0) {
+			time_t epoch = time(NULL);
+			memcpy(ioctlbuffer, &epoch, sizeof(time_t));
+			os_ioctl(file_fd, IOCTL_Epoch, ioctlbuffer, sizeof(time_t), NULL, 0);
+		}
+#endif
+	}
 
 	return file_fd;
 }
