@@ -12,7 +12,7 @@ const string Connection::FileIdPath = "/mnt/identifier";
 static void AcceptClient(string Root, TcpClient *client)
 {
 	Connection *connection = new Connection(Root, client);
-	void *new_thread = Thread_Create(connection->Run, connection);
+	void *new_thread = Thread_Create((void*)connection->Run, connection);
 	connection->DebugPrint("Connection Established");
 	GetLock(ConnectionsLock);
 	Connections.push_back(connection);
@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
 	else
 	{
 		char work_dir[1024];
-		_getcwd(work_dir, sizeof(work_dir));
+		getcwd(work_dir, sizeof(work_dir));
 		Root = work_dir;
 	}
 
@@ -65,14 +65,14 @@ int main(int argc, char* argv[])
 	NetworkInit();
 	ConnectionsLock = CreateLock();
 
-	TcpListener *listener = NewTcpListener(port);
+	TcpListener *listener = new TcpListener(port);
 	if (listener->Start()<0) {
 		cout << "Couldn't start listener, aborting..." << endl;
 		delete listener;
 		return -1;
 	}
 
-	void *timeout = Thread_Create(TimeoutThread, listener);
+	void *timeout = Thread_Create((void*)TimeoutThread, listener);
 	Thread_Start(timeout);
 
 	cout << "RiiFS C++ Server is now ready for connections on " << listener->LocalEndPoint << endl;
@@ -81,6 +81,320 @@ int main(int argc, char* argv[])
 		AcceptClient(Root, listener->AcceptTcpClient());
 
 	return 0;
+}
+
+FileInfo::FileInfo(string path) :
+FullName(path),
+Length(0),
+Exists(false)
+{
+	struct stat st;
+	if (stat(path.c_str(), &st)!=0)
+		return;
+
+	Length = st.st_size;
+	Exists = true;
+	Name = path.substr(path.find_last_of("/")+1);
+}
+
+TcpClient::TcpClient(SOCKET s, string ep)
+{
+	RemoteEndPoint= ep;
+	sock = s;
+	Connected = true;
+}
+	
+TcpClient::~TcpClient()
+{
+	if (Connected)
+	{
+		Close();
+	}
+	closesocket(sock);
+}
+
+void TcpClient::Close()
+{
+	if (Connected) {
+		Connected = false;
+		shutdown(sock, 2);
+	}
+}
+
+int TcpClient::Read(void *data, int len)
+{
+	if (!len || !Connected)
+		return 0;
+	int ret = recv(sock, (char*)data, len, 0);
+	if (ret <= 0)
+	{
+		Connected = false;
+		return 0;
+	}
+	return ret;
+}
+
+int TcpClient::Write(void *data, int len)
+{
+	if (!len || !Connected)
+		return 0;
+	int ret = send(sock, (const char*)data, len, 0);
+	if (ret <= 0)
+	{
+		Connected = false;
+		return 0;
+	}
+	return ret;
+}
+
+int TcpClient::Read(ofstream *dst, int len)
+{
+	u64 read = 0;
+	while (read < len) {
+		int ret = 0;
+		ret = Read(buffer, MIN(TCP_BUFFER_LEN, len-read));
+		if (ret <= 0)
+			break;
+
+		dst->write(buffer, ret);
+
+		read += (u64)read;
+	}
+
+	return (int)read;
+}
+
+int TcpClient::Write(ifstream *src, int len)
+{
+	u64 read=0;
+	while (read < len) {
+		int ret;
+		src->read(buffer, MIN(TCP_BUFFER_LEN, len-read));
+		ret = src->gcount();
+
+		Write(buffer, ret);
+
+		read += ret;
+
+		if (!(*src))
+			break;
+	}
+
+	return (int)read;
+}
+
+TcpListener::TcpListener(int _port) : port(_port)
+{
+	SOCKADDR_IN saddr;
+	socklen_t host_len = sizeof(saddr);
+	memset(&saddr, 0, sizeof(saddr));
+	saddr.sin_port = htons(port);
+	saddr.sin_family = AF_INET;
+	saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	listen_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	bind(listen_socket, (SOCKADDR*)&saddr, sizeof(saddr));
+	if (getsockname(listen_socket, (SOCKADDR*)&saddr, &host_len)==0 && host_len>0)
+		LocalEndPoint = ip_to_string(ntohl(saddr.sin_addr.s_addr), port);
+}
+
+int TcpListener::Start()
+{
+	int broadcast_opt = 1;
+	SOCKADDR_IN saddr;
+	memset(&saddr, 0, sizeof(saddr));
+	// open udp port 1137 and listen for broadcast messages
+	locate_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (locate_socket < 0)
+		return -1;
+
+	if (setsockopt(locate_socket, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast_opt, sizeof(int)) < 0)
+		return -1;
+	saddr.sin_family = AF_INET;
+	saddr.sin_port = htons(1137);
+	saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	if (bind(locate_socket, (SOCKADDR*)&saddr, sizeof(saddr)) < 0)
+		return -1;
+
+	return listen(listen_socket, SOMAXCONN); // listen returns SOCKET_ERROR(-1) on error
+}
+
+// wait for up to 15 seconds for a "search" datagram
+void TcpListener::CheckForBroadcast()
+{
+	fd_set to_read;
+	struct timeval timeout;
+	SOCKADDR_IN saddr;
+	socklen_t host_len;
+	char data[4];
+
+	while(1)
+	{
+		int recv_ret;
+		FD_ZERO(&to_read);
+		FD_SET(locate_socket, &to_read);
+		timeout.tv_sec = 15;
+		timeout.tv_usec = 0;
+		recv_ret = select((int)locate_socket+1, &to_read, NULL, NULL, &timeout);
+		if (recv_ret<=0) // 0(timeout) or SOCKET_ERROR(-1)
+			return;
+
+		host_len = sizeof(saddr);
+		memset(data, 0xFF, sizeof(data));
+		recv_ret = recvfrom(locate_socket, data, sizeof(data), 0, (SOCKADDR*)&saddr, &host_len);
+		if ((recv_ret==4 || (recv_ret<0 && MSG_TOO_BIG)) && be32(data)==Option::Ping)
+		{
+			// reply with the actual server port
+			unsigned int nport = htonl(port);
+			cout << "Broadcast ping from " << ip_to_string(ntohl(saddr.sin_addr.s_addr), ntohs(saddr.sin_port)) << ", replying with port " << port << endl;
+			memcpy(data, &nport, sizeof(int));
+			host_len = sendto(locate_socket, data, sizeof(data), 0, (SOCKADDR*)&saddr, host_len);
+		}
+	}
+}
+
+TcpClient* TcpListener::AcceptTcpClient()
+{
+	SOCKADDR_IN host;
+	socklen_t host_len = sizeof(host);
+	SOCKET new_sock;
+
+	new_sock = accept(listen_socket, (SOCKADDR*)&host, &host_len);
+	if (new_sock < 0)
+		return NULL;
+
+	return new TcpClient(new_sock, ip_to_string(ntohl(host.sin_addr.s_addr), host.sin_port));
+}
+
+void Thread_Sleep(int secs)
+{
+	struct timeval timeout;
+	timeout.tv_sec = secs;
+	timeout.tv_usec = 0;
+	select(0, NULL, NULL, NULL, &timeout);
+}
+
+string ip_to_string(unsigned int hostip, unsigned short port)
+{
+	ostringstream ep;
+	ep << (hostip>>24) << '.' << ((hostip>>16)&0xFF) << '.' << ((hostip>>8)&0xFF) << '.' << (hostip&0xFF) << ':' << port;
+	return ep.str();
+}
+
+Stat::Stat(FileInfo file)
+{
+	Device = 0;
+	vector<string>::iterator iter = find(IDs.begin(), IDs.end(), file.FullName);
+	Identifier = iter - IDs.begin();
+	if (iter == IDs.end())
+		IDs.push_back(file.FullName);
+	Size = file.Length;
+	Mode = S_IFREG;
+	Name = file.Name;
+}
+
+Stat::Stat(DirectoryInfo* directory)
+{
+	Device = 0;
+	Identifier = 0;
+	Size = 0;
+	Mode = S_IFREG | S_IFDIR;
+	Name = directory->Name;
+}
+
+void Stat::Write(TcpClient *Client)
+{
+	u64 beIdentifier = be64((unsigned char*)&Identifier);
+	u64 beSize = be64((unsigned char*)&Size);
+	int beDevice = be32((unsigned char*)&Device);
+	int beMode = be32((unsigned char*)&Mode);
+	Client->Write(&beIdentifier);
+	Client->Write(&beSize);
+	Client->Write(&beDevice);
+	Client->Write(&beMode);
+}
+
+Connection::Connection(string root, TcpClient *client) :
+Root(root),
+Client(client)
+{
+	OpenFileFD = 1;
+	LastPing = time(NULL);
+	Name = Client->RemoteEndPoint;
+}
+
+Connection::~Connection()
+{
+	GetLock(ConnectionsLock);
+	Close();
+	Connections.remove(this);
+	ReleaseLock(ConnectionsLock);
+}
+
+void Connection::Run(void *_p)
+{
+	Connection *p = (Connection*)_p;
+	while (p->Client && p->Client->Connected)
+	{
+		if (!p->WaitForAction())
+			break;
+	}
+	delete p;
+}
+
+vector<unsigned char> Connection::GetData(int size)
+{
+	vector<unsigned char> data(size);
+	unsigned char *buffer = new unsigned char[size];
+	int read = 0;
+	while (Client && read < size)
+	{
+		int readed = Client->Read(buffer+read, size-read);
+		if (readed<=0)
+			break;
+		read += readed;
+	}
+	if (read)
+		data.assign(buffer, buffer+read);
+	data.push_back(0);
+	delete[] buffer;
+	return data;
+}
+
+string Connection::GetPath()
+{
+	string path = GetPath(Options[Option::Path]);
+	return path;
+}
+
+string Connection::GetPath(vector<unsigned char> data)
+{
+	if (data.size()==0)
+		return "";
+	string path((char*)&data[0]);
+	if (!path.compare(0, FileIdPath.length(), FileIdPath)) {
+		u64 id;
+		istringstream filename(path.substr(FileIdPath.length()+1, 16));
+		filename >> hex >> id;
+		if (Stat::IDs.size() > (int)id)
+			return Stat::IDs[(int)id];
+	}
+	if (path[0] == '/')
+		path = path.substr(1);
+	if (path[path.length()-1] == '/')
+		path = path.substr(0, path.length()-1);
+	return Root + path;
+}
+
+unsigned int Connection::GetBE32()
+{
+	vector<unsigned char> data = GetData(4);
+	return be32(data);
+}
+
+unsigned int Connection::GetFD()
+{
+	return be32(Options[Option::File]);
 }
 
 void Connection::DebugPrint(string text)
@@ -109,38 +423,21 @@ void Connection::Close()
 	delete tmpClient;
 }
 
-Connection::Connection(string root, TcpClient *client) :
-Root(root),
-Client(client)
+void Connection::Return(int value)
 {
-	OpenFileFD = 1;
-	LastPing = time(NULL);
-	Name = Client->RemoteEndPoint;
-}
-
-void Connection::Run(void *_p)
-{
-	Connection *p = (Connection*)_p;
-	while (p->Client && p->Client->Connected)
-	{
-		if (!p->WaitForAction())
-			break;
-	}
-	delete p;
-}
-
-Connection::~Connection()
-{
-	Close();
-	GetLock(ConnectionsLock);
-	Connections.remove(this);
-	ReleaseLock(ConnectionsLock);
+	ostringstream s;
+	s << "\tReturn " << value;
+	DebugPrint(s.str());
+	value = be32(((unsigned char*)&value));
+	Client->Write(&value);
 }
 
 bool Connection::WaitForAction()
 {
 	ostringstream dprint;
 	Action::Enum action = (Action::Enum)GetBE32();
+	if (Client==NULL || !Client->Connected)
+		return false;
 	LastPing = time(NULL);
 
 	switch (action)
@@ -195,7 +492,7 @@ bool Connection::WaitForAction()
 					DebugPrint(dprint.str());
 					
 					int fd = -1;
-					int fmode = ios_base::binary; // no more ios_base::nocreate, so O_CREAT is ignored here
+					ios_base::openmode fmode = ios_base::binary; // no more ios_base::nocreate, so O_CREAT is ignored here
 					if (mode & O_WRONLY)
 						fmode |= ios_base::out;
 					else if (mode & O_RDWR)
@@ -257,7 +554,18 @@ bool Connection::WaitForAction()
 				case Command::FileSeek: {
 					int fd = GetFD();
 					int where = be32(Options[Option::SeekWhere]);
-					int whence = be32(Options[Option::SeekWhence]);
+					ios_base::seekdir whence;
+					switch(be32(Options[Option::SeekWhence])) {
+						case 0:
+							whence = ios_base::beg;
+							break;
+						case 2:
+							whence = ios_base::end;
+							break;
+						//case 1:
+						default:
+							whence = ios_base::cur;
+					}
 					dprint << "File_Seek(" << fd << ", " << where << ", " << whence << ");";
 					DebugPrint(dprint.str());
 					if (!OpenFiles.count(fd))
@@ -349,12 +657,12 @@ bool Connection::WaitForAction()
 					DebugPrint(dprint.str());
 					FileInfo file(path);
 					if (file.Exists) {
-						_unlink(path.c_str());
+						unlink(path.c_str());
 						Return(1);
 					} else {
 						DirectoryInfo* dir = CreateDirectoryInfo(path);
 						if (dir->Exists) {
-							_rmdir(path.c_str());
+							rmdir(path.c_str());
 							Return(1);
 						} else
 							Return(0);
@@ -405,7 +713,7 @@ bool Connection::WaitForAction()
 							stat = dir->GetNext();
 						}
 						pair<vector<Stat>, int> p(stats, 0);
-						OpenDirs.insert(map<int, pair<vector<Stat>, int>>::value_type(fd, p));
+						OpenDirs.insert(map<int, pair<vector<Stat>, int> >::value_type(fd, p));
 
 						Return (fd);
 					}
@@ -460,150 +768,7 @@ bool Connection::WaitForAction()
 			break;
 		}
 		default:
-			break;
+			return true;
 	}
 	return true;
-}
-
-string Connection::GetPath()
-{
-	string path = GetPath(Options[Option::Path]);
-	return path;
-}
-
-string Connection::GetPath(vector<unsigned char> data)
-{
-	if (data.size()==0)
-		return "";
-	string path((char*)&data[0]);
-	if (!path.compare(0, FileIdPath.length(), FileIdPath)) {
-		u64 id;
-		istringstream filename(path.substr(FileIdPath.length()+1, 16));
-		filename >> hex >> id;
-		if (Stat::IDs.size() > (int)id)
-			return Stat::IDs[(int)id];
-	}
-	if (path[0] == '/')
-		path = path.substr(1);
-	if (path[path.length()-1] == '/')
-		path = path.substr(0, path.length()-1);
-	return Root + path;
-}
-
-unsigned int Connection::GetFD()
-{
-	return be32(Options[Option::File]);
-}
-
-Stat::Stat(FileInfo file)
-{
-	Device = 0;
-	vector<string>::iterator iter = find(IDs.begin(), IDs.end(), file.FullName);
-	Identifier = iter - IDs.begin();
-	if (iter == IDs.end())
-		IDs.push_back(file.FullName);
-	Size = file.Length;
-	Mode = S_IFREG;
-	Name = file.Name;
-}
-
-Stat::Stat(DirectoryInfo* directory)
-{
-	Device = 0;
-	Identifier = 0;
-	Size = 0;
-	Mode = S_IFREG | S_IFDIR;
-	Name = directory->Name;
-}
-
-void Stat::Write(TcpClient *Client)
-{
-	u64 beIdentifier = be64((unsigned char*)&Identifier);
-	u64 beSize = be64((unsigned char*)&Size);
-	int beDevice = be32((unsigned char*)&Device);
-	int beMode = be32((unsigned char*)&Mode);
-	Client->Write(&beIdentifier);
-	Client->Write(&beSize);
-	Client->Write(&beDevice);
-	Client->Write(&beMode);
-}
-
-void Connection::Return(int value)
-{
-	ostringstream s;
-	s << "\tReturn " << value;
-	DebugPrint(s.str());
-	value = be32(((unsigned char*)&value));
-	Client->Write(&value);
-}
-
-vector<unsigned char> Connection::GetData(int size)
-{
-	vector<unsigned char> data(size);
-	unsigned char *buffer = new unsigned char[size];
-	int read = 0;
-	while (Client && read < size)
-	{
-		int readed = Client->Read(buffer+read, size-read);
-		if (readed<=0)
-			break;
-		read += readed;
-	}
-	if (read)
-		data.assign(buffer, buffer+read);
-	data.push_back(0);
-	delete[] buffer;
-	return data;
-}
-
-unsigned int Connection::GetBE32()
-{
-	vector<unsigned char> data = GetData(4);
-	return be32(data);
-}
-
- // 2MB buffer
-#define BUFFER_LEN 0x400*0x400*2
-int TcpClient::Read(ofstream *dst, int len)
-{
-	char *buffer = new char[BUFFER_LEN];
-
-	u64 read = 0;
-	while (read < len) {
-		int ret = 0;
-		ret = Read(buffer, min(BUFFER_LEN, len-read));
-		if (ret <= 0)
-			break;
-
-		dst->write(buffer, ret);
-
-		read += (u64)read;
-	}
-
-	delete[] buffer;
-
-	return (int)read;
-}
-
-int TcpClient::Write(ifstream *src, int len)
-{
-	char *buffer = new char[BUFFER_LEN];
-
-	u64 read=0;
-	while (read < len) {
-		int ret = 0;
-		src->read(buffer, min(BUFFER_LEN, len-read));
-		ret = src->gcount();
-
-		Write(buffer, ret);
-
-		if (!(*src))
-			break;
-
-		read += ret;
-	}
-
-	delete[] buffer;
-
-	return (int)read;
 }

@@ -4,6 +4,8 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <ctype.h>
+#include <string.h>
+#include <fcntl.h>
 
 #include <algorithm>
 #include <string>
@@ -19,13 +21,38 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <fcntl.h>
 #include <direct.h>
+#include <winsock2.h>
 
 #define THREAD __stdcall
+#define getcwd _getcwd
+#define unlink _unlink
+#define rmdir _rmdir
+#define stat _stat
+#define MIN(a, b) min(a, b)
+#define MSG_TOO_BIG (WSAGetLastError()==WSAEMSGSIZE)
 
 typedef unsigned __int64 u64;
 typedef HANDLE OSLock;
+typedef int socklen_t;
+
+#else
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+#define THREAD
+#define _mkdir(a) mkdir(a, 0777)
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#define MSG_TOO_BIG 0
+#define closesocket close
+
+typedef unsigned long long u64;
+typedef void* OSLock;
+typedef int SOCKET;
+typedef struct sockaddr_in SOCKADDR_IN;
+typedef struct sockaddr SOCKADDR;
 
 #endif
 
@@ -60,33 +87,43 @@ public:
 
 DirectoryInfo* CreateDirectoryInfo(string); 
 
+// 2MB buffer
+#define TCP_BUFFER_LEN 0x400*0x400*2
+
 class TcpClient
 {
+private:
+	char buffer[TCP_BUFFER_LEN];
+	SOCKET sock;
 public:
 	bool Connected;
 	string RemoteEndPoint;
 
-	virtual void Close()=0;
-	virtual int Write(void *data, int len)=0;
-	virtual int Read(void *data, int len)=0;
-	template<class Type> int Write(Type *a)	{return Write((void*)a, sizeof(Type));}
-	int Write(ifstream*, int);
+	TcpClient(SOCKET s, string ep);
+	~TcpClient();
+	void Close();
+	int Read(void *data, int len);
+	int Write(void *data, int len);
 	int Read(ofstream*, int);
+	int Write(ifstream*, int);
+	template<class Type> int Write(Type *a)	{return Write((void*)a, sizeof(Type));}
 
-	TcpClient(string ep) : RemoteEndPoint(ep) {}
-	virtual ~TcpClient() {}
 };
 
 class TcpListener
 {
+private:
+	SOCKET listen_socket;
+	SOCKET locate_socket;
 public:
+	unsigned short port;
 	string LocalEndPoint;
-	virtual TcpClient *AcceptTcpClient()=0;
-	virtual int Start()=0;
-	virtual void CheckForBroadcast()=0;
-};
 
-TcpListener *NewTcpListener(int port);
+	TcpListener(int port);
+	int Start();
+	void CheckForBroadcast();
+	TcpClient *AcceptTcpClient();
+};
 
 void NetworkInit();
 void Thread_Sleep(int);
@@ -95,6 +132,7 @@ void Thread_Start(void*);
 OSLock CreateLock();
 void GetLock(OSLock);
 void ReleaseLock(OSLock);
+string ip_to_string(unsigned int ip, unsigned short port);
 
 class Action
 {
@@ -180,9 +218,9 @@ private:
 	static const int DIRNEXT_CACHE_SIZE = 0x1000;
 public:
 	string Root;
-	map<Option::Enum, vector<unsigned char>> Options;
+	map<Option::Enum, vector<unsigned char> > Options;
 	map<int, fstream*> OpenFiles;
-	map<int, pair<vector<Stat>, int>> OpenDirs;
+	map<int, pair<vector<Stat>, int> > OpenDirs;
 	int OpenFileFD;
 
 	time_t LastPing;
@@ -191,15 +229,15 @@ public:
 	TcpClient *Client;
 
 	Connection(string, TcpClient*);
+	~Connection();
 	static void THREAD Run(void*);
+	vector<unsigned char> GetData(int);
 	string GetPath();
 	string GetPath(vector<unsigned char>);
+	unsigned int GetBE32();
 	unsigned int GetFD();
 	void DebugPrint(string);
-	~Connection();
 	void Close();
-	bool WaitForAction();
 	void Return(int);
-	vector<unsigned char> GetData(int);
-	unsigned int GetBE32();
+	bool WaitForAction();
 };
