@@ -500,17 +500,14 @@ bool Connection::WaitForAction()
 					else
 						fmode |= ios_base::in;
 
-					if (mode & O_TRUNC)
+					if (mode & ARM_O_TRUNC)
 						fmode |= ios_base::trunc;
-					else if (mode & O_APPEND)
+					else if (mode & ARM_O_APPEND)
 						fmode |= ios_base::app;
 
 					fstream *new_stream = new fstream(path.c_str(), fmode);
 					if (new_stream->fail())
-					{
-						fd = -1;
 						delete new_stream;
-					}
 					else
 					{
 						fd = OpenFileFD++;
