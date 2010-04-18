@@ -169,7 +169,10 @@ namespace ProxiIOS { namespace Filesystem {
 	{
 		int read = 0;
 		while (read < size) {
-			int ret = net_recv(socket, data + read, MIN(0x400, size - read), opts);
+			// don't attempt to read more than 0x1000 - IOS will only return 0x1C84
+			// bytes max, and often returns less which results in the pointer
+			// becoming non 32 byte aligned.
+			int ret = net_recv(socket, data + read, MIN(0x1000, size - read), opts);
 
 			if (ret < 0)
 				return ret;

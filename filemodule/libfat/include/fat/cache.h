@@ -41,6 +41,7 @@
 
 #define PAGE_SECTORS 64
 #define CACHE_PAGE_SIZE (BYTES_PER_READ * PAGE_SECTORS)
+#define EVICTION_HISTORY 20
 
 typedef struct {
 	sec_t        sector;
@@ -51,11 +52,18 @@ typedef struct {
 } CACHE_ENTRY;
 
 typedef struct {
+	sec_t        sector;
+	unsigned int count;
+	unsigned int last_access;
+} EVICTION_ENTRY;
+
+typedef struct {
 	const DISC_INTERFACE* disc;
 	sec_t		          endOfPartition;
 	unsigned int          numberOfPages;
 	unsigned int          sectorsPerPage;
 	CACHE_ENTRY*          cacheEntries;
+	EVICTION_ENTRY        evictions[EVICTION_HISTORY];
 } CACHE;
 
 /*

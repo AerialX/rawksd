@@ -69,7 +69,6 @@ CACHE* _FAT_cache_constructor (unsigned int numberOfPages, unsigned int sectorsP
 	cache->numberOfPages = numberOfPages;
 	cache->sectorsPerPage = sectorsPerPage;
 
-
 	cacheEntries = (CACHE_ENTRY*) _FAT_mem_allocate ( sizeof(CACHE_ENTRY) * numberOfPages);
 	if (cacheEntries == NULL) {
 		_FAT_mem_free (cache);
@@ -82,6 +81,12 @@ CACHE* _FAT_cache_constructor (unsigned int numberOfPages, unsigned int sectorsP
 		cacheEntries[i].last_access = 0;
 		cacheEntries[i].dirty = false;
 		cacheEntries[i].cache = (uint8_t*) _FAT_mem_align ( sectorsPerPage * BYTES_PER_READ );
+	}
+
+	for (i=0; i < EVICTION_HISTORY; i++) {
+		cache->evictions[i].sector = CACHE_FREE;
+		cache->evictions[i].count = 0;
+		cache->evictions[i].last_access = 0;
 	}
 
 	cache->cacheEntries = cacheEntries;
@@ -110,6 +115,18 @@ static u32 accessTime(){
 	return accessCounter;
 }
 
+static int _FAT_cache_getEvictionIndex(CACHE *cache, sec_t sector)
+{
+	int i;
+	EVICTION_ENTRY *entries = cache->evictions;
+
+	for(i=0;i<EVICTION_HISTORY;i++) {
+		if (entries[i].sector == sector)
+			return i;
+	}
+
+	return -1;
+}
 
 static CACHE_ENTRY* _FAT_cache_getPage(CACHE *cache,sec_t sector)
 {
@@ -117,22 +134,64 @@ static CACHE_ENTRY* _FAT_cache_getPage(CACHE *cache,sec_t sector)
 	CACHE_ENTRY* cacheEntries = cache->cacheEntries;
 	unsigned int numberOfPages = cache->numberOfPages;
 	unsigned int sectorsPerPage = cache->sectorsPerPage;
+	EVICTION_ENTRY* Evictions = cache->evictions;
 
 	bool foundFree = false;
 	unsigned int oldUsed = 0;
 	unsigned int oldAccess = UINT_MAX;
+	unsigned int oldEvicted = UINT_MAX;
+	unsigned int oldEvictedAccess = 0;
 
 	for(i=0;i<numberOfPages;i++) {
+		int eviction_index = _FAT_cache_getEvictionIndex(cache, cacheEntries[i].sector);
+
 		if(sector>=cacheEntries[i].sector && sector<(cacheEntries[i].sector + cacheEntries[i].count)) {
 			cacheEntries[i].last_access = accessTime();
+			if (eviction_index>=0)
+				Evictions[eviction_index].last_access = cacheEntries[i].last_access;
 			return &(cacheEntries[i]);
 		}
-		
-		if(foundFree==false && (cacheEntries[i].sector==CACHE_FREE || cacheEntries[i].last_access<oldAccess)) {
-			if(cacheEntries[i].sector==CACHE_FREE) foundFree = true;
+
+		if (cacheEntries[i].sector==CACHE_FREE) {
 			oldUsed = i;
-			oldAccess = cacheEntries[i].last_access;
+			foundFree = true;
+			break;
 		}
+
+		if(cacheEntries[i].last_access<oldAccess) {
+			if (eviction_index>=0) {
+				EVICTION_ENTRY *evicted = Evictions+eviction_index;
+				if (evicted->count >= oldEvicted && evicted->last_access >= oldEvictedAccess)
+					continue;
+				oldAccess = UINT_MAX; // set this so any pages without eviction history will be preferred
+				oldEvicted = evicted->count;
+				oldEvictedAccess = evicted->last_access;
+			} else {
+				oldAccess = cacheEntries[i].last_access;
+				oldEvicted = 0; // prefer this page over any with eviction history
+				oldEvictedAccess = 0;
+			}
+			oldUsed = i;
+		}
+	}
+
+	if (foundFree==false) { // something is being evicted, keep track of it
+		int eviction_index = _FAT_cache_getEvictionIndex(cache, cacheEntries[oldUsed].sector);
+
+		if (eviction_index<0) { // no eviction history for this page, overwrite the oldest record
+			oldEvictedAccess = UINT_MAX;
+			for (i=0;i<EVICTION_HISTORY;i++) {
+				if (cache->evictions[i].last_access < oldEvictedAccess) {
+					oldEvictedAccess = Evictions[i].last_access;
+					eviction_index = i;
+				}
+			}
+			Evictions[eviction_index].sector = cacheEntries[oldUsed].sector;
+			Evictions[eviction_index].count = 0;
+		}
+
+		Evictions[eviction_index].count++;
+		Evictions[eviction_index].last_access = accessTime();
 	}
 
 	if(foundFree==false && cacheEntries[oldUsed].dirty==true) {
@@ -181,7 +240,7 @@ bool _FAT_cache_readSectors(CACHE *cache,sec_t sector,sec_t numSectors,void *buf
 /*
 Reads some data from a cache page, determined by the sector number
 */
-bool _FAT_cache_readPartialSector (CACHE* cache, void* buffer, sec_t sector, unsigned int offset, size_t size) 
+bool _FAT_cache_readPartialSector (CACHE* cache, void* buffer, sec_t sector, unsigned int offset, size_t size)
 {
 	sec_t sec;
 	CACHE_ENTRY *entry;
@@ -215,7 +274,7 @@ bool _FAT_cache_readLittleEndianValue (CACHE* cache, uint32_t *value, sec_t sect
 /*
 Writes some data to a cache page, making sure it is loaded into memory first.
 */
-bool _FAT_cache_writePartialSector (CACHE* cache, const void* buffer, sec_t sector, unsigned int offset, size_t size) 
+bool _FAT_cache_writePartialSector (CACHE* cache, const void* buffer, sec_t sector, unsigned int offset, size_t size)
 {
 	sec_t sec;
 	CACHE_ENTRY *entry;
@@ -248,7 +307,7 @@ bool _FAT_cache_writeLittleEndianValue (CACHE* cache, const uint32_t value, sec_
 /*
 Writes some data to a cache page, zeroing out the page first
 */
-bool _FAT_cache_eraseWritePartialSector (CACHE* cache, const void* buffer, sec_t sector, unsigned int offset, size_t size) 
+bool _FAT_cache_eraseWritePartialSector (CACHE* cache, const void* buffer, sec_t sector, unsigned int offset, size_t size)
 {
 	sec_t sec;
 	CACHE_ENTRY *entry;
@@ -266,7 +325,7 @@ bool _FAT_cache_eraseWritePartialSector (CACHE* cache, const void* buffer, sec_t
 	return true;
 }
 
-bool _FAT_cache_writeSectors (CACHE* cache, sec_t sector, sec_t numSectors, const void* buffer) 
+bool _FAT_cache_writeSectors (CACHE* cache, sec_t sector, sec_t numSectors, const void* buffer)
 {
 	sec_t sec;
 	sec_t secs_to_write;

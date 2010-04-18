@@ -651,6 +651,11 @@ s32 net_recvfrom(s32 s, void *mem, s32 len, u32 flags, struct sockaddr *from, so
 
 	if ((u32)mem & 0x1F || (u32)mem < 0x10000000)
 	{
+		u32 head = (32-(u32)mem)&0x1F;
+		// if it's unaligned, only read enough to make the pointer aligned
+		if (head && (u32)mem >= 0x10000000) {
+			len = len < head ? len : head;
+		}
 		message_buf = net_malloc(len);
 		if (message_buf == NULL)
 			return IPC_ENOMEM;

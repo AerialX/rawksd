@@ -52,9 +52,7 @@ int FatHandler::Mount(const void* options, int length)
 	} else
 		strcpy(Name, __fatName);
 
-	// better performance, but requires a lot more memory
-	// if (fatMount(Name, Module->Disk[disk], 0, 12, 16) < 0)
-	if (fatMount(Name, Module->Disk[disk], 0, 5, 4) < 0)
+	if (fatMount(Name, Module->Disk[disk], 0, 5, 8) < 0)
 		return Errors::DiskNotMounted;
 
 	strcpy(MountPoint, "/mnt/");

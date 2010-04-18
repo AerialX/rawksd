@@ -113,7 +113,7 @@ $(OUTPUT).elf: $(TARGET).elf
 	@$(STRIPIOS) $< $@
 	@cp -f $@ ../../launcher/data/$(TARGET).dat
 	
-%.elf: $(OFILES)
+%.elf: $(OFILES) $(LIBS)
 	@echo linking $(notdir $@)
 	@$(LD) -g -o $@ $(OFILES) $(LDFLAGS) $(STYLEFIX)
 	
