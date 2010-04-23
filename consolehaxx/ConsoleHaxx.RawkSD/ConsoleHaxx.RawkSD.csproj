@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{EA64750E-6CC3-4930-9ACC-57AC5CD19B10}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ConsoleHaxx.RawkSD</RootNamespace>
+    <AssemblyName>ConsoleHaxx.RawkSD</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="QueenBeeParser">
+      <HintPath>..\QueenBeeParser.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Audio.cs" />
+    <Compile Include="AudioFormatBeatlesBink.cs" />
+    <Compile Include="AudioFormatBink.cs" />
+    <Compile Include="AudioFormatFFmpeg.cs" />
+    <Compile Include="AudioFormatGH3WiiFSB.cs" />
+    <Compile Include="AudioFormatMogg.cs" />
+    <Compile Include="AudioFormatOgg.cs" />
+    <Compile Include="AudioFormatRB2Bink.cs" />
+    <Compile Include="AudioFormatVGS.cs" />
+    <Compile Include="ChartFormatChart.cs" />
+    <Compile Include="ChartFormatGH1.cs" />
+    <Compile Include="ChartFormatGH2.cs" />
+    <Compile Include="ChartFormatGH3.cs" />
+    <Compile Include="ChartFormatGH4.cs" />
+    <Compile Include="ChartFormatGH5.cs" />
+    <Compile Include="ChartFormatRB.cs" />
+    <Compile Include="FormatData.cs" />
+    <Compile Include="ImportMap.cs" />
+    <Compile Include="MetadataFormatHarmonix.cs" />
+    <Compile Include="MetadataFormatNeversoft.cs" />
+    <Compile Include="PlatformGH1PS2Disc.cs" />
+    <Compile Include="PlatformGH2PS2Disc.cs" />
+    <Compile Include="PlatformGH3WiiDisc.cs" />
+    <Compile Include="PlatformGH4WiiDisc.cs" />
+    <Compile Include="PlatformGH4WiiDLC.cs" />
+    <Compile Include="PlatformGH5WiiDisc.cs" />
+    <Compile Include="PlatformGH5WiiDLC.cs" />
+    <Compile Include="PlatformLocalStorage.cs" />
+    <Compile Include="PlatformRB2360Disc.cs" />
+    <Compile Include="PlatformRB2360DLC.cs" />
+    <Compile Include="PlatformRB2360XNA.cs" />
+    <Compile Include="PlatformRB2WiiDisc.cs" />
+    <Compile Include="PlatformRB2WiiDLC.cs" />
+    <Compile Include="Platforms.cs" />
+    <Compile Include="RawkAudio.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RawkChart.cs" />
+    <Compile Include="RawkSquish.cs" />
+    <Compile Include="PlatformRB2WiiCustomDLC.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ConsoleHaxx.Common\ConsoleHaxx.Common.csproj">
+      <Project>{EA22859F-2A36-43F4-9402-8E78910698D6}</Project>
+      <Name>ConsoleHaxx.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ConsoleHaxx.FreeStyleGames\ConsoleHaxx.FreeStyleGames.csproj">
+      <Project>{8A59E772-C042-45E0-84F8-5F22197538CA}</Project>
+      <Name>ConsoleHaxx.FreeStyleGames</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ConsoleHaxx.Harmonix\ConsoleHaxx.Harmonix.csproj">
+      <Project>{64055A28-36FB-48B9-B8D4-8B3F39D31EB0}</Project>
+      <Name>ConsoleHaxx.Harmonix</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ConsoleHaxx.Neversoft\ConsoleHaxx.Neversoft.csproj">
+      <Project>{BCFE649C-90E8-4BE4-904A-CCB9165740D4}</Project>
+      <Name>ConsoleHaxx.Neversoft</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ConsoleHaxx.Wii\ConsoleHaxx.Wii.csproj">
+      <Project>{E9230C21-6B3D-481B-AB69-0A6958E0B2E9}</Project>
+      <Name>ConsoleHaxx.Wii</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

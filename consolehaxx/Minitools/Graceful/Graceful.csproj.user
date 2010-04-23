@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <StartArguments>Z:\root\media\data\tog\iso\ext\partition1\data\rootR.cpk.ext\sys\FontTexture2.tex</StartArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <StartArguments>Z:\root\media\data\tog\iso\ext\partition1\data\map0R.cpk.ext\mapfile_basiR.cpk.ext\map\tex\basi_d02.tex</StartArguments>
+  </PropertyGroup>
+</Project>
