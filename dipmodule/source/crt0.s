@@ -51,6 +51,27 @@ _start:
 	ldr		r3, =main
 	bx		r3
 
+	.global _FS_ioctl_ret_
+	.thumb_func
+_FS_ioctl_ret_:
+	.code 16
+	.align 2
+
+	ldr r0, = FS_ioctl_vect
+	ldr r0, [r0]
+	cmp r0, #0
+	beq FS_ioctl_ret
+	add r2, r0, #0
+	ldr r1, = FS_ret
+	add r0, r4, #0
+	bl FS_hook_ret
+
+FS_ioctl_ret:
+	ldr r1, = FS_ret
+	ldr r1, [r1]
+	pop {r2}
+FS_hook_ret:
+	bx r2
 
 	.align
 	.pool

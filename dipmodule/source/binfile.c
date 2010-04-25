@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "binfile.h"
-#include "rijndael.h"
 #include "gcutil.h"
 #include "syscalls.h"
 #include "es.h"
@@ -18,6 +17,9 @@
 #define debug_printf(fmt, args...)
 
 #define FSERR_EINVAL	-4
+
+void dlc_aes_decrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len);
+void dlc_aes_encrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len);
 
 int verify_bk(BK_Header *bk)
 {

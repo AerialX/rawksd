@@ -29,24 +29,26 @@ extern "C" {
 #define NUS_URL_BASE "http://nus.cdn.shop.wii.com/ccs/download"
 
 extern "C" {
-	extern u8 certs_dat[];
-	extern u32 certs_dat_size;
-
-	extern u8 banner_tmd_dat[];
-	extern u32 banner_tmd_dat_size;
-	extern u8 banner_tik_dat[];
-	extern u32 banner_tik_dat_size;
+	extern const u8 banner_tmd_dat[];
+	extern const u32 banner_tmd_dat_size;
+	extern const u8 banner_tik_dat[];
+	extern const u32 banner_tik_dat_size;
+	extern const u8 banner_0_dat[];
+	extern const u32 banner_0_dat_size;
+	extern const u8 banner_1_dat[];
+	extern const u32 banner_1_dat_size;
 }
+
+static struct {
+	const u8 *data;
+	const u32 size;
+} banner_datas[2] = {
+	{banner_0_dat, banner_0_dat_size},
+	{banner_1_dat, banner_1_dat_size}
+};
 
 static bool initfat = false;
 static bool initnet = false;
-static const signed_blob* _certs;
-static u32 _certlen;
-static void SetCerts(const signed_blob* certs, u32 certsLength)
-{
-	_certs = certs;
-	_certlen = certsLength;
-}
 
 static bool netinit()
 {
@@ -70,7 +72,6 @@ static bool netinit()
 
 void Installer_Initialize()
 {
-	SetCerts((const signed_blob*)certs_dat, certs_dat_size);
 	printf("\tMounting SD/USB... ");
 	initfat = fatInitDefault();
 	if (!initfat) {
@@ -188,7 +189,7 @@ signed_blob* GetTicket(u64 titleid)
 
 static int InstallTicket(const signed_blob* ticket)
 {
-	return ES_AddTicket(ticket, STD_SIGNED_TIK_SIZE, _certs, _certlen, NULL, 0);
+	return ES_AddTicket(ticket, STD_SIGNED_TIK_SIZE, (signed_blob*)sys_certs, SYS_CERTS_SIZE, NULL, 0);
 }
 
 static int CancelInstall()
@@ -198,7 +199,7 @@ static int CancelInstall()
 
 static int StartInstall(const signed_blob* meta)
 {
-	int ret = ES_AddTitleStart(meta, SIGNED_TMD_SIZE(meta), _certs, _certlen, NULL, 0);
+	int ret = ES_AddTitleStart(meta, SIGNED_TMD_SIZE(meta), (signed_blob*)sys_certs, SYS_CERTS_SIZE, NULL, 0);
 	if (ret < 0)
 		CancelInstall();
 	return ret;
@@ -292,6 +293,10 @@ static bool FakesignTMD(signed_blob* blob)
 int Install(u64 titleid, int version, bool comexploit)
 {
 	int ret;
+	if (!get_certs()) {
+		ERROR("fetching certs", 0);
+		return -1;
+	}
 	signed_blob* meta = GetTMD(titleid, version);
 	signed_blob* newesttmd = GetTMD(titleid);
 	signed_blob* ticket = GetTicket(titleid);
@@ -358,11 +363,17 @@ int Install(u64 titleid, int version, bool comexploit)
 
 static u8* ReadChannelData(int index, u32* size)
 {
+	u8 *ret;
 	char filename[MAXPATHLEN];
 	if (index == 2)
 		strcpy(filename, "/apps/riivolution/boot.dol");
-	else
-		sprintf(filename, "/apps/riivolution/banner.%d", index);
+	else {
+		*size = banner_datas[index].size;
+		ret = (u8*)memalign(0x20, ROUND_UP(*size, 0x20));
+		if (ret)
+			memcpy(ret, banner_datas[index].data, *size);
+		return ret;
+	}
 
 	Stats st;
 	if (File_Stat(filename, &st))
@@ -372,7 +383,7 @@ static u8* ReadChannelData(int index, u32* size)
 		return NULL;
 
 	*size = (u32)st.Size;
-	u8* ret = (u8*)memalign(0x20, ROUND_UP(*size, 0x20));
+	ret = (u8*)memalign(0x20, ROUND_UP(*size, 0x20));
 	if (File_Read(fd, ret, *size) != (int)*size) {
 		free(ret);
 		return NULL;
@@ -413,6 +424,11 @@ int InstallChannel()
 	memcpy(ticket, banner_tik_dat, banner_tik_dat_size);
 	tmd* metatmd = (tmd*)SIGNATURE_PAYLOAD(meta);
 
+	if (!get_certs()) {
+		ERROR("fetching certs", 0);
+		return -1;
+	}
+
 	u32 banner_dat_size[3];
 	u8* banner_dat[3];
 	for (int i = 0; i < 3; i++) {
@@ -423,17 +439,15 @@ int InstallChannel()
 			return -2;
 		}
 
+		metatmd->contents[i].type = 1;
 		metatmd->contents[i].index = i;
 		metatmd->contents[i].cid = i;
 		metatmd->contents[i].size = banner_dat_size[i];
-		if (i == 2) // Only rehash the main.dol
-			SHA1(banner_dat[i], banner_dat_size[i], metatmd->contents[i].hash);
+		SHA1(banner_dat[i], banner_dat_size[i], metatmd->contents[i].hash);
 	}
 
 	if (!forge_sig((u8*)ticket, banner_tik_dat_size) || !forge_sig((u8*)meta, banner_tmd_dat_size))
 		return -3;
-
-	SetCerts((const signed_blob*)certs_dat, certs_dat_size);
 
 	ret = InstallTicket(ticket);
 	if (ret < 0) {

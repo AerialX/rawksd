@@ -285,7 +285,7 @@ static void unpack(const u32 a,u8 *b)
  * Instead of just one ftable[], I could have 4, the other     *
  * 3 pre-rotated to save the ROTL8, ROTL16 and ROTL24 overhead */
 
-void encrypt(u8 *buff)
+static void encrypt(u8 *buff)
 {
     int i,k;
     u32 a[4],b[4],*x,*y,*t;
@@ -347,7 +347,7 @@ void encrypt(u8 *buff)
 	return;
 }
 
-void decrypt(u8 *buff)
+static void decrypt(u8 *buff)
 {
     int i,k;
     u32 a[4],b[4],*x,*y,*t;

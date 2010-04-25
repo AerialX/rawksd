@@ -7,7 +7,7 @@
    extern "C" {
 #endif /* __cplusplus */
 
-/*  0 */ u32       os_thread_create( u32 (*entry)(void* _arg), void* arg, void* stack, u32 stacksize, u32 priority, s32 autostart);
+/*  0 */ int       os_thread_create( u32 (*entry)(void* _arg), void* arg, void* stack_top, u32 stacksize, u32 priority, s32 autostart);
 
 /*  3 */ int       os_get_thread_id(void);
 /*  4 */ int       os_get_process_id(void);
@@ -54,15 +54,13 @@
 
 /* 4B */ void      os_debug_print(u32 flags);
 
-/* 50 */ void      os_syscall_50(u32 unknown);
+/* 50 */ void      os_set_dvd_video(u32 unknown);
 
 /* 56 */ void      os_poke_gpios(u32 reg, u32 value);
 
 /* 63 */ int       os_get_key(int keyid, void* buffer);
 
 void os_puts(char *str); // IOS log
-
-int os_mload(u32 arg0, u32 arg1, u32 arg2, u32 arg3); // mload swi call
 
 #ifdef __cplusplus
    }

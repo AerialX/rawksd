@@ -1,19 +1,20 @@
 #include "dip.h"
+#include "emu.h"
 
 #include <gctypes.h>
 #include <mem.h>
+#include <files.h>
 
-#ifdef DIP_RIIVOLUTION
 static u8 Heapspace[0x42000];
-#endif
-#ifdef DIP_RAWKSD
-static u8 Heapspace[0x1c000];
-#endif
 
 int main()
 {
 	InitializeHeap(Heapspace, sizeof(Heapspace), 8);
 
+	File_Init();
 	ProxiIOS::DIP::DIP dip;
+	ProxiIOS::EMU::EMU emu;
+
+	emu.Loop();
 	return dip.Loop();
 }

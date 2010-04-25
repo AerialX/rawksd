@@ -11,8 +11,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <gpio.h>
-
 #include <files.h>
 
 #include "fileprovider.h"
@@ -31,16 +29,14 @@ struct TemporaryPatch
 namespace ProxiIOS { namespace DIP {
 	DIP::DIP() : ProxyModule("/dev/do", "/dev/di")
 	{
-		File_Init();
-		
 		for (int i = 0; i < MAX_OPEN_FILES; i++)
 			OpenFiles[i] = -1;
-		
+
 		memset(Patches, 0, sizeof(Patches));
 		memset(PatchCount, 0, sizeof(PatchCount));
 		memset(AllocatedPatches, 0, sizeof(AllocatedPatches));
 		Clusters = false;
-		
+
 #ifdef YARR
 		Provider = NULL;
 #endif
@@ -50,31 +46,31 @@ namespace ProxiIOS { namespace DIP {
 
 		LogInit();
 	}
-	
+
 	int DIP::HandleOpen(ipcmessage* message)
 	{
 		if (message->open.mode == OPEN_MODE_BYPASS)
 			return OPEN_MODE_BYPASS;
-		
+
 		int ret = ProxyModule::HandleOpen(message);
 		if (ret < 0)
 			return Errors::OpenProxyFailure;
-		
+
 		return ret;
 	}
-	
+
 	int DIP::AddPatch(int index, void* data)
 	{
 		if (PatchCount[index] == AllocatedPatches[index])
 			if (!Reallocate(index, 1))
 				return -1;
-		
+
 		int size = GetPatchSize(index);
 		memcpy((u8*)Patches[index] + PatchCount[index] * size, data, size);
-		
+
 		return PatchCount[index]++;
 	}
-	
+
 	int DIP::HandleIoctl(ipcmessage* message)
 	{
 		switch (message->ioctl.command) {
@@ -91,12 +87,12 @@ namespace ProxiIOS { namespace DIP {
 				u64 originaloffset = ((u64)message->ioctl.buffer_in[1] << 32) | message->ioctl.buffer_in[2];
 				u64 newoffset = ((u64)message->ioctl.buffer_in[3] << 32) | message->ioctl.buffer_in[4];
 				LogPrintf("IOCTL: AddShift(0x%08x, ?, ?);\n", len);
-				
+
 				Shift shift;
 				shift.Length = len;
 				shift.OriginalOffset = originaloffset >> 2;
 				shift.Offset = newoffset >> 2;
-				
+
 				return AddPatch(PatchType::Shift, &shift);
 			}
 			case Ioctl::AddPatch: {
@@ -106,7 +102,7 @@ namespace ProxiIOS { namespace DIP {
 				u64 offset = ((u64)message->ioctl.buffer_in[2] << 32) | message->ioctl.buffer_in[3];
 				u32 length = message->ioctl.buffer_in[4];
 				PatchPartition = CurrentPartition;
-				
+
 				LogPrintf("IOCTL: AddPatch(0x%08x, 0x%08x%08x, 0x%08x);\n", id, (u32)(offset >> 32), (u32)offset, length);
 
 				if (id < 0)
@@ -117,7 +113,7 @@ namespace ProxiIOS { namespace DIP {
 				//patch.FileOffset = fileoffset;
 				patch.Offset = offset >> 2;
 				patch.Length = length;
-				
+
 				return AddPatch(PatchType::Patch, &patch);
 			}
 			case Ioctl::AddFile: {
@@ -125,9 +121,9 @@ namespace ProxiIOS { namespace DIP {
 				char* filename = (char*)message->ioctl.buffer_in;
 				int len = message->ioctl.length_in;
 				LogPrintf("IOCTL: AddFile(\"%s\");\n", filename);
-				
+
 				FileDesc file;
-				
+
 				if (Clusters) {
 					if (message->ioctl.length_io > 0) {
 						os_sync_before_read(message->ioctl.buffer_io, message->ioctl.length_io);
@@ -145,7 +141,7 @@ namespace ProxiIOS { namespace DIP {
 					file.Filename = new char[len];
 					memcpy(file.Filename, filename, len);
 				}
-				
+
 				return AddPatch(PatchType::File, &file);
 			}
 			case Ioctl::AddEmu: {
@@ -195,16 +191,16 @@ namespace ProxiIOS { namespace DIP {
 					memcpy(tempmessagebufferin, message->ioctl.buffer_in, tempmessage.ioctl.length_in);
 					message = &tempmessage;
 					os_sync_after_write(message, sizeof(ipcmessage));
-					
+
 					for (int i = 0; i < foundshifts; i++) {
 						Shift* shift = shifts[i];
 						s64 offset = pos - ((s64)shift->Offset << 2);
 						message->ioctl.buffer_in[2] = (offset + ((u64)shift->OriginalOffset << 2)) >> 2;
 					}
-					
+
 					os_sync_after_write(message->ioctl.buffer_in, message->ioctl.length_in);
 				}
-				
+
 				Patch* found[MAX_FOUND];
 				int foundpatches = FindPatch(PatchType::Patch, pos, len, (void**)found, MAX_FOUND);
 				if (foundpatches == 0)
@@ -225,7 +221,7 @@ namespace ProxiIOS { namespace DIP {
 						patches[i].Offset = 0;
 					}
 					patches[i].Length = MIN(patches[i].Length, len - patches[i].Offset);
-					
+
 					// Fuck it, too lazy to map every patch
 					if (patches[i].Offset == 0 && patches[i].Length == len)
 						filecover = true;
@@ -240,7 +236,7 @@ namespace ProxiIOS { namespace DIP {
 					if (!ReadFile(found[i]->File, patches[i].FileOffset, (u8*)message->ioctl.buffer_io + patches[i].Offset, patches[i].Length))
 						return 2; // File error
 				}
-				
+
 				return 1;
 			}
 			case Ioctl::ClosePartition:
@@ -250,7 +246,7 @@ namespace ProxiIOS { namespace DIP {
 				return ForwardIoctl(message);
 		}
 	}
-	
+
 	int DIP::HandleIoctlv(ipcmessage* message)
 	{
 		switch (message->ioctlv.command) {
@@ -262,10 +258,9 @@ namespace ProxiIOS { namespace DIP {
 					CurrentPartition = 0;
 				return ret;
 		}
-		
 		return ForwardIoctlv(message);
 	}
-	
+
 	int DIP::GetPatchSize(int index)
 	{
 		switch (index) {
@@ -276,10 +271,10 @@ namespace ProxiIOS { namespace DIP {
 			case PatchType::File:
 				return sizeof(FileDesc);
 		}
-		
+
 		return 0;
 	}
-	
+
 	bool DIP::Reallocate(int index, int toadd)
 	{
 		int size = GetPatchSize(index);
@@ -293,16 +288,16 @@ namespace ProxiIOS { namespace DIP {
 			memcpy(Patches[index], old, size * MIN(PatchCount[index], (u32)allocated));
 			Dealloc(old);
 		}
-		
+
 		AllocatedPatches[index] = allocated;
-		
+
 		return true;
 	}
-	
+
 	int DIP::FindPatch(int index, s64 pos, u32 len, void** found, int limit)
 	{
 		int size = GetPatchSize(index);
-		
+
 		int count = 0;
 		for (u32 i = 0; i < PatchCount[index]; i++) {
 			void* pointer = (u8*)Patches[index] + i * size;
@@ -314,7 +309,7 @@ namespace ProxiIOS { namespace DIP {
 					break;
 			}
 		}
-		
+
 		return count;
 	}
 
@@ -343,12 +338,12 @@ namespace ProxiIOS { namespace DIP {
 				OpenFiles[MAX_OPEN_FILES - 1] = fileid;
 				openindex = MAX_OPEN_FILES - 1;
 			}
-			
+
 			if (Clusters)
 				OpenFds[openindex] = File_Open_ID(file->Cluster, O_RDONLY);
 			else
 				OpenFds[openindex] = File_Open(file->Filename, O_RDONLY);
-			
+
 			if (OpenFds[openindex] < 0) {
 				OpenFiles[openindex] = -1;
 				LogPrintf("0x%08x\n\t\tFile_Open failed!\n", OpenFds[openindex]);
@@ -363,9 +358,9 @@ namespace ProxiIOS { namespace DIP {
 		}
 
 		File_Seek(OpenFds[openindex], offset, SEEK_SET);
-		
+
 		int ret = File_Read(OpenFds[openindex], (u8*)data, length);
-		
+
 		LogPrintf("0x%08x\n", ret);
 
 		if (ret > 0) {
@@ -376,10 +371,10 @@ namespace ProxiIOS { namespace DIP {
 			os_sync_after_write(buffer, length);
 		} else
 			LogPrintf("\t\tFile_Read error!\n");
-		
+
 		return ret >= 0;
 	}
-	
+
 	int DIP::IsFileOpen(s16 fileid)
 	{
 		for (int i = 0; i < MAX_OPEN_FILES; i++)
@@ -387,7 +382,7 @@ namespace ProxiIOS { namespace DIP {
 				return i;
 		return -1;
 	}
-	
+
 	int DIP::ForwardIoctl(ipcmessage* message)
 	{
 		return ForwardIoctl(message, false);

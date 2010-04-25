@@ -1,28 +1,29 @@
 #pragma once
 
-#include <syscalls.h>
+#include <string.h>
 #include <stdlib.h>
 
-#include <string.h>
+#include "syscalls.h"
 #include "mem.h"
+#include "ipc.h"
 
 namespace ProxiIOS {
 	namespace Errors {
 		enum Enum {
-			OpenFailure = -6,
+			OpenFailure = IPC_ENOENT,
 			OpenProxyFailure = -5
 		};
 	}
 	namespace Ios {
 		enum Enum {
-			Open = 0x01,
-			Close = 0x02,
-			Read = 0x03,
-			Write = 0x04,
-			Seek = 0x05,
-			Ioctl = 0x06,
-			Ioctlv = 0x07,
-			Callback = 0x08
+			Open     = IOS_OPEN,
+			Close    = IOS_CLOSE,
+			Read     = IOS_READ,
+			Write    = IOS_WRITE,
+			Seek     = IOS_SEEK,
+			Ioctl    = IOS_IOCTL,
+			Ioctlv   = IOS_IOCTLV,
+			Callback = IOS_CALLBACK
 		};
 	}
 
@@ -37,7 +38,7 @@ namespace ProxiIOS {
 	public:
 		Module(const char* device);
 
-		virtual int Loop();
+		int Loop();
 
 		virtual int HandleOpen(ipcmessage* message);
 

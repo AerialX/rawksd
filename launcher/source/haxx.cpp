@@ -19,11 +19,8 @@ extern "C" {
 	extern u8 filemodule_dat[];
 	extern u32 filemodule_dat_size;
 
-	extern u8 dipmodule_rii_dat[];
-	extern u32 dipmodule_rii_dat_size;
-
-	extern u8 dipmodule_rawk_dat[];
-	extern u32 dipmodule_rawk_dat_size;
+	extern u8 dipmodule_dat[];
+	extern u32 dipmodule_dat_size;
 
 	extern const u8 root_dat[];
 }
@@ -38,9 +35,6 @@ extern vector<int> ToMount;
 #define HAXX_IOS_VERSION     0x00890F1E
 #define HAXX_IOS 0x0000000100000089ULL
 #endif
-
-#define dipmodule_dat dipmodule_rii_dat
-#define dipmodule_dat_size dipmodule_rii_dat_size
 
 static int load_module_code(void *module_code, s32 module_size);
 static bool do_exploit();
@@ -112,7 +106,7 @@ void Haxx_Mount(vector<int>* mounted)
 		mounted->push_back(ret);
 		if (!hasdefault) {
 			ToMount.push_back(ret);
-			//File_SetLogFS(ret);
+			File_SetLogFS(ret);
 		}
 		DEFAULT();
 	}
@@ -132,13 +126,14 @@ int check_cert_chain(const u8 *data, const u32 data_len);
 #define MEM1_BASE_UNCACHED  ((u32*)0xC0000000)
 #define MEM_PROT            ((u16*)0xCD8B420A)
 #define MEM1_IOSVERSION     ((u32*)0xC0003140)
+#define OTP_COMMAND			((volatile u32*)0xCD8001EC)
+#define OTP_DATA			((volatile u32*)0xCD8001F0)
 
 // the filename used to load modules
 static const char LOAD_MODULE_PATH[] = "/tmp/patch.bin";
 static const char LOAD_KERNEL_PATH[] = "/tmp/boot.bin";
 
-#define SYS_CERTS_SIZE      2560
-u8 sys_certs[2560] ATTRIBUTE_ALIGN(32);
+u8 sys_certs[SYS_CERTS_SIZE] ATTRIBUTE_ALIGN(32);
 
 // these are signature for fakesigning
 const u8 tik_sig[260] = {
@@ -201,10 +196,10 @@ const u8 tmd_hash[20] = {
     0xE4, 0x77, 0x58, 0x16, 0x50, 0x5E, 0xCC, 0xCD, 0x3B, 0x16
 };
 
-u8 old_hashcmp[] = {0x24, 0x01, 0x78, 0x3A, 0x37, 0x01, 0x78, 0x2B, 0x35, 0x01,
+static const u8 old_hashcmp[] = {0x24, 0x01, 0x78, 0x3A, 0x37, 0x01, 0x78, 0x2B, 0x35, 0x01,
                     0x06, 0x1b, 0x06, 0x12, 0x42, 0x9a, 0xd1, 0x01, 0x40, 0x20, 0xe0, 0x00,
                     0x20, 0x00, 0x31, 0x01, 0x29, 0x13, 0xd9, 0xf1, 0x28, 0x00, 0xd0, 0x01};
-u8 new_hashcmp[] = {
+static const u8 new_hashcmp[] = {
                 0x24, 0x00, // movs r4, #0
 /* 13A752C2 */  0x78, 0x3A, // ldrb r2, [r7]
                 0x37, 0x01, // adds r7, #1
@@ -226,6 +221,106 @@ u8 new_hashcmp[] = {
 
 /* 13A752E6 */
             };
+
+// 1st word = value to search, 2nd word = mask of bits to disregard
+static const s16 old_dev_fs_main[] = {
+	0xD009, 0,
+	0x68A0, 0,
+	0xF7FF, 0x07FF, 0xF9CF, 0xFFFF,
+	0x2800, 0,
+	0xD104, 0,
+	0x1C20, 0,
+	0xF7FF, 0x07FF, 0xFA84, 0xFFFF,
+	0x1C01, 0,
+	0xE038, 0x00FF,
+	0x6823, 0,
+	0x2B01, 0,
+	0xD009, 0x00FF,
+	0x68A0, 0,
+	0xF7FA, 0x07FF, 0xFBEA, 0xFFFF,
+	0x2800, 0,
+	0xD104, 0
+};
+
+// not used directly, here for reference purposes
+static const u16 new_dev_fs_main[] = {
+/* 20005E82 */ 0xD10C,     // bne 20005E9E (+3)
+               0x6823,     // ldr r3, [r4] (ipcmsg)
+/* 20005E86 */ 0xF7FF,     // bl open_dev_flash    (unmodified)
+               0xF9B9,     // check_fd_is_flash-0x16 (-22)
+               0x2800,     // cmp r0, #0           (unmodified)
+/* 20005E8C */ 0xD103,     // bne 20005E96 (-1)
+/* 20005E8E */ 0xE005,     // b 200005E9C
+               0x0000,     // unreachable          (unmodified)
+               0x0000,     // unreachable          (unmodified)
+               0x1C01,     // unreachable          (unmodified)
+/* 20005E96 */ 0xE038,     // b 20005F0A           (unmodified)
+               0x6823,     // unreachable          (unmodified)
+               0x2B01,     // unreachable          (unmodified)
+/* 20005E9C */ 0xD009,     // beq(b) 20005EB2      (unmodified)
+/* 20005E9E */ 0x68A0,     // ldr r0, [r4,#8]      (unmodified)
+/* 20005EA0 */ 0x0000,     // bl check_fd_is_boot2 (unmodified)
+               0x0000,     //                      (unmodified)
+               0x2800,     // cmp r0, #0           (unmodified)
+/* 20005EA6 */ 0xD1ED      // bne 20005E84 (-23)
+};
+
+static const s16 old_dev_fs_open_flash[] = {
+	0xB510, 0,
+	0x2005, 0,
+	0x4240, 0,
+	0x2100, 0,
+	0x4C07, 0,
+	0x00CB, 0,
+	0x191A, 0,
+	0x6813, 0,
+	0x2B00, 0,
+	0xD103, 0,
+	0x2301, 0,
+	0x6013, 0,
+	0x1C10, 0,
+	0xE002, 0,
+	0x3101, 0,
+	0x2901, 0,
+	0xD9F3, 0,
+	0xBC10, 0,
+	0xBC02, 0,
+	0x4708, 0,
+	0x2004, 0xFFFF, 0x9C44, 0xFFFF,
+	0xB500, 0,
+	0x1C02, 0
+};
+
+// assume this will be placed at a mod 4 address
+static const s16 new_dev_fs_open_flash[] = {
+/* 200051FC */ 0xB500,     // push {lr}
+               0x4809,     // ldr r0, =dev_flash_fds
+               0x2200,     // movs r2, #0
+               0x2B06,     // cmp r3, #6 (ipc_ioctl)
+/* 20005204 */ 0xD105,     // bne 20005212
+               0x68E1,     // ldr r1, [r4, 0xC] (ipcmsg.ioctl.cmd)
+               0x296F,     // cmp r1, #0x6F (111)
+/* 2000520A */ 0xD007,     // beq 2000521C
+               0x2201,     // movs r2, #1
+               0x2964,     // cmp r1, #0x64 (100)
+/* 20005210 */ 0xD004,     // beq 2000521C
+/* 20005212 */ 0x6800,     // ldr r0, [r0]
+               0x2801,     // cmp r0, #1
+/* 20005216 */ 0xD103,     // bne 2000521E
+/* 20005218 */ 0x4803,     // ldr r0, =_FS_ioctl_ret+1
+               0x4700,     // bx r0
+/* 2000521C */ 0x6002,     // str r2, [r0]
+               0x2001,     // movs r0, #1
+/* 20005220 */ 0xBC04,     // pop {r2}
+               0x4710,     // bx r2
+/* 20005224 */ 0x0000,     // dev_flash_fds  (unmodified)
+               0x0000,     //                (unmodified)
+/* 20005228 */ 0x1374,     // _FS_ioctl_ret_
+               0x001C+1    // _FS_ioctl_ret_+1 (thumb)
+};
+
+otp_t otp ATTRIBUTE_ALIGN(4);
+//seeprom_t seeprom ATTRIBUTE_ALIGN(4);
 
 // simple 2 byte patches
 enum {
@@ -293,7 +388,7 @@ u8 *fetch_file(const char *filename, u32 filesize)
 	return filebuf;
 }
 
-static int get_certs()
+int get_certs()
 {
 	u32 readed;
 	s32 fd = IOS_Open("/sys/cert.sys", ISFS_OPEN_READ);
@@ -466,9 +561,10 @@ int check_for_sneek(s32 fd)
 
 int disable_mem2_protection(s32 fd)
 {
-	u64 title = HAXX_IOS;
-	ioctlv vec[3];
-	u32 cnt;
+	// FIXME: find which one of these needs manual aligning
+	static u64 title ATTRIBUTE_ALIGN(32) = HAXX_IOS;
+	static ioctlv vec[3] ATTRIBUTE_ALIGN(32);
+	static u32 cnt ATTRIBUTE_ALIGN(32);
 	u8 lowmem_save[0x20];
 	s32 ret;
 
@@ -673,6 +769,56 @@ static int patch_gpio_stm(void* buf, s32 size)
 	return 0;
 }
 
+static int patch_fs_redirect(void* buf, s32 size)
+{
+	u32 i, j;
+	s16 *kernel = (s16*)buf;
+	for (i=0; i < size - sizeof(old_dev_fs_main)/4; i++)
+	{
+		s16 *open_dev_flash;
+		for (j=0; j < sizeof(old_dev_fs_main)/4; j++) {
+			s16 match_needed = old_dev_fs_main[j*2] | old_dev_fs_main[j*2+1];
+			s16 match_masked = kernel[i+j]          | old_dev_fs_main[j*2+1];
+			if (match_needed != match_masked)
+				break;
+		}
+		if (j < sizeof(old_dev_fs_main)/4)
+			continue;
+
+		//printf("Found /dev/fs main() %08X\n", i*2);
+
+		open_dev_flash = kernel+i+4+kernel[i+3]-0x16;
+		printf("open_dev_flash offset %04X%04X\n", open_dev_flash[0], open_dev_flash[1]);
+		for (j=0; j < sizeof(old_dev_fs_open_flash)/4; j++) {
+			s16 match_needed = old_dev_fs_open_flash[j*2] | old_dev_fs_open_flash[j*2+1];
+			s16 match_masked = open_dev_flash[j]          | old_dev_fs_open_flash[j*2+1];
+			if (match_needed != match_masked)
+			{
+				//printf("j %d mask %04X needed %04X\n", j, match_masked, match_needed);
+				break;
+			}
+		}
+		if (j < sizeof(old_dev_fs_open_flash)/4)
+			continue;
+
+		// do all the patching
+		kernel[i] +=   0x0103;
+		kernel[i+1] =  0x6823;
+		kernel[i+3] -= 0x0016;
+		kernel[i+5] -= 0x0001;
+		kernel[i+6] =  0xE005;
+		kernel[i+18] = 0xD1ED; // lol 0xdied
+
+		// TODO: Check this isn't overrunning
+		for (j=0; j < sizeof(new_dev_fs_open_flash)/2; j++) {
+			open_dev_flash[j] = (open_dev_flash[j] & old_dev_fs_open_flash[j*2+1]) | new_dev_fs_open_flash[j];
+		}
+
+		return 1;
+	}
+	return 0;
+}
+
 static u8 *load_tmd_content(tmd* title_tmd, u16 index)
 {
 	u8 *content = NULL;
@@ -785,7 +931,8 @@ static int prepare_new_kernel(u64 title)
 		return 0;
 	}
 
-	if (!patch_mem2(kernel_blob, size) || !patch_ios37_sd_load(kernel_blob, size) || !patch_gpio_stm(kernel_blob, size))
+	if (!patch_mem2(kernel_blob, size) || !patch_ios37_sd_load(kernel_blob, size) ||
+		!patch_gpio_stm(kernel_blob, size) || !patch_fs_redirect(kernel_blob, size))
 	{
 		printf("Couldn't patch kernel\n");
 		free(kernel_blob);
@@ -1012,6 +1159,16 @@ static int do_sig_check_patch()
 	return 1;
 }
 
+static void read_otp()
+{
+	u32 *otpd = (u32*)&otp;
+	for (int i=0; i < sizeof(otp)/sizeof(u32); i++)
+	{
+		*OTP_COMMAND = 0x80000000|i;
+		*otpd++ = *OTP_DATA;
+	}
+}
+
 static bool do_exploit()
 {
 	s32 es_fd = -1;
@@ -1034,6 +1191,7 @@ static bool do_exploit()
 
 	if (disable_mem2_protection(es_fd))
 	{
+		u32 ng_id;
 		printf("MEM2 protection disabled\n");
 
 		if (!check_for_sneek(es_fd))
@@ -1048,6 +1206,11 @@ static bool do_exploit()
 				printf("NAND Permissions patch failed\n");
 			}
 		}
+
+		read_otp();
+		if (ES_GetDeviceID(&ng_id) || ng_id != otp.ng_id) // wtf how
+			patch_failed = 1;
+
 
 		if (!patch_failed)
 		{
@@ -1087,7 +1250,6 @@ static bool do_exploit()
 		*(u16*)0x93A752E6 = 0x2000;
 		DCFlushRange((void*)0x93A752E0, 32);
 #endif
-
 
 		if (!patch_failed)
 			printf("All patching done!\n");

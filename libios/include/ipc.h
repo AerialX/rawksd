@@ -24,6 +24,15 @@
 #define IPC_EQUEUEFULL		 -8
 #define IPC_ENOMEM			-22
 
+#define IOS_OPEN           0x01
+#define IOS_CLOSE          0x02
+#define IOS_READ           0x03
+#define IOS_WRITE          0x04
+#define IOS_SEEK           0x05
+#define IOS_IOCTL          0x06
+#define IOS_IOCTLV         0x07
+#define IOS_CALLBACK       0x08
+
 #ifdef __cplusplus
 	extern "C" {
 #endif

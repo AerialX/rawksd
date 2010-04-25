@@ -246,12 +246,6 @@ os_puts:
 	svc 0xAB
 	bx lr
 	
-	.code 32
-	.global os_mload
-os_mload:
-	svc 0xCC
-	bx lr
-
 	.pool
 	.end
 
