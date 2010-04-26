@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <sys/iosupport.h>
 #include <ogc/machine/processor.h>
+#include "files.h"
 
 #include <string.h>
 
@@ -27,12 +28,11 @@ static void InitializeNetwork(const char *ip_str, const int port)
 	int ret = inet_aton(ip_str, &address.sin_addr);
 	if (ret <= 0)
 		return;
-	if (net_connect(socket, (struct sockaddr*)&address, sizeof(address)) == -1)
-		return;
-	//net_send(socket, "lolhi\n", 6, 0);
-	//net_close(socket);
-
-	// DebugPrintf("%d\n", init); // 0
+	if (net_connect(socket, (struct sockaddr*)&address, sizeof(address)) < 0)
+	{
+		net_close(socket);
+		socket = -1;
+	}
 }
 
 static int DebugPrint(struct _reent *r, int fd, const char *ptr, size_t len)

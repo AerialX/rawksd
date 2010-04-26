@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string.h>
-#include <stdlib.h>
 
 #include "syscalls.h"
 #include "mem.h"
@@ -10,6 +9,7 @@
 namespace ProxiIOS {
 	namespace Errors {
 		enum Enum {
+			Success = 0,
 			OpenFailure = IPC_ENOENT,
 			OpenProxyFailure = -5
 		};

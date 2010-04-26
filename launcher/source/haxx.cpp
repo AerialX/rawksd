@@ -1162,7 +1162,7 @@ static int do_sig_check_patch()
 static void read_otp()
 {
 	u32 *otpd = (u32*)&otp;
-	for (int i=0; i < sizeof(otp)/sizeof(u32); i++)
+	for (unsigned int i=0; i < sizeof(otp)/sizeof(u32); i++)
 	{
 		*OTP_COMMAND = 0x80000000|i;
 		*otpd++ = *OTP_DATA;
