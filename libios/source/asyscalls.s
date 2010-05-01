@@ -99,8 +99,8 @@ os_destroy_timer:
 	syscall 0x14
 
 	.code 32
-	.global os_timer_now
-os_timer_now:
+	.global os_time_now
+os_time_now:
 	syscall 0x15
 
 	.code 32

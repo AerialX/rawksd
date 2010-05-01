@@ -70,11 +70,14 @@ namespace ProxiIOS { namespace Filesystem {
 				return Errors::DiskNotMounted;
 		}
 		else if (!inet_aton(hoststr, &address.sin_addr)) {
-			hostent* host = net_gethostbyname_async(hoststr, CONNECT_SLEEP_INTERVAL * 50); // 5 second timeout
-			if (!host || !host->h_length || host->h_addrtype != PF_INET)
+			hostent* host = net_getnbhostbyname_async(hoststr, CONNECT_SLEEP_INTERVAL * 5); // 0.5 second timeout
+			if (host==NULL)
+				host = net_gethostbyname_async(hoststr, CONNECT_SLEEP_INTERVAL * 20); // 2 second timeout
+			if (!host || host->h_length != sizeof(address.sin_addr) ||
+				host->h_addrtype != PF_INET || host->h_addr_list==NULL ||
+				host->h_addr_list[0]==NULL)
 				return Errors::DiskNotMounted;
-			else
-				memcpy((char*)&address.sin_addr, host->h_addr_list[0], host->h_length);
+			memcpy(&address.sin_addr, host->h_addr_list[0], host->h_length);
 		}
 		address.sin_port = htons(Port);
 

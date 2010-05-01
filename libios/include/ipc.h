@@ -58,6 +58,7 @@ typedef struct ipcmessage
 			const char* device;	// 12
 			u32 mode;		// 16
 			u32 uid;	// 20
+			u16 gid;
 		} open;
 
 		struct

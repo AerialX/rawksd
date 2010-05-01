@@ -6,40 +6,6 @@
 #define NANDFILE_MAX		0x0C
 
 namespace ProxiIOS { namespace Filesystem {
-	namespace ISFS {
-		enum Enum {
-			Format          = 0x01,
-			GetStats        = 0x02,
-			CreateDir       = 0x03,
-			ReadDir         = 0x04,
-			SetAttrib       = 0x05,
-			GetAttrib       = 0x06,
-			Delete          = 0x07,
-			Rename          = 0x08,
-			CreateFile      = 0x09,
-			SetFileVerCtrl  = 0x0A,
-			GetFileStats    = 0x0B,
-			GetUsage        = 0x0C,
-			Shutdown        = 0x0D
-		};
-
-		struct Stats {
-			u32 Length;
-			u32 Pos;
-		};
-
-		struct FSattr {
-			u32 owner_id;
-			u16 group_id;
-			char path[ISFS_MAXPATH_LEN];
-			u8 ownerperm;
-			u8 groupperm;
-			u8 otherperm;
-			u8 attributes;
-			u8 pad[2];
-		};
-	}
-
 	struct IsfsFileInfo : public FileInfo
 	{
 		IsfsFileInfo(FilesystemHandler* system, int fd) : FileInfo(system) { File = fd; }

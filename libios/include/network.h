@@ -279,6 +279,8 @@ s32 net_shutdown(s32 s, u32 how);
 struct hostent * net_gethostbyname(const char *addrString);
 struct hostent * net_gethostbyname_async(const char *addrString, u32 timeout);
 
+struct hostent * net_getnbhostbyname_async(const char *addrString, u32 timeout);
+
 #ifdef __cplusplus
 	}
 #endif

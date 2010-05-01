@@ -34,6 +34,7 @@ distribution.
 
 #include <string.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #include "gctypes.h"
 #include "gcutil.h"
@@ -204,7 +205,66 @@ static u8 _net_error_code_map[] = {
  	ETIMEDOUT,
 };
 
+/* NetBios structs and defines */
+
+#define OPCODE_QUERY		0
+#define QUESTION_TYPE_NB    0x0020 // general name request
+#define QUESTION_CLASS_IN   0x0001 // internet class
+#define RRTYPE_NB			0x0020
+#define RRCLASS_IN			0x0001
+
+// reversed for big-endian (bitfields suck)
+typedef struct {
+	u16 fResponse:1;
+	u16 OpCode:4;
+	u16 fNM_AA:1;
+	u16 fNM_TC:1;
+	u16 fNM_RD:1;
+	u16 fNM_RA:1;
+	u16 fNM_00:2;
+	u16 fNM_B:1;
+	u16 RCode:4;
+} OPCODEFLAGSRCODE;
+
+typedef struct {
+	u8 Name[34]; // compressed name
+	u16 Type;    // question type
+	u16 Class;   // question class (always type IN - Internet)
+} QUESTION;
+
+typedef struct
+{
+	QUESTION question;
+	u32 TTL ATTRIBUTE_PACKED; // Time to live
+	u16 RDLength ATTRIBUTE_PACKED; // length of following resource data
+} RESOURCERECORDHEADER;
+
+typedef struct {
+	u16 TransactionID;		// transaction id, responses match original packet, requests are random/sequential
+	u16 OpcodeFlagsRcode;	// opcode, flags and rcode
+	u16 QDCount;			// number of questions
+	u16 ANCount;			// number of answer resource records
+	u16 NSCount;			// number of name service resource records
+	u16 ARCount;			// number of authoratative resource records
+} NBNAMEHEADER;
+
+typedef struct {
+	struct hostent he;
+	char Name[16];
+	char *alias_none;
+	char *addr_list[2];
+	// nameheader should be 32-byte aligned
+	u8 padding[20];
+	NBNAMEHEADER nameheader;
+	RESOURCERECORDHEADER rrheader;
+	u8 nbflags[2];
+	u8 ip_addr[4];
+} nb_lookup;
+
+/* End NetBios */
+
 static s32 net_ip_top_fd = -1;
+static ipcmessage cbdata ATTRIBUTE_ALIGN(32);
 
 static const char __manage_fs[] = "/dev/net/ncd/manage";
 static const char __iptop_fs[] = "/dev/net/ip/top";
@@ -352,6 +412,7 @@ struct hostent * net_gethostbyname(const char *addrString)
 	return net_gethostbyname_async(addrString, 0);
 }
 
+static u8 ipBuffer[0x460] ATTRIBUTE_ALIGN(32);
 /* Returned value is a static buffer -- this function is not threadsafe! */
 struct hostent * net_gethostbyname_async(const char *addrString, u32 timeout)
 {
@@ -359,9 +420,8 @@ struct hostent * net_gethostbyname_async(const char *addrString, u32 timeout)
 	u8 *params;
 	struct hostent *ipData;
 	u32 addrOffset;
-	static u8 ipBuffer[0x460] ATTRIBUTE_ALIGN(32);
 
-	memset(ipBuffer, 0, 0x460);
+	memset(ipBuffer, 0, sizeof(ipBuffer));
 
 	if (net_ip_top_fd < 0) {
 		errno = -ENXIO;
@@ -393,7 +453,6 @@ struct hostent * net_gethostbyname_async(const char *addrString, u32 timeout)
 		ret = _net_convert_error(os_ioctl(net_ip_top_fd, IOCTL_SO_GETHOSTBYNAME, params, len, ipBuffer, 0x460));
 	} else {
 		u32 queuedata[0x02];
-		static ipcmessage cbdata ATTRIBUTE_ALIGN(32);
 		int queue = os_message_queue_create(queuedata, sizeof(queuedata)/sizeof(u32));
 		int timer = os_create_timer(timeout, 0, queue, SO_TIMER_MESSAGE);
 		u32 message;
@@ -401,8 +460,10 @@ struct hostent * net_gethostbyname_async(const char *addrString, u32 timeout)
 		os_ioctl_async(net_ip_top_fd, IOCTL_SO_GETHOSTBYNAME, params, len, ipBuffer, 0x460, queue, &cbdata);
 
 		while (!(ret = os_message_queue_receive(queue, &message, 0))) {
-			if (message == SO_TIMER_MESSAGE)
+			if (message == SO_TIMER_MESSAGE) {
+				ret = -ETIMEDOUT;
 				break;
+			}
 			else if (&cbdata == (ipcmessage*)message) {
 				ret = _net_convert_error(cbdata.result);
 				os_message_queue_ack(&cbdata, 0);
@@ -443,6 +504,199 @@ struct hostent * net_gethostbyname_async(const char *addrString, u32 timeout)
 	return ipData;
 }
 
+static s32 FormNameQueryPacket(nb_lookup *lookup)
+{
+	int i;
+	OPCODEFLAGSRCODE Wcode;
+
+	lookup->nameheader.TransactionID = os_time_now(); // Transaction ID
+
+	Wcode.RCode = 0;
+	Wcode.fNM_B = 1; // always broadcast
+	Wcode.fNM_00 = 0;
+	Wcode.fNM_RA = 0;
+	Wcode.fNM_RD = 1;
+	Wcode.fNM_TC = 0;
+	Wcode.fNM_AA = 0;
+	Wcode.OpCode = OPCODE_QUERY;
+	Wcode.fResponse = 0;
+
+	lookup->nameheader.OpcodeFlagsRcode = htons(*(u16*)&Wcode);
+
+	lookup->nameheader.QDCount = htons(1);
+	//lookup->nameheader.ANCount = 0;
+	//lookup->nameheader.ARCount = 0;
+	//lookup->nameheader.NSCount = 0;
+
+	lookup->rrheader.question.Name[0] = 32;
+	//lookup->rrheader.question.Name[33] = 0;
+
+	// do the weird name encoding
+	for(i=0; i < 16; i++) {
+		lookup->rrheader.question.Name[1+i*2] = 'A' + (lookup->Name[i]>>4);
+		lookup->rrheader.question.Name[2+i*2] = 'A' + (lookup->Name[i]&0xF);
+	}
+
+	debug_printf("NB Encoded name: %s\n", lookup->rrheader.question.Name);
+
+	lookup->rrheader.question.Type = htons(QUESTION_TYPE_NB);
+	lookup->rrheader.question.Class = htons(QUESTION_CLASS_IN);
+
+	return (s32)(sizeof(NBNAMEHEADER)+sizeof(QUESTION));
+}
+
+struct hostent* ProcessPacket(nb_lookup *reply, s32 packetsize, struct sockaddr_in *sockaddr)
+{
+	OPCODEFLAGSRCODE Wcode;
+	u16 w, QDCount, ANCount, NSCount, ARCount;
+
+	if (packetsize <= sizeof(NBNAMEHEADER))
+		return NULL;
+
+	QDCount = ntohs(reply->nameheader.QDCount);
+	ANCount = ntohs(reply->nameheader.ANCount);
+	ARCount = ntohs(reply->nameheader.ARCount);
+	NSCount = ntohs(reply->nameheader.NSCount);
+
+	w = ntohs(reply->nameheader.OpcodeFlagsRcode);
+	memcpy(&Wcode, &w, sizeof(w));
+
+	if (Wcode.RCode || Wcode.OpCode!=OPCODE_QUERY || !Wcode.fResponse || QDCount || ANCount!=1 || ARCount || NSCount)
+	{
+		debug_printf("Packet Wcode is bad\n");
+		return NULL;
+	}
+
+	packetsize -= sizeof(NBNAMEHEADER);
+
+	if (packetsize < sizeof(RESOURCERECORDHEADER)+6)
+	{
+		debug_printf("packetsize %d expected %d\n", packetsize, sizeof(RESOURCERECORDHEADER)+6);
+		return NULL;
+	}
+
+	if (reply->rrheader.question.Name[0] != 32)
+	{
+		debug_printf("Packet Name[0] unsupported (%d)\n", reply->rrheader.question.Name[0]);
+		return NULL;
+	}
+
+	if (ntohs(reply->rrheader.question.Type) != RRTYPE_NB) {
+		debug_printf("Bad rrheader Type (%d)\n", ntohs(reply->rrheader.question.Type));
+		return NULL;
+	}
+
+	if (ntohs(reply->rrheader.question.Class) != RRCLASS_IN) {
+		debug_printf("Bad rrheader Class (%d)\n", ntohs(reply->rrheader.question.Class));
+		return NULL;
+	}
+
+	if (ntohs(reply->rrheader.RDLength) < 6) {
+		debug_printf("Bad rrheader RDLength (%d)\n", ntohs(reply->rrheader.RDLength));
+		return NULL;
+	}
+
+	debug_printf("Flags: %02X%02X, IP: %d.%d.%d.%d\n", reply->nbflags[0], reply->nbflags[1], reply->ip_addr[0], reply->ip_addr[1], reply->ip_addr[2], reply->ip_addr[3]);
+
+	reply->he.h_addrtype = PF_INET;
+	reply->he.h_name = reply->Name;
+	reply->he.h_length = 4;
+	reply->he.h_aliases = &reply->alias_none;
+	reply->he.h_addr_list = reply->addr_list;
+	reply->addr_list[0] = (char*)&reply->ip_addr[0];
+	// if there's more than one IP in the record, get the IP from the datagram instead
+	if (ntohs(reply->rrheader.RDLength > 6))
+		memcpy(reply->ip_addr, &sockaddr->sin_addr, reply->he.h_length);
+
+	return &reply->he;
+}
+
+struct hostent* net_getnbhostbyname_async(const char *addrString, u32 timeout)
+{
+	int udpsock;
+	u32 sock_opt = 1;
+	struct sockaddr_in sockaddr;
+	nb_lookup *reply = (nb_lookup*)ipBuffer;
+	s32 d;
+	socklen_t size;
+	int i;
+
+	// TODO: Set errno properly for errors
+
+	memset(reply, 0, sizeof(*ipBuffer));
+
+	if (addrString==NULL || addrString[0]=='\0' || strlen(addrString)>15)
+		return NULL;
+
+	memset(reply->Name, ' ', 15);
+	memcpy(reply->Name, addrString, strnlen(addrString, 15));
+	for (i=0; i < 15; i++)
+		reply->Name[i] = toupper((int)reply->Name[i]);
+
+	udpsock = net_socket(AF_INET, SOCK_DGRAM, 0);
+	if (udpsock < 0)
+		return NULL;
+
+	// set non-blocking
+	if (net_ioctl(udpsock, FIONBIO, &sock_opt) < 0) {
+		net_close(udpsock);
+		return NULL;
+	}
+
+	if (net_setsockopt(udpsock, SOL_SOCKET, SO_BROADCAST, (char*)&sock_opt, 4)==-E2BIG) {
+		net_close(udpsock);
+		return NULL;
+	}
+
+	sockaddr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+	sockaddr.sin_port = htons(137); // NetBios name port
+	sockaddr.sin_family = AF_INET;
+
+	d = FormNameQueryPacket(reply);
+
+	// this will implicitly bind the socket to a free port
+	if (net_sendto(udpsock, &reply->nameheader, d, 0, (struct sockaddr*)&sockaddr, 8) < d) {
+		net_close(udpsock);
+		return NULL;
+	}
+
+	size = sizeof(sockaddr);
+	// No timeout is a really bad idea if the host doesn't exist. You have been warned.
+	if (timeout==0)
+	{
+		// set blocking
+		sock_opt = 0;
+		d = net_ioctl(udpsock, FIONBIO, &sock_opt);
+		if (d>=0)
+			d = net_recvfrom(udpsock, &reply->nameheader, sizeof(ipBuffer)-64, 0, (struct sockaddr*)&sockaddr, &size);
+	} else {
+		u32 queuedata[1];
+		int queue = os_message_queue_create(queuedata, sizeof(queuedata)/sizeof(u32));
+		int timer = os_create_timer(timeout, 0, queue, SO_TIMER_MESSAGE);
+		u32 message;
+
+		if (queue>=0 && timer>=0) {
+			do {
+				d = net_recvfrom(udpsock, &reply->nameheader, sizeof(ipBuffer)-64, 0, (struct sockaddr*)&sockaddr, &size);
+				if (d != -EAGAIN)
+					break;
+			} while (os_message_queue_receive(queue, &message, 1) || message != SO_TIMER_MESSAGE);
+
+			os_destroy_timer(timer);
+			os_message_queue_destroy(queue);
+		}
+		else
+			d = -1; // something fucked up, don't really care what
+	}
+
+	net_close(udpsock);
+
+	if (d<=0)
+		return NULL;
+
+	return ProcessPacket(reply, d, &sockaddr);
+}
+
 s32 net_socket(u32 domain, u32 type, u32 protocol)
 {
 	s32 ret;
@@ -452,9 +706,15 @@ s32 net_socket(u32 domain, u32 type, u32 protocol)
 
 	params[0] = domain;
 	params[1] = type;
-	params[2] = protocol;
+	params[2] = protocol; // 0
 
 	ret = _net_convert_error(os_ioctl(net_ip_top_fd, IOCTL_SO_SOCKET, params, 12, NULL, 0));
+	if(ret>=0 && type==SOCK_STREAM) // set tcp window size to 32kb
+	{
+		int window_size = 32768;
+		net_setsockopt(ret, SOL_SOCKET, SO_SNDBUF, (char *) &window_size, sizeof(window_size));
+		net_setsockopt(ret, SOL_SOCKET, SO_RCVBUF, (char *) &window_size, sizeof(window_size));
+	}
 	debug_printf("net_socket(%d, %d, %d)=%d\n", domain, type, protocol, ret);
 	return ret;
 }
