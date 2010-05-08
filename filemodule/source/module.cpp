@@ -38,7 +38,8 @@ namespace ProxiIOS { namespace Filesystem {
 
 	int Filesystem::HandleIoctl(ipcmessage* message)
 	{
-		os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
+		u32 *buffer_in = (u32*)message->ioctl.buffer_in;
+		os_sync_before_read(buffer_in, message->ioctl.length_in);
 
 		switch (message->ioctl.command) {
 			case Ioctl::Epoch: {
@@ -56,7 +57,7 @@ namespace ProxiIOS { namespace Filesystem {
 				if (index == FILE_MAX_DISKS)
 					return Errors::OutOfMemory;
 
-				int diskid = message->ioctl.buffer_in[0];
+				int diskid = buffer_in[0];
 				switch (diskid) {
 					case Disks::SD:
 						Disk[index] = const_cast<DISC_INTERFACE*>(&__io_wiisd);
@@ -89,7 +90,7 @@ namespace ProxiIOS { namespace Filesystem {
 					return Errors::OutOfMemory;
 
 				FilesystemHandler* system = null;
-				Filesystems::Enum fs = (Filesystems::Enum)message->ioctl.buffer_in[0];
+				Filesystems::Enum fs = (Filesystems::Enum)buffer_in[0];
 				switch (fs) {
 					case Filesystems::FAT:
 						system = new FatHandler(this);
@@ -115,7 +116,7 @@ namespace ProxiIOS { namespace Filesystem {
 
 				return index; }
 			case Ioctl::Unmount: {
-				int index = message->ioctl.buffer_in[0];
+				int index = buffer_in[0];
 				FilesystemHandler* system = Mounted[index];
 				if (!system)
 					return Errors::NotMounted;
@@ -130,7 +131,7 @@ namespace ProxiIOS { namespace Filesystem {
 				}
 				return ret; }
 			case Ioctl::GetMountPoint: {
-				int index = message->ioctl.buffer_in[0];
+				int index = buffer_in[0];
 				FilesystemHandler* system = Mounted[index];
 				if (!system)
 					return Errors::NotMounted;
@@ -146,7 +147,7 @@ namespace ProxiIOS { namespace Filesystem {
 					FilePathDesc desc(this, (const char*)message->ioctl.buffer_io);
 					system = desc.System;
 				} else
-					system = Mounted[message->ioctl.buffer_in[0]];
+					system = Mounted[buffer_in[0]];
 
 				if (!system)
 					return Errors::NotMounted;
@@ -158,7 +159,7 @@ namespace ProxiIOS { namespace Filesystem {
 
 				return Errors::Success; }
 			case Ioctl::SetLogFS: {
-				int index = message->ioctl.buffer_in[0];
+				int index = buffer_in[0];
 				if (index>0 && !Mounted[index])
 					return Errors::NotMounted;
 
@@ -185,10 +186,10 @@ namespace ProxiIOS { namespace Filesystem {
 					return Errors::NotMounted;
 				return descriptor.System->Delete(descriptor.Path); }
 			case Ioctl::Rename: {
-				os_sync_before_read((void*)message->ioctl.buffer_in[0], IPC_MAXPATH_LEN);
-				os_sync_before_read((void*)message->ioctl.buffer_in[1], IPC_MAXPATH_LEN);
-				FilePathDesc source(this, (const char*)message->ioctl.buffer_in[0]);
-				FilePathDesc dest(this, (const char*)message->ioctl.buffer_in[1]);
+				os_sync_before_read((void*)buffer_in[0], IPC_MAXPATH_LEN);
+				os_sync_before_read((void*)buffer_in[1], IPC_MAXPATH_LEN);
+				FilePathDesc source(this, (const char*)buffer_in[0]);
+				FilePathDesc dest(this, (const char*)buffer_in[1]);
 				if (!source.System)
 					return Errors::NotMounted;
 				if (source.System != dest.System)
@@ -208,7 +209,7 @@ namespace ProxiIOS { namespace Filesystem {
 					return Errors::NotOpened;
 				return ret; }
 			case Ioctl::CloseDir: {
-				FileInfo* dir = (FileInfo*)message->ioctl.buffer_in[0];
+				FileInfo* dir = (FileInfo*)buffer_in[0];
 				return dir->System->CloseDir(dir); }
 			case Ioctl::Shorten: {
 				if (memcmp(message->ioctl.buffer_in, FILE_MODULE_NAME, FILE_MODULE_NAME_LENGTH))

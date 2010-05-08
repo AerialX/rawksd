@@ -81,7 +81,7 @@
 /* 27 */ s32       os_seek_async(s32 fd, s32 where, s32 whence, osqueue_t cb, ipcmessage *cb_data);
 /* 28 */ s32       os_ioctl_async(s32 fd, s32 request, const void* buffer_in, s32 bytes_in, void* buffer_io, s32 bytes_io, osqueue_t cb, ipcmessage* cb_data);
 /* 29 */ s32       os_ioctlv_async(s32 fd, s32 request, s32 count_in, s32 count_out, const ioctlv* vector, osqueue_t cb, ipcmessage* cb_data);
-/* 2A */ void      os_message_queue_ack(ipcmessage* message, s32 result);
+/* 2A */ void      os_message_queue_ack(const ipcmessage* message, s32 result);
 /* 2B    os_set_uid(u32 pid, u32 uid) */
 /* 2C    os_get_uid */
 /* 2D    os_set_gid */

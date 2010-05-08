@@ -5,7 +5,6 @@
 #include <ogcsys.h>
 #include <unistd.h>
 #include <wiiuse/wpad.h>
-#include <fat.h>
 
 #include "FreeTypeGX.h"
 #include "video.h"

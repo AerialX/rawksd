@@ -5,7 +5,7 @@
 #include <mem.h>
 #include <files.h>
 
-static u8 Heapspace[0x42000];
+static u8 Heapspace[0x40000];
 
 int main()
 {
@@ -13,8 +13,10 @@ int main()
 
 	File_Init();
 	ProxiIOS::DIP::DIP dip;
+#if 0
 	ProxiIOS::EMU::EMU emu;
+	emu.Start();
+#endif
 
-	emu.Loop();
 	return dip.Loop();
 }

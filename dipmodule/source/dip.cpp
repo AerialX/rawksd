@@ -73,19 +73,19 @@ namespace ProxiIOS { namespace DIP {
 
 	int DIP::HandleIoctl(ipcmessage* message)
 	{
+		u32 *buffer_in = (u32*)message->ioctl.buffer_in;
+		os_sync_before_read(buffer_in, message->ioctl.length_in);
 		switch (message->ioctl.command) {
 			case Ioctl::Allocate: {
-				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
-				LogPrintf("IOCTL: Allocate(0x%08x);\n", message->ioctl.buffer_in[0]);
-				if (Reallocate(message->ioctl.buffer_in[0], message->ioctl.buffer_in[1]))
+				LogPrintf("IOCTL: Allocate(0x%08x);\n", buffer_in[0]);
+				if (Reallocate(buffer_in[0], buffer_in[1]))
 					return 1;
 				return -1;
 			}
 			case Ioctl::AddShift: {
-				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
-				u32 len = message->ioctl.buffer_in[0];
-				u64 originaloffset = ((u64)message->ioctl.buffer_in[1] << 32) | message->ioctl.buffer_in[2];
-				u64 newoffset = ((u64)message->ioctl.buffer_in[3] << 32) | message->ioctl.buffer_in[4];
+				u32 len = buffer_in[0];
+				u64 originaloffset = ((u64)buffer_in[1] << 32) | buffer_in[2];
+				u64 newoffset = ((u64)buffer_in[3] << 32) | buffer_in[4];
 				LogPrintf("IOCTL: AddShift(0x%08x, ?, ?);\n", len);
 
 				Shift shift;
@@ -96,11 +96,10 @@ namespace ProxiIOS { namespace DIP {
 				return AddPatch(PatchType::Shift, &shift);
 			}
 			case Ioctl::AddPatch: {
-				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
-				s32 id = message->ioctl.buffer_in[0];
-				//u32 fileoffset = message->ioctl.buffer_in[1];
-				u64 offset = ((u64)message->ioctl.buffer_in[2] << 32) | message->ioctl.buffer_in[3];
-				u32 length = message->ioctl.buffer_in[4];
+				s32 id = buffer_in[0];
+				//u32 fileoffset = buffer_in[1];
+				u64 offset = ((u64)buffer_in[2] << 32) | buffer_in[3];
+				u32 length = buffer_in[4];
 				PatchPartition = CurrentPartition;
 
 				LogPrintf("IOCTL: AddPatch(0x%08x, 0x%08x%08x, 0x%08x);\n", id, (u32)(offset >> 32), (u32)offset, length);
@@ -117,7 +116,6 @@ namespace ProxiIOS { namespace DIP {
 				return AddPatch(PatchType::Patch, &patch);
 			}
 			case Ioctl::AddFile: {
-				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				char* filename = (char*)message->ioctl.buffer_in;
 				int len = message->ioctl.length_in;
 				LogPrintf("IOCTL: AddFile(\"%s\");\n", filename);
@@ -129,7 +127,7 @@ namespace ProxiIOS { namespace DIP {
 						os_sync_before_read(message->ioctl.buffer_io, message->ioctl.length_io);
 						file.Cluster = *(u64*)message->ioctl.buffer_io; // TODO: Casting u64 to u32... Saving memory but could be bad.
 						LogPrintf("\t Cluster: 0x%08x%08x;\n", message->ioctl.buffer_io[0], (u32)file.Cluster);
-						if (message->ioctl.buffer_io[0])
+						if (*(u32*)message->ioctl.buffer_io)
 							LogPrintf("\tWARNING! Cluster too large for cluster hack to work (u64).\n");
 					} else {
 						Stats st;
@@ -150,7 +148,6 @@ namespace ProxiIOS { namespace DIP {
 			}
 #ifdef YARR
 			case Ioctl::SetFileProvider: {
-				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
 				LogPrintf("IOCTL: SetFileProvider(\"%s\");\n", (const char*)message->ioctl.buffer_in);
 				int file = File_Open((const char*)message->ioctl.buffer_in, O_RDONLY);
 				if (!file)
@@ -162,19 +159,16 @@ namespace ProxiIOS { namespace DIP {
 			}
 #endif
 			case Ioctl::SetShiftBase: {
-				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
-				ShiftBase = ((u64)message->ioctl.buffer_in[0] << 32) | message->ioctl.buffer_in[1];
+				ShiftBase = ((u64)buffer_in[0] << 32) | buffer_in[1];
 				LogPrintf("IOCTL: SetShiftBase(0x%08x%08x);\n", (u32)(ShiftBase >> 32), (u32)ShiftBase);
 			}
 			case Ioctl::SetClusters:
-				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
-				Clusters = message->ioctl.buffer_in[0];
+				Clusters = buffer_in[0];
 				LogPrintf("IOCTL: SetClusters(%s);\n", Clusters ? "true" : "false");
 				return 1;
 			case Ioctl::Read: {
-				os_sync_before_read(message->ioctl.buffer_in, message->ioctl.length_in);
-				u32 len = message->ioctl.buffer_in[1];
-				s64 pos = (s64)message->ioctl.buffer_in[2] << 2;
+				u32 len = buffer_in[1];
+				s64 pos = (s64)buffer_in[2] << 2;
 				LogPrintf("IOCTL: Read(0x%08x%08x, 0x%08x);\n", (u32)(pos >> 32), (u32)pos, len);
 
 				if (CurrentPartition != PatchPartition)
@@ -195,7 +189,7 @@ namespace ProxiIOS { namespace DIP {
 					for (int i = 0; i < foundshifts; i++) {
 						Shift* shift = shifts[i];
 						s64 offset = pos - ((s64)shift->Offset << 2);
-						message->ioctl.buffer_in[2] = (offset + ((u64)shift->OriginalOffset << 2)) >> 2;
+						buffer_in[2] = (offset + ((u64)shift->OriginalOffset << 2)) >> 2;
 					}
 
 					os_sync_after_write(message->ioctl.buffer_in, message->ioctl.length_in);

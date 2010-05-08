@@ -65,7 +65,13 @@ typedef struct ipcmessage
 		{
 			void* data;
 			u32 length;
-		} read, write;
+		} read;
+
+		struct
+		{
+			const void* data;
+			u32 length;
+		} write;
 
 		struct
 		{
@@ -77,9 +83,9 @@ typedef struct ipcmessage
 		{
 			u32 command;
 
-			u32* buffer_in;
+			const void* buffer_in;
 			u32 length_in;
-			u32* buffer_io;
+			void* buffer_io;
 			u32 length_io;
 		} ioctl;
 

@@ -6,7 +6,6 @@
 
 #define MAX_OPEN_FILES 8
 #define MAX_FOUND MAX_OPEN_FILES
-#define MAX_PATCH_TYPES 0x03
 
 namespace ProxiIOS { namespace DIP {
 	namespace Ioctl {
@@ -90,7 +89,8 @@ namespace ProxiIOS { namespace DIP {
 		enum Enum {
 			Patch = 0,
 			Shift,
-			File
+			File,
+			Max
 		};
 	}
 
@@ -101,9 +101,9 @@ namespace ProxiIOS { namespace DIP {
 			u64 ShiftBase;
 			u64 PatchPartition;
 
-			u32 AllocatedPatches[MAX_PATCH_TYPES];
-			u32 PatchCount[MAX_PATCH_TYPES];
-			void* Patches[MAX_PATCH_TYPES];
+			u32 AllocatedPatches[PatchType::Max];
+			u32 PatchCount[PatchType::Max];
+			void* Patches[PatchType::Max];
 
 			s32 OpenFiles[MAX_OPEN_FILES];
 			s32 OpenFds[MAX_OPEN_FILES];
