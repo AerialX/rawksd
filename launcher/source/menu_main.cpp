@@ -360,14 +360,14 @@ Menus::Enum MenuMount()
 	buttons.GetButton(0)->SetTrigger(&Trigger[Triggers::Home]);
 	ResumeGui();
 
-	do {
-		Haxx_Mount(&Mounted);
-		if (!Mounted.size()) {
-			HaltGui(); Subtitle->SetText("Insert SD/USB..."); ResumeGui();
-		}
+	Haxx_Mount(&Mounted);
+	Launcher_ScrubPlaytimeEntry();
 
+	while (!Mounted.size()) {
+		HaltGui(); Subtitle->SetText("Insert SD/USB..."); ResumeGui();
 		MENUINIT_CHECKBUTTONS();
-	} while (!Mounted.size());
+		Haxx_Mount(&Mounted);
+	}
 	HaltGui(); Subtitle->SetText("Loading..."); ResumeGui();
 
 	LauncherStatus::Enum status;
@@ -392,8 +392,6 @@ Menus::Enum MenuInit()
 	buttons.GetButton(0)->SetTrigger(&Trigger[Triggers::Home]);
 	Title->SetText(RIIVOLUTION_TITLE);
 	ResumeGui();
-
-	Launcher_ScrubPlaytimeEntry();
 
 	RVL_SetFST(NULL, 0);
 

@@ -43,7 +43,7 @@ bool WDVD_Reset() {
 int WDVD_LowUnencryptedRead(void *buf, u32 len, u64 offset) {
 	int result;
 
-	if (di_fd<0)
+	if (di_fd<0 || (u32)buf&0x1F)
 		return -1;
 
 	inbuffer[0] = 0x8d000000;
@@ -118,7 +118,7 @@ int WDVD_LowOpenPartition(u64 offset) {
 }
 tmd* WDVD_GetTMD()
 {
-	return (tmd*)tmd_data;
+	return (tmd*)(tmd_data+sizeof(sig_rsa2048));
 }
 
 void WDVD_Close() {
@@ -192,6 +192,25 @@ int WDVD_SetDVDMode(int enable)
 	result = IOS_Ioctl(di_fd, 0x8E, inbuffer, 0x20, inbuffer + 0x08, 0x20);
 	return (result==1) ? 0 : -result;
 }
+
+// to detect WODE: DVDRead lba 0x1FEAE9 and see if the first 4 bytes are "WODE"
+int WDVD_DVDRead(void *buf, u32 len, u32 lba)
+{
+	int result = 0;
+	if (di_fd<0 || (u32)buf&0x1F)
+		return -1;
+
+	inbuffer[0] = 0xD0000000;
+	inbuffer[1] = 0;
+	inbuffer[2] = 0;
+	inbuffer[3] = len;
+	inbuffer[4] = lba;
+
+	result = IOS_Ioctl(di_fd, 0xD0, inbuffer, 0x20, buf, len<<11);
+
+	return (result==1) ? 0 : -result;
+}
+
 
 int WDVD_ReportKey(int keytype, u32 lba, void* buf)
 {
