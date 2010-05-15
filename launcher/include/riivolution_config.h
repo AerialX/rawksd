@@ -83,7 +83,12 @@ struct RiiShiftPatch {
 };
 
 struct RiiSavegamePatch {
+	RiiSavegamePatch()
+	{
+		Clone = 1;
+	}
 	std::string External;
+	int Clone;
 };
 
 struct RiiMemoryPatch {

@@ -151,9 +151,16 @@ int RVL_AddPatch(int file, u64 offset, u32 fileoffset, u32 length)
 	return IOS_Ioctl(fd, Ioctl::AddPatch, ioctlbuffer, 0x20, NULL, 0);
 }
 
-int RVL_AddEmu(const char* nandpath, const char* external)
+int RVL_AddEmu(const char* nandpath, const char* external, int clone)
 {
-	return IOS_Ioctl(fd, Ioctl::AddEmu, (void*)nandpath, strlen(nandpath) + 1, (void*)external, strlen(external) + 1);
+	ioctlv vec[3];
+	vec[0].data = (void*)nandpath;
+	vec[0].len = strlen(nandpath)+1;
+	vec[1].data = (void*)external;
+	vec[1].len = strlen(external)+1;
+	vec[2].data = &clone;
+	vec[2].len = sizeof(int);
+	return IOS_Ioctlv(fd, Ioctl::AddEmu, 3, 0, vec);
 }
 
 u64 RVL_GetShiftOffset(u32 length)
@@ -461,8 +468,8 @@ static void RVL_Patch(RiiSavegamePatch* save, string commonfs)
 		external = external.substr(commonfs.size());
 
 	char nandpath[0x40];
-	sprintf(nandpath, "/title/%08x/%08x/data", (int)(WDVD_GetTMD()->title_id >> 32), (int)WDVD_GetTMD()->title_id);
-	RVL_AddEmu(nandpath, external.c_str());
+	snprintf(nandpath, 0x40, "/title/%08x/%08x/data", (int)(WDVD_GetTMD()->title_id >> 32), (int)WDVD_GetTMD()->title_id);
+	RVL_AddEmu(nandpath, external.c_str(), save->Clone);
 }
 
 static void ApplyParams(std::string* str, map<string, string>* params)

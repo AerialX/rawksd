@@ -57,7 +57,7 @@ namespace ProxiIOS { namespace DIP {
 			AddShift                     = 0xC3,
 			SetClusters                  = 0xC4,
 			Allocate                     = 0xC5,
-			AddEmu                       = 0xC6,
+			AddEmu                       = 0xC6, // Ioctlv
 			SetFileProvider              = 0xC7,
 			SetShiftBase                 = 0xC8
 		};
@@ -96,6 +96,9 @@ namespace ProxiIOS { namespace DIP {
 
 	class DIP : public ProxiIOS::ProxyModule
 	{
+		private:
+			int CopyDir(const char *in_dir, const char *out_dir);
+			int DoEmu(const char* nand_dir, const char* ext_dir, const int* clone);
 		public:
 			u64 CurrentPartition;
 			u64 ShiftBase;

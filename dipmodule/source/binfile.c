@@ -62,9 +62,9 @@ int verify_bk(BK_Header *bk)
 		debug_printf("bk_header.title_id_2 incorrect got=%08X expected=%08X\n", bk->title_id_2, *(u32*)0);
 		failed = 1;
 	}
-	if (bk->padding[0] != 0 || bk->padding[0] != bk->padding[1] || bk->padding[0] != bk->padding[2])
+	if (bk->padding[0] || bk->padding[1] || bk->padding[2])
 	{
-		debug_printf("bk_header.padding incorrect %08X\n", bk->padding);
+		debug_printf("bk_header.padding incorrect\n");
 		failed =1;
 	}
 
@@ -121,7 +121,7 @@ BinFile* OpenBinRead(s32 file)
     	FileSeek(binfile, 0x1C0) ||
     	FileRead(binfile, &tmd_header, sizeof(tmd)))
     	{
-			debug_printf("DLC Open failed reading bk_header\n");
+			debug_printf("DLC Open failed reading bk_header or tmd_header\n");
     		goto open_error;
 		}
 
@@ -142,10 +142,10 @@ BinFile* OpenBinRead(s32 file)
 			binfile->iv[1] = (u8)content_rec.index;
 			if (bk_header.contents_size != ROUND_UP(content_rec.size, 64) ||
 				content_rec.type != 0x4001)
-				{
-					debug_printf("DLC Open size mismatch (%d vs. %d) or contents not DLC (%04X)\n", bk_header.contents_size, ROUND_UP(content_rec.size, 64), content_rec.type);
-					goto open_error;
-				}
+			{
+				debug_printf("DLC Open size mismatch (%d vs. %d) or contents not DLC (%04X)\n", bk_header.contents_size, ROUND_UP(content_rec.size, 64), content_rec.type);
+				goto open_error;
+			}
 			found = 1;
 			break;
         }
@@ -319,7 +319,7 @@ create_error:
 	return NULL;
 }
 
-s32 WriteBin(BinFile* file, u8* buffer, u32 numbytes)
+s32 WriteBin(BinFile* file, const u8* buffer, u32 numbytes)
 {
 	s32 result = FSERR_EINVAL;
 

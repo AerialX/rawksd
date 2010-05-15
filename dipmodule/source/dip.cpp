@@ -1,5 +1,6 @@
 #include "dip.h"
 #include "patch.h"
+#include "emu.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -126,7 +127,7 @@ namespace ProxiIOS { namespace DIP {
 					if (message->ioctl.length_io > 0) {
 						os_sync_before_read(message->ioctl.buffer_io, message->ioctl.length_io);
 						file.Cluster = *(u64*)message->ioctl.buffer_io; // TODO: Casting u64 to u32... Saving memory but could be bad.
-						LogPrintf("\t Cluster: 0x%08x%08x;\n", message->ioctl.buffer_io[0], (u32)file.Cluster);
+						LogPrintf("\t Cluster: 0x%08x%08x;\n", *(u32*)message->ioctl.buffer_io, (u32)file.Cluster);
 						if (*(u32*)message->ioctl.buffer_io)
 							LogPrintf("\tWARNING! Cluster too large for cluster hack to work (u64).\n");
 					} else {
@@ -141,10 +142,6 @@ namespace ProxiIOS { namespace DIP {
 				}
 
 				return AddPatch(PatchType::File, &file);
-			}
-			case Ioctl::AddEmu: {
-				LogPrintf("IOCTL: AddEmu();\n");
-				return -1;
 			}
 #ifdef YARR
 			case Ioctl::SetFileProvider: {
@@ -243,16 +240,148 @@ namespace ProxiIOS { namespace DIP {
 
 	int DIP::HandleIoctlv(ipcmessage* message)
 	{
+		int ret;
+		for (u32 i=0; i < message->ioctlv.num_in; i++) {
+			if (message->ioctlv.vector[i].len)
+				os_sync_before_read(message->ioctlv.vector[i].data, message->ioctlv.vector[i].len);
+		}
 		switch (message->ioctlv.command) {
 			case Ioctl::OpenPartition:
-				os_sync_before_read(message->ioctlv.vector[0].data, message->ioctlv.vector[0].len);
 				CurrentPartition = (u64)((u32*)message->ioctlv.vector[0].data)[1] << 2;
-				int ret = ForwardIoctlv(message);
+				ret = ForwardIoctlv(message);
 				if (ret < 0 || ret == 2)
 					CurrentPartition = 0;
 				return ret;
+			case Ioctl::AddEmu:
+				LogPrintf("IOCTL: AddEmu();\n");
+				if (message->ioctlv.num_in < 3)
+					return -1;
+				return DoEmu((const char*)message->ioctlv.vector[0].data, (const char*)message->ioctlv.vector[1].data, (const int*)message->ioctlv.vector[2].data);
 		}
 		return ForwardIoctlv(message);
+	}
+
+	int DIP::CopyDir(const char *in_dir, const char *out_dir)
+	{
+		char nandfile[16]; // NAND filenames are 12 chars max
+		char *in_string=NULL, *out_string=NULL;
+		Stats st;
+		int in, ret=1;
+		in = File_OpenDir(in_dir);
+		if (in<0)
+			return in;
+
+		if (File_CreateDir(out_dir)==ERROR_NOTMOUNTED)
+			return ERROR_NOTMOUNTED;
+
+		// 17=1(null char) + sizeof(nandfile) (there's a / in there somewhere too)
+		in_string = (char*)Alloc(strlen(in_dir)+17);
+		out_string = (char*)Alloc(strlen(out_dir)+17);
+		if (in_string==NULL || out_string==NULL) {
+			File_CloseDir(in);
+			Dealloc(in_string);
+			Dealloc(out_string);
+			return ERROR_OUTOFMEMORY;
+		}
+		strcpy(in_string, in_dir);
+		strcpy(out_string, out_dir);
+
+		while (File_NextDir(in, nandfile, &st)>=0) {
+			strcpy(in_string+strlen(in_dir), "/");
+			strcat(in_string, nandfile);
+			strcpy(out_string+strlen(out_dir), "/");
+			strcat(out_string, nandfile);
+
+			if (st.Mode & S_IFDIR) {
+				if (nandfile[0]=='.')
+					continue;
+				ret = CopyDir(in_string, out_string);
+			} else if (st.Mode & S_IFREG && st.Size) { // S_IFREG test is just a precaution
+				int in_file = -1;
+				int out_file;
+
+				// check if it exists
+				out_file = File_Open(out_string, O_RDONLY);
+				if (out_file<0) {
+					in_file = File_Open(in_string, O_RDONLY);
+					if (in_file<0) {
+						ret = in_file;
+						break;
+					}
+					out_file = File_Open(out_string, O_CREAT|O_WRONLY);
+					if (out_file<0) {
+						File_Close(in_file);
+						ret = out_file;
+						break;
+					}
+
+					void *copy_buf = Alloc(0x8000);
+					if (copy_buf == NULL)
+						ret = ERROR_OUTOFMEMORY;
+					else {
+						while (st.Size) {
+							int readed = File_Read(in_file, copy_buf, MIN(0x8000, st.Size));
+							if (readed<=0)
+								ret = -1;
+							else if (File_Write(out_file, copy_buf, readed)!=readed)
+								ret = -1;
+							else
+								st.Size -= readed;
+						}
+					}
+					Dealloc(copy_buf);
+				}
+
+				File_Close(out_file);
+				if (in_file>=0)
+					File_Close(in_file);
+			}
+			if (ret<0)
+				break;
+		}
+
+		File_CloseDir(in);
+
+		Dealloc(in_string);
+		Dealloc(out_string);
+		return ret;
+	}
+
+	int DIP::DoEmu(const char* nand_dir, const char* ext_dir, const int* clone)
+	{
+		int i=0;
+
+		int emu_fd = os_open(EMU_MODULE_NAME, 0);
+		if (emu_fd<0)
+			return emu_fd;
+
+		if (File_CreateDir(ext_dir)==ERROR_NOTMOUNTED)
+			return ERROR_NOTMOUNTED;
+
+		if (*clone) {
+			char *mnt_dir = (char*)Alloc(strlen(nand_dir)+11);
+			if (mnt_dir) {
+				strcpy(mnt_dir, "/mnt/isfs");
+				strcat(mnt_dir, nand_dir);
+				i = CopyDir(mnt_dir, ext_dir);
+				Dealloc(mnt_dir);
+			} else
+				i = ERROR_OUTOFMEMORY;
+		}
+
+		if (i>=0) {
+			LogPrintf("DIP->EMU ioctl\n");
+			ioctlv vec[2];
+			vec[0].data = (void*)nand_dir;
+			vec[0].len = strlen(nand_dir)+1;
+			vec[1].data = (void*)ext_dir;
+			vec[1].len = strlen(ext_dir)+1;
+			os_sync_after_write(vec, sizeof(ioctlv)*2);
+			i = os_ioctlv(emu_fd, EMU::Ioctl::RedirectDir, 2, 0, vec);
+		}
+
+		os_close(emu_fd);
+		return i;
 	}
 
 	int DIP::GetPatchSize(int index)

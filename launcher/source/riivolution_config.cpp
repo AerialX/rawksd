@@ -407,6 +407,8 @@ versionisvalid:
 					RiiSavegamePatch savegame;
 					ELEMENT_ATTRIBUTE("external", true)
 						savegame.External = AbsolutePathCombine(patchroot, attribute, rootfs);
+					ELEMENT_ATTRIBUTE("clone", true)
+						savegame.Clone = ELEMENT_BOOL();
 
 					patch.Savegames.push_back(savegame);
 				}

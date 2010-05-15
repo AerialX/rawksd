@@ -3,6 +3,8 @@
 #include <proxiios.h>
 #include "binfile.h"
 
+#include <vector>
+
 #define EMU_MODULE_NAME "emu"
 #define FS_INTERNAL_NAME "nandfs"
 #define MAX_EMU_OPEN 16
@@ -25,8 +27,8 @@ namespace ProxiIOS { namespace EMU {
 			Shutdown         = ISFS::Shutdown,
 
 			FSMessage        = 0x60,
-			RedirectDir,
-			RedirectFile,
+			RedirectDir,                             // ioctlv
+			//RedirectFile,
 			NANDFSMessage,
 			ActivateHook     = 0x64,
 			DeactivateHook   = 0x6F
@@ -94,16 +96,28 @@ namespace ProxiIOS { namespace EMU {
 		virtual ~AppFile();
 	};
 
+	class RiivDir
+	{
+	private:
+		char *nand_dir, *ext_dir;
+	public:
+		virtual char* GetTranslatedPath(const char *path);
+		RiivDir(const char* _nand_dir, const char* _ext_dir);
+		virtual ~RiivDir();
+	};
+
 	class EMU : public ProxiIOS::Module
 	{
 	private:
 		int loop_thread;
+		std::vector<RiivDir*> DataDirs;
+
 		RiivFile* open_files[MAX_EMU_OPEN];
-		RiivFile* TryOpen(const char *name, u32 mode);
+		int TryOpen(const char *name, u32 mode, RiivFile **x);
 
 		s32 FS_IPC(ipcmessage *msg);
 		// open
-		s32 FS_IPC(const char *device, u32 mode, u32 uid, u16 gid);
+		s32 FS_IPC(const char *device, u32 mode, u32 uid=0, u16 gid=0);
 		// close
 		s32 FS_IPC(s32 fd);
 		// read
@@ -116,12 +130,18 @@ namespace ProxiIOS { namespace EMU {
 		s32 FS_IPC(s32 fd, u32 command, const void* buffer_in, u32 length_in, void* buffer_io, u32 length_io);
 		// ioctlv
 		s32 FS_IPC(s32 fd, u32 command, u32 num_in, u32 num_io, ioctlv* vector);
+
+		int MoveTo(const char* nand_path, const char* ext_path);
+		// s32 MoveFrom(const char* ext_path, const char* nand_path);
+		int GetUsage(const char* ext_path, u32 *files, u32 *blocks, char* next_name);
+		int ReadDir(const char* ext_path, u32 *out_count, char *names, const u32 *max_count);
 	public:
 		EMU();
 
 		int Start();
 
 		int HandleIoctl(ipcmessage* message);
+		int HandleIoctlv(ipcmessage* message);
 		int HandleFSMessage(ipcmessage* message, int* result);
 
 		static u32 emu_thread(void*);

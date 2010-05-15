@@ -2,29 +2,18 @@ OUTPUT_FORMAT("elf32-bigarm", "elf32-bigarm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(_start)
  
- 
-/*
-	Change exe start and ram start as needed for the custom IOS module.
-	Current settings are for the freespace after OH1 module from IOS 31.
- */
-
-/* address range from dev/mload: 0x13730000 to 0x1377ffff
-  reserved for ehcmodule:        0x13700000 to 0x1372ffff
-  reserved for dip_plugin:       0x1377E000 to 0x1377ffff
-*/
- 
 MEMORY {
 	ios_info_table	: ORIGIN = 0x0, LENGTH = 0x4000
-	exe(rwx)	: ORIGIN = 0x13740000, LENGTH = 0x4000
-	ram(rw)		: ORIGIN = 0x13744000, LENGTH = 0x45000
+	exe(rwx)	: ORIGIN = 0x13740000, LENGTH = 0x10000
+	ram(rw)		: ORIGIN = 0x13750000, LENGTH = 0x39000
 }
 
 
 
 __exe_start_virt__			= 0x13740000;
 __exe_start_phys__			= 0x13740000;
-__ram_start_virt__			= 0x13744000;
-__ram_start_phys__			= 0x13744000;
+__ram_start_virt__			= 0x13750000;
+__ram_start_phys__			= 0x13750000;
 __ios_info_table_start		= 0x0;
 
  
