@@ -208,30 +208,55 @@ LauncherStatus::Enum Launcher_ReadDisc()
 		return LauncherStatus::ReadError;
 
 #ifndef YARR
-	memset(GameName, 0xFF, 0x40);
-	if (WDVD_LowReadBCA((u8*)GameName, 0x40))
+    // sectors are 0x800 bytes, use a bit extra
+	u8 *sector = (u8*)memalign(32, 0xC00);
+	if (sector==NULL)
+		return LauncherStatus::OutOfMemory;
+
+	memset(sector, 0xFF, 52);
+	memset(sector+52, 0, 12);
+	if (WDVD_LowReadBCA(sector, 0x40))
 		return LauncherStatus::ReadError;
 
+	// check BCA userdata is zeroes except last byte (NSMBW)
 	for (i=0; i < 51; i++)
-		if (GameName[i])
+		if (sector[i])
 			return LauncherStatus::ReadError;
+	// check BCA tail (12 bytes) isn't zeroes
+	for (i=53; i < 64; i++)
+		if (sector[i])
+			break;
+	if (i==64)
+		return LauncherStatus::ReadError;
 
-	memset(GameName, 0xFF, 0x40);
-	if (WDVD_LowUnencryptedRead(GameName, 0x40, 0x100))
+	// check for fake BCA
+	memset(sector, 0xFF, 0x40);
+	if (WDVD_LowUnencryptedRead(sector, 0x40, 0x100))
 		return LauncherStatus::ReadError;
 
 	for (i=0; i < 0x40; i++)
-		if (GameName[i])
+		if (sector[i])
 			return LauncherStatus::ReadError;
 
 	// check if it returns a key when it shouldn't (001 error)
-	if (WDVD_ReportKey(4, 0, GameName) != -2)
+	if (WDVD_ReportKey(4, 0, sector) != -2)
 		return LauncherStatus::ReadError;
 
-	// make sure LowUnenencryptedRead lba table hasn't been patched
-	WDVD_SetDVDMode(0);
+	// check for WODE
+	if (WDVD_SetDVDMode(1))
+		return LauncherStatus::ReadError;
+	if (WDVD_DVDRead(sector, 1, 0x1FEAE9)==0) {
+		if (sector[0]=='W' && sector[1]=='O' && sector[2]=='D' && sector[3]=='E')
+			return LauncherStatus::ReadError;
+	}
+	if (WDVD_SetDVDMode(0))
+		return LauncherStatus::ReadError;
+
+	// make sure LowUnencryptedRead lba table hasn't been patched
 	if (WDVD_LowUnencryptedRead(0, 0, 0x2EE00000llu << 2) != -32)
 		return LauncherStatus::ReadError;
+
+	free(sector);
 #endif
 
 	if (WDVD_LowUnencryptedRead(GameName, 0x40, 0x20))
@@ -377,6 +402,7 @@ static void PatchReturnToMenu(s32 app_section_size, u64 titleID)
 			code[5] = (titleID >> 16) & 0xFFFF;
 			code[7] = titleID & 0xFFFF;
 		}
+		return;
 	}
 
 	if ((found = (u32*)FindInBuffer(app_address, app_section_size, __OSLaunchMenuCodeOld, sizeof(__OSLaunchMenuCodeOld))))

@@ -97,14 +97,14 @@ int WDVD_LowOpenPartition(u64 offset) {
 
 	WDVD_LowClosePartition();
 
-	inbuffer[12] = 0x8b000000;
+	inbuffer[12] = 0x8B000000;
 	inbuffer[13] = offset >> 2;
 	inbuffer[14] = inbuffer[15] = 0;
 
 	iovector[0].data = inbuffer+12;
 	iovector[0].len = 0x20;
 	iovector[1].data = 0;
-	iovector[1].len = 0x24a;
+	iovector[1].len = 0x2a4;
 	iovector[2].data = 0;
 	iovector[2].len = 0;
 	iovector[3].data = tmd_data;

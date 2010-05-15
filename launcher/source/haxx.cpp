@@ -327,6 +327,7 @@ enum {
     MEM2_INDEX,
     DI_VERIFY_INDEX,
     NAND_PERMS_INDEX,
+    DVD_SWITCH_INDEX
 };
 
 static const struct {
@@ -336,7 +337,8 @@ static const struct {
 } patches[] = {
     {MEM_PROT, 1, 2},
     {(u16*)0x939F0D4A, 0xD123, 0x46C0},
-    {(u16*)0x93A112F2, 0xD001, 0xE001}
+    {(u16*)0x93A112F2, 0xD001, 0xE001},
+    {(u16*)0x939B0528, 0x4651, 0x2100}
 };
 
 typedef struct _cmap_entry
@@ -1246,7 +1248,10 @@ static bool do_exploit()
 #ifndef YARR
 		if (!patch_failed)
 			patch_failed = !do_sig_check_patch();
+		if (!patch_failed)
+			patch_failed = !do_patch(DVD_SWITCH_INDEX);
 #else
+		// kill sig check
 		*(u16*)0x93A752E6 = 0x2000;
 		DCFlushRange((void*)0x93A752E0, 32);
 #endif
