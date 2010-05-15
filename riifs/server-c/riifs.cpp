@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 {
 	string Root;
 	int port = 1137;
-	
+
 	if (argc > 1)
 		Root = argv[1];
 	else
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 	Thread_Start(timeout);
 
 	cout << "RiiFS C++ Server is now ready for connections on " << listener->LocalEndPoint << endl;
-	
+
 	while(true)
 		AcceptClient(Root, listener->AcceptTcpClient());
 
@@ -89,7 +89,7 @@ Length(0),
 Exists(false)
 {
 	struct stat st;
-	if (stat(path.c_str(), &st)!=0)
+	if (stat(path.c_str(), &st)!=0 || st.st_mode&S_IFDIR)
 		return;
 
 	Length = st.st_size;
@@ -103,7 +103,7 @@ TcpClient::TcpClient(SOCKET s, string ep)
 	sock = s;
 	Connected = true;
 }
-	
+
 TcpClient::~TcpClient()
 {
 	if (Connected)
@@ -448,7 +448,7 @@ bool Connection::WaitForAction()
 			vector<unsigned char> data;
 			if (length > 0)
 				data = GetData(length);
-			
+
 			Options[option] = data;
 
 			if (option == Option::Ping)
@@ -490,7 +490,7 @@ bool Connection::WaitForAction()
 
 					dprint << "File_Open(\"" << path << "\", " << showbase << hex << mode << dec << noshowbase << ");";
 					DebugPrint(dprint.str());
-					
+
 					int fd = -1;
 					ios_base::openmode fmode = ios_base::binary; // no more ios_base::nocreate, so O_CREAT is ignored here
 					if (mode & O_WRONLY)
@@ -571,6 +571,8 @@ bool Connection::WaitForAction()
 					{
 						// seekp for writing position
 						OpenFiles[fd]->seekg(where, whence);
+						if ((int)OpenFiles[fd]->tellp() != -1)
+							OpenFiles[fd]->seekp(where, whence);
 						Return(0);
 					}
 					break;
@@ -621,9 +623,17 @@ bool Connection::WaitForAction()
 
 					FileInfo file(path);
 					if (!file.Exists) {
-						Stat empty;
-						empty.Write(Client);
-						Return(-1);
+						DirectoryInfo *dir = CreateDirectoryInfo(path);
+						if (!dir->Exists) {
+							Stat empty;
+							empty.Write(Client);
+							Return(-1);
+						} else {
+							Stat st(dir);
+							st.Write(Client);
+							Return(0);
+						}
+						delete dir;
 					} else {
 						Stat st(file);
 						st.Write(Client);
