@@ -29,19 +29,19 @@ namespace ProxiIOS {
 
 	namespace ISFS {
 		enum Enum {
-			Format          = 0x01,
-			GetStats        = 0x02,
-			CreateDir       = 0x03,
-			ReadDir         = 0x04,
-			SetAttrib       = 0x05,
-			GetAttrib       = 0x06,
-			Delete          = 0x07,
-			Rename          = 0x08,
-			CreateFile      = 0x09,
-			SetFileVerCtrl  = 0x0A,
-			GetFileStats    = 0x0B,
-			GetUsage        = 0x0C,
-			Shutdown        = 0x0D
+			Format = 0x01,
+			GetStats,
+			CreateDir,
+			ReadDir,
+			SetAttrib,
+			GetAttrib,
+			Delete,
+			Rename,
+			CreateFile,
+			SetFileVerCtrl,
+			GetFileStats,
+			GetUsage,
+			Shutdown
 		};
 
 		struct Stats {

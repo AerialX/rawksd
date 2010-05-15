@@ -3,7 +3,7 @@
 #include "filemodule.h"
 
 // maximum length of a nand filename (8.3/dos style)
-#define NANDFILE_MAX		0x0C
+#define NANDFILE_MAX		12
 
 namespace ProxiIOS { namespace Filesystem {
 	struct IsfsFileInfo : public FileInfo
@@ -40,7 +40,6 @@ namespace ProxiIOS { namespace Filesystem {
 			int Write(FileInfo* file, const u8* buffer, int length);
 			int Seek(FileInfo* file, int where, int whence);
 			int Tell(FileInfo* file);
-			int Sync(FileInfo* file);
 			int Close(FileInfo* file);
 
 			int Stat(const char* path, Stats* st);

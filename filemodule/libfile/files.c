@@ -237,8 +237,10 @@ int File_Open(const char* path, int mode)
 
 	path = fpath;
 	if (strlen(fpath)+1 > IPC_MAXPATH_LEN) {
-		if (os_ioctl(file_fd, IOCTL_Shorten, (void*)fpath, strlen(fpath)+1, short_path, sizeof(short_path))>=0)
+		os_sync_after_write(fpath, strlen(fpath) + 1);
+		if (os_ioctl(file_fd, IOCTL_Shorten, (void*)fpath, strlen(fpath)+1, short_path, sizeof(short_path))>=0) {
 			path = short_path;
+		}
 	}
 
 	os_sync_after_write(path, strlen(path) + 1);

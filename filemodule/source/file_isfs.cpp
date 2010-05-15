@@ -24,7 +24,7 @@ namespace ProxiIOS { namespace Filesystem {
 		int ret = -1;
 		ret = os_open(path, mode + 1); // Conversion from O_RDONLY/O_WRONLY to ISFS_OPEN_READ/ISFS_OPEN_WRITE
 		if (ret < 0)
-			return null;
+			return NULL;
 		return new IsfsFileInfo(this, ret);
 	}
 
@@ -48,11 +48,6 @@ namespace ProxiIOS { namespace Filesystem {
 		return os_seek(((IsfsFileInfo*)file)->File, 0, SEEK_CUR);
 	}
 
-	int IsfsHandler::Sync(FileInfo* file)
-	{
-		return 0;
-	}
-
 	int IsfsHandler::Close(FileInfo* file)
 	{
 		int ret = os_close(((IsfsFileInfo*)file)->File);
@@ -74,30 +69,34 @@ namespace ProxiIOS { namespace Filesystem {
 		if (path[strlen(path)-1] == '/')
 			path[strlen(path)-1] = 0;
 
-		s32 fd = os_open(path, 1);
-		if (fd<0)
-			return -1;
-
-		st->Identifier = 0;
-		st->Size = 0;
-		st->Device = 0;
-		st->Mode = S_IFREG;
-
-		isfs_stats = (ISFS::Stats*)Memalign(32, sizeof(ISFS::Stats));
-		isfs_stats->Length = 0;
-
-		result = os_ioctl(fd, ISFS::GetFileStats, NULL, 0, isfs_stats, 8);
-		os_close(fd);
-		st->Size = isfs_stats->Length;
-		Dealloc(isfs_stats);
-
 		vec[0].data = (void*)path;
 		vec[0].len = ISFS_MAXPATH_LEN;
 		vec[1].data = &num_contents;
 		vec[1].len = sizeof(u32);
+		os_sync_after_write(path, ISFS_MAXPATH_LEN);
 		s32 type = os_ioctlv(filefd, ISFS::ReadDir, 1, 1, vec);
-		if (type==0 || type==-0x66) // -0x66 = -102 = EACCESS, just assume it's a dir
-			st->Mode |= S_IFDIR;
+		if (type==0) {
+			st->Mode = S_IFDIR|S_IFREG;
+			st->Size = 0;
+		} else if (type==-101) { // invalid argument = file, not directory
+			st->Mode = S_IFREG;
+
+			s32 fd = os_open(path, 1);
+			if (fd<0)
+				return -1;
+
+			isfs_stats = (ISFS::Stats*)Memalign(32, sizeof(ISFS::Stats));
+			isfs_stats->Length = 0;
+
+			result = os_ioctl(fd, ISFS::GetFileStats, NULL, 0, isfs_stats, 8);
+			os_close(fd);
+			st->Size = isfs_stats->Length;
+			Dealloc(isfs_stats);
+		} else
+			return -1;
+
+		st->Identifier = 0;
+		st->Device = 0;
 
 		return 1;
 	}
@@ -113,6 +112,7 @@ namespace ProxiIOS { namespace Filesystem {
 		attrib.otherperm = 1;
 		attrib.attributes = 0;
 
+		os_sync_after_write(&attrib, sizeof(attrib));
 		return os_ioctl(filefd, ISFS::CreateFile, &attrib, sizeof(attrib), NULL, 0);
 	}
 
@@ -141,6 +141,8 @@ namespace ProxiIOS { namespace Filesystem {
 		vec[3].data = &dir_count;
 		vec[3].len = sizeof(dir_count);
 
+		os_sync_after_write(path, ISFS_MAXPATH_LEN);
+		os_sync_after_write(&count, sizeof(count));
 		os_ioctlv(filefd, ISFS::ReadDir, 2, 2, vec);
 	}
 
@@ -163,6 +165,7 @@ namespace ProxiIOS { namespace Filesystem {
 		vec[1].data = &count;
 		vec[1].len = sizeof(count);
 
+		os_sync_after_write(path, ISFS_MAXPATH_LEN);
 		result = os_ioctlv(filefd, ISFS::ReadDir, 1, 1, vec);
 		if (result < 0)
 			return NULL;
@@ -178,6 +181,7 @@ namespace ProxiIOS { namespace Filesystem {
 			return -1;
 
 		memcpy(dirname, dir->next_name, (NANDFILE_MAX+4)&~3);
+		os_sync_after_write(dirname, NANDFILE_MAX);
 		dir->next_name += strlen(dir->next_name)+1;
 		dir->dir_count--;
 

@@ -159,9 +159,6 @@
 /* 75    os_syscall_75 */
 /* 76    os_syscall_76 */
 /* 77    os_syscall_77 */
-/* 78    os_syscall_78 */
-/* 79    os_syscall_79 */
-/* 7A    os_syscall_7A */
 
 void os_puts(const char *str); // IOS log
 

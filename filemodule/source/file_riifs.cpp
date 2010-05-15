@@ -42,7 +42,7 @@ namespace ProxiIOS { namespace Filesystem {
 			/* Games do this in a different way, which I call wtf_setbroadcast:
 					net_setsockopt(locate_socket, 1, 0x29A, (char*)&sock_opt, 4);
 			   It still returns -ENOPROTOOPT, but the code I've seen assumes it succeeds
-			   unless it returns -1 (which I think is -E2BIG?) so we do the same. */
+			   unless it returns -1 (which translates to -E2BIG?) so we do the same. */
 			ret = net_setsockopt(locate_socket, SOL_SOCKET, SO_BROADCAST, (char*)&sock_opt, 4);
 			if (ret!=-E2BIG) {
 				int data = RII_OPTION_PING;
@@ -232,18 +232,34 @@ namespace ProxiIOS { namespace Filesystem {
 
 	FileInfo* RiiHandler::Open(const char* path, int mode)
 	{
+		RiiFileInfo* x;
 		SendCommand(RII_OPTION_PATH, path, strlen(path));
 		SendCommand(RII_OPTION_MODE, &mode, 4);
 
 		int ret = ReceiveCommand(RII_FILE_OPEN);
 		if (ret < 0)
 			return NULL;
-		return new RiiFileInfo(this, ret);
+		x = new RiiFileInfo(this, ret);
+#ifdef RIIFS_LOCAL_SEEKING
+		if (x) {
+			Stats st;
+			st.Size = 0;
+			ReceiveCommand(RII_FILE_STAT, &st, sizeof(Stats));
+			x->Size = st.Size;
+		}
+#endif
+		return x;
 	}
 
 	int RiiHandler::Read(FileInfo* file, u8* buffer, int length)
 	{
 		RiiFileInfo* info = (RiiFileInfo*)file;
+
+#ifdef RIIFS_LOCAL_SEEKING
+		// don't request more bytes than there is available
+		if (length > int(info->Size - info->Position))
+			length = info->Size - info->Position;
+#endif
 
 		SendCommand(RII_OPTION_FILE, &info->File, 4);
 		SendCommand(RII_OPTION_LENGTH, &length, 4);
@@ -263,18 +279,24 @@ namespace ProxiIOS { namespace Filesystem {
 		SendCommand(RII_OPTION_DATA, buffer, length);
 		int ret = ReceiveCommand(RII_FILE_WRITE);
 #ifdef RIIFS_LOCAL_SEEKING
-		if (ret > 0)
+		if (ret > 0) {
 			info->Position += ret;
+			if (info->Position > info->Size)
+				info->Size = info->Position;
+		}
 #endif
 		return ret;
 	}
 
 	int RiiHandler::Seek(FileInfo* file, int where, int whence)
 	{
+		// FIXME: This function doesn't return a proper result without LOCAL_SEEKING
+		// It shouldn't allow seeking beyond end of file either
 		RiiFileInfo* info = (RiiFileInfo*)file;
 #ifdef RIIFS_LOCAL_SEEKING
-		if (whence == SEEK_SET && (u32)where == info->Position)
-			return 0; // Ignore excessive seeking
+		if ((whence == SEEK_SET && (u32)where == info->Position) ||
+			(whence == SEEK_CUR && where == 0))
+			return info->Position; // Ignore excessive seeking
 #endif
 		SendCommand(RII_OPTION_FILE, &info->File, 4);
 		SendCommand(RII_OPTION_SEEK_WHERE, &where, 4);
@@ -286,8 +308,9 @@ namespace ProxiIOS { namespace Filesystem {
 				info->Position += where;
 			else if (whence == SEEK_SET)
 				info->Position = where;
-			else
-				info->Position = ReceiveCommand(RII_FILE_TELL);
+			else // SEEK_END
+				info->Position = info->Size + where;
+			return info->Position;
 		}
 #endif
 		return ret;
@@ -306,6 +329,9 @@ namespace ProxiIOS { namespace Filesystem {
 	int RiiHandler::Sync(FileInfo* file)
 	{
 		SendCommand(RII_OPTION_FILE, &((RiiFileInfo*)file)->File, 4);
+#ifdef RIIFS_LOCAL_SEEKING
+		((RiiFileInfo*)file)->Position = ReceiveCommand(RII_FILE_TELL);
+#endif
 		return ReceiveCommand(RII_FILE_SYNC);
 	}
 
