@@ -20,11 +20,12 @@ typedef int int32_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 #else
+#ifdef _LP64
+#define RAWKAUDIO_API
+#else
 #define RAWKAUDIO_API __attribute__((cdecl))
-#include <stdint.h>
-#ifndef size_t
-typedef unsigned int size_t;
 #endif
+#include <stdint.h>
 #endif
 
 #define rawk_min(a, b) (((a)>(b)) ? (b) : (a))
@@ -76,19 +77,19 @@ typedef struct rawk_callbacks
 /* Creates an encoding object
 * output_name = name of the file to write to (will be created)
 * channels = number of audio channels
-* s_rate = sampling rate in Hz
+* s_rate = input sampling rate in Hz
+* target_s_rate = output sampling rate in Hz
 * bitrate = bitrate to use per channel (in bps), 0 means use the default (72000)
-* m_header = boolean(0/1), 1 means the output file will have an unencrypted RB1/RB2 mogg header added
 * stream = (out) a pointer to a variable that will hold the encoding object
 * returns 0 on success or a RAWKERROR on failure
 */
-int RAWKAUDIO_API rawk_vorbis_enc_create(char *output_name, int channels, int s_rate, int bitrate, int m_header, vb_enc_stream *stream);
+int RAWKAUDIO_API rawk_vorbis_enc_create(char *output_name, int channels, int s_rate, int target_s_rate, int bitrate, vb_enc_stream *stream);
 
 /* The same function, but using callback functions
 * The callbacks are stored internally, the callback struct passed to this function does not need
 * to be static and can be freed after the function has returned.
 */
-int RAWKAUDIO_API rawk_vorbis_enc_create_cb(rawk_callbacks *cb, int channels, int s_rate, int bitrate, int m_header, vb_enc_stream *stream);
+int RAWKAUDIO_API rawk_vorbis_enc_create_cb(rawk_callbacks *cb, int channels, int s_rate, int target_s_rate, int bitrate, vb_enc_stream *stream);
 
 /* Finalize and destroy an encoding object
 * stream = the encoding object to destroy
@@ -147,9 +148,10 @@ int RAWKAUDIO_API rawk_vorbis_dec_decompress(vb_dec_stream stream, short **sampl
 * out_channels = number of output channels
 * masks = an array of bitmasks, for each output channel that specifies which input channels will be included in the mix
 * samples = the number of samples (per channel) to process
+* normalize = specifies whether to scale the output based on the number of input channels
 * returns 0 on success or a RAWKERROR on failure
 */
-int RAWKAUDIO_API rawk_downmix(short **in, int in_channels, short **out, int out_channels, unsigned short *masks, int samples);
+int RAWKAUDIO_API rawk_downmix(short **in, int in_channels, short **out, int out_channels, unsigned short *masks, int samples, int normalize);
 
 int RAWKAUDIO_API rawk_bink_dec_create(char *input_name, int *channels, int *rate, int64_t *samples, bk_dec_stream *stream);
 int RAWKAUDIO_API rawk_bink_dec_create_cb(rawk_callbacks *cb, int *channels, int *rate, int64_t *samples, bk_dec_stream *stream);

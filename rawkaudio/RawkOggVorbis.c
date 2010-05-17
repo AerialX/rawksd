@@ -45,7 +45,6 @@ typedef struct rawkvorbis_dec_file
 
 // constants
 #define MAX_INPUT_CHANNELS 16
-static const int mogg_header[2] = {10, 8};
 
 void vorbis_enc_close(rawkvorbis_enc_stream *vbs)
 {
@@ -165,7 +164,7 @@ int RAWKAUDIO_API rawk_vorbis_enc_compress(vb_enc_stream stream, short **samples
 	return 0;
 }
 
-int RAWKAUDIO_API rawk_vorbis_enc_create_cb(rawk_callbacks *cb, int channels, int s_rate, int bitrate, int m_header, vb_enc_stream *stream)
+int RAWKAUDIO_API rawk_vorbis_enc_create_cb(rawk_callbacks *cb, int channels, int s_rate, int target_s_rate, int bitrate, vb_enc_stream *stream)
 {
 	int ret=0;
 	rawkvorbis_enc_stream *vbs=NULL;
@@ -173,7 +172,7 @@ int RAWKAUDIO_API rawk_vorbis_enc_create_cb(rawk_callbacks *cb, int channels, in
 	ogg_page og;
 	uint32_t num, den;
 
-	if (stream==NULL||cb==NULL||cb->write_func==NULL||channels<=0||s_rate<=0||bitrate<0)
+	if (stream==NULL||cb==NULL||cb->write_func==NULL||channels<=0||s_rate<=0||target_s_rate<0||bitrate<0)
 		return RAWKERROR_INVALID_PARAM;
 	*stream = NULL;
 
@@ -185,19 +184,19 @@ int RAWKAUDIO_API rawk_vorbis_enc_create_cb(rawk_callbacks *cb, int channels, in
 	// copy callbacks
 	memcpy(&vbs->cb, cb, sizeof(rawk_callbacks));
 	
-	if (m_header)
-		vbs->cb.write_func(mogg_header, sizeof(mogg_header), 1, vbs->cb.datasource);
-
 	// initialize the vorbis stream
 	vorbis_info_init(&vbs->vi);
+
+	if (!target_s_rate)
+		target_s_rate = OGG_SAMPLE_RATE_OUT;
 
 	// vorbis documentation says max_bitrate and min_bitrate should be set to -1 if not used
 	// but that doesn't match the headers in RB1's .mogg files, so use 0 (if bitrate not specified)
 
-	//if (bitrate)
-	//	ret = vorbis_encode_init(&vbs->vi, channels, OGG_SAMPLE_RATE_OUT, -1, bitrate*channels, -1);
-	//else
-		ret = vorbis_encode_init(&vbs->vi, channels, OGG_SAMPLE_RATE_OUT, 0, 72000*channels, 0);
+	if (bitrate)
+		ret = vorbis_encode_init(&vbs->vi, channels, target_s_rate, -1, bitrate*channels, -1);
+	else
+		ret = vorbis_encode_init(&vbs->vi, channels, target_s_rate, 0, 72000*channels, 0);
 
 	if (ret)
 	{
@@ -235,7 +234,7 @@ int RAWKAUDIO_API rawk_vorbis_enc_create_cb(rawk_callbacks *cb, int channels, in
 	}
 
 	// setup a resampler
-	vbs->rs = rawk_resampler_init(channels, s_rate, OGG_SAMPLE_RATE_OUT, SPEEX_RESAMPLER_QUALITY_MAX, NULL);
+	vbs->rs = rawk_resampler_init(channels, s_rate, target_s_rate, SPEEX_RESAMPLER_QUALITY_MAX, NULL);
 	if (vbs->rs==NULL)
 	{
 		ret = RAWKERROR_MEMORY;
@@ -259,7 +258,7 @@ vorbis_enc_create_done:
 	return ret;
 }
 
-int RAWKAUDIO_API rawk_vorbis_enc_create(char *output_name, int channels, int s_rate, int bitrate, int m_header, vb_enc_stream *stream)
+int RAWKAUDIO_API rawk_vorbis_enc_create(char *output_name, int channels, int s_rate, int target_s_rate, int bitrate, vb_enc_stream *stream)
 {
 	rawk_callbacks cb;
 
@@ -274,7 +273,7 @@ int RAWKAUDIO_API rawk_vorbis_enc_create(char *output_name, int channels, int s_
 	cb.close_func = (int (*)(void*))fclose;
 	cb.write_func = (size_t (*)(const void*,size_t,size_t,void*))fwrite;
 
-	return rawk_vorbis_enc_create_cb(&cb, channels, s_rate, bitrate, m_header, stream);
+	return rawk_vorbis_enc_create_cb(&cb, channels, s_rate, target_s_rate, bitrate, stream);
 }
 
 void RAWKAUDIO_API rawk_vorbis_enc_destroy(vb_enc_stream stream)
@@ -546,7 +545,7 @@ int RAWKAUDIO_API rawk_vorbis_dec_decompress(vb_dec_stream stream, short **sampl
 	return decoded;
 }
 
-int RAWKAUDIO_API rawk_downmix(short **in, int in_channels, short **out, int out_channels, unsigned short *masks, int samples)
+int RAWKAUDIO_API rawk_downmix(short **in, int in_channels, short **out, int out_channels, unsigned short *masks, int samples, int normalize)
 {
 	int chan;
 	char input_jump[MAX_INPUT_CHANNELS];
@@ -584,7 +583,10 @@ int RAWKAUDIO_API rawk_downmix(short **in, int in_channels, short **out, int out
 				{
 					mix += in[input_jump[j]][i];
 				}
-				out[chan][i] = (short)((mix*scale+(1<<10))>>11);
+				if (normalize)
+					out[chan][i] = (short)((mix*scale+(1<<10))>>11);
+				else
+					out[chan][i] = (short)mix;
 			}
 		}
 	}
