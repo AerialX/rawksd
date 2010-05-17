@@ -112,7 +112,7 @@ namespace ConsoleHaxx.Wii
 		public u32			TotalSize;
 		public u8[]			ContentIndex;
 		public u64			TitleID;
-		public u64			Unknown;
+		public u64			MacAddress;
 		public u8[]			Padding;
 		public List<File>	Files;
 
@@ -143,7 +143,7 @@ namespace ConsoleHaxx.Wii
 			bk.TotalSize = reader.ReadUInt32();
 			reader.ReadBytes(bk.ContentIndex);
 			bk.TitleID = reader.ReadUInt64();
-			bk.Unknown = reader.ReadUInt64();
+			bk.MacAddress = reader.ReadUInt64();
 			reader.ReadBytes(bk.Padding);
 
 			for (u32 i = 0; i < numfiles; i++)
@@ -168,7 +168,7 @@ namespace ConsoleHaxx.Wii
 			writer.Write(TotalSize);
 			writer.Write(ContentIndex);
 			writer.Write(TitleID);
-			writer.Write(Unknown);
+			writer.Write(MacAddress);
 			writer.Write(Padding);
 
 			foreach (File file in Files) {

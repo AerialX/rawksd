@@ -1,0 +1,23 @@
+<importdata>
+	<global>
+		<idprefix>lrb</idprefix>
+		<nameprefix>[LRB]</nameprefix>
+		<version>1</version>
+	</global>
+	<addsong id="justfortonight" />
+	<song id="justfortonight">
+		<name>Just for Tonight</name>
+		<artist>One Night Only</artist>
+		<album>Started a Fire</album>
+		<track>1</track>
+		<master>true</master>
+		<year>2008</year>
+		<genre>poprock</genre>
+		<vocalist>male</vocalist>
+		<difficulty instrument="band" rank="252" />
+		<difficulty instrument="guitar" rank="265" />
+		<difficulty instrument="bass" rank="205" />
+		<difficulty instrument="drums" rank="240" />
+		<difficulty instrument="vocals" rank="170" />
+	</song>
+</importdata>

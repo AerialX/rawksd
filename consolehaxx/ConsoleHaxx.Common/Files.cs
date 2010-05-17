@@ -59,7 +59,7 @@ namespace ConsoleHaxx.Common
 
 		public Node Find(string name)
 		{
-			return Find(name, false);
+			return Find(name, true);
 		}
 
 		public Node Find(string name, bool ignorecase)
@@ -69,7 +69,7 @@ namespace ConsoleHaxx.Common
 
 		public Node Find(string name, SearchOption search)
 		{
-			return Find(name, search, false);
+			return Find(name, search, true);
 		}
 
 		public Node Find(string name, SearchOption search, bool ignorecase)
@@ -95,7 +95,7 @@ namespace ConsoleHaxx.Common
 
 		public Node Navigate(string path, bool create)
 		{
-			return Navigate(path, create, false);
+			return Navigate(path, create, true);
 		}
 
 		public Node Navigate(string path, bool create, bool ignorecase)
@@ -117,26 +117,26 @@ namespace ConsoleHaxx.Common
 			return current;
 		}
 
-		public static DirectoryNode FromPath(string path, DelayedStreamCache cache, FileAccess access = FileAccess.ReadWrite)
+		public static DirectoryNode FromPath(string path, DelayedStreamCache cache, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
 		{
 			DirectoryInfo dir = new DirectoryInfo(path);
 			DirectoryNode node = new DirectoryNode(dir.Name, null);
-			FromPath(node, path, cache, access);
+			FromPath(node, path, cache, access, share);
 			return node;
 		}
 
-		protected static void FromPath(DirectoryNode parent, string path, DelayedStreamCache cache, FileAccess access)
+		protected static void FromPath(DirectoryNode parent, string path, DelayedStreamCache cache, FileAccess access, FileShare share)
 		{
 			string[] paths = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly);
 			foreach (string fpath in paths) {
 				FileInfo finfo = new FileInfo(fpath);
-				FileNode file = new FileNode(finfo.Name, parent, (ulong)finfo.Length, new DelayedStream(cache.GenerateFileStream(finfo.FullName, FileMode.Open, access)));
+				FileNode file = new FileNode(finfo.Name, parent, (ulong)finfo.Length, new DelayedStream(cache.GenerateFileStream(finfo.FullName, FileMode.Open, access, share)));
 			}
 			paths = Directory.GetDirectories(path, "*", SearchOption.TopDirectoryOnly);
 			foreach (string dpath in paths) {
 				DirectoryInfo dinfo = new DirectoryInfo(dpath);
 				DirectoryNode dir = new DirectoryNode(dinfo.Name, parent);
-				FromPath(dir, dpath, cache, access);
+				FromPath(dir, dpath, cache, access, share);
 			}
 		}
 	}

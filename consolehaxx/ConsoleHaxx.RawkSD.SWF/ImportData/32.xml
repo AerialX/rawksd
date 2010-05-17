@@ -1,0 +1,1085 @@
+<importdata>
+	<global>
+		<idprefix>ghwt</idprefix>
+		<nameprefix>[GHWT]</nameprefix>
+		<version>1</version>
+		<difficulty instrument="guitar" rank="1" />
+		<difficulty instrument="bass" rank="1" />
+		<difficulty instrument="drums" rank="1" />
+		<difficulty instrument="vox" rank="1" />
+	</global>
+	<deletesong id="synctest" />
+	<deletesong id="synctestplaytoaudio" />
+	<deletesong id="synctestaudioandvisual" />
+	<deletesong id="synctestmuting" />
+	<deletesong id="tenseconddebug" />
+	<deletesong id="elevenseconddebug" />
+	<deletesong id="twelveseconddebug" />
+	<deletesong id="testtones" />
+	<deletesong id="Tut_Bass_OpenNote" />
+	<deletesong id="Tut_Demo" />
+	<deletesong id="Tut_Drum_Activ" />
+	<deletesong id="Tut_Drum_Beat1" />
+	<deletesong id="Tut_Drum_Beat2" />
+	<deletesong id="Tut_Drum_Beat3" />
+	<deletesong id="Tut_Drum_Break" />
+	<deletesong id="Tut_Drum_Combos" />
+	<deletesong id="Tut_Drum_Kick" />
+	<deletesong id="Tut_Drum_Free" />
+	<deletesong id="Tut_Drum_OneHand" />
+	<deletesong id="Tut_Drum_TwoHands" />
+	<deletesong id="Tut_Gtr_Chords" />
+	<deletesong id="Tut_Gtr_Combos" />
+	<deletesong id="Tut_Gtr_DiffNotes" />
+	<deletesong id="Tut_Gtr_ExtSus" />
+	<deletesong id="Tut_Gtr_HamOn" />
+	<deletesong id="Tut_Gtr_LongNotes" />
+	<deletesong id="Tut_Gtr_PlayNotes" />
+	<deletesong id="Tut_Gtr_PullOff" />
+	<deletesong id="Tut_Gtr_Slide" />
+	<deletesong id="Tut_Gtr_Tilt" />
+	<deletesong id="Tut_Gtr_Wham" />
+	<deletesong id="Tut_Vox_Activ" />
+	<deletesong id="Tut_Vox_Combos" />
+	<deletesong id="Tut_Vox_Freeform" />
+	<deletesong id="Tut_Vox_HitNotes" />
+	<deletesong id="Tut_Vox_Hype" />
+	<deletesong id="Tut_Vox_Spoken" />
+	<deletesong id="Tut_VS_BattPow" />
+	<deletesong id="Tut_VS_MultAttck" />
+	<deletesong id="Tut_VS_Recov" />
+	<deletesong id="Tut_VS_Tilt" />
+	<deletesong id="DrumStreamTest" />
+	<song id="AboutAGirl">
+		<name>About a Girl</name>
+		<artist>Nirvana</artist>
+		<album>MTV Unplugged in New York</album>
+		<genre>grunge</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="234" />
+		<difficulty instrument="guitar" rank="234" />
+		<difficulty instrument="bass" rank="234" />
+		<difficulty instrument="drum" rank="234" />
+		<difficulty instrument="vocals" rank="234" />
+	</song>
+	<song id="Aggro">
+		<name>Aggro</name>
+		<artist>The Enemy</artist>
+		<album>We'll Live and Die in These Towns</album>
+		<genre>indierock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="252" />
+		<difficulty instrument="guitar" rank="252" />
+		<difficulty instrument="bass" rank="252" />
+		<difficulty instrument="drum" rank="252" />
+		<difficulty instrument="vocals" rank="252" />
+	</song>
+	<song id="AmericanWoman">
+		<name>American Woman</name>
+		<artist>The Guess Who</artist>
+		<album>American Woman</album>
+		<genre>classicrock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="168" />
+		<difficulty instrument="guitar" rank="168" />
+		<difficulty instrument="bass" rank="168" />
+		<difficulty instrument="drum" rank="168" />
+		<difficulty instrument="vocals" rank="168" />
+	</song>
+	<song id="Antisocial">
+		<name>Antisocial</name>
+		<artist>Trust</artist>
+		<album>Repression</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="438" />
+		<difficulty instrument="guitar" rank="438" />
+		<difficulty instrument="bass" rank="438" />
+		<difficulty instrument="drum" rank="438" />
+		<difficulty instrument="vocals" rank="438" />
+	</song>
+	<song id="AreYouGonnaGoMyWay">
+		<name>Are You Gonna Go My Way</name>
+		<artist>Lenny Kravitz</artist>
+		<album>Are You Gonna Go My Way</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="198" />
+		<difficulty instrument="guitar" rank="198" />
+		<difficulty instrument="bass" rank="198" />
+		<difficulty instrument="drum" rank="198" />
+		<difficulty instrument="vocals" rank="198" />
+	</song>
+	<song id="Assassin">
+		<name>Assassin</name>
+		<artist>Muse</artist>
+		<album>Black Holes &amp; Revelations</album>
+		<genre>prog</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="456" />
+		<difficulty instrument="guitar" rank="456" />
+		<difficulty instrument="bass" rank="456" />
+		<difficulty instrument="drum" rank="456" />
+		<difficulty instrument="vocals" rank="456" />
+	</song>
+	<song id="BandOnTheRun">
+		<name>Band on the Run</name>
+		<artist>Wings</artist>
+		<album>Band on the Run</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="90" />
+		<difficulty instrument="guitar" rank="90" />
+		<difficulty instrument="bass" rank="90" />
+		<difficulty instrument="drum" rank="90" />
+		<difficulty instrument="vocals" rank="90" />
+	</song>
+	<song id="beatit">
+		<name>Beat It</name>
+		<artist>Michael Jackson</artist>
+		<album>Thriller</album>
+		<genre>rock</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="210" />
+		<difficulty instrument="guitar" rank="210" />
+		<difficulty instrument="bass" rank="210" />
+		<difficulty instrument="drum" rank="210" />
+		<difficulty instrument="vocals" rank="210" />
+	</song>
+	<song id="BeautifulDisaster">
+		<name>Beautiful Disaster</name>
+		<artist>311</artist>
+		<album>Transistor</album>
+		<genre>alternative</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="54" />
+		<difficulty instrument="guitar" rank="54" />
+		<difficulty instrument="bass" rank="54" />
+		<difficulty instrument="drum" rank="54" />
+		<difficulty instrument="vocals" rank="54" />
+	</song>
+	<song id="BossTed">
+		<name>Ted Nugent Guitar Duel</name>
+		<artist>Ted Nugent</artist>
+		<album>Ted Nugent</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="504" />
+		<difficulty instrument="guitar" rank="504" />
+		<difficulty instrument="bass" rank="504" />
+		<difficulty instrument="drum" rank="504" />
+		<difficulty instrument="vocals" rank="504" />
+	</song>
+	<song id="BossZakk">
+		<name>Zakk Wylde Guitar Duel</name>
+		<album>Zakk Wylde</album>
+		<artist>Zakk Wylde</artist>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="510" />
+		<difficulty instrument="guitar" rank="510" />
+		<difficulty instrument="bass" rank="510" />
+		<difficulty instrument="drum" rank="510" />
+		<difficulty instrument="vocals" rank="510" />
+	</song>
+	<song id="BYOB">
+		<name>B.Y.O.B</name>
+		<artist>System of a Down</artist>
+		<album>Mezmerize</album>
+		<genre>alternative</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="462" />
+		<difficulty instrument="guitar" rank="462" />
+		<difficulty instrument="bass" rank="462" />
+		<difficulty instrument="drum" rank="462" />
+		<difficulty instrument="vocals" rank="462" />
+	</song>
+	<song id="CrazyTrain">
+		<name>Crazy Train</name>
+		<artist>Ozzy Osbourne</artist>
+		<album>Blizzard of Ozz</album>
+		<genre>metal</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="432" />
+		<difficulty instrument="guitar" rank="432" />
+		<difficulty instrument="bass" rank="432" />
+		<difficulty instrument="drum" rank="432" />
+		<difficulty instrument="vocals" rank="432" />
+	</song>
+	<song id="Dammit">
+		<name>Dammit</name>
+		<artist>Blink-182</artist>
+		<album>Dude Ranch</album>
+		<genre>punk</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="186" />
+		<difficulty instrument="guitar" rank="186" />
+		<difficulty instrument="bass" rank="186" />
+		<difficulty instrument="drum" rank="186" />
+		<difficulty instrument="vocals" rank="186" />
+	</song>
+	<song id="DemolitionMan">
+		<name>Demolition Man (Live)</name>
+		<artist>Sting</artist>
+		<album>Ghost in the Machine</album>
+		<genre>rock</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="294" />
+		<difficulty instrument="guitar" rank="294" />
+		<difficulty instrument="bass" rank="294" />
+		<difficulty instrument="drum" rank="294" />
+		<difficulty instrument="vocals" rank="294" />
+	</song>
+	<song id="DoItAgain">
+		<name>Do It Again</name>
+		<artist>Steely Dan</artist>
+		<album>Can't Buy a Thrill</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="144" />
+		<difficulty instrument="guitar" rank="144" />
+		<difficulty instrument="bass" rank="144" />
+		<difficulty instrument="drum" rank="144" />
+		<difficulty instrument="vocals" rank="144" />
+	</song>
+	<song id="EscuelaDeCalor">
+		<name>Escuela De Calor</name>
+		<artist>Radio Futura</artist>
+		<album>La ley del desierto, la ley del mar</album>
+		<genre>rock</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="282" />
+		<difficulty instrument="guitar" rank="282" />
+		<difficulty instrument="bass" rank="282" />
+		<difficulty instrument="drum" rank="282" />
+		<difficulty instrument="vocals" rank="282" />
+	</song>
+	<song id="Everlong">
+		<name>Everlong</name>
+		<artist>Foo Fighters</artist>
+		<album>The Colour and the Shape</album>
+		<genre>alternative</genre>
+		<track>11</track>
+		<difficulty instrument="band" rank="342" />
+		<difficulty instrument="guitar" rank="342" />
+		<difficulty instrument="bass" rank="342" />
+		<difficulty instrument="drum" rank="342" />
+		<difficulty instrument="vocals" rank="342" />
+	</song>
+	<song id="eyeofthetiger">
+		<name>Eye of the Tiger</name>
+		<artist>Suvivor</artist>
+		<album>Eye of the Tiger</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="18" />
+		<difficulty instrument="guitar" rank="18" />
+		<difficulty instrument="bass" rank="18" />
+		<difficulty instrument="drum" rank="18" />
+		<difficulty instrument="vocals" rank="18" />
+	</song>
+	<song id="FeelThePain">
+		<name>Feel The Pain</name>
+		<artist>Dinosaur Jr.</artist>
+		<album>Without a Sound</album>
+		<genre>alternative</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="60" />
+		<difficulty instrument="guitar" rank="60" />
+		<difficulty instrument="bass" rank="60" />
+		<difficulty instrument="drum" rank="60" />
+		<difficulty instrument="vocals" rank="60" />
+	</song>
+	<song id="FloatOn">
+		<name>Float On</name>
+		<artist>Modest Mouse</artist>
+		<album>Good News for People Who Love Bad News</album>
+		<genre>alternative</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="270" />
+		<difficulty instrument="guitar" rank="270" />
+		<difficulty instrument="bass" rank="270" />
+		<difficulty instrument="drum" rank="270" />
+		<difficulty instrument="vocals" rank="270" />
+	</song>
+	<song id="FreakOnALeash">
+		<name>Freak on a Leash</name>
+		<artist>KoRn</artist>
+		<album>Follow the Leader</album>
+		<genre>numetal</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="42" />
+		<difficulty instrument="guitar" rank="42" />
+		<difficulty instrument="bass" rank="42" />
+		<difficulty instrument="drum" rank="42" />
+		<difficulty instrument="vocals" rank="42" />
+	</song>
+	<song id="GoodGod">
+		<name>Good God</name>
+		<artist>Anouk</artist>
+		<album>Who's Your Momma</album>
+		<genre>rock</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="384" />
+		<difficulty instrument="guitar" rank="384" />
+		<difficulty instrument="bass" rank="384" />
+		<difficulty instrument="drum" rank="384" />
+		<difficulty instrument="vocals" rank="384" />
+	</song>
+	<song id="GoYourOwnWay">
+		<name>Go Your Own Way</name>
+		<artist>Fleetwood Mac</artist>
+		<album>Rumours</album>
+		<genre>classicrock</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="222" />
+		<difficulty instrument="guitar" rank="222" />
+		<difficulty instrument="bass" rank="222" />
+		<difficulty instrument="drum" rank="222" />
+		<difficulty instrument="vocals" rank="222" />
+	</song>
+	<song id="HailToTheFreaks">
+		<name>Hail to the Freaks</name>
+		<artist>Beatsteaks</artist>
+		<album>.limbo messiah</album>
+		<genre>alternative</genre>
+		<track>10</track>
+		<difficulty instrument="band" rank="330" />
+		<difficulty instrument="guitar" rank="330" />
+		<difficulty instrument="bass" rank="330" />
+		<difficulty instrument="drum" rank="330" />
+		<difficulty instrument="vocals" rank="330" />
+	</song>
+	<song id="Heartbreaker">
+		<name>Heartbreaker</name>
+		<artist>Pat Benatar</artist>
+		<album>In the Heat of the Night</album>
+		<genre>classicrock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="204" />
+		<difficulty instrument="guitar" rank="204" />
+		<difficulty instrument="bass" rank="204" />
+		<difficulty instrument="drum" rank="204" />
+		<difficulty instrument="vocals" rank="204" />
+	</song>
+	<song id="HeyManNiceShot">
+		<name>Hey Man Nice Shot</name>
+		<artist>Filter</artist>
+		<album>Short Bus</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="174" />
+		<difficulty instrument="guitar" rank="174" />
+		<difficulty instrument="bass" rank="174" />
+		<difficulty instrument="drum" rank="174" />
+		<difficulty instrument="vocals" rank="174" />
+	</song>
+	<song id="HollywoodNights">
+		<name>Hollywood Nights</name>
+		<artist>Bob Seger &amp; The Silver Bullet Band</artist>
+		<album>Stranger in Town</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="396" />
+		<difficulty instrument="guitar" rank="396" />
+		<difficulty instrument="bass" rank="396" />
+		<difficulty instrument="drum" rank="396" />
+		<difficulty instrument="vocals" rank="396" />
+	</song>
+	<song id="HotelCalifornia">
+		<name>Hotel California</name>
+		<artist>The Eagles</artist>
+		<album>Hotel California</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="162" />
+		<difficulty instrument="guitar" rank="162" />
+		<difficulty instrument="bass" rank="162" />
+		<difficulty instrument="drum" rank="162" />
+		<difficulty instrument="vocals" rank="162" />
+	</song>
+	<song id="HotForTeacher">
+		<name>Hot for Teacher</name>
+		<artist>Van Halen</artist>
+		<album>1984</album>
+		<genre>rock</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="468" />
+		<difficulty instrument="guitar" rank="468" />
+		<difficulty instrument="bass" rank="468" />
+		<difficulty instrument="drum" rank="468" />
+		<difficulty instrument="vocals" rank="468" />
+	</song>
+	<song id="KickOutTheJams">
+		<name>Kick Out the Jams</name>
+		<artist>MC5's Wayne Kramer</artist>
+		<album>Kick Out the Jams</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="276" />
+		<difficulty instrument="guitar" rank="276" />
+		<difficulty instrument="bass" rank="276" />
+		<difficulty instrument="drum" rank="276" />
+		<difficulty instrument="vocals" rank="276" />
+	</song>
+	<song id="Labamba">
+		<name>La Bamba</name>
+		<artist>Los Lobos</artist>
+		<album>La Bamba (soundtrack)</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="453" />
+		<difficulty instrument="guitar" rank="453" />
+		<difficulty instrument="bass" rank="453" />
+		<difficulty instrument="drum" rank="453" />
+		<difficulty instrument="vocals" rank="453" />
+	</song>
+	<song id="LazyEye">
+		<name>Lazy Eye</name>
+		<artist>Silversun Pickups</artist>
+		<album>Carnavas</album>
+		<genre>indierock</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="306" />
+		<difficulty instrument="guitar" rank="306" />
+		<difficulty instrument="bass" rank="306" />
+		<difficulty instrument="drum" rank="306" />
+		<difficulty instrument="vocals" rank="306" />
+	</song>
+	<song id="LivingOnAPrayer">
+		<name>Livin' on a Prayer</name>
+		<artist>Bon Jovi</artist>
+		<album>Slippery When Wet</album>
+		<genre>rock</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="96" />
+		<difficulty instrument="guitar" rank="96" />
+		<difficulty instrument="bass" rank="96" />
+		<difficulty instrument="drum" rank="96" />
+		<difficulty instrument="vocals" rank="96" />
+	</song>
+	<song id="LoveMeTwoTimes">
+		<name>Love Me Two Times</name>
+		<artist>The Doors</artist>
+		<album>Strange Days</album>
+		<genre>rock</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="180" />
+		<difficulty instrument="guitar" rank="180" />
+		<difficulty instrument="bass" rank="180" />
+		<difficulty instrument="drum" rank="180" />
+		<difficulty instrument="vocals" rank="180" />
+	</song>
+	<song id="LoveRemovalMachine">
+		<name>Love Removal Machine</name>
+		<artist>The Cult</artist>
+		<album>Electric</album>
+		<genre>rock</genre>
+		<track>8</track>
+		<difficulty instrument="band" rank="48" />
+		<difficulty instrument="guitar" rank="48" />
+		<difficulty instrument="bass" rank="48" />
+		<difficulty instrument="drum" rank="48" />
+		<difficulty instrument="vocals" rank="48" />
+	</song>
+	<song id="LoveSpreads">
+		<name>Love Spreads</name>
+		<artist>The Stone Roses</artist>
+		<album>Second Coming</album>
+		<genre>alternative</genre>
+		<track>12</track>
+		<difficulty instrument="band" rank="474" />
+		<difficulty instrument="guitar" rank="474" />
+		<difficulty instrument="bass" rank="474" />
+		<difficulty instrument="drum" rank="474" />
+		<difficulty instrument="vocals" rank="474" />
+	</song>
+	<song id="LViaLViaquez">
+		<name>L'Via L'Viaquez</name>
+		<artist>The Mars Volta</artist>
+		<album>Frances the Mute</album>
+		<genre>prog</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="348" />
+		<difficulty instrument="guitar" rank="348" />
+		<difficulty instrument="bass" rank="348" />
+		<difficulty instrument="drum" rank="348" />
+		<difficulty instrument="vocals" rank="348" />
+	</song>
+	<song id="MiseryBusiness">
+		<name>Misery Business</name>
+		<artist>Paramore</artist>
+		<album>Riot!</album>
+		<genre>punk</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="114" />
+		<difficulty instrument="guitar" rank="114" />
+		<difficulty instrument="bass" rank="114" />
+		<difficulty instrument="drum" rank="114" />
+		<difficulty instrument="vocals" rank="114" />
+	</song>
+	<song id="Monsoon">
+		<name>Monsoon</name>
+		<artist>Tokio Hotel</artist>
+		<album>Schrei</album>
+		<genre>Glam</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="246" />
+		<difficulty instrument="guitar" rank="246" />
+		<difficulty instrument="bass" rank="246" />
+		<difficulty instrument="drum" rank="246" />
+		<difficulty instrument="vocals" rank="246" />
+	</song>
+	<song id="MountainSong">
+		<name>Mountain Song</name>
+		<artist>Jane's Addiction</artist>
+		<album>Nothing's Shocking</album>
+		<genre>alternative</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="30" />
+		<difficulty instrument="guitar" rank="30" />
+		<difficulty instrument="bass" rank="30" />
+		<difficulty instrument="drum" rank="30" />
+		<difficulty instrument="vocals" rank="30" />
+	</song>
+	<song id="MrCrowley">
+		<name>Mr. Crowley</name>
+		<artist>Ozzy Osbourne</artist>
+		<album>Blizzard of Ozz</album>
+		<genre>metal</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="426" />
+		<difficulty instrument="guitar" rank="426" />
+		<difficulty instrument="bass" rank="426" />
+		<difficulty instrument="drum" rank="426" />
+		<difficulty instrument="vocals" rank="426" />
+	</song>
+	<song id="NeverTooLate">
+		<name>Never Too Late</name>
+		<artist>The Answer</artist>
+		<album>Rise</album>
+		<genre>rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="480" />
+		<difficulty instrument="guitar" rank="480" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="480" />
+		<difficulty instrument="vocals" rank="480" />
+	</song>
+	<song id="NoSleepTillBrooklyn">
+		<name>No Sleep Till Brooklyn</name>
+		<artist>Beastie Boys</artist>
+		<album>Licensed to Ill</album>
+		<genre>rock</genre>
+		<track>8</track>
+		<difficulty instrument="band" rank="228" />
+		<difficulty instrument="guitar" rank="228" />
+		<difficulty instrument="bass" rank="228" />
+		<difficulty instrument="drum" rank="228" />
+		<difficulty instrument="vocals" rank="228" />
+	</song>
+	<song id="Nuvole">
+		<name>Nuvole</name>
+		<artist>Negramaro</artist>
+		<album>Mentre Tutto Scorre</album>
+		<genre>alternative</genre>
+		<track>8</track>
+		<difficulty instrument="band" rank="318" />
+		<difficulty instrument="guitar" rank="318" />
+		<difficulty instrument="bass" rank="318" />
+		<difficulty instrument="drum" rank="318" />
+		<difficulty instrument="vocals" rank="318" />
+	</song>
+	<song id="Obstacle1">
+		<name>Obstacle 1</name>
+		<artist>Interpol</artist>
+		<album>Turn on the Bright Lights</album>
+		<genre>indierock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="120" />
+		<difficulty instrument="guitar" rank="120" />
+		<difficulty instrument="bass" rank="120" />
+		<difficulty instrument="drum" rank="120" />
+		<difficulty instrument="vocals" rank="120" />
+	</song>
+	<song id="OneArmedScissor">
+		<name>One Armed Scissor</name>
+		<artist>At the Drive-In</artist>
+		<album>Relationship of Command</album>
+		<genre>alternative</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="390" />
+		<difficulty instrument="guitar" rank="390" />
+		<difficulty instrument="bass" rank="390" />
+		<difficulty instrument="drum" rank="390" />
+		<difficulty instrument="vocals" rank="390" />
+	</song>
+	<song id="OneWayOrAnother">
+		<name>One Way or Another</name>
+		<artist>Blondie</artist>
+		<album>Parallel Lines</album>
+		<genre>Pop rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="108" />
+		<difficulty instrument="guitar" rank="108" />
+		<difficulty instrument="bass" rank="108" />
+		<difficulty instrument="drum" rank="108" />
+		<difficulty instrument="vocals" rank="108" />
+	</song>
+	<song id="OnTheRoadAgain">
+		<name>On the Road Again (Live)</name>
+		<artist>Willie Nelson</artist>
+		<album>Honeysuckle Rose</album>
+		<genre>Country</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="150" />
+		<difficulty instrument="guitar" rank="150" />
+		<difficulty instrument="bass" rank="150" />
+		<difficulty instrument="drum" rank="150" />
+		<difficulty instrument="vocals" rank="150" />
+	</song>
+	<song id="OurTruth">
+		<name>Our Truth</name>
+		<artist>Lacuna Coil</artist>
+		<album>Karmacode</album>
+		<genre>metal</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="414" />
+		<difficulty instrument="guitar" rank="414" />
+		<difficulty instrument="bass" rank="414" />
+		<difficulty instrument="drum" rank="414" />
+		<difficulty instrument="vocals" rank="414" />
+	</song>
+	<song id="Overkill">
+		<name>Overkill</name>
+		<album>Overkill</album>
+		<artist>Motörhead</artist>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="402" />
+		<difficulty instrument="guitar" rank="402" />
+		<difficulty instrument="bass" rank="402" />
+		<difficulty instrument="drum" rank="402" />
+		<difficulty instrument="vocals" rank="402" />
+	</song>
+	<song id="Parabola">
+		<name>Parabola</name>
+		<artist>Tool</artist>
+		<album>Lateralus</album>
+		<genre>prog</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="126" />
+		<difficulty instrument="guitar" rank="126" />
+		<difficulty instrument="bass" rank="126" />
+		<difficulty instrument="drum" rank="126" />
+		<difficulty instrument="vocals" rank="126" />
+	</song>
+	<song id="PrettyVacant">
+		<name>Pretty Vacant</name>
+		<artist>Sex Pistols</artist>
+		<album>Never Mind the Bollocks, Here's the Sex Pistols</album>
+		<genre>punk</genre>
+		<track>10</track>
+		<difficulty instrument="band" rank="312" />
+		<difficulty instrument="guitar" rank="312" />
+		<difficulty instrument="bass" rank="312" />
+		<difficulty instrument="drum" rank="312" />
+		<difficulty instrument="vocals" rank="312" />
+	</song>
+	<song id="PrisonerOfSociety">
+		<name>Prisoner of Society</name>
+		<artist>The Living End</artist>
+		<album>The Living End</album>
+		<genre>punk</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="408" />
+		<difficulty instrument="guitar" rank="408" />
+		<difficulty instrument="bass" rank="408" />
+		<difficulty instrument="drum" rank="408" />
+		<difficulty instrument="vocals" rank="408" />
+	</song>
+	<song id="PullMeUnder">
+		<name>Pull Me Under</name>
+		<artist>Dream Theater</artist>
+		<album>Images and Words</album>
+		<genre>prog</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="492" />
+		<difficulty instrument="guitar" rank="492" />
+		<difficulty instrument="bass" rank="492" />
+		<difficulty instrument="drum" rank="492" />
+		<difficulty instrument="vocals" rank="492" />
+	</song>
+	<song id="PurpleHaze">
+		<name>Purple Haze</name>
+		<artist>The Jimi Hendrix Experience</artist>
+		<album>Are You Experienced</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="366" />
+		<difficulty instrument="guitar" rank="366" />
+		<difficulty instrument="bass" rank="366" />
+		<difficulty instrument="drum" rank="366" />
+		<difficulty instrument="vocals" rank="366" />
+	</song>
+	<song id="RamblinMan">
+		<name>Ramblin' Man</name>
+		<artist>The Allman Brothers Band</artist>
+		<album>Brothers and Sisters</album>
+		<genre>Southern rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="102" />
+		<difficulty instrument="guitar" rank="102" />
+		<difficulty instrument="bass" rank="102" />
+		<difficulty instrument="drum" rank="102" />
+		<difficulty instrument="vocals" rank="102" />
+	</song>
+	<song id="RebelYell">
+		<name>Rebel Yell</name>
+		<artist>Billy Idol</artist>
+		<album>Rebel Yell</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="36" />
+		<difficulty instrument="guitar" rank="36" />
+		<difficulty instrument="bass" rank="36" />
+		<difficulty instrument="drum" rank="36" />
+		<difficulty instrument="vocals" rank="36" />
+	</song>
+	<song id="ReEdThroughLabor">
+		<name>Re-education Through Labor</name>
+		<artist>Rise Against</artist>
+		<album>Appeal to Reason</album>
+		<genre>punk</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="444" />
+		<difficulty instrument="guitar" rank="444" />
+		<difficulty instrument="bass" rank="444" />
+		<difficulty instrument="drum" rank="444" />
+		<difficulty instrument="vocals" rank="444" />
+	</song>
+	<song id="Rooftops">
+		<name>Rooftops (A Liberation Broadcast)</name>
+		<artist>Lostprophets</artist>
+		<album>Liberation Transmission</album>
+		<genre>alternative</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="258" />
+		<difficulty instrument="guitar" rank="258" />
+		<difficulty instrument="bass" rank="258" />
+		<difficulty instrument="drum" rank="258" />
+		<difficulty instrument="vocals" rank="258" />
+	</song>
+	<song id="Santeria">
+		<name>Santeria</name>
+		<artist>Sublime</artist>
+		<album>Sublime</album>
+		<genre>punk</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="288" />
+		<difficulty instrument="guitar" rank="288" />
+		<difficulty instrument="bass" rank="288" />
+		<difficulty instrument="drum" rank="288" />
+		<difficulty instrument="vocals" rank="288" />
+	</song>
+	<song id="SatchBoogie">
+		<name>Satch Boogie</name>
+		<artist>Joe Santriani</artist>
+		<album>Surfing with the Alien</album>
+		<genre>rock</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="498" />
+		<difficulty instrument="guitar" rank="498" />
+		<difficulty instrument="bass" rank="498" />
+		<difficulty instrument="drum" rank="498" />
+		<difficulty instrument="vocals" rank="50" />
+	</song>
+	<song id="Schism">
+		<name>Schism</name>
+		<artist>Tool</artist>
+		<album>Lateralus</album>
+		<genre>prog</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="132" />
+		<difficulty instrument="guitar" rank="132" />
+		<difficulty instrument="bass" rank="132" />
+		<difficulty instrument="drum" rank="132" />
+		<difficulty instrument="vocals" rank="132" />
+	</song>
+	<song id="ScreamAimFire">
+		<name>Scream Aim Fire</name>
+		<artist>Bullet for My Valentine</artist>
+		<album>Scream Aim Fire</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="420" />
+		<difficulty instrument="guitar" rank="420" />
+		<difficulty instrument="bass" rank="420" />
+		<difficulty instrument="drum" rank="420" />
+		<difficulty instrument="vocals" rank="420" />
+	</song>
+	<song id="Shiver">
+		<name>Shiver</name>
+		<artist>Coldplay</artist>
+		<album>Parachutes</album>
+		<genre>alternative</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="300" />
+		<difficulty instrument="bass" rank="300" />
+		<difficulty instrument="drum" rank="300" />
+		<difficulty instrument="vocals" rank="300" />
+	</song>
+	<song id="SomeMightSay">
+		<name>Some Might Say</name>
+		<artist>Oasis</artist>
+		<album>(What's the Story) Morning Glory?</album>
+		<genre>alternative</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="12" />
+		<difficulty instrument="guitar" rank="12" />
+		<difficulty instrument="bass" rank="12" />
+		<difficulty instrument="drum" rank="12" />
+		<difficulty instrument="vocals" rank="12" />
+	</song>
+	<song id="SoulDoubt">
+		<name>Soul Doubt</name>
+		<artist>NOFX</artist>
+		<album>White Trash, Two Heebs and a Bean</album>
+		<genre>punk</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="486" />
+		<difficulty instrument="guitar" rank="486" />
+		<difficulty instrument="bass" rank="486" />
+		<difficulty instrument="drum" rank="486" />
+		<difficulty instrument="vocals" rank="486" />
+	</song>
+	<song id="Spiderwebs">
+		<name>Spiderwebs</name>
+		<artist>No Doubt</artist>
+		<album>Tragic Kingdom</album>
+		<genre>Pop rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="192" />
+		<difficulty instrument="guitar" rank="192" />
+		<difficulty instrument="bass" rank="192" />
+		<difficulty instrument="drum" rank="192" />
+		<difficulty instrument="vocals" rank="192" />
+	</song>
+	<song id="Stillborn">
+		<name>Stillborn</name>
+		<artist>Black Label Society</artist>
+		<album>The Blessed Hellride</album>
+		<genre>metal</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="156" />
+		<difficulty instrument="guitar" rank="156" />
+		<difficulty instrument="bass" rank="156" />
+		<difficulty instrument="drum" rank="156" />
+		<difficulty instrument="vocals" rank="156" />
+	</song>
+	<song id="Stranglehold">
+		<name>Stranglehold</name>
+		<artist>Ted Nugent</artist>
+		<album>Ted Nugent</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="216" />
+		<difficulty instrument="guitar" rank="216" />
+		<difficulty instrument="bass" rank="216" />
+		<difficulty instrument="drum" rank="216" />
+		<difficulty instrument="vocals" rank="216" />
+	</song>
+	<song id="SweetHomeAlabama">
+		<name>Sweet Home Alabama</name>
+		<artist>Lynyrd Skynyrd</artist>
+		<album>Second Helping</album>
+		<genre>Southern rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="336" />
+		<difficulty instrument="guitar" rank="336" />
+		<difficulty instrument="bass" rank="336" />
+		<difficulty instrument="drum" rank="336" />
+		<difficulty instrument="vocals" rank="336" />
+	</song>
+	<song id="TheJoker">
+		<name>The Joker</name>
+		<artist>The Steve Miller Band</artist>
+		<album>The Joker</album>
+		<genre>rock</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="84" />
+		<difficulty instrument="guitar" rank="84" />
+		<difficulty instrument="bass" rank="84" />
+		<difficulty instrument="drum" rank="84" />
+		<difficulty instrument="vocals" rank="84" />
+	</song>
+	<song id="TheKill">
+		<name>The Kill</name>
+		<artist>30 Seconds to Mars</artist>
+		<album>A Beautiful Lie</album>
+		<genre>emo</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="354" />
+		<difficulty instrument="guitar" rank="354" />
+		<difficulty instrument="bass" rank="354" />
+		<difficulty instrument="drum" rank="354" />
+		<difficulty instrument="vocals" rank="354" />
+	</song>
+	<song id="TheMiddle">
+		<name>The Middle</name>
+		<artist>Jimmy Eat World</artist>
+		<album>Bleed American</album>
+		<genre>Pop rock</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="24" />
+		<difficulty instrument="guitar" rank="24" />
+		<difficulty instrument="bass" rank="24" />
+		<difficulty instrument="drum" rank="24" />
+		<difficulty instrument="vocals" rank="24" />
+	</song>
+	<song id="TheOneILove">
+		<name>The One I Love</name>
+		<artist>R.E.M.</artist>
+		<album>Documents</album>
+		<genre>alternative</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="78" />
+		<difficulty instrument="guitar" rank="78" />
+		<difficulty instrument="bass" rank="78" />
+		<difficulty instrument="drum" rank="78" />
+		<difficulty instrument="vocals" rank="78" />
+	</song>
+	<song id="Today">
+		<name>Today</name>
+		<artist>The Smashing Pumpkins</artist>
+		<album>Siamese Dream</album>
+		<genre>alternative</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="66" />
+		<difficulty instrument="guitar" rank="66" />
+		<difficulty instrument="bass" rank="66" />
+		<difficulty instrument="drum" rank="66" />
+		<difficulty instrument="vocals" rank="66" />
+	</song>
+	<song id="TooMuchTooYoung">
+		<name>Too Much Too Young</name>
+		<artist>Airbourne</artist>
+		<album>Runnin' Wild</album>
+		<genre>rock</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="264" />
+		<difficulty instrument="guitar" rank="264" />
+		<difficulty instrument="bass" rank="264" />
+		<difficulty instrument="drum" rank="264" />
+		<difficulty instrument="vocals" rank="264" />
+	</song>
+	<song id="ToyBoy">
+		<name>Toy Boy</name>
+		<artist>Stuck in the Sound</artist>
+		<album>Toy Boy</album>
+		<genre>indierock</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="324" />
+		<difficulty instrument="guitar" rank="324" />
+		<difficulty instrument="bass" rank="324" />
+		<difficulty instrument="drum" rank="324" />
+		<difficulty instrument="vocals" rank="324" />
+	</song>
+	<song id="TrappedUnderIce">
+		<name>Trapped Under Ice</name>
+		<artist>Metallica</artist>
+		<album>Ride the Lightning</album>
+		<genre>metal</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="450" />
+		<difficulty instrument="bass" rank="450" />
+		<difficulty instrument="drum" rank="450" />
+		<difficulty instrument="vocals" rank="450" />
+	</song>
+	<song id="UpAroundTheBend">
+		<name>Up Around the Bend</name>
+		<artist>Creedence Clearwater Revival</artist>
+		<album>Cosmo's Factory</album>
+		<genre>rock</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="6" />
+		<difficulty instrument="guitar" rank="6" />
+		<difficulty instrument="bass" rank="6" />
+		<difficulty instrument="drum" rank="6" />
+		<difficulty instrument="vocals" rank="6" />
+	</song>
+	<song id="Vicarious">
+		<name>Vicarious</name>
+		<artist>Tool</artist>
+		<album>10,000 Days</album>
+		<genre>prog</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="138" />
+		<difficulty instrument="guitar" rank="138" />
+		<difficulty instrument="bass" rank="138" />
+		<difficulty instrument="drum" rank="138" />
+		<difficulty instrument="vocals" rank="138" />
+	</song>
+	<song id="Vinternoll2">
+		<name>Vinternoll2</name>
+		<artist>Kent</artist>
+		<album>Vapen &amp; ammunition</album>
+		<genre>rock</genre>
+		<track>8</track>
+		<difficulty instrument="band" rank="372" />
+		<difficulty instrument="guitar" rank="372" />
+		<difficulty instrument="bass" rank="372" />
+		<difficulty instrument="drum" rank="372" />
+		<difficulty instrument="vocals" rank="372" />
+	</song>
+	<song id="WeaponOfChoice">
+		<name>Weapon Of Choice</name>
+		<artist>Black Revel Motorcycle Club</artist>
+		<album>Baby 81</album>
+		<genre>alternative</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="378" />
+		<difficulty instrument="guitar" rank="378" />
+		<difficulty instrument="bass" rank="378" />
+		<difficulty instrument="drum" rank="378" />
+		<difficulty instrument="vocals" rank="378" />
+	</song>
+	<song id="WhatIveDone">
+		<name>What I've Done</name>
+		<artist>Linkin Park</artist>
+		<album>Minutes to Midnight</album>
+		<genre>numetal</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="240" />
+		<difficulty instrument="guitar" rank="240" />
+		<difficulty instrument="bass" rank="240" />
+		<difficulty instrument="drum" rank="240" />
+		<difficulty instrument="vocals" rank="240" />
+	</song>
+	<song id="WindCriesMary">
+		<name>The Wind Cries Mary</name>
+		<artist>Jimi Hendrix</artist>
+		<album>Are You Experienced</album>
+		<genre>rock</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="360" />
+		<difficulty instrument="guitar" rank="360" />
+		<difficulty instrument="bass" rank="360" />
+		<difficulty instrument="drum" rank="360" />
+		<difficulty instrument="vocals" rank="360" />
+	</song>
+	<song id="YoureGonnaSayYeah">
+		<name>You're Gonna Say Yeah</name>
+		<artist>HushPuppies</artist>
+		<album>The Trap</album>
+		<genre>rock</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="72" />
+		<difficulty instrument="guitar" rank="72" />
+		<difficulty instrument="bass" rank="72" />
+		<difficulty instrument="drum" rank="72" />
+		<difficulty instrument="vocals" rank="72" />
+	</song>
+</importdata>

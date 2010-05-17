@@ -59,5 +59,131 @@ namespace ConsoleHaxx.RawkSD.SWF.Properties {
                 resourceCulture = value;
             }
         }
+        
+        internal static System.Drawing.Bitmap IconFolder {
+            get {
+                object obj = ResourceManager.GetObject("IconFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconGH {
+            get {
+                object obj = ResourceManager.GetObject("IconGH", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconGH2 {
+            get {
+                object obj = ResourceManager.GetObject("IconGH2", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconGH3 {
+            get {
+                object obj = ResourceManager.GetObject("IconGH3", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconRB {
+            get {
+                object obj = ResourceManager.GetObject("IconRB", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconRSD {
+            get {
+                object obj = ResourceManager.GetObject("IconRSD", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Icon RawkSD {
+            get {
+                object obj = ResourceManager.GetObject("RawkSD", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        internal static byte[] rbn_album {
+            get {
+                object obj = ResourceManager.GetObject("rbn_album", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        internal static byte[] rbn_metadata {
+            get {
+                object obj = ResourceManager.GetObject("rbn_metadata", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        internal static byte[] rbn_milo {
+            get {
+                object obj = ResourceManager.GetObject("rbn_milo", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        internal static byte[] rbn_weights {
+            get {
+                object obj = ResourceManager.GetObject("rbn_weights", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap TierFive {
+            get {
+                object obj = ResourceManager.GetObject("TierFive", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap TierFour {
+            get {
+                object obj = ResourceManager.GetObject("TierFour", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap TierOne {
+            get {
+                object obj = ResourceManager.GetObject("TierOne", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap TierSix {
+            get {
+                object obj = ResourceManager.GetObject("TierSix", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap TierThree {
+            get {
+                object obj = ResourceManager.GetObject("TierThree", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap TierTwo {
+            get {
+                object obj = ResourceManager.GetObject("TierTwo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap TierZero {
+            get {
+                object obj = ResourceManager.GetObject("TierZero", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

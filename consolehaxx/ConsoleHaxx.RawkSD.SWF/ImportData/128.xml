@@ -1,0 +1,375 @@
+<importdata>
+	<global>
+		<idprefix>rb1</idprefix>
+		<nameprefix>[RB1]</nameprefix>
+		<version>1</version>
+	</global>
+	<song id="29fingers">
+		<album>The Konks</album>
+		<year>2005</year>
+		<track>2</track>
+	</song>
+	<song id="areyougonnabemygirl">
+		<album>Get Born</album>
+		<year>2003</year>
+		<track>2</track>
+	</song>
+	<song id="ballroomblitz">
+		<album>Desolation Boulevard</album>
+		<year>1974</year>
+		<master>false</master>
+		<track>1</track>
+	</song>
+	<song id="beetlebum">
+		<album>Blur</album>
+		<year>1997</year>
+		<master>false</master>
+		<track>1</track>
+	</song>
+	<song id="blackholesun">
+		<album>Superunknown</album>
+		<year>1994</year>
+		<track>7</track>
+	</song>
+	<song id="blitzkriegbop">
+		<album>Ramones</album>
+		<year>1976</year>
+		<track>1</track>
+	</song>
+	<song id="blooddoll">
+		<album>A Single Drop of Red</album>
+		<year>2007</year>
+		<track>3</track>
+	</song>
+	<song id="brainpower">
+		<album>Future Future Future Perfect</album>
+		<year>2007</year>
+		<track>6</track>
+	</song>
+	<song id="cantletgo">
+		<album>Can't Let Go</album>
+		<year>2007</year>
+		<track>1</track>
+	</song>
+	<song id="celebrityskin">
+		<album>Celebrity Skin</album>
+		<year>1998</year>
+		<track>1</track>
+	</song>
+	<song id="cherubrock">
+		<album>Siamese Dream</album>
+		<year>1993</year>
+		<track>1</track>
+	</song>
+	<song id="countdowntoinsanity">
+		<album>Open Letter to a Friend</album>
+		<year>2007</year>
+		<track>3</track>
+	</song>
+	<song id="creep">
+		<album>Pablo Honey</album>
+		<year>1993</year>
+		<track>2</track>
+	</song>
+	<song id="danicalifornia">
+		<album>Stadium Arcadium</album>
+		<year>2006</year>
+		<track>1</track>
+	</song>
+	<song id="daylatedollarshort">
+		<album>...Go Down Swinging!</album>
+		<year>2006</year>
+		<track>1</track>
+	</song>
+	<song id="deadonarrival">
+		<album>Take This to Your Grave</album>
+		<year>2003</year>
+		<track>2</track>
+	</song>
+	<song id="detroitrockcity">
+		<album>Destroyer</album>
+		<year>1976</year>
+		<track>1</track>
+	</song>
+	<song id="dirtylittlesecret">
+		<album>Move Along</album>
+		<year>2005</year>
+		<track>1</track>
+	</song>
+	<song id="dontfearthereaper">
+		<album>Agents of Fortune</album>
+		<year>1976</year>
+		<track>3</track>
+	</song>
+	<song id="dontlookbackinanger">
+		<album>(What's the Story) Morning Glory?</album>
+		<year>1995</year>
+		<track>4</track>
+	</song>
+	<song id="electricversion">
+		<album>Electric Version</album>
+		<year>2003</year>
+		<track>1</track>
+	</song>
+	<song id="entersandman">
+		<album>Metallica</album>
+		<year>1991</year>
+		<track>1</track>
+	</song>
+	<song id="epic">
+		<album>The Real Thing</album>
+		<year>1989</year>
+		<track>2</track>
+	</song>
+	<song id="flirtinwithdisaster">
+		<album>Flirtin' with Disaster</album>
+		<year>1979</year>
+		<track>6</track>
+	</song>
+	<song id="foreplaylongtime">
+		<album>Boston</album>
+		<year>1976</year>
+		<track>3</track>
+	</song>
+	<song id="gimmeshelter">
+		<album>Let It Bleed</album>
+		<year>1969</year>
+		<track>1</track>
+	</song>
+	<song id="gowiththeflow">
+		<album>Songs for the Deaf</album>
+		<year>2002</year>
+		<track>8</track>
+	</song>
+	<song id="greengrass">
+		<album>Outlaws</album>
+		<year>1975</year>
+		<master>false</master>
+		<track>10</track>
+	</song>
+	<song id="hereitgoesagain">
+		<album>Oh No</album>
+		<year>2005</year>
+		<track>3</track>
+	</song>
+	<song id="hierkommtalex">
+		<album>Ein kleines bisschen Horrorschau</album>
+		<year>1988</year>
+		<track>1</track>
+	</song>
+	<song id="highwaystar">
+		<album>Machine Head</album>
+		<year>1972</year>
+		<track>1</track>
+	</song>
+	<song id="hysteria">
+		<album>Absolution</album>
+		<year>2003</year>
+		<track>8</track>
+	</song>
+	<song id="igetby">
+		<album>Second and Eighteen</album>
+		<year>2004</year>
+		<track>16</track>
+	</song>
+	<song id="imsosick">
+		<album>Flyleaf</album>
+		<year>2005</year>
+		<track>1</track>
+	</song>
+	<song id="inbloom">
+		<album>Nevermind</album>
+		<year>1991</year>
+		<track>2</track>
+	</song>
+	<song id="ithinkimparanoid">
+		<album>Version 2.0</album>
+		<year>1998</year>
+		<track>2</track>
+	</song>
+	<song id="learntofly">
+		<album>There Is Nothing Left to Lose</album>
+		<year>1999</year>
+		<track>3</track>
+	</song>
+	<song id="mainoffender">
+		<album>Veni Vidi Vicious</album>
+		<year>2000</year>
+		<track>4</track>
+	</song>
+	<song id="manuchao">
+		<album>Never trust a guy who after having been a punk, is now playing electro</album>
+		<year>2003</year>
+		<track>2</track>
+	</song>
+	<song id="maps">
+		<album>Fever to Tell</album>
+		<year>2003</year>
+		<track>9</track>
+	</song>
+	<song id="missqueen">
+		<album>Climbing!</album>
+		<year>1970</year>
+		<master>false</master>
+		<track>1</track>
+	</song>
+	<song id="monsoon">
+		<album>Scream</album>
+		<year>2007</year>
+		<track>3</track>
+	</song>
+	<song id="newwave">
+		<album>Doctor Tank's Medicine Cake</album>
+		<year>2002</year>
+		<track>3</track>
+	</song>
+	<song id="nexttoyou">
+		<album>Outlandos d'Amour</album>
+		<year>1978</year>
+		<track>1</track>
+	</song>
+	<song id="nightmare">
+		<album>Crooked X</album>
+		<year>2009</year>
+		<track>8</track>
+	</song>
+	<song id="orangecrush">
+		<album>Green</album>
+		<year>1988</year>
+		<track>7</track>
+	</song>
+	<song id="outside">
+		<album>Here at the Home</album>
+		<year>1990</year>
+		<track>6</track>
+	</song>
+	<song id="paranoid">
+		<album>Paranoid</album>
+		<year>1970</year>
+		<master>false</master>
+		<track>2</track>
+	</song>
+	<song id="perfektewelle">
+		<album>Es ist Juli</album>
+		<year>2004</year>
+		<track>6</track>
+	</song>
+	<song id="pleasure">
+		<album>Bang Camaro</album>
+		<year>2007</year>
+		<track>3</track>
+	</song>
+	<song id="reptilia">
+		<album>Room on Fire</album>
+		<year>2003</year>
+		<track>2</track>
+	</song>
+	<song id="roam">
+		<album>Cosmic Thing</album>
+		<year>1989</year>
+		<track>6</track>
+	</song>
+	<song id="rockandrollstar">
+		<album>Definitely Maybe</album>
+		<year>1994</year>
+		<track>1</track>
+	</song>
+	<song id="rockawaybeach">
+		<album>Rocket to Russia</album>
+		<year>1977</year>
+		<track>2</track>
+	</song>
+	<song id="roxanne">
+		<album>Outlandos d'Amour</album>
+		<year>1978</year>
+		<track>3</track>
+	</song>
+	<song id="runtothehills">
+		<album>The Number of the Beast</album>
+		<year>1982</year>
+		<master>false</master>
+		<track>6</track>
+	</song>
+	<song id="sabotage">
+		<album>Ill Communication</album>
+		<year>1994</year>
+		<track>6</track>
+	</song>
+	<song id="sayitaintso">
+		<album>Weezer (The Blue Album)</album>
+		<year>1994</year>
+		<track>7</track>
+	</song>
+	<song id="seven">
+		<album>Public Display of Infection</album>
+		<year>2007</year>
+		<track>7</track>
+	</song>
+	<song id="shouldistay">
+		<album>Combat Rock</album>
+		<year>1982</year>
+		<track>3</track>
+	</song>
+	<song id="suffragettecity">
+		<album>The Rise and Fall of Ziggy Stardust and the Spiders from Mars</album>
+		<year>1972</year>
+		<track>10</track>
+	</song>
+	<song id="thehandthatfeeds">
+		<album>With Teeth</album>
+		<year>2005</year>
+		<track>4</track>
+	</song>
+	<song id="timewehad">
+		<album>Kiss the Crystal Flake</album>
+		<year>2007</year>
+		<track>3</track>
+	</song>
+	<song id="timmy">
+		<album>Timmy &amp; the Lords of the Underworld</album>
+		<year>2000</year>
+		<track>1</track>
+	</song>
+	<song id="tomsawyer">
+		<album>Moving Pictures</album>
+		<year>1981</year>
+		<master>false</master>
+		<track>1</track>
+	</song>
+	<song id="trainkeptarollin">
+		<album>Get Your Wings</album>
+		<year>1974</year>
+		<master>false</master>
+		<track>6</track>
+	</song>
+	<song id="vasoline">
+		<album>Purple</album>
+		<year>1994</year>
+		<track>2</track>
+	</song>
+	<song id="wanteddeadoralive">
+		<album>Slippery When Wet</album>
+		<year>1986</year>
+		<track>5</track>
+	</song>
+	<song id="waveofmutilation">
+		<album>Doolittle</album>
+		<year>1989</year>
+		<track>3</track>
+	</song>
+	<song id="welcomehome">
+		<album>Good Apollo, I'm Burning Star IV, Volume One: From Fear Through the Eyes of Madness</album>
+		<year>2005</year>
+		<track>3</track>
+	</song>
+	<song id="whenyouwereyoung">
+		<album>Sam's Town</album>
+		<year>2006</year>
+		<track>3</track>
+	</song>
+	<song id="wontgetfooled">
+		<album>Who's Next</album>
+		<year>1971</year>
+		<track>9</track>
+	</song>
+</importdata>

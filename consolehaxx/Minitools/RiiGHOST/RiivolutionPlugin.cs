@@ -64,7 +64,7 @@ namespace RiiGHOST
 
 		public void ImportFile(string gameFilename, string diskFilename, FileCopyProgress callback)
 		{
-			Node node = ISO.Partitions.Find(p => p.Type == PartitionType.Data).Root.Root;
+			Node node = ISO.DataPartition.Root.Root;
 			FileNode file = (node as DirectoryNode).Navigate(gameFilename) as FileNode;
 			if (file == null)
 				return;

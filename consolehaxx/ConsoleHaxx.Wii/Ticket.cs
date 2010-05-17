@@ -110,7 +110,7 @@ namespace ConsoleHaxx.Wii
 			MemoryStream stream = new MemoryStream(memory, true);
 			Save(stream);
 			stream.Close();
-			return Util.SHA1Hash(memory, Signature.Size);
+			return Util.SHA1Hash(memory, Signature.Size, TicketSize - Signature.Size);
 		}
 
 		public bool Fakesign()

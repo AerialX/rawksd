@@ -1,0 +1,255 @@
+<importdata>
+	<global>
+		<idprefix>gh80</idprefix>
+		<nameprefix>[GH80s]</nameprefix>
+		<version>1</version>
+		<difficulty instrument="guitar" rank="1" />
+		<difficulty instrument="bass" rank="1" />
+	</global>
+	<song id="becauseitsmidnite">
+		<album>Strong Bad Sings (and Other Type Hits)</album>
+		<genre>glam</genre>
+		<year>2003</year>
+		<track>5</track>
+		<difficulty instrument="band" rank="250" />
+		<difficulty instrument="guitar" rank="250" />
+		<difficulty instrument="bass" rank="250" />
+	</song>
+	<song id="electriceye">
+		<album>Screaming for Vengeance</album>
+		<genre>metal</genre>
+		<year>1982</year>
+		<track>2</track>
+		<difficulty instrument="band" rank="640" />
+		<difficulty instrument="guitar" rank="640" />
+		<difficulty instrument="bass" rank="640" />
+	</song>
+	<song id="iran">
+		<album>A Flock of Seagulls</album>
+		<genre>new_wave</genre>
+		<year>1982</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="75" />
+		<difficulty instrument="guitar" rank="75" />
+		<difficulty instrument="bass" rank="75" />
+	</song>
+	<song id="iwannarock">
+		<album>Stay Hungry</album>
+		<genre>metal</genre>
+		<year>1984</year>
+		<track>5</track>
+		<difficulty instrument="band" rank="375" />
+		<difficulty instrument="guitar" rank="375" />
+		<difficulty instrument="bass" rank="375" />
+	</song>
+	<song id="thewarrior">
+		<album>The Warrior</album>
+		<genre>poprock</genre>
+		<year>1984</year>
+		<track>1</track>
+		<vocalist>female</vocalist>
+		<difficulty instrument="band" rank="350" />
+		<difficulty instrument="guitar" rank="350" />
+		<difficulty instrument="bass" rank="350" />
+	</song>
+	<song id="18andlife">
+		<genre>metal</genre>
+		<year>1989</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="125" />
+		<difficulty instrument="guitar" rank="125" />
+		<difficulty instrument="bass" rank="125" />
+	</song>
+	<song id="aintnothinbut">
+		<genre>glam</genre>
+		<year>1988</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="525" />
+		<difficulty instrument="guitar" rank="525" />
+		<difficulty instrument="bass" rank="525" />
+	</song>
+	<song id="ballroomblitz">
+		<genre>rock</genre>
+		<year>1984</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="450" />
+		<difficulty instrument="bass" rank="450" />
+	</song>
+	<song id="ballstothewall">
+		<genre>metal</genre>
+		<year>1984</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="100" />
+		<difficulty instrument="guitar" rank="100" />
+		<difficulty instrument="bass" rank="100" />
+	</song>
+	<song id="bangyourhead">
+		<genre>metal</genre>
+		<year>1983</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="25" />
+		<difficulty instrument="guitar" rank="25" />
+		<difficulty instrument="bass" rank="25" />
+	</song>
+	<song id="bathroomwall">
+		<genre>glam</genre>
+		<year>1987</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="575" />
+		<difficulty instrument="guitar" rank="575" />
+		<difficulty instrument="bass" rank="575" />
+	</song>
+	<song id="caughtinamosh">
+		<genre>metal</genre>
+		<year>1987</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="700" />
+		<difficulty instrument="guitar" rank="700" />
+		<difficulty instrument="bass" rank="700" />
+	</song>
+	<song id="heatofthemoment">
+		<genre>prog</genre>
+		<year>1982</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="200" />
+		<difficulty instrument="guitar" rank="200" />
+		<difficulty instrument="bass" rank="200" />
+	</song>
+	<song id="holdonloosely">
+		<genre>rock</genre>
+		<year>1981</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="325" />
+		<difficulty instrument="guitar" rank="325" />
+		<difficulty instrument="bass" rank="325" />
+	</song>
+	<song id="holydiver">
+		<genre>metal</genre>
+		<year>1983</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="275" />
+		<difficulty instrument="guitar" rank="275" />
+		<difficulty instrument="bass" rank="275" />
+	</song>
+	<song id="lonelyisthenight">
+		<genre>rock</genre>
+		<year>1981</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="550" />
+		<difficulty instrument="guitar" rank="550" />
+		<difficulty instrument="bass" rank="550" />
+	</song>
+	<song id="losangeles">
+		<genre>punk</genre>
+		<year>1980</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="600" />
+		<difficulty instrument="guitar" rank="600" />
+		<difficulty instrument="bass" rank="600" />
+	</song>
+	<song id="noonelikeyou">
+		<genre>rock</genre>
+		<year>1982</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="150" />
+		<difficulty instrument="guitar" rank="150" />
+		<difficulty instrument="bass" rank="150" />
+	</song>
+	<song id="onlyalad">
+		<genre>new_wave</genre>
+		<year>1981</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="475" />
+		<difficulty instrument="guitar" rank="475" />
+		<difficulty instrument="bass" rank="475" />
+	</song>
+	<song id="playwithme">
+		<genre>glam</genre>
+		<year>1989</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="720" />
+		<difficulty instrument="guitar" rank="720" />
+		<difficulty instrument="bass" rank="720" />
+	</song>
+	<song id="policetruck">
+		<genre>punk</genre>
+		<year>1980</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="660" />
+		<difficulty instrument="guitar" rank="660" />
+		<difficulty instrument="bass" rank="660" />
+	</song>
+	<song id="radarlove">
+		<genre>rock</genre>
+		<year>1989</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="225" />
+		<difficulty instrument="guitar" rank="225" />
+		<difficulty instrument="bass" rank="225" />
+	</song>
+	<song id="roundandround">
+		<genre>metal</genre>
+		<year>1984</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="500" />
+		<difficulty instrument="bass" rank="500" />
+	</song>
+	<song id="seventeen">
+		<genre>glam</genre>
+		<year>1989</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="680" />
+		<difficulty instrument="guitar" rank="680" />
+		<difficulty instrument="bass" rank="680" />
+	</song>
+	<song id="shakin">
+		<genre>rock</genre>
+		<year>1982</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="175" />
+		<difficulty instrument="guitar" rank="175" />
+		<difficulty instrument="bass" rank="175" />
+	</song>
+	<song id="synchronicity2">
+		<genre>rock</genre>
+		<year>1983</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="425" />
+		<difficulty instrument="guitar" rank="425" />
+		<difficulty instrument="bass" rank="425" />
+	</song>
+	<song id="turningjapanese">
+		<genre>new_wave</genre>
+		<year>1980</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="300" />
+		<difficulty instrument="bass" rank="300" />
+	</song>
+	<song id="wegotthebeat">
+		<genre>new_wave</genre>
+		<year>1982</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="50" />
+		<difficulty instrument="guitar" rank="50" />
+		<difficulty instrument="bass" rank="50" />
+	</song>
+	<song id="whatilikeaboutyou">
+		<genre>rock</genre>
+		<year>1980</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="400" />
+		<difficulty instrument="bass" rank="400" />
+	</song>
+	<song id="wrathchild">
+		<genre>metal</genre>
+		<year>1981</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="620" />
+		<difficulty instrument="guitar" rank="620" />
+		<difficulty instrument="bass" rank="620" />
+	</song>
+</importdata>

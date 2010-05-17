@@ -10,9 +10,11 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class RawkAudio
 	{
+		#region Codec Implementations
 		public class Encoder : IEncoder
 		{
 			public const int DefaultBitRate = 72000;
+			public const int DefaultSampleRate = 28000;
 
 			public int Channels { get; protected set; }
 			public int SampleRate { get; protected set; }
@@ -24,19 +26,21 @@ namespace ConsoleHaxx.RawkSD
 			private bool disposed;
 
 			public Encoder(Stream stream, int channels, int samplerate) : this(stream, channels, samplerate, 0) { }
-			public Encoder(Stream stream, int channels, int samplerate, int bitrate) : this(channels, samplerate, bitrate)
+
+			public Encoder(Stream stream, int channels, int samplerate, int targetsamplerate) : this(stream, channels, samplerate, targetsamplerate, 0) { }
+			public Encoder(Stream stream, int channels, int samplerate, int targetsamplerate, int bitrate) : this(channels, samplerate, targetsamplerate, bitrate)
 			{
 				callbacks = new Callbacks(stream, false);
 
-				RawkError error = CreateEncoder(ref callbacks.Struct, Channels, SampleRate, BitRate, 0, out identifier);
+				RawkError error = CreateEncoder(ref callbacks.Struct, Channels, SampleRate, targetsamplerate, BitRate, out identifier);
 
 				ThrowRawkError(error);
 			}
 
-			public Encoder(string filename, int channels, int samplerate) : this(filename, channels, samplerate, 0) { }
-			public Encoder(string filename, int channels, int samplerate, int bitrate) : this(channels, samplerate, bitrate)
+			public Encoder(string filename, int channels, int samplerate, int targetsamplerate) : this(filename, channels, samplerate, targetsamplerate, 0) { }
+			public Encoder(string filename, int channels, int samplerate, int targetsamplerate, int bitrate) : this(channels, samplerate, targetsamplerate, bitrate)
 			{
-				RawkError error = CreateEncoder(filename, Channels, SampleRate, BitRate, 0, out identifier);
+				RawkError error = CreateEncoder(filename, Channels, SampleRate, targetsamplerate, BitRate, out identifier);
 
 				ThrowRawkError(error);
 			}
@@ -46,12 +50,14 @@ namespace ConsoleHaxx.RawkSD
 				Dispose();
 			}
 
-			private Encoder(int channels, int samplerate, int bitrate)
+			private Encoder(int channels, int samplerate, int targetsamplerate, int bitrate)
 			{
 				disposed = false;
 
 				if (bitrate == 0)
 					bitrate = DefaultBitRate;
+				if (targetsamplerate == 0)
+					targetsamplerate = DefaultSampleRate;
 
 				Channels = channels;
 				SampleRate = samplerate;
@@ -89,10 +95,11 @@ namespace ConsoleHaxx.RawkSD
 				Vgs,
 				MoggEncrypted,
 				MoggDecrypted,
-				BinkEncryptedRB2
+				BinkEncryptedRB2,
+				Wav
 			}
 
-			public const int BufferSize = 4096;
+			public const int BufferSize = 0x10000;
 
 			public JaggedShortArray AudioBuffer { get; protected set; }
 			public int Channels { get; protected set; }
@@ -103,6 +110,8 @@ namespace ConsoleHaxx.RawkSD
 			private IntPtr identifier;
 			private Callbacks callbacks;
 			private bool disposed;
+			private bool eof = false;
+			private long Position;
 
 			public Decoder(Stream stream, AudioFormat format) : this(format)
 			{
@@ -120,6 +129,7 @@ namespace ConsoleHaxx.RawkSD
 						error = CreateFsbDecoder(ref callbacks.Struct, out channels, out samplerate, out samples, out identifier);
 						break;
 					case AudioFormat.BinkAudio:
+					case AudioFormat.BinkEncryptedRB2:
 						error = CreateBinkDecoder(ref callbacks.Struct, out channels, out samplerate, out samples, out identifier);
 						break;
 					case AudioFormat.Vgs:
@@ -150,6 +160,7 @@ namespace ConsoleHaxx.RawkSD
 						error = CreateFsbDecoder(filename, out channels, out samplerate, out samples, out identifier);
 						break;
 					case AudioFormat.BinkAudio:
+					case AudioFormat.BinkEncryptedRB2:
 						error = CreateBinkDecoder(filename, out channels, out samplerate, out samples, out identifier);
 						break;
 					case AudioFormat.Vgs:
@@ -180,13 +191,16 @@ namespace ConsoleHaxx.RawkSD
 
 			public int Read()
 			{
-				return Read(AudioBuffer.Rank2);
+				return Read((int)Math.Min(AudioBuffer.Rank2, Samples - Position));
 			}
 
 			public int Read(int count)
 			{
 				if (disposed)
 					throw new ObjectDisposedException(string.Empty);
+
+				if (eof)
+					return 0;
 
 				RawkError error = RawkError.Unknown;
 
@@ -200,6 +214,7 @@ namespace ConsoleHaxx.RawkSD
 						error = FsbDecompress(identifier, AudioBuffer.Pointer, count);
 						break;
 					case AudioFormat.BinkAudio:
+					case AudioFormat.BinkEncryptedRB2:
 						error = BinkDecompress(identifier, AudioBuffer.Pointer, count);
 						break;
 					case AudioFormat.Vgs:
@@ -209,14 +224,19 @@ namespace ConsoleHaxx.RawkSD
 						break;
 				}
 
-				if (error == RawkError.FileError)
+				if (error == RawkError.FileError) {
+					eof = true;
 					return 0; // EOF
+				}
 
 				ThrowRawkError(error);
 
-				count = (int)error; // Returns positive number of read samples
+				Position += (int)error;
 
-				return count;
+				if (Position == Samples)
+					eof = true;
+
+				return (int)error; // Returns positive number of read samples
 			}
 
 			public void Seek(long sample)
@@ -234,6 +254,7 @@ namespace ConsoleHaxx.RawkSD
 						error = FsbSeek(identifier, sample);
 						break;
 					case AudioFormat.BinkAudio:
+					case AudioFormat.BinkEncryptedRB2:
 						error = BinkSeek(identifier, sample);
 						break;
 					case AudioFormat.Vgs:
@@ -241,7 +262,14 @@ namespace ConsoleHaxx.RawkSD
 						break;
 				}
 
+				// BUG: Seeking to the beginning of the Bink decoder returns INVALID_PARAM because it tries to decode 0 samples
+				if (Format == AudioFormat.BinkAudio || Format == AudioFormat.BinkEncryptedRB2 && sample == 0 && error == RawkError.InvalidParameter)
+					error = RawkError.OK;
+
 				ThrowRawkError(error);
+
+				eof = false;
+				Position = sample;
 			}
 
 			public void Dispose()
@@ -257,6 +285,7 @@ namespace ConsoleHaxx.RawkSD
 						DestroyFsbDecoder(identifier);
 						break;
 					case AudioFormat.BinkAudio:
+					case AudioFormat.BinkEncryptedRB2:
 						DestroyBinkDecoder(identifier);
 						break;
 					case AudioFormat.Vgs:
@@ -267,8 +296,10 @@ namespace ConsoleHaxx.RawkSD
 				disposed = true;
 			}
 		}
+		#endregion
 
-		private static void ThrowRawkError(RawkError error)
+		#region RawkAudio Native Layer
+		internal static void ThrowRawkError(RawkError error)
 		{
 			switch (error) {
 				case RawkError.InvalidParameter:
@@ -287,20 +318,6 @@ namespace ConsoleHaxx.RawkSD
 				case RawkError.Unknown:
 					throw new Exception();
 			}
-		}
-
-		private enum RawkError : int
-		{
-			OK = 0,
-			InvalidParameter = -1,
-			OutOfMemory = -2,
-			FileError = -3,
-			NotVorbis = -4,
-			NotBink = -5,
-			NotFsb = -7,
-			NotVgs = -8,
-			MisalignedSamplingRates = -6,
-			Unknown = -127
 		}
 
 		private class Callbacks
@@ -383,11 +400,14 @@ namespace ConsoleHaxx.RawkSD
 			public IntPtr Descriptor;
 		}
 
+		[DllImport("RawkAudio", EntryPoint = "rawk_downmix")]
+		internal static extern RawkError Downmix(IntPtr input, int in_channels, IntPtr output, int out_channels, ushort[] masks, int samples, int normalize);
+
 		[DllImport("RawkAudio", EntryPoint = "rawk_vorbis_enc_create", CallingConvention = CallingConvention.Cdecl)]
 		private static extern RawkError CreateEncoder([MarshalAs(UnmanagedType.LPStr)]string outpath, int channels, int rate, int bitrate, int m_header, out IntPtr stream);
 
 		[DllImport("RawkAudio", EntryPoint = "rawk_vorbis_enc_create_cb")]
-		private static extern RawkError CreateEncoder(ref RawkCallbacks cb, int channels, int rate, int bitrate, int m_header, out IntPtr stream);
+		private static extern RawkError CreateEncoder(ref RawkCallbacks cb, int channels, int rate, int targetrate, int bitrate, out IntPtr stream);
 
 		[DllImport("RawkAudio", EntryPoint = "rawk_vorbis_enc_destroy")]
 		private static extern RawkError DestroyEncoder(IntPtr stream);
@@ -409,9 +429,6 @@ namespace ConsoleHaxx.RawkSD
 
 		[DllImport("RawkAudio", EntryPoint = "rawk_vorbis_dec_decompress")]
 		private static extern RawkError VorbisDecompress(IntPtr stream, IntPtr samples, int length);
-
-		[DllImport("RawkAudio", EntryPoint = "rawk_downmix")]
-		private static extern RawkError Downmix(IntPtr input, int in_channels, IntPtr output, int out_channels, ushort[] masks, int samples);
 
 		[DllImport("RawkAudio", EntryPoint = "rawk_fsb_dec_create")]
 		private static extern RawkError CreateFsbDecoder([MarshalAs(UnmanagedType.LPStr)]string inpath, out int channels, out int rate, out long samples, out IntPtr stream);
@@ -457,6 +474,21 @@ namespace ConsoleHaxx.RawkSD
 
 		[DllImport("RawkAudio", EntryPoint = "rawk_vgs_dec_decompress")]
 		private static extern RawkError VgsDecompress(IntPtr stream, IntPtr samples, int length);
+
+		internal enum RawkError : int
+		{
+			OK = 0,
+			InvalidParameter = -1,
+			OutOfMemory = -2,
+			FileError = -3,
+			NotVorbis = -4,
+			NotBink = -5,
+			NotFsb = -7,
+			NotVgs = -8,
+			MisalignedSamplingRates = -6,
+			Unknown = -127
+		}
+		#endregion
 	}
 
 	public class JaggedShortArray
@@ -522,6 +554,19 @@ namespace ConsoleHaxx.RawkSD
 			for (int i = 0; i < Rank1; i++)
 				for (int l = 0; l < Rank2; l++)
 					this[i][l] = 0;
+		}
+
+		public void DownmixTo(JaggedShortArray output, ushort[] masks, int samples, bool normalize = true)
+		{
+			RawkAudio.RawkError error = RawkAudio.Downmix(this.Pointer, Rank1, output.Pointer, Math.Min(masks.Length, output.Rank1), masks, samples, normalize ? 1 : 0);
+			RawkAudio.ThrowRawkError(error);
+		}
+
+		public void DeinterlaceFrom(short[] data, int samples, int offset = 0)
+		{
+			for (int i = 0; i < Rank1; i++)
+				for (int k = 0; k < samples; k++)
+					Array[i][k + offset] = data[k * Rank1 + i];
 		}
 	}
 }

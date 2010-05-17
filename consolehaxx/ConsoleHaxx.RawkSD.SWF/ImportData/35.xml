@@ -1,0 +1,636 @@
+<importdata>
+	<global>
+		<idprefix>ghvh</idprefix>
+		<nameprefix>[GHVH]</nameprefix>
+		<version>1</version>
+		<difficulty instrument="guitar" rank="1" />
+		<difficulty instrument="bass" rank="1" />
+		<difficulty instrument="drums" rank="1" />
+		<difficulty instrument="vox" rank="1" />
+	</global>
+	<song id="Panama">
+		<name>Panama</name>
+		<artist>Van Halen</artist>
+		<album>1984</album>
+		<genre>rock</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="200" />
+		<difficulty instrument="guitar" rank="230" />
+		<difficulty instrument="bass" rank="120" />
+		<difficulty instrument="drum" rank="200" />
+		<difficulty instrument="vocals" rank="180" />
+	</song>
+
+	<song id="Runninwiththedevil">
+		<name>Runnin' With the Devil</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="201" />
+		<difficulty instrument="guitar" rank="250" />
+		<difficulty instrument="bass" rank="121" />
+		<difficulty instrument="drum" rank="200" />
+		<difficulty instrument="vocals" rank="190" />
+	</song>
+
+	<song id="Whiteweddingpartone">
+		<name>White Wedding (Part 1)</name>
+		<artist>Billy Idol</artist>
+		<album>Billy Idol</album>
+		<genre>punk</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="202" />
+		<difficulty instrument="guitar" rank="100" />
+		<difficulty instrument="bass" rank="90" />
+		<difficulty instrument="drum" rank="230" />
+		<difficulty instrument="vocals" rank="180" />
+	</song>
+
+	<song id="Stacysmom">
+		<name>Stacy's Mom</name>
+		<artist>Fountains of Wayne</artist>
+		<album>Welcome Interstate Managers</album>
+		<genre>pop</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="204" />
+		<difficulty instrument="guitar" rank="120" />
+		<difficulty instrument="bass" rank="100" />
+		<difficulty instrument="drum" rank="230" />
+		<difficulty instrument="vocals" rank="250" />
+	</song>
+
+	<song id="Prettyflyforawhiteguy">
+		<name>Pretty Fly (for a White Guy)</name>
+		<artist>The Offspring</artist>
+		<album>Americana</album>
+		<genre>punk</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="205" />
+		<difficulty instrument="guitar" rank="200" />
+		<difficulty instrument="bass" rank="120" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="300" />
+	</song>
+
+
+
+	<song id="Bestofyou">
+		<name>Best of You</name>
+		<artist>Foo Fighters</artist>
+		<album>In Your Honor</album>
+		<genre>rock</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="206" />
+		<difficulty instrument="guitar" rank="210" />
+		<difficulty instrument="bass" rank="110" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Safeeuropeanhome">
+		<name>Safe European Home</name>
+		<artist>The Clash</artist>
+		<album>Give 'Em Enough Rope</album>
+		<genre>punk</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="207" />
+		<difficulty instrument="guitar" rank="240" />
+		<difficulty instrument="bass" rank="200" />
+		<difficulty instrument="drum" rank="300" />
+		<difficulty instrument="vocals" rank="300" />
+	</song>
+
+	<song id="Theblackriver">
+		<name>The Black River</name>
+		<artist>The Sword</artist>
+		<album>Gods of the Earth</album>
+		<genre>metal</genre>
+		<track>9</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="423" />
+		<difficulty instrument="bass" rank="505" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Andthecradlewillrock">
+		<name>And the Cradle Will Rock...</name>
+		<artist>Van Halen</artist>
+		<album>Women and Children First</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="350" />
+		<difficulty instrument="bass" rank="275" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Intruderohprettywoman">
+		<name>Intruder/(Oh) Pretty Woman</name>
+		<artist>Van Halen</artist>
+		<album>Diver Down</album>
+		<genre>rock</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="301" />
+		<difficulty instrument="guitar" rank="360" />
+		<difficulty instrument="bass" rank="280" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="200" />
+	</song>
+
+	<song id="Jamiescryin">
+		<name>Jamie's Cryin'</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen</album>
+		<genre>rock</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="302" />
+		<difficulty instrument="guitar" rank="323" />
+		<difficulty instrument="bass" rank="305" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="300" />
+	</song>
+
+	<song id="Ainttalkinboutlove">
+		<name>Ain't Talkin' 'bout Love</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen</album>
+		<genre>rock</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="303" />
+		<difficulty instrument="guitar" rank="323" />
+		<difficulty instrument="bass" rank="305" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Everybodywantssome">
+		<name>Everybody Wants Some!!</name>
+		<artist>Van Halen</artist>
+		<album>Women and Children First</album>
+		<genre>rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="304" />
+		<difficulty instrument="guitar" rank="323" />
+		<difficulty instrument="bass" rank="305" />
+		<difficulty instrument="drum" rank="300" />
+		<difficulty instrument="vocals" rank="312" />
+	</song>
+
+	<song id="Pain">
+		<name>Pain</name>
+		<artist>Jimmy Eat World</artist>
+		<album>Futures</album>
+		<genre>emo</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="306" />
+		<difficulty instrument="guitar" rank="400" />
+		<difficulty instrument="bass" rank="300" />
+		<difficulty instrument="drum" rank="370" />
+		<difficulty instrument="vocals" rank="200" />
+	</song>
+
+	<song id="Semicharmedlife">
+		<name>Semi-Charmed Life</name>
+		<artist>Third Eye Blind</artist>
+		<album>Third Eye Blind</album>
+		<genre>pop</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="305" />
+		<difficulty instrument="guitar" rank="300" />
+		<difficulty instrument="bass" rank="300" />
+		<difficulty instrument="drum" rank="300" />
+		<difficulty instrument="vocals" rank="310" />
+	</song>
+
+	<song id="Rockandrollisdead">
+		<name>Rock and Roll Is Dead</name>
+		<artist>Lenny Kravitz</artist>
+		<album>Circus</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="307" />
+		<difficulty instrument="guitar" rank="300" />
+		<difficulty instrument="bass" rank="320" />
+		<difficulty instrument="drum" rank="360" />
+		<difficulty instrument="vocals" rank="300" />
+	</song>
+
+	<song id="Theendofheartache">
+		<name>The End of Heartache</name>
+		<artist>Killswitch Engage</artist>
+		<album>The End of Heartache</album>
+		<genre>metal</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="308" />
+		<difficulty instrument="guitar" rank="312" />
+		<difficulty instrument="bass" rank="240" />
+		<difficulty instrument="drum" rank="350" />
+		<difficulty instrument="vocals" rank="300" />
+	</song>
+
+	<song id="Firstdate">
+		<name>First Date</name>
+		<artist>Blink-182</artist>
+		<album>Take Off Your Pants and Jacket</album>
+		<genre>punk</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="309" />
+		<difficulty instrument="guitar" rank="315" />
+		<difficulty instrument="bass" rank="315" />
+		<difficulty instrument="drum" rank="420" />
+		<difficulty instrument="vocals" rank="370" />
+	</song>
+
+	<song id="Unchained">
+		<name>Unchained</name>
+		<artist>Van Halen</artist>
+		<album>Fair Warning</album>
+		<genre>rock</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="405" />
+		<difficulty instrument="bass" rank="380" />
+		<difficulty instrument="drum" rank="390" />
+		<difficulty instrument="vocals" rank="402" />
+	</song>
+
+	<song id="Atomicpunk">
+		<name>Atomic Punk</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen</album>
+		<genre>rock</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="401" />
+		<difficulty instrument="guitar" rank="440" />
+		<difficulty instrument="bass" rank="375" />
+		<difficulty instrument="drum" rank="400" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Dancethenightaway">
+		<name>Dance the Night Away</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen II</album>
+		<genre>rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="402" />
+		<difficulty instrument="guitar" rank="450" />
+		<difficulty instrument="bass" rank="400" />
+		<difficulty instrument="drum" rank="420" />
+		<difficulty instrument="vocals" rank="275" />
+	</song>
+
+	<song id="Hearaboutitlater">
+		<name>Hear About it Later</name>
+		<artist>Van Halen</artist>
+		<album>Fair Warning</album>
+		<genre>rock</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="403" />
+		<difficulty instrument="guitar" rank="480" />
+		<difficulty instrument="bass" rank="420" />
+		<difficulty instrument="drum" rank="415" />
+		<difficulty instrument="vocals" rank="440" />
+	</song>
+
+	<song id="Jump">
+		<name>Jump</name>
+		<artist>Van Halen</artist>
+		<album>1984</album>
+		<genre>rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="404" />
+		<difficulty instrument="guitar" rank="490" />
+		<difficulty instrument="bass" rank="440" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Doublevision">
+		<name>Double Vision</name>
+		<artist>Foreigner</artist>
+		<album>Double Vision</album>
+		<genre>rock</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="405" />
+		<difficulty instrument="guitar" rank="470" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Iwantitall">
+		<name>I Want it All</name>
+		<artist>Queen</artist>
+		<album>The Miracle</album>
+		<genre>rock</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="406" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Masterexploder">
+		<name>Master Exploder</name>
+		<artist>Tenacious D</artist>
+		<album>The Pick of Destiny</album>
+		<genre>punk</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="407" />
+		<difficulty instrument="guitar" rank="430" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Dopenose">
+		<name>Dope Nose</name>
+		<artist>Weezer</artist>
+		<album>Maladroit</album>
+		<genre>rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="410" />
+		<difficulty instrument="guitar" rank="470" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="475" />
+	</song>
+
+	<song id="Cometolife">
+		<name>Come to Life</name>
+		<artist>Alter Bridge</artist>
+		<album>Blackbird</album>
+		<genre>metal</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="411" />
+		<difficulty instrument="guitar" rank="430" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="450" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Littleguitars">
+		<name>Little Guitars</name>
+		<artist>Van Halen</artist>
+		<album>Diver Down</album>
+		<genre>rock</genre>
+		<track>9</track>
+		<difficulty instrument="band" rank="420" />
+		<difficulty instrument="guitar" rank="500" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="475" />
+	</song>
+
+	<song id="Eruption">
+		<name>Eruption</name>
+		<artist>Eddie Van Halen</artist>
+		<album>Van Halen</album>
+		<genre>rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="421" />
+		<difficulty instrument="guitar" rank="550" />
+		<difficulty instrument="bass" rank="0" />
+		<difficulty instrument="drum" rank="100" />
+		<difficulty instrument="vocals" rank="0" />
+	</song>
+
+	<song id="Youreallygotme">
+		<name>You Really Got Me</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen</album>
+		<genre>rock</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="422" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Feelyourlovetonight">
+		<name>Feel Your Love Tonight</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen</album>
+		<genre>rock</genre>
+		<track>8</track>
+		<difficulty instrument="band" rank="424" />
+		<difficulty instrument="guitar" rank="500" />
+		<difficulty instrument="bass" rank="400" />
+		<difficulty instrument="drum" rank="460" />
+		<difficulty instrument="vocals" rank="460" />
+	</song>
+
+	<song id="Icecreamman">
+		<name>Ice Cream Man</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen</album>
+		<genre>rock</genre>
+		<track>10</track>
+		<difficulty instrument="band" rank="425" />
+		<difficulty instrument="guitar" rank="540" />
+		<difficulty instrument="bass" rank="400" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="425" />
+	</song>
+
+	<song id="Spacetruckin">
+		<name>Space Truckin'</name>
+		<artist>Van Halen</artist>
+		<album>Machine Head</album>
+		<genre>metal</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="430" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="500" />
+	</song>
+
+	<song id="Thetakedown">
+		<name>The Takedown</name>
+		<artist>Yellowcard</artist>
+		<album>Paper Walls</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="435" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Sicksicksick">
+		<name>Sick, Sick, Sick</name>
+		<artist>Queens of the Stone Age</artist>
+		<album>Era Vulgaris</album>
+		<genre>rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="436" />
+		<difficulty instrument="guitar" rank="430" />
+		<difficulty instrument="bass" rank="460" />
+		<difficulty instrument="drum" rank="430" />
+		<difficulty instrument="vocals" rank="200" />
+	</song>
+
+	<song id="Painkiller">
+		<name>Painkiller</name>
+		<artist>Judas Priest</artist>
+		<album>Painkiller</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="439" />
+		<difficulty instrument="guitar" rank="430" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="500" />
+	</song>
+
+	<song id="Beautifulgirls">
+		<name>Beautiful Girls</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen II</album>
+		<genre>rock</genre>
+		<track>10</track>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="475" />
+	</song>
+
+	<song id="Somebodygetmeadoctor">
+		<name>Somebody Get Me a Doctor</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen II</album>
+		<genre>rock</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="501" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="420" />
+		<difficulty instrument="vocals" rank="495" />
+	</song>
+
+	<song id="Hangemhigh">
+		<name>Hang 'Em High</name>
+		<artist>Van Halen</artist>
+		<album>Diver Down</album>
+		<genre>rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="503" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="520" />
+		<difficulty instrument="vocals" rank="575" />
+	</song>
+
+	<song id="Romeodelight">
+		<name>Romeo Delight</name>
+		<artist>Van Halen</artist>
+		<album>Women and Children First</album>
+		<genre>rock</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="504" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="510" />
+		<difficulty instrument="drum" rank="420" />
+		<difficulty instrument="vocals" rank="505" />
+	</song>
+
+	<song id="Lossofcontrol">
+		<name>Loss of Control</name>
+		<artist>Van Halen</artist>
+		<album>Women and Children First</album>
+		<genre>rock</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="505" />
+		<difficulty instrument="guitar" rank="550" />
+		<difficulty instrument="bass" rank="500" />
+		<difficulty instrument="drum" rank="510" />
+		<difficulty instrument="vocals" rank="480" />
+	</song>
+
+	<song id="Sothisislove">
+		<name>So This Is Love?</name>
+		<artist>Van Halen</artist>
+		<album>Fair Warning</album>
+		<genre>rock</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="506" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="580" />
+		<difficulty instrument="drum" rank="450" />
+		<difficulty instrument="vocals" rank="525" />
+	</song>
+
+	<song id="Meanstreet">
+		<name>Mean Street</name>
+		<artist>Van Halen</artist>
+		<album>Fair Warning</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="506" />
+		<difficulty instrument="guitar" rank="560" />
+		<difficulty instrument="bass" rank="580" />
+		<difficulty instrument="drum" rank="510" />
+		<difficulty instrument="vocals" rank="575" />
+	</song>
+
+	<song id="Imtheone">
+		<name>I'm the One</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen</album>
+		<genre>rock</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="508" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="580" />
+		<difficulty instrument="drum" rank="520" />
+		<difficulty instrument="vocals" rank="540" />
+	</song>
+
+	<song id="Hotforteacher">
+		<name>Hot for Teacher</name>
+		<artist>Van Halen</artist>
+		<album>1984</album>
+		<genre>rock</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="510" />
+		<difficulty instrument="guitar" rank="500" />
+		<difficulty instrument="bass" rank="580" />
+		<difficulty instrument="drum" rank="545" />
+		<difficulty instrument="vocals" rank="543" />
+	</song>
+
+	<song id="Cathedral">
+		<name>Cathedral</name>
+		<artist>Eddie Van Halen</artist>
+		<album>Diver Down</album>
+		<genre>rock</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="560" />
+		<difficulty instrument="bass" rank="0" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="0" />
+	</song>
+
+	<song id="Spanishfly">
+		<name>Spanish Fly</name>
+		<artist>Van Halen</artist>
+		<album>Van Halen II</album>
+		<genre>rock</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="0" />
+		<difficulty instrument="drum" rank="520" />
+		<difficulty instrument="vocals" rank="0" />
+	</song>
+</importdata>

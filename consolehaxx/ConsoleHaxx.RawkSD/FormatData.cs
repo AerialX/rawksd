@@ -8,12 +8,21 @@ using ConsoleHaxx.Harmonix;
 
 namespace ConsoleHaxx.RawkSD
 {
-	public class FormatData
+	#region FormatData
+	public class FormatData : IDisposable
 	{
+		public static bool LocalSongCache = true;
+
+		public PlatformData PlatformData { get; protected set; }
+		public virtual bool StreamOwnership { get; set; }
+
 		private SongData songdata;
+		protected List<string> Data;
+		protected Dictionary<string, Stream> Streams;
+
 		public virtual SongData Song {
 			get {
-				if (songdata != null)
+				if (LocalSongCache && songdata != null)
 					return songdata;
 				Stream stream = GetStream("songdata");
 				songdata = SongData.Create(stream);
@@ -24,20 +33,47 @@ namespace ConsoleHaxx.RawkSD
 				Stream stream = AddStream("songdata");
 				value.Save(stream);
 				CloseStream(stream);
-				songdata = value;
-				songdata.PropertyChanged += new Action<SongData>(Song_PropertyChanged);
+				if (LocalSongCache && songdata != value) {
+					songdata = value;
+					songdata.PropertyChanged += new Action<SongData>(Song_PropertyChanged);
+				}
 			}
+		}
+
+		void Song_PropertyChanged(SongData song)
+		{
+			Song = song;
 		}
 
 		public virtual IList<IFormat> Formats
 		{
 			get
 			{
+				List<int> formats = new List<int>();
+				string[] streams = GetStreamNames();
+				foreach (string name in streams) {
+					string[] parts = name.Split('.');
+					int id;
+					if (int.TryParse(parts[0], out id) && !formats.Contains(id))
+						formats.Add(id);
+				}
+				/*
 				IList<int> formats = Song.Data.GetArray<int>("FormatIDs");
 				if (formats == null)
 					return new List<IFormat>();
+				*/
 				return formats.Select(f => Platform.GetFormat(f)).ToArray();
 			}
+		}
+
+		public IFormat GetFormat(FormatType type)
+		{
+			return Formats.FirstOrDefault(f => f.Type == type && f.Readable);
+		}
+
+		public IFormat GetFormatAny(FormatType type)
+		{
+			return Formats.FirstOrDefault(f => f.Type == type);
 		}
 
 		public IList<IFormat> GetFormats(FormatType type)
@@ -47,6 +83,7 @@ namespace ConsoleHaxx.RawkSD
 
 		public void AddFormat(IFormat format)
 		{
+			/*
 			List<IFormat> formats = new List<IFormat>(Formats);
 
 			if (formats.Contains(format))
@@ -55,7 +92,7 @@ namespace ConsoleHaxx.RawkSD
 			formats.Add(format);
 
 			Song.Data.SetArray<int>("FormatIDs", formats.Select(f => f.ID).ToArray());
-			Song_PropertyChanged(Song);
+			*/
 		}
 
 		public void RemoveFormat(IFormat format)
@@ -67,7 +104,7 @@ namespace ConsoleHaxx.RawkSD
 
 			formats.Remove(format);
 
-			string[] streams = GetStreams();
+			string[] streams = GetStreamNames();
 			foreach (string name in streams) {
 				string[] parts = name.Split('.');
 				int id;
@@ -77,21 +114,17 @@ namespace ConsoleHaxx.RawkSD
 				}
 			}
 
-			Song.Data.SetArray<int>("FormatIDs", formats.Select(f => f.ID).ToArray());
-			Song_PropertyChanged(Song);
+			// Song.Data.SetArray<int>("FormatIDs", formats.Select(f => f.ID).ToArray());
 		}
 
-		private List<string> Data;
-		private Dictionary<string, Stream> Streams;
-
-		public FormatData(SongData song) : this()
+		public FormatData(SongData song) : this(song, null) { }
+		public FormatData(SongData song, PlatformData data) : this()
 		{
-			Song = song;
-		}
-
-		void Song_PropertyChanged(SongData song)
-		{
-			Song = song;
+			if (song != null) {
+				Song = song;
+				song.PropertyChanged += new Action<SongData>(Song_PropertyChanged);
+			}
+			PlatformData = data;
 		}
 
 		public FormatData()
@@ -103,14 +136,23 @@ namespace ConsoleHaxx.RawkSD
 
 		~FormatData()
 		{
+			Dispose();
+		}
+
+		protected bool Disposed;
+		public virtual void Dispose()
+		{
+			if (Disposed)
+				return;
+
 			var streams = Streams.ToArray();
 			foreach (var s in streams)
 				CloseStream(s.Value);
 			Streams.Clear();
 			Data.Clear();
-		}
 
-		public bool StreamOwnership { get; set; }
+			Disposed = true;
+		}
 
 		public virtual void DeleteStream(string name)
 		{
@@ -124,9 +166,11 @@ namespace ConsoleHaxx.RawkSD
 			if (HasStream(name))
 				DeleteStream(name);
 			Stream ret = AddStreamBase(name);
-			Streams[name] = ret;
-			if (ret != null)
+			if (ret != null) {
+				Streams[name] = ret;
+
 				Data.Add(name);
+			}
 			return ret;
 		}
 
@@ -137,8 +181,12 @@ namespace ConsoleHaxx.RawkSD
 
 		public virtual Stream GetStream(string name)
 		{
-			if (!Streams.ContainsKey(name))
+			if (!Streams.ContainsKey(name)) {
+				if (!HasStream(name))
+					return null;
+
 				Streams[name] = OpenStream(name);
+			}
 
 			Stream stream = Streams[name];
 			stream.Position = 0;
@@ -182,18 +230,28 @@ namespace ConsoleHaxx.RawkSD
 			Streams[name] = stream;
 		}
 
-		public string[] GetStreams()
+		public string[] GetStreamNames()
 		{
 			return Data.ToArray();
 		}
 
-		public virtual void Save(FormatData data)
+		public IList<string> GetStreamNames(IFormat format)
 		{
+			List<string> streams = new List<string>();
 			foreach (string name in Data) {
-				Util.StreamCopy(data.AddStream(name), GetStream(name));
-				data.CloseStream(name);
-				CloseStream(name);
+				string[] parts = name.Split('.');
+				int id;
+				if (int.TryParse(parts[0], out id)) {
+					if (id == format.ID)
+						streams.Add(name);
+				}
 			}
+			return streams.ToArray();
+		}
+
+		public IList<Stream> GetStreams(IFormat format)
+		{
+			return GetStreamNames(format).Select(n => GetStream(n)).ToArray();
 		}
 
 		protected virtual Stream OpenStream(string name) { throw new NotImplementedException(); }
@@ -206,67 +264,91 @@ namespace ConsoleHaxx.RawkSD
 		public void CloseStream(IFormat format, string name) { CloseStream(MixName(format, name)); }
 		public void SetStream(IFormat format, string name, Stream stream) { SetStream(MixName(format, name), stream); AddFormat(format); }
 		public string MixName(IFormat format, string name) { return format.ID.ToString() + (name == null ? string.Empty : ("." + name)); }
+
+		public virtual void Save(FormatData data)
+		{
+			foreach (string name in Data) {
+				Util.StreamCopy(data.AddStream(name), GetStream(name));
+				data.CloseStream(name);
+				CloseStream(name);
+			}
+		}
+	}
+	#endregion
+
+	#region Implementations
+	public abstract class FormatDataPersistance : FormatData
+	{
+		protected Dictionary<string, Stream> MyStreams = new Dictionary<string, Stream>();
+
+		public override bool StreamOwnership { get { return false; } }
+
+		public FormatDataPersistance() : base() { }
+		public FormatDataPersistance(SongData song) : base(song) { }
+		public FormatDataPersistance(SongData song, PlatformData data) : base(song, data) { }
+
+		protected abstract Stream AddStreamBase();
+		protected virtual void RemoveStreamBase(Stream stream) { stream.Close(); }
+
+		protected override Stream AddStreamBase(string name)
+		{
+			Stream stream = AddStreamBase();
+			MyStreams[name] = stream;
+			return stream;
+		}
+
+		protected override Stream OpenStream(string name)
+		{
+			if (MyStreams.ContainsKey(name))
+				return MyStreams[name];
+
+			return null;
+		}
+
+		public override void DeleteStream(string name)
+		{
+			if (MyStreams.ContainsKey(name)) {
+				RemoveStreamBase(MyStreams[name]);
+				MyStreams.Remove(name);
+			}
+
+			base.DeleteStream(name);
+		}
+
+		~FormatDataPersistance()
+		{
+			Dispose();
+		}
+
+		public override void Dispose()
+		{
+			foreach (var stream in MyStreams)
+				RemoveStreamBase(stream.Value);
+			base.Dispose();
+		}
 	}
 
-	public class TemporaryFormatData : FormatData
+	public class TemporaryFormatData : FormatDataPersistance
 	{
 		public TemporaryFormatData() : base() { }
 		public TemporaryFormatData(SongData song) : base(song) {  }
+		public TemporaryFormatData(SongData song, PlatformData data) : base(song, data) { }
 
-		protected List<Stream> MyStreams = new List<Stream>();
-
-		protected override Stream AddStreamBase(string name)
+		protected override Stream AddStreamBase()
 		{
-			Stream stream = new TemporaryStream();
-			MyStreams.Add(stream);
-			return stream;
-		}
-
-		protected override Stream OpenStream(string name)
-		{
-			throw new NotSupportedException();
-		}
-
-		public override void CloseStream(Stream stream)
-		{
-			return;
-		}
-
-		~TemporaryFormatData()
-		{
-			foreach (Stream stream in MyStreams)
-				stream.Close();
+			return new TemporaryStream();
 		}
 	}
 
-	public class MemoryFormatData : FormatData
+	public class MemoryFormatData : FormatDataPersistance
 	{
 		public MemoryFormatData() : base() { }
 		public MemoryFormatData(SongData song) : base(song) { }
+		public MemoryFormatData(SongData song, PlatformData data) : base(song, data) { }
 
-		protected List<Stream> MyStreams = new List<Stream>();
-
-		protected override Stream AddStreamBase(string name)
+		protected override Stream AddStreamBase()
 		{
-			Stream stream = new MemoryStream();
-			MyStreams.Add(stream);
-			return stream;
-		}
-
-		protected override Stream OpenStream(string name)
-		{
-			throw new NotSupportedException();
-		}
-
-		public override void CloseStream(Stream stream)
-		{
-			return;
-		}
-
-		~MemoryFormatData()
-		{
-			foreach (Stream stream in MyStreams)
-				stream.Close();
+			return new MemoryStream();
 		}
 	}
 
@@ -274,20 +356,21 @@ namespace ConsoleHaxx.RawkSD
 	{
 		protected string Folder;
 
-		public FolderFormatData(string path) : base()
+		public FolderFormatData(string path) : this(null, null, path) { }
+
+		public FolderFormatData(SongData song, string path) : this(song, null, path) { }
+		public FolderFormatData(PlatformData data, string path) : this(null, data, path) { }
+
+		public FolderFormatData(SongData song, PlatformData data, string path) : base()
 		{
 			Folder = path;
 
 			Refresh();
-		}
 
-		public FolderFormatData(SongData song, string path) : base()
-		{
-			Folder = path;
-
-			Refresh();
-
-			Song = song;
+			if (song != null)
+				Song = song;
+			if (data != null)
+				PlatformData = data;
 		}
 
 		private void Refresh()
@@ -319,209 +402,5 @@ namespace ConsoleHaxx.RawkSD
 			return new FileStream(GetPath(name), FileMode.Open, FileAccess.ReadWrite);
 		}
 	}
-
-	public class DataArray
-	{
-		public static Dictionary<Type, StructDescriptor> RegisteredStructs;
-
-		static DataArray()
-		{
-			RegisteredStructs = new Dictionary<Type, StructDescriptor>();
-		}
-
-		public static void RegisterStruct(Type type, StructDescriptor desc)
-		{
-			RegisteredStructs.Add(type, desc);
-		}
-
-		public class Struct
-		{
-			public Struct(StructDescriptor desc)
-			{
-				Descriptor = desc;
-				Values = new object[desc.Types.Length];
-			}
-
-			public object[] Values;
-			public StructDescriptor Descriptor;
-		}
-
-		public class StructDescriptor
-		{
-			public Type[] Types;
-
-			public StructDescriptor(Type[] types)
-			{
-				Types = types;
-			}
-		}
-
-		public DTB.NodeTree Options;
-
-		public DataArray(DTB.NodeTree tree)
-		{
-			Options = tree;
-		}
-
-		public DataArray()
-		{
-			Options = new DTB.NodeTree();
-		}
-
-		public static DataArray Create(Stream stream)
-		{
-			try {
-				return new DataArray(DTB.Create(new EndianReader(stream, Endianness.LittleEndian)));
-			} catch (FormatException) {
-				return null;
-			}
-		}
-
-		public void Save(Stream stream)
-		{
-			Options.Save(new EndianReader(stream, Endianness.LittleEndian));
-		}
-
-		public T GetValue<T>(string name)
-		{
-			return GetValue<T>(name, 0);
-		}
-
-		public T GetValue<T>(string name, int index)
-		{
-			DataArray tree = GetSubtree(name, false);
-			return tree == null ? default(T) : tree.GetValue<T>(index);
-		}
-
-		public T GetValue<T>(int index)
-		{
-			return (T)InternalGetValue(typeof(T), index);
-		}
-
-		protected object InternalGetValue(Type type, int index)
-		{
-			if (type == typeof(bool))
-				return Options.GetValue<DTB.NodeInt32>(index + 1).Number != 0;
-			else if (type == typeof(int))
-				return Options.GetValue<DTB.NodeInt32>(index + 1).Number;
-			else if (type == typeof(uint))
-				return (uint)Options.GetValue<DTB.NodeInt32>(index + 1).Number;
-			else if (type == typeof(float))
-				return Options.GetValue<DTB.NodeFloat32>(index + 1).Number;
-			else if (type == typeof(string))
-				return Options.GetValue<DTB.NodeString>(index + 1).Text;
-			else if (type == typeof(byte[]))
-				return Options.GetValue<DTB.NodeData>(index + 1).Contents;
-			else if (type.IsSubclassOf(typeof(Struct))) {
-				StructDescriptor desc = RegisteredStructs[type];
-				Struct st = (Struct)type.GetConstructor(new Type[] { typeof(StructDescriptor) }).Invoke(new object[] { desc });
-				for (int i = 0; i < desc.Types.Length; i++)
-					st.Values[i] = InternalGetValue(desc.Types[i], index * desc.Types.Length + i);
-				return st;
-			}
-
-			return null;
-		}
-
-		public DataArray GetSubtree(string name)
-		{
-			return GetSubtree(name, false);
-		}
-
-		public DataArray GetSubtree(string name, bool create)
-		{
-			DTB.NodeTree tree = Options.FindByKeyword(name);
-			if (tree == null) {
-				if (create) {
-					tree = new DTB.NodeTree() { Type = 0x10 };
-					tree.Nodes.Add(new DTB.NodeKeyword() { Type = 0x05, Text = name });
-					Options.Nodes.Add(tree);
-				} else
-					return null;
-			}
-
-			return new DataArray(tree);
-		}
-
-		public void SetSubtree(string name, DTB.NodeTree dtb)
-		{
-			DataArray tree = GetSubtree(name, true);
-			tree.Options.Nodes.AddOrReplace(1, dtb);
-		}
-
-		public DTB.NodeTree GetSubtree()
-		{
-			return Options.Nodes[1] as DTB.NodeTree;
-		}
-
-		public void SetValue(string name, object value)
-		{
-			SetValue(name, value, 0);
-		}
-
-		public void SetValue(string name, object value, int index)
-		{
-			DataArray tree = GetSubtree(name, true);
-
-			tree.InternalSetValue(value, index);
-		}
-
-		protected void InternalSetValue(object value, int index)
-		{
-			if (value == null) {
-				Options.Nodes.AddOrReplace(index + 1, new DTB.NodeInt32() { Number = 0 });
-				return;
-			}
-
-			Type type = value.GetType();
-			if (value is bool)
-				Options.Nodes.AddOrReplace(index + 1, new DTB.NodeInt32() { Number = (bool)value ? 1 : 0 });
-			else if (value is int)
-				Options.Nodes.AddOrReplace(index + 1, new DTB.NodeInt32() { Number = (int)value });
-			else if (value is uint)
-				Options.Nodes.AddOrReplace(index + 1, new DTB.NodeInt32() { Number = (int)(uint)value });
-			else if (value is float)
-				Options.Nodes.AddOrReplace(index + 1, new DTB.NodeFloat32() { Type = 0x01, Number = (float)value });
-			else if (value is string)
-				Options.Nodes.AddOrReplace(index + 1, new DTB.NodeString() { Type = 0x12, Text = (string)value });
-			else if (value is byte[])
-				Options.Nodes.AddOrReplace(index + 1, new DTB.NodeData() { Type = 0xF8, Contents = (byte[])value });
-			else if (value is Struct) {
-				Struct st = (Struct)value;
-				for (int i = 0; i < st.Descriptor.Types.Length; i++)
-					InternalSetValue(st.Values[i], index * st.Descriptor.Types.Length + i);
-			} else
-				throw new NotSupportedException();
-		}
-
-		public IList<T> GetArray<T>(string name)
-		{
-			DataArray array = GetSubtree(name);
-			if (array == null)
-				return null;
-
-			int count = array.GetValue<int>("count");
-
-			DataArray items = array.GetSubtree("data");
-			if (items == null)
-				return null;
-
-			T[] ret = new T[count];
-			for (int i = 0; i < count; i++)
-				ret[i] = items.GetValue<T>(i);
-
-			return ret;
-		}
-
-		public void SetArray<T>(string name, IList<T> value)
-		{
-			DataArray subtree = GetSubtree(name, true);
-
-			subtree.SetValue("count", value.Count);
-			DataArray data = subtree.GetSubtree("data", true);
-
-			for (int i = 0; i < value.Count; i++)
-				data.InternalSetValue(value[i], i);
-		}
-	}
+	#endregion
 }

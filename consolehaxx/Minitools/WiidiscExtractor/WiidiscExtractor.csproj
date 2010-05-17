@@ -49,6 +49,10 @@
       <Project>{EA22859F-2A36-43F4-9402-8E78910698D6}</Project>
       <Name>ConsoleHaxx.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\ConsoleHaxx.Harmonix\ConsoleHaxx.Harmonix.csproj">
+      <Project>{64055A28-36FB-48B9-B8D4-8B3F39D31EB0}</Project>
+      <Name>ConsoleHaxx.Harmonix</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\ConsoleHaxx.Wii\ConsoleHaxx.Wii.csproj">
       <Project>{E9230C21-6B3D-481B-AB69-0A6958E0B2E9}</Project>
       <Name>ConsoleHaxx.Wii</Name>

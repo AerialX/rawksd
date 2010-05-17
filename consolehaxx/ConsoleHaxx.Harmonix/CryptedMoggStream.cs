@@ -9,7 +9,7 @@ namespace ConsoleHaxx.Harmonix
 	public class CryptedMoggStream : Stream
 	{
 		public Stream Base;
-		private EndianReader Reader;
+		//private EndianReader Reader;
 		private Aes Crypt;
 		ICryptoTransform Decryptor;
 		private long Offset;
@@ -21,10 +21,14 @@ namespace ConsoleHaxx.Harmonix
 		private uint HeaderSize;
 		private bool Encrypted;
 
-		public CryptedMoggStream(EndianReader reader)
+		public CryptedMoggStream(Stream stream)
 		{
-			Base = reader.Base;
-			Reader = reader;
+			Base = stream;
+			EndianReader reader = new EndianReader(Base, Endianness.LittleEndian);
+			
+			ReadBuffer = new byte[Util.AesKeySize];
+			KeyBuffer = new byte[Util.AesKeySize];
+			Buffer = new byte[Util.AesKeySize];
 
 			Crypt = Aes.Create();
 			Crypt.Padding = PaddingMode.None;
@@ -35,9 +39,9 @@ namespace ConsoleHaxx.Harmonix
 			Offset = 1;
 
 			if (Base.Length >= 8) {
-				int magic = Reader.ReadInt32();
+				int magic = reader.ReadInt32();
 				if (magic == 0x0B || magic == 0x0A) {
-					HeaderSize = Reader.ReadUInt32(); // HeaderSize
+					HeaderSize = reader.ReadUInt32(); // HeaderSize
 					Size = Base.Length - HeaderSize;
 					Encrypted = magic == 0x0B;
 					Position = 0;
@@ -84,12 +88,13 @@ namespace ConsoleHaxx.Harmonix
 			{
 				if (Encrypted) {
 					if (value < Offset) {
-						Reader.Position = HeaderSize - 0x10;
+						Base.Position = HeaderSize - 0x10;
 						Block = 0;
-						KeyBuffer = Reader.ReadBytes(Util.AesKeySize);
+						Base.Read(KeyBuffer, 0, Util.AesKeySize);
 						Buffer = new byte[Util.AesKeySize];
 						Decryptor.TransformBlock(KeyBuffer, 0, Util.AesKeySize, Buffer, 0);
-						ReadBuffer = Reader.ReadBytes(Util.AesKeySize);
+						if (Length > HeaderSize)
+							Base.Read(ReadBuffer, 0, Util.AesKeySize);
 					}
 
 					Offset = value;
@@ -107,10 +112,10 @@ namespace ConsoleHaxx.Harmonix
 				count = (int)(Size - Offset);
 
 			long off = Util.RoundDown(Offset, Util.AesKeySize);
-			Reader.Position = HeaderSize + Block + Util.AesKeySize;
+			Base.Position = HeaderSize + Block + Util.AesKeySize;
 			if (off >= Block + Util.AesKeySize) {
 				for (long i = Block; i < off; i += Util.AesKeySize) {
-					ReadBuffer = Reader.ReadBytes(Util.AesKeySize);
+					Base.Read(ReadBuffer, 0, Util.AesKeySize);
 					DoBlock();
 				}
 				Block = off;
@@ -121,14 +126,13 @@ namespace ConsoleHaxx.Harmonix
 			int pos = 0;
 			while (pos < count) {
 				int written = (int)((Util.AesKeySize - diff) > (count - pos) ? (count - pos) : (Util.AesKeySize - diff));
-				//Array.Copy(Buffer, diff, buffer, offset + pos, written);
 				for (int i = 0; i < written; i++)
 					buffer[offset + pos + i] = (byte)(Buffer[diff + i] ^ ReadBuffer[diff + i]);
 				pos += written;
 				Offset += written;
 				diff = 0;
 				if (Util.RoundDown(Offset, Util.AesKeySize) > Block) {
-					ReadBuffer = Reader.ReadBytes(Util.AesKeySize);
+					Base.Read(ReadBuffer, 0, Util.AesKeySize);
 					DoBlock();
 					Block += Util.AesKeySize;
 				}
@@ -189,7 +193,6 @@ namespace ConsoleHaxx.Harmonix
 				int written = (int)((Util.AesKeySize - diff) > (count - pos) ? (count - pos) : (Util.AesKeySize - diff));
 
 				for (int i = 0; i < written; i++)
-					//buffer[offset + pos + i] = (byte)(Buffer[diff + i] ^ ReadBuffer[diff + i]);
 					Base.WriteByte((byte)(buffer[offset + pos + i] ^ Buffer[diff + i]));
 				pos += written;
 				Offset += written;
@@ -203,17 +206,16 @@ namespace ConsoleHaxx.Harmonix
 
 		public void WriteHeader()
 		{
-			Reader.Write(0x0B); // Encrypted
-			Reader.Write(44); // Offset to OGG
+			EndianReader writer = new EndianReader(Base, Endianness.LittleEndian);
+			writer.Write(0x0B); // Encrypted
+			writer.Write(44); // Offset to OGG
 
-			Reader.Write(0x0F); // Unknown; channels?
-			Reader.Write(0x4E20); // Unknown
-			Reader.Write(0x01); // Number of entries
-			Reader.Write(0x00);
-			Reader.Write(0x00);
-			//Reader.Write(Util.Encoding.GetBytes("microwaveyourcat")); // MOGG Key
-			//Reader.Write(Util.Encoding.GetBytes("lulzmediawikicms")); // MOGG Key
-			Reader.Write(Util.Encoding.GetBytes("imrightbehindyou")); // MOGG Key
+			writer.Write(0x0F); // Unknown; channels?
+			writer.Write(0x4E20); // Unknown
+			writer.Write(0x01); // Number of entries
+			writer.Write(0x00);
+			writer.Write(0x00);
+			writer.Write(Util.Encoding.GetBytes("imrightbehindyou")); // MOGG Key
 
 			Encrypted = true;
 

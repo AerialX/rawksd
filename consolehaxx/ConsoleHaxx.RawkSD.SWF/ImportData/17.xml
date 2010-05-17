@@ -1,0 +1,467 @@
+<importdata>
+	<global>
+		<idprefix>gha</idprefix>
+		<nameprefix>[GHA]</nameprefix>
+		<version>1</version>
+		<difficulty instrument="guitar" rank="1" />
+		<difficulty instrument="bass" rank="1" />
+	</global>
+	<song id="alwaysontherun">
+		<album>Mama Said</album>
+		<genre>Rock</genre>
+		<year>1991</year>
+		<track>2</track>
+	</song>
+	<song id="backinthesaddle">
+		<album>Rocks</album>
+		<genre>Rock</genre>
+		<year>1976</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="500" />
+		<difficulty instrument="bass" rank="500" />
+		<difficulty instrument="drum" rank="500" />
+	</song>
+	<song id="BeyondBeautiful">
+		<album>Just Push Play</album>
+		<genre>Rock</genre>
+		<year>2001</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="550" />
+		<difficulty instrument="guitar" rank="550" />
+		<difficulty instrument="bass" rank="550" />
+		<difficulty instrument="drum" rank="550" />
+	</song>
+	<song id="brightlightfright">
+		<album>Draw the Line</album>
+		<genre>Rock</genre>
+		<year>1997</year>
+		<track>5</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="450" />
+		<difficulty instrument="bass" rank="450" />
+		<difficulty instrument="drum" rank="450" />
+	</song>
+	<song id="catscratchfever">
+		<album>Cat Scratch Fever</album>
+		<genre>Rock</genre>
+		<year>1977</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="600" />
+		<difficulty instrument="guitar" rank="600" />
+		<difficulty instrument="bass" rank="600" />
+		<difficulty instrument="drum" rank="600" />
+	</song>
+	<song id="combination">
+		<album>Rocks</album>
+		<genre>Rock</genre>
+		<year>1976</year>
+		<track>4</track>
+		<difficulty instrument="band" rank="350" />
+		<difficulty instrument="guitar" rank="350" />
+		<difficulty instrument="bass" rank="350" />
+		<difficulty instrument="drum" rank="350" />
+	</song>
+	<song id="completecontrol">
+		<album>The Clash</album>
+		<genre>Punk</genre>
+		<year>1979</year>
+		<track>4</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="300" />
+		<difficulty instrument="bass" rank="300" />
+		<difficulty instrument="drum" rank="300" />
+	</song>
+	<song id="drawtheline">
+		<album>Draw the Line</album>
+		<genre>Rock</genre>
+		<year>1977</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="150" />
+		<difficulty instrument="guitar" rank="150" />
+		<difficulty instrument="bass" rank="150" />
+		<difficulty instrument="drum" rank="150" />
+	</song>
+	<song id="dreamon">
+		<album>Aerosmith Guitar Hero Re-Records</album>
+		<genre>Rock</genre>
+		<year>2007</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="550" />
+		<difficulty instrument="guitar" rank="550" />
+		<difficulty instrument="bass" rank="550" />
+		<difficulty instrument="drum" rank="550" />
+	</song>
+	<song id="dreampolice">
+		<album>Dream Police</album>
+		<genre>Rock</genre>
+		<year>1979</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="100" />
+		<difficulty instrument="guitar" rank="100" />
+		<difficulty instrument="bass" rank="100" />
+		<difficulty instrument="drum" rank="100" />
+	</song>
+	<song id="ihatemyselfforlovingyou">
+		<album>Up Your Alley</album>
+		<genre>Rock</genre>
+		<year>1988</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="200" />
+		<difficulty instrument="guitar" rank="200" />
+		<difficulty instrument="bass" rank="200" />
+		<difficulty instrument="drum" rank="200" />
+	</song>
+	<song id="joeperryguitarbattle">
+		<album>Joe Perry Guitar Battle</album>
+		<genre>Rock</genre>
+		<year>2007</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="600" />
+		<difficulty instrument="guitar" rank="600" />
+		<difficulty instrument="bass" rank="600" />
+		<difficulty instrument="drum" rank="600" />
+	</song>
+	<song id="kingofrock">
+		<album>King of Rock</album>
+		<genre>Rock</genre>
+		<year>1985</year>
+		<track>2</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="400" />
+		<difficulty instrument="bass" rank="400" />
+		<difficulty instrument="drum" rank="400" />
+	</song>
+	<song id="KingsAndQueens">
+		<album>Draw the Line</album>
+		<genre>Rock</genre>
+		<year>1977</year>
+		<track>6</track>
+		<difficulty instrument="band" rank="200" />
+		<difficulty instrument="guitar" rank="200" />
+		<difficulty instrument="bass" rank="200" />
+		<difficulty instrument="drum" rank="200" />
+	</song>
+	<song id="letthemusicdothetalking">
+		<album>Done with Mirrors</album>
+		<genre>Rock</genre>
+		<year>1985</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="200" />
+		<difficulty instrument="guitar" rank="200" />
+		<difficulty instrument="bass" rank="200" />
+		<difficulty instrument="drum" rank="200" />
+	</song>
+	<song id="livinontheedge">
+		<album>Get a Grip</album>
+		<genre>Rock</genre>
+		<year>1993</year>
+		<track>5</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="300" />
+		<difficulty instrument="bass" rank="300" />
+		<difficulty instrument="drum" rank="300" />
+	</song>
+	<song id="loveinanelevator">
+		<album>Pump</album>
+		<genre>Rock</genre>
+		<year>1989</year>
+		<track>3</track>
+		<difficulty instrument="band" rank="350" />
+		<difficulty instrument="guitar" rank="350" />
+		<difficulty instrument="bass" rank="350" />
+		<difficulty instrument="drum" rank="350" />
+	</song>
+	<song id="MakeIt">
+		<album>Aerosmith Guitar Hero Re-Records</album>
+		<genre>Rock</genre>
+		<year>2007</year>
+		<track>2</track>
+		<difficulty instrument="band" rank="100" />
+		<difficulty instrument="guitar" rank="100" />
+		<difficulty instrument="bass" rank="100" />
+		<difficulty instrument="drum" rank="100" />
+	</song>
+	<song id="mamakin">
+		<album>Aerosmith Guitar Hero Re-Records</album>
+		<genre>Rock</genre>
+		<year>2007</year>
+		<track>3</track>
+		<difficulty instrument="band" rank="650" />
+		<difficulty instrument="guitar" rank="650" />
+		<difficulty instrument="bass" rank="650" />
+		<difficulty instrument="drum" rank="650" />
+	</song>
+	<song id="mercy">
+		<album>Joe Perry</album>
+		<genre>Rock</genre>
+		<year>2005</year>
+		<track>13</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="450" />
+		<difficulty instrument="bass" rank="450" />
+		<difficulty instrument="drum" rank="450" />
+	</song>
+	<song id="movinout">
+		<album>Aerosmith Guitar Hero Re-Records</album>
+		<genre>Rock</genre>
+		<year>2007</year>
+		<track>4</track>
+		<difficulty instrument="band" rank="250" />
+		<difficulty instrument="guitar" rank="250" />
+		<difficulty instrument="bass" rank="250" />
+		<difficulty instrument="drum" rank="250" />
+	</song>
+	<song id="nobodysfault">
+		<album>Rocks</album>
+		<genre>Rock</genre>
+		<year>1976</year>
+		<track>6</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="450" />
+		<difficulty instrument="bass" rank="450" />
+		<difficulty instrument="drum" rank="450" />
+	</song>
+	<song id="nosurprize">
+		<album>Night in the Ruts</album>
+		<genre>Rock</genre>
+		<year>1979</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="250" />
+		<difficulty instrument="guitar" rank="250" />
+		<difficulty instrument="bass" rank="250" />
+		<difficulty instrument="drum" rank="250" />
+	</song>
+	<song id="pandorasbox">
+		<album>Get Your Wings</album>
+		<genre>Rock</genre>
+		<year>1974</year>
+		<track>8</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="300" />
+		<difficulty instrument="bass" rank="300" />
+		<difficulty instrument="drum" rank="300" />
+	</song>
+	<song id="Pink">
+		<album>Nine Lives</album>
+		<genre>Rock</genre>
+		<year>1997</year>
+		<track>11</track>
+		<difficulty instrument="band" rank="350" />
+		<difficulty instrument="guitar" rank="350" />
+		<difficulty instrument="bass" rank="350" />
+		<difficulty instrument="drum" rank="350" />
+	</song>
+	<song id="ragdoll">
+		<album>Permanent Vacation</album>
+		<genre>Rock</genre>
+		<year>1987</year>
+		<track>3</track>
+		<difficulty instrument="band" rank="350" />
+		<difficulty instrument="guitar" rank="350" />
+		<difficulty instrument="bass" rank="350" />
+		<difficulty instrument="drum" rank="350" />
+	</song>
+	<song id="ratsinthecellar">
+		<album>Rocks</album>
+		<genre>Rock</genre>
+		<year>1976</year>
+		<track>3</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="450" />
+		<difficulty instrument="bass" rank="450" />
+		<difficulty instrument="drum" rank="450" />
+	</song>
+	<song id="sextypething">
+		<album>Core</album>
+		<genre>Rock</genre>
+		<year>1992</year>
+		<track>2</track>
+		<difficulty instrument="band" rank="600" />
+		<difficulty instrument="guitar" rank="600" />
+		<difficulty instrument="bass" rank="600" />
+		<difficulty instrument="drum" rank="600" />
+	</song>
+	<song id="shakinmycage">
+		<album>Joe Perry</album>
+		<genre>Rock</genre>
+		<year>2005</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="500" />
+		<difficulty instrument="bass" rank="500" />
+		<difficulty instrument="drum" rank="500" />
+	</song>
+	<song id="shesellssanctuary">
+		<album>Love</album>
+		<genre>Rock</genre>
+		<year>1985</year>
+		<track>9</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="400" />
+		<difficulty instrument="bass" rank="400" />
+		<difficulty instrument="drum" rank="400" />
+	</song>
+	<song id="sweetemotion">
+		<album>Toys in the Attic</album>
+		<genre>Rock</genre>
+		<year>1975</year>
+		<track>6</track>
+		<difficulty instrument="band" rank="250" />
+		<difficulty instrument="guitar" rank="250" />
+		<difficulty instrument="bass" rank="250" />
+		<difficulty instrument="drum" rank="250" />
+	</song>
+	<song id="talktalking">
+		<album>Joe Perry</album>
+		<genre>Rock</genre>
+		<year>2005</year>
+		<track>7</track>
+		<difficulty instrument="band" rank="250" />
+		<difficulty instrument="guitar" rank="250" />
+		<difficulty instrument="bass" rank="250" />
+		<difficulty instrument="drum" rank="250" />
+	</song>
+	<song id="toysintheattic">
+		<album>Toys in the Attic</album>
+		<genre>Rock</genre>
+		<year>1975</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="650" />
+		<difficulty instrument="guitar" rank="650" />
+		<difficulty instrument="bass" rank="650" />
+		<difficulty instrument="drum" rank="650" />
+	</song>
+	<song id="trainkeptarollin">
+		<album>Get Your Wings</album>
+		<genre>Rock</genre>
+		<year>1974</year>
+		<track>6</track>
+		<difficulty instrument="band" rank="650" />
+		<difficulty instrument="guitar" rank="650" />
+		<difficulty instrument="bass" rank="650" />
+		<difficulty instrument="drum" rank="650" />
+	</song>
+	<song id="UncleSalty">
+		<album>Toys in the Attic</album>
+		<genre>Rock</genre>
+		<year>1975</year>
+		<track>2</track>
+		<difficulty instrument="band" rank="150" />
+		<difficulty instrument="guitar" rank="150" />
+		<difficulty instrument="bass" rank="150" />
+		<difficulty instrument="drum" rank="150" />
+	</song>
+	<song id="walkthisway">
+		<album>Toys in the Attic</album>
+		<genre>Rock</genre>
+		<year>1975</year>
+		<track>4</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="450" />
+		<difficulty instrument="bass" rank="450" />
+		<difficulty instrument="drum" rank="450" />
+	</song>
+	<song id="walkthiswayrundmc">
+		<album>Raising Hell</album>
+		<genre>Rock</genre>
+		<year>1986</year>
+		<track>2</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="450" />
+		<difficulty instrument="bass" rank="450" />
+		<difficulty instrument="drum" rank="450" />
+	</song>
+	<song id="alldayandallofthenight">
+		<genre>Rock</genre>
+		<year>1964</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="200" />
+		<difficulty instrument="guitar" rank="200" />
+		<difficulty instrument="bass" rank="200" />
+		<difficulty instrument="drum" rank="200" />
+	</song>
+	<song id="alltheyoungdudes">
+		<genre>Glam</genre>
+		<year>1972</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="100" />
+		<difficulty instrument="guitar" rank="100" />
+		<difficulty instrument="bass" rank="100" />
+		<difficulty instrument="drum" rank="100" />
+	</song>
+	<song id="hardtohandle">
+		<genre>Rock</genre>
+		<year>1990</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="500" />
+		<difficulty instrument="bass" rank="500" />
+		<difficulty instrument="drum" rank="500" />
+	</song>
+	<song id="personalitycrisis">
+		<genre>Punk</genre>
+		<year>1973</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="300" />
+		<difficulty instrument="bass" rank="300" />
+		<difficulty instrument="drum" rank="300" />
+	</song>
+	<song id="alwaysontherun ">
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="500" />
+		<difficulty instrument="bass" rank="500" />
+		<difficulty instrument="drum" rank="500" />
+	</song>
+	<song id="beyondbeautiful">
+		<album>Just Push Play</album>
+		<genre>Rock</genre>
+		<year>2001</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="550" />
+		<difficulty instrument="guitar" rank="550" />
+		<difficulty instrument="bass" rank="550" />
+		<difficulty instrument="drum" rank="550" />
+	</song>
+	<song id="kingsandqueens">
+		<album>Draw the Line</album>
+		<genre>Rock</genre>
+		<year>1977</year>
+		<track>6</track>
+		<difficulty instrument="band" rank="200" />
+		<difficulty instrument="guitar" rank="200" />
+		<difficulty instrument="bass" rank="200" />
+		<difficulty instrument="drum" rank="200" />
+	</song>
+	<song id="makeit">
+		<album>Aerosmith Guitar Hero Re-Records</album>
+		<genre>Rock</genre>
+		<year>2007</year>
+		<track>2</track>
+		<difficulty instrument="band" rank="100" />
+		<difficulty instrument="guitar" rank="100" />
+		<difficulty instrument="bass" rank="100" />
+		<difficulty instrument="drum" rank="100" />
+	</song>
+	<song id="pink">
+		<album>Nine Lives</album>
+		<genre>Rock</genre>
+		<year>1997</year>
+		<track>11</track>
+		<difficulty instrument="band" rank="350" />
+		<difficulty instrument="guitar" rank="350" />
+		<difficulty instrument="bass" rank="350" />
+		<difficulty instrument="drum" rank="350" />
+	</song>
+	<song id="unclesalty">
+		<album>Toys in the Attic</album>
+		<genre>Rock</genre>
+		<year>1975</year>
+		<track>2</track>
+		<difficulty instrument="band" rank="150" />
+		<difficulty instrument="guitar" rank="150" />
+		<difficulty instrument="bass" rank="150" />
+		<difficulty instrument="drum" rank="150" />
+	</song>
+</importdata>

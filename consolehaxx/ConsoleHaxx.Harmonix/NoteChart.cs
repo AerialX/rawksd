@@ -25,8 +25,6 @@ namespace ConsoleHaxx.Harmonix
 
 		public Dictionary<string, string> Metadata;
 
-		//UnisonBonus;
-
 		public const ushort DefaultTicksPerBeat = 480;
 
 		public NoteChart()
@@ -140,8 +138,10 @@ namespace ConsoleHaxx.Harmonix
 			chart.Signature = midi.Signature;
 			chart.Division = midi.Division;
 
-			if (chart.Signature.Count == 0)
+			if (chart.Signature.Count == 0) {
+				chart.Signature = new List<Midi.TimeSignatureEvent>();
 				chart.Signature.Add(new Midi.TimeSignatureEvent(0, 4, 2, 24, 8));
+			}
 
 			chart.Venue = new VenueTrack(chart);
 			chart.Events = new EventsTrack(chart);
@@ -254,7 +254,7 @@ namespace ConsoleHaxx.Harmonix
 				case TrackType.Drums:
 					Drums drums = track as Drums;
 					if (text.StartsWith("mix ")) {
-						drums.Mixing[(Difficulty)int.Parse(text.Substring(4, 1))] = text.Substring(6);
+						drums.Mixing.Add(new Pair<Point,Pair<Difficulty,string>>(new Point(comment.Time), new Pair<Difficulty,string>((Difficulty)int.Parse(text.Substring(4, 1)), text.Substring(6))));
 					} else
 						drums.CharacterMoods.Add(new Pair<Point, CharacterMood>(new Point(comment.Time), NoteChartHelper.CharacterMoodFromString(text)));
 					break;
@@ -431,7 +431,7 @@ namespace ConsoleHaxx.Harmonix
 
 						uint k = 0;
 						while (true) {
-							Note note = new Note() { Time = sig.Time + Chart.Division.TicksPerBeat * k, Duration = (ulong)Chart.Division.TicksPerBeat / sig.Numerator };
+							Note note = new Note(sig.Time + Chart.Division.TicksPerBeat * k, (ulong)Chart.Division.TicksPerBeat / sig.Numerator);
 							if ((i < Chart.Signature.Count - 1 && note.Time + note.Duration >= Chart.Signature[i + 1].Time) ||
 								(note.Time >= Chart.Events.End.Time))
 								break;
@@ -914,7 +914,7 @@ namespace ConsoleHaxx.Harmonix
 						}
 
 						if (num == 0) { // Add empty fallback notes
-							track.Notes.Add(new Note() { Time = Chart.Division.TicksPerBeat * 4U, Duration = 1, Velocity = 100, ReleaseVelocity = 100 }.ToMidiNote(notebase));
+							track.Notes.Add(new Note(Chart.Division.TicksPerBeat * 4U, Chart.Division.TicksPerBeat / 4U).ToMidiNote(notebase));
 						} else {
 							for (byte i = 0; i < g.Value.Length; i++)
 								track.Notes.AddRange(g.Value[i].ConvertAll(n => n.ToMidiNote((byte)(notebase + i))));
@@ -1045,7 +1045,7 @@ namespace ConsoleHaxx.Harmonix
 			public List<Note> DrumFills;
 			public Dictionary<Difficulty, List<Note>[]> Gems { get; set; }
 			public List<Note> SoloSections { get; set; }
-			public Dictionary<Difficulty, string> Mixing;
+			public List<Pair<Point, Pair<Difficulty, string>>> Mixing;
 			public List<Pair<Point, CharacterMood>> CharacterMoods { get; set; }
 			public List<Pair<Note, Animation>> Animations { get; set; }
 
@@ -1055,16 +1055,16 @@ namespace ConsoleHaxx.Harmonix
 				DrumFills = new List<Note>();
 				Gems = new Dictionary<Difficulty, List<Note>[]>();
 				SoloSections = new List<Note>();
-				Mixing = new Dictionary<Difficulty, string>();
+				Mixing = new List<Pair<Point, Pair<Difficulty, string>>>();
 
 				CharacterMoods = new List<Pair<Point, CharacterMood>>();
 
 				Animations = new List<Pair<Note, Animation>>();
 
-				Mixing[Difficulty.Easy] = "drums0";
-				Mixing[Difficulty.Medium] = "drums0";
-				Mixing[Difficulty.Hard] = "drums0";
-				Mixing[Difficulty.Expert] = "drums0";
+				Mixing.Add(new Pair<Point, Pair<Difficulty, string>>(new Point(0), new Pair<Difficulty, string>(Difficulty.Easy, "drums0")));
+				Mixing.Add(new Pair<Point, Pair<Difficulty, string>>(new Point(0), new Pair<Difficulty, string>(Difficulty.Medium, "drums0")));
+				Mixing.Add(new Pair<Point, Pair<Difficulty, string>>(new Point(0), new Pair<Difficulty, string>(Difficulty.Hard, "drums0")));
+				Mixing.Add(new Pair<Point, Pair<Difficulty, string>>(new Point(0), new Pair<Difficulty, string>(Difficulty.Expert, "drums0")));
 
 				Gems.Add(Difficulty.Easy, new List<Note>[] { new List<Note>(), new List<Note>(), new List<Note>(), new List<Note>(), new List<Note>() });
 				Gems.Add(Difficulty.Medium, new List<Note>[] { new List<Note>(), new List<Note>(), new List<Note>(), new List<Note>(), new List<Note>() });
@@ -1078,6 +1078,11 @@ namespace ConsoleHaxx.Harmonix
 			{
 				Midi.Track track = new Midi.Track();
 				track.Name = "PART DRUMS";
+
+				foreach (var gems in Gems) {
+					foreach (var subgems in gems.Value)
+						NoteChartHelper.CombineNotes(subgems);
+				}
 
 				if (Animations.Count == 0) {
 					for (int i = 0; i < Gems[Difficulty.Expert].Length; i++) {
@@ -1101,16 +1106,15 @@ namespace ConsoleHaxx.Harmonix
 									break;
 							}
 
-							if (previous != null && (n.Time - previous.Time + previous.Duration) < 40) {
+							if (previous != null && (n.Time - (previous.Time + previous.Duration)) < Chart.Division.TicksPerBeat / 4U) {
 								if (lasthand == AnimationHandedness.LeftHand)
 									hand = AnimationHandedness.RightHand;
 								else
 									hand = AnimationHandedness.LeftHand;
 							}
 
-
 							List<Pair<Note, Animation>> animations = Animations.FindAll(a => a.Key.Time == n.Time);
-							if (animations.Count != 0) { // There might be a conflicting animation...
+							if (animations.Count > 0) { // There might be a conflicting animation...
 								foreach (Pair<Note, Animation> ani in animations) {
 									if (ani.Value.GetAnimationHandedness() == hand) { // Swap hands if conflict
 										if (hand == AnimationHandedness.LeftHand)
@@ -1151,10 +1155,9 @@ namespace ConsoleHaxx.Harmonix
 									break;
 							}
 
-							lasthand = hand;
-
 							Animations.Add(new Pair<Note, Animation>(n, animation));
 
+							lasthand = hand;
 							previous = n;
 						}
 					}
@@ -1167,8 +1170,8 @@ namespace ConsoleHaxx.Harmonix
 
 				ToMidiTrack(track);
 
-				foreach (KeyValuePair<Difficulty, string> m in Mixing) {
-					track.Comments.Add(new Midi.TextEvent(0, "[mix " + (int)m.Key + " " + m.Value + "]"));
+				foreach (var mix in Mixing) {
+					track.Comments.Add(new Midi.TextEvent(mix.Key.Time, "[mix " + (int)mix.Value.Key + " " + mix.Value.Value + "]"));
 				}
 
 				track.Notes.AddRange(Animations.ConvertAll(c => c.Key.ToMidiNote((byte)c.Value)));
@@ -1344,13 +1347,20 @@ namespace ConsoleHaxx.Harmonix
 
 		public class Note : Point
 		{
-			public byte Velocity = 127;
-			public byte ReleaseVelocity = 127;
-			public ulong Duration = 60;
+			public byte Velocity;
+			public byte ReleaseVelocity;
+			public ulong Duration;
 
-			public static Note FromMidiNote(Midi.NoteEvent note)
+			public Note(Point note) : this(note.Time) { }
+			public Note(Note note) : this(note.Time, note.Duration, note.Velocity, note.ReleaseVelocity) { }
+			public Note(Midi.NoteEvent note) : this(note.Time, note.Duration, note.Velocity, note.ReleaseVelocity) { }
+
+			public Note(ulong time = 0, ulong duration = DefaultTicksPerBeat / 8U, byte velocity = 127, byte releasevelocity = 127)
 			{
-				return new Note() { Time = note.Time, Duration = note.Duration, Velocity = note.Velocity, ReleaseVelocity = note.ReleaseVelocity };
+				Time = time;
+				Duration = duration;
+				Velocity = velocity;
+				ReleaseVelocity = releasevelocity;
 			}
 
 			public new Midi.NoteEvent ToMidiNote(byte note)
@@ -1379,7 +1389,7 @@ namespace ConsoleHaxx.Harmonix
 						case 15:
 							break;
 					}
-					(t as Instrument).H2H.Add(new Instrument.H2HNote() { Note = Note.FromMidiNote(n), Member = member });
+					(t as Instrument).H2H.Add(new Instrument.H2HNote() { Note = new Note(n), Member = member });
 				}
 			); */
 			// Fret Animations
@@ -1393,103 +1403,103 @@ namespace ConsoleHaxx.Harmonix
 				Notes = new byte[] { 116 },
 				Track = TrackType.Bass | TrackType.Guitar | TrackType.Drums | TrackType.Vocals
 			},
-				(n, t) => (t as Instrument).Overdrive.Add(Note.FromMidiNote(n))
+				(n, t) => (t as Instrument).Overdrive.Add(new Note(n))
 			);
 			// Easy
 			NoteTypes.Add(new NoteDescriptor() { // Gems
 				Notes = new byte[] { 60, 61, 62, 63, 64 },
 				Track = TrackType.Bass | TrackType.Guitar | TrackType.Drums
 			},
-				(n, t) => (t as IGems).Gems[Difficulty.Easy][n.Note - 60].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IGems).Gems[Difficulty.Easy][n.Note - 60].Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() { // Force Hopo
 				Notes = new byte[] { 60 + 5 },
 				Track = TrackType.Bass | TrackType.Guitar
 			},
-				(n, t) => (t as IForcedHopo).ForceHammeron[Difficulty.Easy].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IForcedHopo).ForceHammeron[Difficulty.Easy].Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() { // Force Strum
 				Notes = new byte[] { 60 + 6 },
 				Track = TrackType.Bass | TrackType.Guitar
 			},
-				(n, t) => (t as IForcedHopo).ForceStrum[Difficulty.Easy].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IForcedHopo).ForceStrum[Difficulty.Easy].Add(new Note(n))
 			);
 			// Medium
 			NoteTypes.Add(new NoteDescriptor() { // Gems
 				Notes = new byte[] { 72, 73, 74, 75, 76 },
 				Track = TrackType.Bass | TrackType.Guitar | TrackType.Drums
 			},
-				(n, t) => (t as IGems).Gems[Difficulty.Medium][n.Note - 72].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IGems).Gems[Difficulty.Medium][n.Note - 72].Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() { // Force Hopo
 				Notes = new byte[] { 72 + 5 },
 				Track = TrackType.Bass | TrackType.Guitar
 			},
-				(n, t) => (t as IForcedHopo).ForceHammeron[Difficulty.Medium].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IForcedHopo).ForceHammeron[Difficulty.Medium].Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() { // Force Strum
 				Notes = new byte[] { 72 + 6 },
 				Track = TrackType.Bass | TrackType.Guitar
 			},
-				(n, t) => (t as IForcedHopo).ForceStrum[Difficulty.Medium].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IForcedHopo).ForceStrum[Difficulty.Medium].Add(new Note(n))
 			);
 			// Hard
 			NoteTypes.Add(new NoteDescriptor() { // Gems
 				Notes = new byte[] { 84, 85, 86, 87, 88 },
 				Track = TrackType.Bass | TrackType.Guitar | TrackType.Drums
 			},
-				(n, t) => (t as IGems).Gems[Difficulty.Hard][n.Note - 84].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IGems).Gems[Difficulty.Hard][n.Note - 84].Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() { // Force Hopo
 				Notes = new byte[] { 84 + 5 },
 				Track = TrackType.Bass | TrackType.Guitar
 			},
-				(n, t) => (t as IForcedHopo).ForceHammeron[Difficulty.Hard].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IForcedHopo).ForceHammeron[Difficulty.Hard].Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() { // Force Strum
 				Notes = new byte[] { 84 + 6 },
 				Track = TrackType.Bass | TrackType.Guitar
 			},
-				(n, t) => (t as IForcedHopo).ForceStrum[Difficulty.Hard].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IForcedHopo).ForceStrum[Difficulty.Hard].Add(new Note(n))
 			);
 			// Expert
 			NoteTypes.Add(new NoteDescriptor() { // Gems
 				Notes = new byte[] { 96, 97, 98, 99, 100 },
 				Track = TrackType.Bass | TrackType.Guitar | TrackType.Drums
 			},
-				(n, t) => (t as IGems).Gems[Difficulty.Expert][n.Note - 96].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IGems).Gems[Difficulty.Expert][n.Note - 96].Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() { // Force Hopo
 				Notes = new byte[] { 96 + 5 },
 				Track = TrackType.Bass | TrackType.Guitar
 			},
-				(n, t) => (t as IForcedHopo).ForceHammeron[Difficulty.Expert].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IForcedHopo).ForceHammeron[Difficulty.Expert].Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() { // Force Strum
 				Notes = new byte[] { 96 + 6 },
 				Track = TrackType.Bass | TrackType.Guitar
 			},
-				(n, t) => (t as IForcedHopo).ForceStrum[Difficulty.Expert].Add(Note.FromMidiNote(n))
+				(n, t) => (t as IForcedHopo).ForceStrum[Difficulty.Expert].Add(new Note(n))
 			);
 			// Fretboard Position
 			NoteTypes.Add(new NoteDescriptor() {
 				Notes = new byte[] { 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59 },
 				Track = TrackType.Bass | TrackType.Guitar
 			},
-				(n, t) => (t as IFretPosition).FretPosition.Add(new Pair<Note, byte>(Note.FromMidiNote(n), (byte)(n.Note - 40)))
+				(n, t) => (t as IFretPosition).FretPosition.Add(new Pair<Note, byte>(new Note(n), (byte)(n.Note - 40)))
 			);
 			// Player Demarkation
 			NoteTypes.Add(new NoteDescriptor() {
 				Notes = new byte[] { 105 },
 				Track = TrackType.Bass | TrackType.Guitar | TrackType.Drums | TrackType.Vocals
 			},
-				(n, t) => (t as Instrument).Player1.Add(Note.FromMidiNote(n))
+				(n, t) => (t as Instrument).Player1.Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() {
 				Notes = new byte[] { 106 },
 				Track = TrackType.Bass | TrackType.Guitar | TrackType.Drums | TrackType.Vocals
 			},
-				(n, t) => (t as Instrument).Player2.Add(Note.FromMidiNote(n))
+				(n, t) => (t as Instrument).Player2.Add(new Note(n))
 			);
 			// Big Rock Ending / Drum Fills
 			/*
@@ -1497,7 +1507,7 @@ namespace ConsoleHaxx.Harmonix
 				//Notes = new byte[] { 120, 121, 122, 123, 124 },
 				Notes = new byte[] { 120, 121, 122, 123, 124 },
 				Track = TrackType.Bass | TrackType.Guitar | TrackType.Vocals },
-				(n, t) => { if (n.Note == 120) t.Chart.BigRockEnding = Note.FromMidiNote(n); }
+				(n, t) => { if (n.Note == 120) t.Chart.BigRockEnding = new Note(n); }
 			);
 			*/
 			NoteTypes.Add(new NoteDescriptor() {
@@ -1505,54 +1515,54 @@ namespace ConsoleHaxx.Harmonix
 				Notes = new byte[] { 120 },
 				Track = TrackType.Drums
 			},
-				//(n, t) => { if (n.Note == 120) (t as Drums).DrumFills.Add(Note.FromMidiNote(n)); }
-				(n, t) => (t as Drums).DrumFills.Add(Note.FromMidiNote(n))
+				//(n, t) => { if (n.Note == 120) (t as Drums).DrumFills.Add(new Note(n)); }
+				(n, t) => (t as Drums).DrumFills.Add(new Note(n))
 			);
 			// Solo
 			NoteTypes.Add(new NoteDescriptor() {
 				Notes = new byte[] { 103 },
 				Track = TrackType.Guitar | TrackType.Bass | TrackType.Drums
 			},
-				(n, t) => (t as ISolo).SoloSections.Add(Note.FromMidiNote(n))
+				(n, t) => (t as ISolo).SoloSections.Add(new Note(n))
 			);
 			// Drums
 			NoteTypes.Add(new NoteDescriptor() {
 				Notes = new byte[] { 24, 25, 26, 27, 30, 31, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 46, 47, 48, 49, 50, 51 },
 				Track = TrackType.Drums
 			},
-				(n, t) => (t as Drums).Animations.Add(new Pair<Note, Drums.Animation>(Note.FromMidiNote(n), (Drums.Animation)n.Note))
+				(n, t) => (t as Drums).Animations.Add(new Pair<Note, Drums.Animation>(new Note(n), (Drums.Animation)n.Note))
 			);
 			// Beat Track
 			NoteTypes.Add(new NoteDescriptor() {
 				Notes = new byte[] { 12 },
 				Track = TrackType.Beat
 			},
-				(n, t) => (t as BeatTrack).Low.Add(Note.FromMidiNote(n))
+				(n, t) => (t as BeatTrack).Low.Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() {
 				Notes = new byte[] { 13 },
 				Track = TrackType.Beat
 			},
-				(n, t) => (t as BeatTrack).High.Add(Note.FromMidiNote(n))
+				(n, t) => (t as BeatTrack).High.Add(new Note(n))
 			);
 			// Events Track
 			NoteTypes.Add(new NoteDescriptor() {
 				Notes = new byte[] { 24 },
 				Track = TrackType.Events
 			},
-				(n, t) => (t as EventsTrack).Kick.Add(Note.FromMidiNote(n))
+				(n, t) => (t as EventsTrack).Kick.Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() {
 				Notes = new byte[] { 25 },
 				Track = TrackType.Events
 			},
-				(n, t) => (t as EventsTrack).Snare.Add(Note.FromMidiNote(n))
+				(n, t) => (t as EventsTrack).Snare.Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() {
 				Notes = new byte[] { 26 },
 				Track = TrackType.Events
 			},
-				(n, t) => (t as EventsTrack).Hat.Add(Note.FromMidiNote(n))
+				(n, t) => (t as EventsTrack).Hat.Add(new Note(n))
 			);
 			// Vocals
 			byte[] notes = new byte[84 - 36 + 1];
@@ -1568,7 +1578,7 @@ namespace ConsoleHaxx.Harmonix
 				Notes = new byte[] { 103 },
 				Track = TrackType.Vocals
 			},
-				(n, t) => (t as Vocals).PercussionSections.Add(Note.FromMidiNote(n))
+				(n, t) => (t as Vocals).PercussionSections.Add(new Note(n))
 			);
 			NoteTypes.Add(new NoteDescriptor() {
 				Notes = new byte[] { 96 },
@@ -1960,6 +1970,22 @@ namespace ConsoleHaxx.Harmonix
 			return ret;
 		}
 
+		public static string DifficultyToString(this NoteChart.Difficulty difficulty)
+		{
+			switch (difficulty) {
+				case NoteChart.Difficulty.Easy:
+					return "Easy";
+				case NoteChart.Difficulty.Medium:
+					return "Medium";
+				case NoteChart.Difficulty.Hard:
+					return "Hard";
+				case NoteChart.Difficulty.Expert:
+					return "Expert";
+			}
+
+			return null;
+		}
+
 		public static bool IsUnderNote(this NoteChart.Note note, NoteChart.Note parent)
 		{
 			return note.IsUnderNote(parent, true);
@@ -1973,7 +1999,7 @@ namespace ConsoleHaxx.Harmonix
 		public static List<NoteChart.Note> SplitNote(this NoteChart.Note note, NoteChart.Note remove)
 		{
 			List<NoteChart.Note> notes = new List<NoteChart.Note>();
-			NoteChart.Note nnote = new NoteChart.Note() { Time = note.Time, Duration = note.Duration, Velocity = note.Velocity, ReleaseVelocity = note.ReleaseVelocity };
+			NoteChart.Note nnote = new NoteChart.Note(note);
 			notes.Add(nnote);
 
 			if (remove.Time >= note.Time && remove.Time <= note.Time + note.Duration) {
@@ -1981,7 +2007,7 @@ namespace ConsoleHaxx.Harmonix
 				nnote.Duration = remove.Time - note.Time;
 				// create another note starting at the end of remove to the end of note
 				if (remove.Time + remove.Duration < note.Time + note.Duration) {
-					nnote = new NoteChart.Note() { Time = remove.Time + remove.Duration, Duration = note.Time + note.Duration - (remove.Time + remove.Duration), Velocity = note.Velocity, ReleaseVelocity = note.ReleaseVelocity };
+					nnote = new NoteChart.Note(remove.Time + remove.Duration, note.Time + note.Duration - (remove.Time + remove.Duration), note.Velocity, note.ReleaseVelocity);
 					notes.Add(nnote);
 				}
 			} else if (remove.Time + remove.Duration > note.Time && remove.Time + remove.Duration <= note.Time + note.Duration) {
@@ -2000,6 +2026,21 @@ namespace ConsoleHaxx.Harmonix
 			}
 
 			return notes;
+		}
+
+		public static void CombineNotes(List<NoteChart.Note> notes)
+		{
+			notes.Sort((a, b) => a.Time.CompareTo(b.Time));
+			NoteChart.Note previous = null;
+			for (int i = 0; i < notes.Count; i++) {
+				NoteChart.Note note = notes[i];
+				if (previous != null && previous.Time + previous.Duration > note.Time) {
+					previous.Duration = note.Time + note.Duration - previous.Time;
+					notes.Remove(note);
+					i--;
+				} else
+					previous = note;
+			}
 		}
 	}
 }

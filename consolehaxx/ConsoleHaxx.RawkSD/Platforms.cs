@@ -7,41 +7,21 @@ using ConsoleHaxx.Common;
 using ConsoleHaxx.Wii;
 using ConsoleHaxx.Harmonix;
 using System.Text.RegularExpressions;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace ConsoleHaxx.RawkSD
 {
-	[Serializable]
-	public class CancelledException : Exception
-	{
-		public CancelledException() { }
-		public CancelledException(string message) : base(message) { }
-		public CancelledException(string message, Exception inner) : base(message, inner) { }
-	}
-
-	public abstract class ProgressIndicator
-	{
-		public abstract void SetTasks(int tasks);
-		public abstract void NewTask(string name, int max);
-		public abstract void Progress(int increment);
-		public abstract bool Warning(string message);
-		public abstract void Error(string message);
-
-		public void Progress() { Progress(1); }
-	}
-
 	public abstract class Engine
 	{
 		public abstract int ID { get; }
 		public abstract string Name { get; }
 
-		public abstract bool IsValid(string path);
-
-		public abstract PlatformData Create(string path, Game game);
-		public abstract bool AddSong(PlatformData data, SongData song);
+		public abstract PlatformData Create(string path, Game game, ProgressIndicator progress);
+		public abstract bool AddSong(PlatformData data, SongData song, ProgressIndicator progress);
 
 		public virtual FormatData CreateSong(PlatformData data, SongData song) { throw new NotImplementedException(); }
-		public virtual void SaveSong(PlatformData data, FormatData formatdata) { throw new NotImplementedException(); }
-		public virtual bool Writable { get { return false; } }
+		public virtual void SaveSong(PlatformData data, FormatData formatdata, ProgressIndicator progress) { throw new NotImplementedException(); }
 
 		public override string ToString()
 		{
@@ -66,11 +46,15 @@ namespace ConsoleHaxx.RawkSD
 		bool Writable { get; }
 		bool Readable { get; }
 
-		object Decode(FormatData data);
+		object Decode(FormatData data, ProgressIndicator progress);
 		void Encode(object data, FormatData destination, ProgressIndicator progress);
 
 		bool CanRemux(IFormat format);
 		void Remux(IFormat format, FormatData data, FormatData destination, ProgressIndicator progress);
+
+		bool CanTransfer(FormatData data);
+
+		bool HasFormat(FormatData format);
 	}
 
 	public abstract class IAudioFormat : IFormat
@@ -80,9 +64,9 @@ namespace ConsoleHaxx.RawkSD
 
 		public FormatType Type { get { return FormatType.Audio; } }
 
-		public virtual object Decode(FormatData data)
+		public virtual object Decode(FormatData data, ProgressIndicator progress)
 		{
-			return DecodeAudio(data);
+			return DecodeAudio(data, progress);
 		}
 
 		public virtual void Encode(object data, FormatData destination, ProgressIndicator progress)
@@ -93,7 +77,8 @@ namespace ConsoleHaxx.RawkSD
 				throw new FormatException();
 		}
 
-		public abstract AudioFormat DecodeAudio(FormatData data);
+		public abstract AudioFormat DecodeAudio(FormatData data, ProgressIndicator progress);
+		public virtual AudioFormat DecodeAudioFormat(FormatData data) { AudioFormat format = DecodeAudio(data, new ProgressIndicator()); format.Decoder.Dispose(); return format; }
 
 		public abstract void EncodeAudio(AudioFormat data, FormatData destination, ProgressIndicator progress);
 
@@ -101,10 +86,19 @@ namespace ConsoleHaxx.RawkSD
 		public abstract bool Readable { get; }
 
 		public virtual bool CanRemux(IFormat format) { return false; }
+
 		public virtual void Remux(IFormat format, FormatData data, FormatData destination, ProgressIndicator progress) { throw new NotSupportedException(); }
+
+		public virtual bool CanTransfer(FormatData data) { return true; }
+
+		public virtual bool HasFormat(FormatData data) { return data.Formats.Contains(this); }
+
+		public override string ToString()
+		{
+			return Name;
+		}
 	}
 
-	// At the moment, charts are only "remuxable" because there is no generic chart format
 	public abstract class IChartFormat : IFormat
 	{
 		public abstract int ID { get; }
@@ -112,9 +106,9 @@ namespace ConsoleHaxx.RawkSD
 
 		public FormatType Type { get { return FormatType.Chart; } }
 
-		public virtual object Decode(FormatData data)
+		public virtual object Decode(FormatData data, ProgressIndicator progress)
 		{
-			return DecodeChart(data);
+			return DecodeChart(data, progress);
 		}
 
 		public virtual void Encode(object data, FormatData destination, ProgressIndicator progress)
@@ -125,7 +119,7 @@ namespace ConsoleHaxx.RawkSD
 				throw new FormatException();
 		}
 
-		public abstract ChartFormat DecodeChart(FormatData data);
+		public abstract ChartFormat DecodeChart(FormatData data, ProgressIndicator progress);
 
 		public abstract void EncodeChart(ChartFormat data, FormatData destination, ProgressIndicator progress);
 
@@ -134,6 +128,15 @@ namespace ConsoleHaxx.RawkSD
 
 		public virtual bool CanRemux(IFormat format) { return false; }
 		public virtual void Remux(IFormat format, FormatData data, FormatData destination, ProgressIndicator progress) { throw new NotSupportedException(); }
+
+		public virtual bool CanTransfer(FormatData data) { return true; }
+
+		public virtual bool HasFormat(FormatData data) { return data.Formats.Contains(this); }
+
+		public override string ToString()
+		{
+			return Name;
+		}
 	}
 
 	public class PlatformData : IDisposable
@@ -163,6 +166,11 @@ namespace ConsoleHaxx.RawkSD
 			Data.Add(data);
 		}
 
+		public void RemoveSong(FormatData data)
+		{
+			Data.Remove(data);
+		}
+
 		public void Dispose()
 		{
 			if (Cache != null)
@@ -177,44 +185,17 @@ namespace ConsoleHaxx.RawkSD
 
 	public static class Platform
 	{
-		public static List<Engine> Platforms;
 		public static List<IFormat> Formats;
 
-		public static Engine GetPlatform(int id) { return Platforms.SingleOrDefault(p => p.ID == id); }
 		public static IFormat GetFormat(int id) { return Formats.SingleOrDefault(a => a.ID == id); }
+		public static void AddFormat(IFormat format) { Formats.Add(format); }
 
 		static Platform()
 		{
-			Platforms = new List<Engine>();
 			Formats = new List<IFormat>();
-			
-			Formats.Add(AudioFormatBeatlesBink.Instance);
-			Formats.Add(AudioFormatBink.Instance);
-			Formats.Add(AudioFormatFFmpeg.Instance);
-			Formats.Add(AudioFormatGH3WiiFSB.Instance);
-			Formats.Add(AudioFormatMogg.Instance);
-			Formats.Add(AudioFormatOgg.Instance);
-			Formats.Add(AudioFormatRB2Bink.Instance);
-			Formats.Add(AudioFormatVGS.Instance);
 
-			Formats.Add(ChartFormatChart.Instance);
-			Formats.Add(ChartFormatGH1.Instance);
-			Formats.Add(ChartFormatGH2.Instance);
-			Formats.Add(ChartFormatGH3.Instance);
-			Formats.Add(ChartFormatGH4.Instance);
-			Formats.Add(ChartFormatGH5.Instance);
-			Formats.Add(ChartFormatRB.Instance);
-
-			Platforms.Add(PlatformLocalStorage.Instance);
-			Platforms.Add(PlatformRB2WiiDisc.Instance);
-			Platforms.Add(PlatformRB2WiiDLC.Instance);
-			Platforms.Add(PlatformGH1PS2Disc.Instance);
-			Platforms.Add(PlatformGH2PS2Disc.Instance);
-			Platforms.Add(PlatformGH3WiiDisc.Instance);
-			Platforms.Add(PlatformGH4WiiDisc.Instance);
-			Platforms.Add(PlatformGH5WiiDisc.Instance);
-			Platforms.Add(PlatformGH4WiiDLC.Instance);
-			Platforms.Add(PlatformGH5WiiDLC.Instance);
+			foreach (var type in Assembly.GetExecutingAssembly().GetTypes().Where(t => typeof(Engine).IsAssignableFrom(t) || typeof(IFormat).IsAssignableFrom(t)))
+				RuntimeHelpers.RunClassConstructor(type.TypeHandle);
 		}
 
 		public static Instrument InstrumentFromString(string s)
@@ -287,14 +268,24 @@ namespace ConsoleHaxx.RawkSD
 
 		public static void Transcode(FormatType type, FormatData data, IList<IFormat> targets, FormatData destination, ProgressIndicator progress)
 		{
+			foreach (IFormat format in targets) {
+				if (format.HasFormat(data)) {
+					Transfer(format, data, destination, progress);
+					return;
+				}
+			}
+
 			IList<IFormat> formats = FindTranscodePath(data.GetFormats(type), targets);
 
 			if (formats.Count == 0)
 				throw new NotSupportedException();
 
 			if (formats.Count == 1) {
-				Transfer(formats[0], data, destination, progress);
-				return;
+				if (formats[0].CanTransfer(data)) {
+					Transfer(formats[0], data, destination, progress);
+					return;
+				} else
+					formats.Add(formats[0]);
 			}
 
 			FormatData tempdata = null;
@@ -302,10 +293,16 @@ namespace ConsoleHaxx.RawkSD
 			if (formats.Count > 2)
 				tempdata = new TemporaryFormatData();
 
+			progress.NewTask(formats.Count - 1);
+
 			for (int i = 1; i < formats.Count; i++) {
-				Transcode(formats[i - 1], i > 1 ? tempdata : data, formats[i], i < formats.Count - 1 ? tempdata : destination, progress);
-				data = destination;
+				FormatData dest = i < formats.Count - 1 ? tempdata : destination;
+				Transcode(formats[i - 1], data, formats[i], dest, progress);
+				data = dest;
+				progress.Progress();
 			}
+
+			progress.EndTask();
 		}
 
 		public static void Transcode(IFormat format, FormatData data, IFormat target, FormatData destination, ProgressIndicator progress)
@@ -313,14 +310,21 @@ namespace ConsoleHaxx.RawkSD
 			if (target.CanRemux(format)) {
 				target.Remux(format, data, destination, progress);
 			} else if (target.Writable && format.Readable)
-				target.Encode(format.Decode(data), destination, progress);
+				TranscodeOnly(format, data, target, destination, progress);
 			else
 				throw new NotSupportedException();
 		}
 
+		public static void TranscodeOnly(IFormat format, FormatData data, IFormat target, FormatData destination, ProgressIndicator progress)
+		{
+			target.Encode(format.Decode(data, progress), destination, progress);
+		}
+
 		public static void Transfer(IFormat format, FormatData data, FormatData destination, ProgressIndicator progress)
 		{
-			foreach (string fullname in data.GetStreams()) {
+			string[] streams = data.GetStreamNames();
+			progress.NewTask(streams.Length);
+			foreach (string fullname in streams) {
 				if (fullname.StartsWith(format.ID + ".")) {
 					string name = fullname.Split(new char[] { '.' }, 2)[1];
 
@@ -331,8 +335,12 @@ namespace ConsoleHaxx.RawkSD
 
 					destination.CloseStream(ostream);
 					data.CloseStream(istream);
+
+					progress.Progress();
 				}
 			}
+
+			progress.EndTask();
 		}
 
 		public static void Transfer(FormatData data, FormatData destination, ProgressIndicator progress)
@@ -341,143 +349,231 @@ namespace ConsoleHaxx.RawkSD
 				Transfer(format, data, destination, progress);
 		}
 
-		public static Ark GetHarmonixArk(DirectoryNode dir)
+		public static DirectoryNode GetDirectoryStructure(this PlatformData platform, string path)
 		{
-			DirectoryNode gen = dir.Navigate("gen") as DirectoryNode;
-			if (gen == null) // Just in case we're given the "wrong" directory that directly contains the ark
-				gen = dir;
+			platform.Session["path"] = path;
 
-			List<Pair<int, Stream>> arkfiles = new List<Pair<int, Stream>>();
-			Stream hdrfile = null;
-			foreach (FileNode file in gen.Children.Where(n => n is FileNode)) {
-				if (file.Name.EndsWith(".hdr"))
-					hdrfile = file.Data;
-				else if (file.Name.EndsWith(".ark")) {
-					Match match = Regex.Match(file.Name, @"_(\d+).ark");
-					if (match.Success)
-						arkfiles.Add(new Pair<int, Stream>(int.Parse(match.Groups[1].Value), file.Data));
-					else
-						arkfiles.Add(new Pair<int, Stream>(0, file.Data));
-				}
-			}
-
-			// FreQuency/Amplitude where the header is the ark
-			if (hdrfile == null) {
-				if (arkfiles.Count == 1) {
-					hdrfile = arkfiles[0].Value;
-					arkfiles.Clear();
-				} else
-					throw new FormatException();
-			}
-
-			return new Ark(new EndianReader(hdrfile, Endianness.LittleEndian), arkfiles.OrderBy(f => f.Key).Select(f => f.Value).ToArray());
-		}
-
-		public static DirectoryNode GetWiiDirectoryStructure(this PlatformData platform, string path)
-		{
-			if (File.Exists(path)) {
-				Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read);
-
+			if (Directory.Exists(path)) {
+				DirectoryNode root = DirectoryNode.FromPath(path, platform.Cache, FileAccess.Read, FileShare.Read);
+				platform.Session["rootdirnode"] = root;
+				return root;
+			} else if (File.Exists(path)) {
+				Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 				platform.Cache.AddStream(stream);
 
-				Disc disc = new Disc(stream);
+				try {
+					Iso9660 iso = new Iso9660(stream);
+					platform.Session["iso"] = iso;
+					platform.Session["rootdirnode"] = iso.Root;
+					return iso.Root;
+				} catch (FormatException) { }
 
-				platform.Session["wiidisc"] = disc;
+				try {
+					Disc disc = new Disc(stream);
 
-				Partition partition = disc.Partitions.Find(p => p.Type == PartitionType.Data);
-				if (partition == null)
-					return null;
-				U8 u8 = partition.Root;
-				if (u8 == null)
-					return null;
-				return u8.Root;
-			} else if (Directory.Exists(path))
-				return DirectoryNode.FromPath(path, platform.Cache, FileAccess.Read);
-			else
-				throw new NotSupportedException();
-		}
+					platform.Session["wiidisc"] = disc;
 
-		public static DirectoryNode GetPS2DirectoryStructure(this PlatformData data, string path)
-		{
-			if (File.Exists(path))
-				throw new NotImplementedException(); // ISO
-			else if (Directory.Exists(path))
-				return DirectoryNode.FromPath(path, data.Cache, FileAccess.Read);
-			else
-				throw new NotSupportedException();
-		}
+					Partition partition = disc.DataPartition;
+					if (partition == null)
+						throw new FormatException();
 
-		public static IFormat GetPreferredFormat(IFormat[] formats, FormatType type)
-		{
-			// TODO: Have some sort of priority system set up
-			foreach (IFormat format in formats)
-				if (format.Type == type)
-					return format;
+					platform.Session["rootdirnode"] = partition.Root.Root;
+					return partition.Root.Root;
+				} catch (FormatException) { }
+			}
 
-			return null;
-		}
-
-		public static IFormat GetPreferredFormat(IFormat[] formats, FormatType type, object priorities)
-		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		public static Game DetermineGame(PlatformData data)
 		{
+			Game game = Game.Unknown;
+
+			if (data.Session.ContainsKey("rootdirnode")) {
+				DirectoryNode root = data.Session["rootdirnode"] as DirectoryNode;
+				game = DetermineGame(root);
+			}
 			if (data.Session.ContainsKey("wiidisc")) {
 				Disc disc = data.Session["wiidisc"] as Disc;
-				Games game;
 				switch (disc.Console + disc.Gamecode) {
 					case "SXA":
-						game = Games.GuitarHeroWorldTour;
+						game = Game.GuitarHeroWorldTour;
 						break;
 					case "SXB":
-						game = Games.GuitarHeroMetallica;
+						game = Game.GuitarHeroMetallica;
 						break;
 					case "SXC":
-						game = Games.GuitarHeroSmashHits;
+						game = Game.GuitarHeroSmashHits;
 						break;
 					case "SXD":
-						game = Games.GuitarHeroVanHalen;
+						game = Game.GuitarHeroVanHalen;
 						break;
 					case "SXE":
-						game = Games.GuitarHero5;
+						game = Game.GuitarHero5;
 						break;
 					case "SXF":
-						game = Games.BandHero;
+						game = Game.BandHero;
 						break;
 					case "RKX":
-						game = Games.RockBand;
+						game = Game.RockBand;
 						break;
 					case "R33":
-						game = Games.RockBandACDC;
+						game = Game.RockBandACDC;
+						break;
+					case "RRE":
+						game = Game.RockBandTP1;
 						break;
 					case "RRD":
-						game = Games.RockBandTP2;
+						game = Game.RockBandTP2;
+						break;
+					case "R3Z":
+						game = Game.RockBandClassicTP;
+						break;
+					case "R34":
+						game = Game.RockBandCountryTP;
+						break;
+					case "R37":
+						game = Game.RockBandMetalTP;
 						break;
 					case "SZA":
-						game = Games.RockBand2;
+						game = Game.RockBand2;
 						break;
 					case "R6L":
-						game = Games.LegoRockBand;
+						game = Game.LegoRockBand;
 						break;
 					case "R9J":
-						game = Games.RockBandBeatles;
+						game = Game.RockBandBeatles;
 						break;
 					case "RGH":
-						game = Games.GuitarHero3;
+						game = Game.GuitarHero3;
 						break;
 					case "RGV":
-						game = Games.GuitarHeroAerosmith;
+						game = Game.GuitarHeroAerosmith;
 						break;
-					default:
-						return data.Game;
 				}
-
-				return Game.GetGame(game);
 			}
 
-			return data.Game;
+			if (game == Game.Unknown)
+				return data.Game;
+			return game;
 		}
+
+		public static Game DetermineGame(DirectoryNode root)
+		{
+			if (root.Find("SLES_541.32", true) != null || root.Find("SLUS_212.24", true) != null)
+				return Game.GuitarHero1;
+			else if (root.Find("SLES_544.42", true) != null || root.Find("SLUS_214.47", true) != null)
+				return Game.GuitarHero2;
+			else if (root.Find("SLES_548.59", true) != null || root.Find("SLUS_215.86", true) != null || root.Find("SLES_548.60", true) != null)
+				return Game.GuitarHero80s;
+
+			return Game.Unknown;
+		}
+
+		public static string GameName(Game game)
+		{
+			switch (game) {
+				case Game.GuitarHero1:
+					return "Guitar Hero";
+				case Game.GuitarHero2:
+					return "Guitar Hero 2";
+				case Game.GuitarHero80s:
+					return "Guitar Hero Encore: Rocks the 80s";
+				case Game.GuitarHero3:
+					return "Guitar Hero 3: Legends of Rock";
+				case Game.GuitarHeroAerosmith:
+					return "Guitar Hero: Aerosmith";
+				case Game.GuitarHeroWorldTour:
+					return "Guitar Hero World Tour";
+				case Game.GuitarHeroMetallica:
+					return "Guitar Hero: Metallica";
+				case Game.GuitarHeroSmashHits:
+					return "Guitar Hero Smash Hits";
+				case Game.GuitarHeroVanHalen:
+					return "Guitar Hero: Van Halen";
+				case Game.GuitarHero5:
+					return "Guitar Hero 5";
+				case Game.BandHero:
+					return "Band Hero";
+				case Game.DjHero:
+					return "DJ Hero";
+				case Game.RockBand:
+					return "Rock Band";
+				case Game.RockBandACDC:
+					return "AC/DC Live: Rock Band Track Pack";
+				case Game.RockBandTP1:
+					return "Rock Band: Track Pack Volume 1";
+				case Game.RockBandTP2:
+					return "Rock Band: Track Pack Volume 2";
+				case Game.RockBandCountryTP:
+					return "Rock Band: Country Track Pack";
+				case Game.RockBandClassicTP:
+					return "Rock Band Track Pack: Classic Rock";
+				case Game.RockBandMetalTP:
+					return "Rock Band: Metal Track Pack";
+				case Game.RockBand2:
+					return "Rock Band 2";
+				case Game.RockBandBeatles:
+					return "The Beatles: Rock Band";
+				case Game.LegoRockBand:
+					return "Lego Rock Band";
+				case Game.RockBandGreenDay:
+					return "Green Day: Rock Band";
+				case Game.RockBand3:
+					return "Rock Band 3";
+			}
+
+			return null;
+		}
+
+		public static IList<Game> GetGames()
+		{
+			return new List<Game>() {
+				Game.GuitarHero1, Game.GuitarHero2, Game.GuitarHero80s,
+				Game.GuitarHero3, Game.GuitarHeroAerosmith,
+				Game.GuitarHeroWorldTour, Game.GuitarHeroMetallica, Game.GuitarHeroSmashHits, Game.GuitarHeroVanHalen,
+				Game.GuitarHero5, Game.BandHero,
+				Game.DjHero,
+				Game.RockBand, Game.RockBandACDC, Game.RockBandTP1, Game.RockBandTP2, Game.RockBandCountryTP, Game.RockBandClassicTP, Game.RockBandMetalTP, 
+				Game.RockBand2, Game.RockBandBeatles, Game.LegoRockBand, Game.RockBandGreenDay, 
+				Game.RockBand3
+			};
+		}
+	}
+
+	public enum Game
+	{
+		Unknown = 0x00,
+		GuitarHero1 = 0x01,
+		GuitarHero2 = 0x02,
+		GuitarHero80s = 0x03,
+
+		GuitarHero3 = 0x10,
+		GuitarHeroAerosmith = 0x11,
+
+		GuitarHeroWorldTour = 0x20,
+		GuitarHeroMetallica = 0x21,
+		GuitarHeroSmashHits = 0x22,
+		GuitarHeroVanHalen = 0x23,
+
+		GuitarHero5 = 0x30,
+		BandHero = 0x31,
+
+		DjHero = 0x70,
+
+		RockBand = 0x80,
+		RockBandACDC = 0x81,
+		RockBandTP1 = 0x82,
+		RockBandTP2 = 0x83,
+		RockBandCountryTP = 0x84,
+		RockBandClassicTP = 0x85,
+		RockBandMetalTP = 0x86,
+
+		RockBand2 = 0x90,
+		RockBandBeatles = 0x91,
+		LegoRockBand = 0x92,
+		RockBandGreenDay = 0x93,
+
+		RockBand3 = 0xA0
 	}
 }

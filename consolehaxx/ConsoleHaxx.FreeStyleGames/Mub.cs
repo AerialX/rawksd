@@ -10,14 +10,12 @@ namespace ConsoleHaxx.FreeStyleGames
 		// Header
 		public int Version;
 		public int Checksum;
-		public EndingType Type;
 
 		public List<Node> Nodes;
 
 		public Mub()
 		{
 			Nodes = new List<Node>();
-			Type = EndingType.SinglePlayer;
 		}
 
 		public static Mub Create(EndianReader reader)
@@ -35,25 +33,8 @@ namespace ConsoleHaxx.FreeStyleGames
 
 			long begin = reader.Position;
 
-			mub.Type = EndingType.Scene;
 			for (int i = 0; i < nodes; i++) {
 				Node node = Node.ParseNode(reader);
-
-				if (i == nodes - 2 && node.Type == 0x2C && node.Time == 4 && node.Duration == 0.0625) {
-					mub.Type = EndingType.SinglePlayer;
-					continue;
-				}
-
-				if (i == nodes - 1 && mub.Type == EndingType.SinglePlayer) {
-					if (node.Type != 0x2D || node.Time != 4 || node.Duration != 0.0625)
-						throw new FormatException(); // End must be 0x2C, 0x2D
-					continue;
-				}
-
-				if (i == nodes - 1 && node.Type == 0x00 && node.Time == 0 && node.Duration == 0 && node.Data == 0) {
-					mub.Type = EndingType.Guitar;
-					continue;
-				}
 
 				mub.Nodes.Add(node);
 			}
@@ -72,7 +53,7 @@ namespace ConsoleHaxx.FreeStyleGames
 		public void Save(EndianReader writer)
 		{
 			Nodes.Sort(new NodeComparer());
-			int stringoffset = (Nodes.Count + GetEndingSize(Type)) * 0x10;
+			int stringoffset = Nodes.Count * 0x10;
 
 			// First build the stringtable
 			MemoryStream stringtable = new MemoryStream();
@@ -89,26 +70,11 @@ namespace ConsoleHaxx.FreeStyleGames
 
 			writer.Write(Version);
 			writer.Write(Checksum);
-			writer.Write(Nodes.Count + GetEndingSize(Type));
+			writer.Write(Nodes.Count);
 			writer.Write((int)stringtable.Length);
 
-			foreach (Node node in Nodes) {
+			foreach (Node node in Nodes)
 				node.Save(writer);
-			}
-
-			switch (Type) {
-				case EndingType.SinglePlayer:
-					Node.EndingSinglePlayer1.Save(writer);
-					Node.EndingSinglePlayer2.Save(writer);
-					break;
-				case EndingType.Guitar:
-					Node.EndingGuitar.Save(writer);
-					break;
-				case EndingType.Scene:
-					break;
-				default:
-					throw new NotSupportedException();
-			}
 
 			stringtable.Position = 0;
 			Util.StreamCopy(writer.Base, stringtable);
@@ -118,10 +84,6 @@ namespace ConsoleHaxx.FreeStyleGames
 
 		public class Node
 		{
-			internal static Node EndingSinglePlayer1 = new Node() { Time = 4, Duration = 0.0625f, Data = 0, Type = 0x2C };
-			internal static Node EndingSinglePlayer2 = new Node() { Time = 4, Duration = 0.0625f, Data = 0, Type = 0x2D };
-			internal static Node EndingGuitar = new Node() { Time = 0, Duration = 0, Data = 0, Type = 0 };
-
 			public float Time;
 			public int Type;
 			public float Duration;

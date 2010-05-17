@@ -33,34 +33,24 @@ namespace ConsoleHaxx.Common
 			AesCBC.Mode = CipherMode.CBC;
 		}
 
-		public static long RoundUp(long p, int round)
+		public static long RoundUp(long p, long round)
 		{
-			unchecked {
-				return (p + round - 1) & ~(round - 1);
-			}
+			return RoundDown(p + round - 1, round);
 		}
 
-		public static ulong RoundUp(ulong p, int round)
+		public static ulong RoundUp(ulong p, ulong round)
 		{
-			unchecked {
-				return ((ulong)p + (uint)round - 1) & (ulong)~(round - 1);
-			}
+			return RoundDown(p + round - 1, round);
 		}
 
-		public static long RoundDown(long p, int round)
+		public static long RoundDown(long p, long round)
 		{
-			long ret = RoundUp(p, round);
-			if (p - ret == 0)
-				return ret;
-			return ret - round;
+			return p / round * round;
 		}
 
-		public static ulong RoundDown(ulong p, int round)
+		public static ulong RoundDown(ulong p, ulong round)
 		{
-			ulong ret = RoundUp(p, round);
-			if (p - ret == 0)
-				return ret;
-			return ret - (ulong)round;
+			return p / round * round;
 		}
 
 		public static long StreamCopy(Stream destination, Stream source)
@@ -257,9 +247,9 @@ namespace ConsoleHaxx.Common
 
 		public static byte[] SHA1Hash(byte[] data)
 		{
-			return SHA1Hash(data, 0);
+			return SHA1Hash(data, 0, data.Length);
 		}
-
+		// DELETE THIS v
 		public static byte[] SHA1Hash(byte[] data, int offset)
 		{
 			return SHA1Hash(data, offset, data.Length - offset);
@@ -320,6 +310,29 @@ namespace ConsoleHaxx.Common
 			}
 
 			return ret.ToString();
+		}
+
+		public static string FileSizeToString(long bytesize)
+		{
+			double size = bytesize;
+			string units = "B";
+			while (size > 0x400 && units != "GB") {
+				switch (units) {
+					case "B":
+						units = "KB";
+						break;
+					case "KB":
+						units = "MB";
+						break;
+					case "MB":
+						units = "GB";
+						break;
+				}
+
+				size /= 0x400;
+			}
+
+			return size.ToString(units == "B" ? "0" : "0.00") + " " + units;
 		}
 	}
 }

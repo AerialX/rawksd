@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using ConsoleHaxx.Common;
 
@@ -288,6 +289,10 @@ namespace ConsoleHaxx.Wii
 				break;
 			}
 		}
+
+		public Partition DataPartition { get {
+			return Partitions.FirstOrDefault(p => p.Type == PartitionType.Data);
+		} }
 	}
 
 	public enum PartitionType : uint

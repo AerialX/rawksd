@@ -1,0 +1,686 @@
+<importdata>
+	<global>
+		<idprefix>ghm</idprefix>
+		<nameprefix>[GHM]</nameprefix>
+		<version>1</version>
+		<difficulty instrument="guitar" rank="1" />
+		<difficulty instrument="bass" rank="1" />
+		<difficulty instrument="drums" rank="1" />
+		<difficulty instrument="vox" rank="1" />
+	</global>
+	<song>
+		<name>Ace of Spades</name>
+		<artist>Motörhead</artist>
+		<album>Ace of Spades</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="453" />
+		<difficulty instrument="guitar" rank="388" />
+		<difficulty instrument="bass" rank="429" />
+		<difficulty instrument="drum" rank="255" />
+		<difficulty instrument="vocals" rank="471" />
+	</song>
+
+	<song id="Albatross">
+		<name>Albatross</name>
+		<artist>Corrosion of Conformity</artist>
+		<album>Deliverance</album>
+		<genre>metal</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="400" />
+		<difficulty instrument="bass" rank="400" />
+		<difficulty instrument="drum" rank="400" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Allnightmarelong">
+		<name>All Nightmare Long</name>
+		<artist>Metallica</artist>
+		<album>Death Magnetic</album>
+		<genre>metal</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="490" />
+		<difficulty instrument="bass" rank="425" />
+		<difficulty instrument="drum" rank="450" />
+		<difficulty instrument="vocals" rank="220" />
+	</song>
+
+	<song id="Amievil">
+		<name>Am I Evil?</name>
+		<artist>Diamond Head</artist>
+		<album>Lightning to the Nations</album>
+		<genre>metal</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="250" />
+		<difficulty instrument="bass" rank="120" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="300" />
+	</song>
+
+	<song id="Armedandready">
+		<name>Armed and Ready</name>
+		<artist>Michael Schenker Group</artist>
+		<album>The Michael Schenker Group</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="400" />
+		<difficulty instrument="bass" rank="400" />
+		<difficulty instrument="drum" rank="400" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Battery">
+		<name>Battery</name>
+		<artist>Metallica</artist>
+		<album>Master of Puppets</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="520" />
+		<difficulty instrument="guitar" rank="483" />
+		<difficulty instrument="bass" rank="510" />
+		<difficulty instrument="drum" rank="261" />
+		<difficulty instrument="vocals" rank="553" />
+	</song>
+
+	<song id="Beautifulmourning">
+		<name>Beautiful Mourning</name>
+		<artist>Machine Head</artist>
+		<album>The Blackening</album>
+		<genre>metal</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="423" />
+		<difficulty instrument="bass" rank="505" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Theblackriver">
+		<name>The Black River</name>
+		<artist>The Sword</artist>
+		<album>Gods of the Earth</album>
+		<genre>metal</genre>
+		<track>9</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="423" />
+		<difficulty instrument="bass" rank="505" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Bloodandthunder">
+		<name>Blood and Thunder</name>
+		<artist>Mastodon</artist>
+		<album>Leviathan</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="423" />
+		<difficulty instrument="bass" rank="505" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Theboysarebackintown">
+		<name>The Boys Are Back in Town</name>
+		<artist>Thin Lizzy</artist>
+		<album>Jailbreak</album>
+		<genre>rock</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="423" />
+		<difficulty instrument="bass" rank="505" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Brokenbeatenscarred">
+		<name>Broken, Beat & Scarred</name>
+		<artist>Metallica</artist>
+		<album>Death Magnetic</album>
+		<genre>metal</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="423" />
+		<difficulty instrument="bass" rank="505" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Creepingdeath">
+		<name>Creeping Death</name>
+		<artist>Metallica</artist>
+		<album>Ride the Lightning</album>
+		<genre>metal</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="423" />
+		<difficulty instrument="bass" rank="505" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Cyanide">
+		<name>Cyanide</name>
+		<artist>Metallica</artist>
+		<album>Death Magnetic</album>
+		<genre>metal</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="423" />
+		<difficulty instrument="bass" rank="505" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Demoncleaner">
+		<name>Demon Cleaner</name>
+		<artist>Kyuss</artist>
+		<album>Welcome to Sky Valley</album>
+		<genre>rock</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="423" />
+		<difficulty instrument="bass" rank="505" />
+		<difficulty instrument="drum" rank="345" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+
+	<song id="Disposableheroes">
+		<name>Disposable Heroes</name>
+		<artist>Metallica</artist>
+		<album>Master of Puppets</album>
+		<genre>metal</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="480" />
+		<difficulty instrument="bass" rank="420" />
+		<difficulty instrument="drum" rank="510" />
+		<difficulty instrument="vocals" rank="525" />
+	</song>
+
+	<song id="Dyerseve">
+		<name>Dyers Eve</name>
+		<artist>Metallica</artist>
+		<album>Master of Puppets</album>
+		<genre>metal</genre>
+		<track>9</track>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="480" />
+		<difficulty instrument="bass" rank="420" />
+		<difficulty instrument="drum" rank="510" />
+		<difficulty instrument="vocals" rank="525" />
+	</song>
+
+	<song id="Entersandman">
+		<name>Enter Sandman</name>
+		<artist>Metallica</artist>
+		<album>Metallica</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="330" />
+		<difficulty instrument="bass" rank="280" />
+		<difficulty instrument="drum" rank="220" />
+		<difficulty instrument="vocals" rank="275" />
+	</song>
+
+	<song id="Evil">
+		<name>Evil</name>
+		<artist>Mercyful Fate</artist>
+		<album>Melissa</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="330" />
+		<difficulty instrument="bass" rank="280" />
+		<difficulty instrument="drum" rank="220" />
+		<difficulty instrument="vocals" rank="275" />
+	</song>
+
+	<song id="Fadetoblack">
+		<name>Fade to Black</name>
+		<artist>Metallica</artist>
+		<album>Ride the Lightning</album>
+		<genre>metal</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="330" />
+		<difficulty instrument="bass" rank="280" />
+		<difficulty instrument="drum" rank="220" />
+		<difficulty instrument="vocals" rank="275" />
+	</song>
+
+	<song id="Fightfirewithfire">
+		<name>Fight Fire with Fire</name>
+		<artist>Metallica</artist>
+		<album>Ride the Lightning</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="330" />
+		<difficulty instrument="bass" rank="280" />
+		<difficulty instrument="drum" rank="220" />
+		<difficulty instrument="vocals" rank="275" />
+	</song>
+
+	<song id="Forwhomthebelltolls">
+		<name>For Whom the Bell Tolls</name>
+		<artist>Metallica</artist>
+		<album>Ride the Lightning</album>
+		<genre>metal</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="330" />
+		<difficulty instrument="bass" rank="280" />
+		<difficulty instrument="drum" rank="220" />
+		<difficulty instrument="vocals" rank="275" />
+	</song>
+
+	<song id="Frantic">
+		<name>Frantic</name>
+		<artist>Metallica</artist>
+		<album>St. Anger</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Fuel">
+		<name>Fuel</name>
+		<artist>Metallica</artist>
+		<album>ReLoad</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Hellbentforleather">
+		<name>Hell Bent for Leather</name>
+		<artist>Judas Priest</artist>
+		<album>Killing Machine</album>
+		<genre>metal</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="350" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Hitthelights">
+		<name>Hit the Lights</name>
+		<artist>Metallica</artist>
+		<album>Kill 'Em All</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Kingnothing">
+		<name>King Nothing</name>
+		<artist>Metallica</artist>
+		<album>Load</album>
+		<genre>metal</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Masterofpuppets">
+		<name>Master of Puppets</name>
+		<artist>Metallica</artist>
+		<album>Master of Puppets</album>
+		<genre>metal</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="470" />
+		<difficulty instrument="bass" rank="280" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Thememoryremains">
+		<name>The Memory Remains</name>
+		<artist>Metallica</artist>
+		<album>ReLoad</album>
+		<genre>metal</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Mercyfulfate">
+		<name>Mercyful Fate</name>
+		<artist>Metallica</artist>
+		<album>St. Anger</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Mommyslittlemonster">
+		<name>Mommy's Little Monster (Live)</name>
+		<artist>Social Distortion</artist>
+		<album>Mommy's Little Monster</album>
+		<genre>rock</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Motherofmercy">
+		<name>Mother of Mercy</name>
+		<artist>Samhain</artist>
+		<album>November-Coming-Fire</album>
+		<genre>punk</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Myapocalypse">
+		<name>My Apocalypse</name>
+		<artist>Metallica</artist>
+		<album>Death Magnetic</album>
+		<genre>metal</genre>
+		<track>10</track>
+		<difficulty instrument="band" rank="490" />
+		<difficulty instrument="guitar" rank="500" />
+		<difficulty instrument="bass" rank="400" />
+		<difficulty instrument="drum" rank="460" />
+		<difficulty instrument="vocals" rank="460" />
+	</song>
+
+	<song id="Noexcuses">
+		<name>No Excuses</name>
+		<artist>Alice in Chains</artist>
+		<album>Jar of Flies</album>
+		<genre>grunge</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Noleafclover">
+		<name>No Leaf Clover</name>
+		<artist>Metallica</artist>
+		<album>S&M</album>
+		<genre>metal</genre>
+		<track>8</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Nothingelsematters">
+		<name>Nothing Else Matters</name>
+		<artist>Metallica</artist>
+		<album>Metallica</album>
+		<genre>metal</genre>
+		<track>8</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="One">
+		<name>One</name>
+		<artist>Metallica</artist>
+		<album>...And Justice for All</album>
+		<genre>metal</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="460" />
+		<difficulty instrument="drum" rank="530" />
+		<difficulty instrument="vocals" rank="200" />
+	</song>
+
+	<song id="Orion">
+		<name>Orion</name>
+		<artist>Metallica</artist>
+		<album>Master of Puppets</album>
+		<genre>metal</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="0" />
+	</song>
+
+	<song id="Sadbuttrue">
+		<name>Sad But True</name>
+		<artist>Metallica</artist>
+		<album>Metallica</album>
+		<genre>metal</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Seekdestroy">
+		<name>Seek & Destroy</name>
+		<artist>Metallica</artist>
+		<album>Kill 'Em All</album>
+		<genre>metal</genre>
+		<track>9</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Theshorteststraw">
+		<name>The Shortest Straw</name>
+		<artist>Metallica</artist>
+		<album>...And Justice for All</album>
+		<genre>metal</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Stackedactors">
+		<name>Stacked Actors</name>
+		<artist>Foo Fighters</artist>
+		<album>There is Nothing Left to Lose</album>
+		<genre>rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Stonecoldcrazy">
+		<name>Stone Cold Crazy</name>
+		<artist>Queen</artist>
+		<album>Sheer Heart Attack</album>
+		<genre>rock</genre>
+		<track>8</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Thethingthatshouldnotbe">
+		<name>The Thing That Should Not Be</name>
+		<artist>Metallica</artist>
+		<album>Master of Puppets</album>
+		<genre>metal</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Toxicity">
+		<name>Toxicity</name>
+		<artist>System of a Down</artist>
+		<album>Toxicity</album>
+		<genre>metal</genre>
+		<track>12</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Tuesdaysgone">
+		<name>Tuesday's Gone</name>
+		<artist>Lynyrd Skynyrd</artist>
+		<album>(pronounced 'lĕh-'nérd 'skin-'nérd)</album>
+		<genre>rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Turnthepage">
+		<name>Turn the Page (Live)</name>
+		<artist>Bob Seger</artist>
+		<album>Back in '72</album>
+		<genre>rock</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Theunforgiven">
+		<name>The Unforgiven</name>
+		<artist>Metallica</artist>
+		<album>Metallica</album>
+		<genre>metal</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Warensemble">
+		<name>War Ensemble</name>
+		<artist>Slayer</artist>
+		<album>Seasons in the Abyss</album>
+		<genre>metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="580" />
+		<difficulty instrument="drum" rank="520" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Warinsidemyhead">
+		<name>War Inside My Head</name>
+		<artist>Suicidal Tendencies</artist>
+		<album>Still Cyco After All These Years</album>
+		<genre>metal</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Welcomehomesanitarium">
+		<name>Welcome Home (Sanitarium)</name>
+		<artist>Metallica</artist>
+		<album>Master of Puppets</album>
+		<genre>metal</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Whereverimayroam">
+		<name>Wherever I May Roam</name>
+		<artist>Metallica</artist>
+		<album>Metallica</album>
+		<genre>metal</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+
+	<song id="Whiplash">
+		<name>Whiplash</name>
+		<artist>Metallica</artist>
+		<album>Kill 'Em All</album>
+		<genre>metal</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="530" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="375" />
+	</song>
+</importdata>

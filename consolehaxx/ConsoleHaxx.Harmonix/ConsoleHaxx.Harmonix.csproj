@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Ark.cs" />
+    <Compile Include="Chart.cs" />
     <Compile Include="ChunkedDtbStream.cs" />
     <Compile Include="CryptedDtbStream.cs" />
     <Compile Include="CryptedMoggStream.cs" />

@@ -78,7 +78,7 @@ namespace ConsoleHaxx.Wii
 		public int Size
 		{
 			get {
-				return Signature.Size + 36 + PaddingSize + Contents.Count * ContentSize;
+				return Signature.Size + 38 + PaddingSize + Contents.Count * ContentSize;
 			}
 		}
 
@@ -125,7 +125,7 @@ namespace ConsoleHaxx.Wii
 			MemoryStream stream = new MemoryStream(data, true);
 			Save(stream);
 			stream.Close();
-			return Util.SHA1Hash(data, Signature.Size);
+			return Util.SHA1Hash(data, Signature.Size, Size - Signature.Size);
 		}
 	}
 

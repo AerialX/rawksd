@@ -1,0 +1,491 @@
+<importdata>
+	<global>
+		<idprefix>ghsh</idprefix>
+		<nameprefix>[GHSH]</nameprefix>
+		<version>1</version>
+		<difficulty instrument="guitar" rank="1" />
+		<difficulty instrument="bass" rank="1" />
+		<difficulty instrument="drums" rank="1" />
+		<difficulty instrument="vox" rank="1" />
+	</global>
+	<song id="backinthesaddle">
+		<album>Rocks</album>
+		<genre>Rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="230" />
+		<difficulty instrument="guitar" rank="230" />
+		<difficulty instrument="bass" rank="230" />
+		<difficulty instrument="drum" rank="230" />
+		<difficulty instrument="vocals" rank="230" />
+	</song>
+	<song id="barkatthemoon">
+		<album>Bark At The Moon</album>
+		<genre>Metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="390" />
+		<difficulty instrument="guitar" rank="390" />
+		<difficulty instrument="bass" rank="390" />
+		<difficulty instrument="drum" rank="390" />
+		<difficulty instrument="vocals" rank="390" />
+	</song>
+	<song id="barracuda">
+		<album>Little Queen</album>
+		<genre>Rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="320" />
+		<difficulty instrument="guitar" rank="320" />
+		<difficulty instrument="bass" rank="320" />
+		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="vocals" rank="320" />
+	</song>
+	<song id="beastandtheharlot">
+		<album>City of Evil</album>
+		<genre>Metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="540" />
+		<difficulty instrument="guitar" rank="540" />
+		<difficulty instrument="bass" rank="540" />
+		<difficulty instrument="drum" rank="540" />
+		<difficulty instrument="vocals" rank="540" />
+	</song>
+	<song id="carryonmywaywardson">
+		<album>Leftoverture</album>
+		<genre>Prog</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="220" />
+		<difficulty instrument="guitar" rank="220" />
+		<difficulty instrument="bass" rank="220" />
+		<difficulty instrument="drum" rank="220" />
+		<difficulty instrument="vocals" rank="220" />
+	</song>
+	<song id="caughtinamosh">
+		<album>Among the Living</album>
+		<genre>Metal</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="500" />
+		<difficulty instrument="guitar" rank="500" />
+		<difficulty instrument="bass" rank="500" />
+		<difficulty instrument="drum" rank="500" />
+		<difficulty instrument="vocals" rank="500" />
+	</song>
+	<song id="cherrypie">
+		<album>Cherry Pie</album>
+		<genre>Glam</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="160" />
+		<difficulty instrument="guitar" rank="160" />
+		<difficulty instrument="bass" rank="160" />
+		<difficulty instrument="drum" rank="160" />
+		<difficulty instrument="vocals" rank="160" />
+	</song>
+	<song id="cowboysfromhell">
+		<album>Official Live: 101 Proof</album>
+		<genre>Metal</genre>
+		<track>12</track>
+		<difficulty instrument="band" rank="380" />
+		<difficulty instrument="guitar" rank="380" />
+		<difficulty instrument="bass" rank="380" />
+		<difficulty instrument="drum" rank="380" />
+		<difficulty instrument="vocals" rank="380" />
+	</song>
+	<song id="cultofpersonality">
+		<album>Vivid</album>
+		<genre>Rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="370" />
+		<difficulty instrument="guitar" rank="370" />
+		<difficulty instrument="bass" rank="370" />
+		<difficulty instrument="drum" rank="370" />
+		<difficulty instrument="vocals" rank="370" />
+	</song>
+	<song id="electriceye">
+		<album>Screaming for Vengeance</album>
+		<genre>Metal</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="290" />
+		<difficulty instrument="guitar" rank="290" />
+		<difficulty instrument="bass" rank="290" />
+		<difficulty instrument="drum" rank="290" />
+		<difficulty instrument="vocals" rank="290" />
+	</song>
+	<song id="freebird">
+		<album>(pronounced 'lĕh-'nérd 'skin-'nérd)</album>
+		<genre>Southern Rock</genre>
+		<track>8</track>
+		<difficulty instrument="band" rank="440" />
+		<difficulty instrument="guitar" rank="440" />
+		<difficulty instrument="bass" rank="440" />
+		<difficulty instrument="drum" rank="440" />
+		<difficulty instrument="vocals" rank="440" />
+	</song>
+	<song id="freya">
+		<album>Age of Winters</album>
+		<genre>Metal</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="310" />
+		<difficulty instrument="guitar" rank="310" />
+		<difficulty instrument="bass" rank="310" />
+		<difficulty instrument="drum" rank="310" />
+		<difficulty instrument="vocals" rank="310" />
+	</song>
+	<song id="godzilla">
+		<album>Spectres</album>
+		<genre>Classic Rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="110" />
+		<difficulty instrument="guitar" rank="110" />
+		<difficulty instrument="bass" rank="110" />
+		<difficulty instrument="drum" rank="110" />
+		<difficulty instrument="vocals" rank="110" />
+	</song>
+	<song id="heartshapedbox">
+		<album>In Utero</album>
+		<genre>Grunge</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="20" />
+		<difficulty instrument="guitar" rank="20" />
+		<difficulty instrument="bass" rank="20" />
+		<difficulty instrument="drum" rank="20" />
+		<difficulty instrument="vocals" rank="20" />
+	</song>
+	<song id="heyyou">
+		<album>Head for the Door</album>
+		<genre>Alternative</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="180" />
+		<difficulty instrument="guitar" rank="180" />
+		<difficulty instrument="bass" rank="180" />
+		<difficulty instrument="drum" rank="180" />
+		<difficulty instrument="vocals" rank="180" />
+	</song>
+	<song id="hitmewithyourbestshot">
+		<album>Crimes of Passion</album>
+		<genre>Rock</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="30" />
+		<difficulty instrument="guitar" rank="30" />
+		<difficulty instrument="bass" rank="30" />
+		<difficulty instrument="drum" rank="30" />
+		<difficulty instrument="vocals" rank="30" />
+	</song>
+	<song id="iloverockandroll">
+		<album>I Love Rock 'n' Roll</album>
+		<genre>Rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="10" />
+		<difficulty instrument="guitar" rank="10" />
+		<difficulty instrument="bass" rank="10" />
+		<difficulty instrument="drum" rank="10" />
+		<difficulty instrument="vocals" rank="10" />
+	</song>
+	<song id="iwannarock">
+		<album>Stay Hungry</album>
+		<genre>Rock</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="80" />
+		<difficulty instrument="guitar" rank="80" />
+		<difficulty instrument="bass" rank="80" />
+		<difficulty instrument="drum" rank="80" />
+		<difficulty instrument="vocals" rank="80" />
+	</song>
+	<song id="killerqueen">
+		<album>Sheer Heart Attack</album>
+		<genre>Classic Rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="280" />
+		<difficulty instrument="guitar" rank="280" />
+		<difficulty instrument="bass" rank="280" />
+		<difficulty instrument="drum" rank="280" />
+		<difficulty instrument="vocals" rank="280" />
+	</song>
+	<song id="killinginthenameof">
+		<album>Rage Against the Machine</album>
+		<genre>Alternative</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="140" />
+		<difficulty instrument="guitar" rank="140" />
+		<difficulty instrument="bass" rank="140" />
+		<difficulty instrument="drum" rank="140" />
+		<difficulty instrument="vocals" rank="140" />
+	</song>
+	<song id="laidtorest">
+		<album>Ashes of the Wake</album>
+		<genre>Metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="420" />
+		<difficulty instrument="guitar" rank="420" />
+		<difficulty instrument="bass" rank="420" />
+		<difficulty instrument="drum" rank="420" />
+		<difficulty instrument="vocals" rank="420" />
+	</song>
+	<song id="laydown">
+		<album>Hello Master</album>
+		<genre>Rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="120" />
+		<difficulty instrument="guitar" rank="120" />
+		<difficulty instrument="bass" rank="120" />
+		<difficulty instrument="drum" rank="120" />
+		<difficulty instrument="vocals" rank="120" />
+	</song>
+	<song id="messageinabottle">
+		<album>Reggatta de Blanc</album>
+		<genre>Pop-Rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="260" />
+		<difficulty instrument="guitar" rank="260" />
+		<difficulty instrument="bass" rank="260" />
+		<difficulty instrument="drum" rank="260" />
+		<difficulty instrument="vocals" rank="260" />
+	</song>
+	<song id="missmurder">
+		<album>Decemberunderground</album>
+		<genre>Alternative</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="200" />
+		<difficulty instrument="guitar" rank="200" />
+		<difficulty instrument="bass" rank="200" />
+		<difficulty instrument="drum" rank="200" />
+		<difficulty instrument="vocals" rank="200" />
+	</song>
+	<song id="monkeywrench">
+		<album>The Colour and the Shape</album>
+		<genre>Alternative</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="240" />
+		<difficulty instrument="guitar" rank="240" />
+		<difficulty instrument="bass" rank="240" />
+		<difficulty instrument="drum" rank="240" />
+		<difficulty instrument="vocals" rank="240" />
+	</song>
+	<song id="morethanafeeling">
+		<album>Boston</album>
+		<genre>Classic Rock</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="60" />
+		<difficulty instrument="guitar" rank="60" />
+		<difficulty instrument="bass" rank="60" />
+		<difficulty instrument="drum" rank="60" />
+		<difficulty instrument="vocals" rank="60" />
+	</song>
+	<song id="mother">
+		<album>Danzig</album>
+		<genre>Metal</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="250" />
+		<difficulty instrument="guitar" rank="250" />
+		<difficulty instrument="bass" rank="250" />
+		<difficulty instrument="drum" rank="250" />
+		<difficulty instrument="vocals" rank="250" />
+	</song>
+	<song id="nooneknows">
+		<album>Songs for the Deaf</album>
+		<genre>Alternative</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="340" />
+		<difficulty instrument="guitar" rank="340" />
+		<difficulty instrument="bass" rank="340" />
+		<difficulty instrument="drum" rank="340" />
+		<difficulty instrument="vocals" rank="340" />
+	</song>
+	<song id="nothinbutagoodtime">
+		<album>Open Up and Say... Ahh!</album>
+		<genre>Classic Rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="210" />
+		<difficulty instrument="guitar" rank="210" />
+		<difficulty instrument="bass" rank="210" />
+		<difficulty instrument="drum" rank="210" />
+		<difficulty instrument="vocals" rank="210" />
+	</song>
+	<song id="playwithme">
+		<album>Extreme</album>
+		<genre>Metal</genre>
+		<track>11</track>
+		<difficulty instrument="band" rank="480" />
+		<difficulty instrument="guitar" rank="480" />
+		<difficulty instrument="bass" rank="480" />
+		<difficulty instrument="drum" rank="480" />
+		<difficulty instrument="vocals" rank="480" />
+	</song>
+	<song id="psychobillyfreakout">
+		<album>Smoke 'em if You Got 'em</album>
+		<genre>Alternative</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="360" />
+		<difficulty instrument="guitar" rank="360" />
+		<difficulty instrument="bass" rank="360" />
+		<difficulty instrument="drum" rank="360" />
+		<difficulty instrument="vocals" rank="360" />
+	</song>
+	<song id="rainingblood">
+		<album>Reign in Blood</album>
+		<genre>Metal</genre>
+		<track>10</track>
+		<difficulty instrument="band" rank="520" />
+		<difficulty instrument="guitar" rank="520" />
+		<difficulty instrument="bass" rank="520" />
+		<difficulty instrument="drum" rank="520" />
+		<difficulty instrument="vocals" rank="520" />
+	</song>
+	<song id="rockandrollallnite">
+		<album>Dressed to Kill</album>
+		<genre>Classic Rock</genre>
+		<track>10</track>
+		<difficulty instrument="band" rank="40" />
+		<difficulty instrument="guitar" rank="40" />
+		<difficulty instrument="bass" rank="40" />
+		<difficulty instrument="drum" rank="40" />
+		<difficulty instrument="vocals" rank="40" />
+	</song>
+	<song id="roundandround">
+		<album>Out of the Cellar</album>
+		<genre>Metal</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="150" />
+		<difficulty instrument="guitar" rank="150" />
+		<difficulty instrument="bass" rank="150" />
+		<difficulty instrument="drum" rank="150" />
+		<difficulty instrument="vocals" rank="150" />
+	</song>
+	<song id="shoutatthedevil">
+		<album>Shout at the Devil</album>
+		<genre>Metal</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="170" />
+		<difficulty instrument="guitar" rank="170" />
+		<difficulty instrument="bass" rank="170" />
+		<difficulty instrument="drum" rank="170" />
+		<difficulty instrument="vocals" rank="170" />
+	</song>
+	<song id="smokeonthewater">
+		<album>Machine Head</album>
+		<genre>Classic Rock</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="270" />
+		<difficulty instrument="guitar" rank="270" />
+		<difficulty instrument="bass" rank="270" />
+		<difficulty instrument="drum" rank="270" />
+		<difficulty instrument="vocals" rank="270" />
+	</song>
+	<song id="stellar">
+		<album>Make Yourself</album>
+		<genre>Alternative</genre>
+		<track>6</track>
+		<difficulty instrument="band" rank="70" />
+		<difficulty instrument="guitar" rank="70" />
+		<difficulty instrument="bass" rank="70" />
+		<difficulty instrument="drum" rank="70" />
+		<difficulty instrument="vocals" rank="70" />
+	</song>
+	<song id="stop">
+		<album>Ritual de lo Habitual</album>
+		<genre>Alternative</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="330" />
+		<difficulty instrument="guitar" rank="330" />
+		<difficulty instrument="bass" rank="330" />
+		<difficulty instrument="drum" rank="330" />
+		<difficulty instrument="vocals" rank="330" />
+	</song>
+	<song id="takeitoff">
+		<album>Spend the Night</album>
+		<genre>Rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="130" />
+		<difficulty instrument="guitar" rank="130" />
+		<difficulty instrument="bass" rank="130" />
+		<difficulty instrument="drum" rank="130" />
+		<difficulty instrument="vocals" rank="130" />
+	</song>
+	<song id="takemeout">
+		<album>Franz Ferdinand</album>
+		<genre>Alternative</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="50" />
+		<difficulty instrument="guitar" rank="50" />
+		<difficulty instrument="bass" rank="50" />
+		<difficulty instrument="drum" rank="50" />
+		<difficulty instrument="vocals" rank="50" />
+	</song>
+	<song id="thetrooper">
+		<album>Piece of Mind</album>
+		<genre>Metal</genre>
+		<track>5</track>
+		<difficulty instrument="band" rank="460" />
+		<difficulty instrument="guitar" rank="460" />
+		<difficulty instrument="bass" rank="460" />
+		<difficulty instrument="drum" rank="460" />
+		<difficulty instrument="vocals" rank="460" />
+	</song>
+	<song id="thembones">
+		<album>Dirt</album>
+		<genre>Grunge</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="100" />
+		<difficulty instrument="guitar" rank="100" />
+		<difficulty instrument="bass" rank="100" />
+		<difficulty instrument="drum" rank="100" />
+		<difficulty instrument="vocals" rank="100" />
+	</song>
+	<song id="throughthefire">
+		<album>Inhuman Rampage</album>
+		<genre>Metal</genre>
+		<track>1</track>
+		<difficulty instrument="band" rank="580" />
+		<difficulty instrument="guitar" rank="580" />
+		<difficulty instrument="bass" rank="580" />
+		<difficulty instrument="drum" rank="580" />
+		<difficulty instrument="vocals" rank="580" />
+	</song>
+	<song id="thunderkiss65">
+		<album>La Sexorcisto: Devil Music, Vol. 1</album>
+		<genre>Metal</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="300" />
+		<difficulty instrument="guitar" rank="300" />
+		<difficulty instrument="bass" rank="300" />
+		<difficulty instrument="drum" rank="300" />
+		<difficulty instrument="vocals" rank="300" />
+	</song>
+	<song id="trippinonahole">
+		<album>Tiny Music... Songs from the Vatican Gift Shop</album>
+		<genre>Alternative</genre>
+		<track>7</track>
+		<difficulty instrument="band" rank="350" />
+		<difficulty instrument="guitar" rank="350" />
+		<difficulty instrument="bass" rank="350" />
+		<difficulty instrument="drum" rank="350" />
+		<difficulty instrument="vocals" rank="350" />
+	</song>
+	<song id="unsung">
+		<album>Meantime</album>
+		<genre>Metal</genre>
+		<track>4</track>
+		<difficulty instrument="band" rank="190" />
+		<difficulty instrument="guitar" rank="190" />
+		<difficulty instrument="bass" rank="190" />
+		<difficulty instrument="drum" rank="190" />
+		<difficulty instrument="vocals" rank="190" />
+	</song>
+	<song id="woman">
+		<album>Wolfmother</album>
+		<genre>Rock</genre>
+		<track>2</track>
+		<difficulty instrument="band" rank="90" />
+		<difficulty instrument="guitar" rank="90" />
+		<difficulty instrument="bass" rank="90" />
+		<difficulty instrument="drum" rank="90" />
+		<difficulty instrument="vocals" rank="90" />
+	</song>
+	<song id="yyz">
+		<album>Moving Pictures</album>
+		<genre>Prog</genre>
+		<track>3</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="400" />
+		<difficulty instrument="bass" rank="400" />
+		<difficulty instrument="drum" rank="400" />
+		<difficulty instrument="vocals" rank="400" />
+	</song>
+</importdata>

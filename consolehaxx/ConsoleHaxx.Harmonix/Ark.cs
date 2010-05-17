@@ -12,6 +12,8 @@ namespace ConsoleHaxx.Harmonix
 
 		public DirectoryNode Root;
 
+		public uint Version;
+
 		public const uint ArkMagic = 0x41524B00; // "ARK\0"
 		public const uint ArkMagicLE = 0x004B5241;
 
@@ -26,7 +28,7 @@ namespace ConsoleHaxx.Harmonix
 			ArkStreams = arkstreams;
 
 			HdrStream.Position = 0;
-			uint version = HdrStream.ReadUInt32();
+			Version = HdrStream.ReadUInt32();
 			uint numArks;
 			uint numArks2;
 			long[] arkSizes;
@@ -36,8 +38,8 @@ namespace ConsoleHaxx.Harmonix
 			int[] offsetTable;
 			int numEntries;
 
-			if (version == ArkMagic || version == ArkMagicLE) { // FreQuency
-				version = HdrStream.ReadUInt32(); // == 2
+			if (Version == ArkMagic || Version == ArkMagicLE) { // FreQuency
+				Version = HdrStream.ReadUInt32(); // == 2
 				int fileoffset = HdrStream.ReadInt32();
 				numEntries = HdrStream.ReadInt32();
 				int diroffset = HdrStream.ReadInt32();
@@ -82,14 +84,14 @@ namespace ConsoleHaxx.Harmonix
 					dir.Children.Add(new FileNode(filename, dir, size, new Substream(HdrStream, sector * sectorSize + sectoroffset, (long)size)));
 				}
 			} else {
-				if (version > 5) { // Invalid version number, encrypted
+				if (Version > 5) { // Invalid version number, encrypted
 					Stream stream = new CryptedDtbStream(HdrStream);
 					HdrStream = new EndianReader(stream, HdrStream.Endian);
 					HdrStream.Position = 0;
-					version = HdrStream.ReadUInt32();
+					Version = HdrStream.ReadUInt32();
 				}
 
-				if (version <= 2) {
+				if (Version <= 2) {
 					numArks = 1;
 					numArks2 = 1;
 					arkSizes = new long[1] { HdrStream.Base.Length };
@@ -97,27 +99,28 @@ namespace ConsoleHaxx.Harmonix
 
 					numEntries = HdrStream.ReadInt32();
 					HdrStream.Position += numEntries * (4 * 4 + 4);
-				} else {
+				} else if (Version <= 5) {
 					numArks = HdrStream.ReadUInt32();
 					numArks2 = HdrStream.ReadUInt32();
 
 					arkSizes = new long[numArks];
 
 					for (int i = 0; i < numArks; i++) {
-						if (version == 4)
+						if (Version == 4)
 							arkSizes[i] = HdrStream.ReadInt64();
 						else
 							arkSizes[i] = (long)HdrStream.ReadUInt32();
 					}
 
-					if (version == 5) { // ark file string list
+					if (Version == 5) { // ark file string list
 						numArks = HdrStream.ReadUInt32();
 						for (int i = 0; i < numArks; i++) {
 							int strsize = HdrStream.ReadInt32();
 							HdrStream.PadRead(strsize); // I'm not using them >.>
 						}
 					}
-				}
+				} else
+					throw new FormatException();
 
 				stringSize = HdrStream.ReadInt32();
 				stringTable = new MemoryStream(HdrStream.ReadBytes(stringSize), false);
@@ -126,14 +129,14 @@ namespace ConsoleHaxx.Harmonix
 				for (int i = 0; i < numOffsets; i++)
 					offsetTable[i] = HdrStream.ReadInt32();
 
-				if (version <= 2)
+				if (Version <= 2)
 					HdrStream.Position = 0x04;
 
 				numEntries = HdrStream.ReadInt32();
 
 				for (int i = 0; i < numEntries; i++) {
 					long offset;
-					if (version <= 3)
+					if (Version <= 3)
 						offset = (long)HdrStream.ReadUInt32();
 					else
 						offset = HdrStream.ReadInt64();
@@ -141,7 +144,7 @@ namespace ConsoleHaxx.Harmonix
 					uint dirnameStringIndex = HdrStream.ReadUInt32();
 					ulong size = 0;
 
-					if (version <= 2) {
+					if (Version <= 2) {
 						size = HdrStream.ReadUInt32();
 						HdrStream.ReadInt32(); // unknown, flags?
 					} else

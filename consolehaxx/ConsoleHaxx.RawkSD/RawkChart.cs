@@ -11,7 +11,7 @@ namespace ConsoleHaxx.RawkSD
 	// TODO: This is much too RB2-specific, needs generalizing
 	public class ChartFormat
 	{
-		NoteChart Chart;
+		public NoteChart Chart;
 
 		public ChartFormat(NoteChart chart)
 		{

@@ -1,0 +1,97 @@
+<importdata>
+	<global>
+		<idprefix>rbacdc</idprefix>
+		<nameprefix>[RBACDC]</nameprefix>
+		<version>1</version>
+	</global>
+	<song id="backinblack_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>3</track>
+	</song>
+	<song id="dirtydeeds_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>9</track>
+	</song>
+	<song id="fireyourguns_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>6</track>
+	</song>
+	<song id="forthoseabouttorock_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>18</track>
+	</song>
+	<song id="heatseeker_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>5</track>
+	</song>
+	<song id="hellaintabadplace_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>4</track>
+	</song>
+	<song id="hellsbells_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>11</track>
+	</song>
+	<song id="highvoltage_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>12</track>
+	</song>
+	<song id="highwaytohell_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>17</track>
+	</song>
+	<song id="jailbreak_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>7</track>
+	</song>
+	<song id="letthereberock_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>16</track>
+	</song>
+	<song id="moneytalks_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>10</track>
+	</song>
+	<song id="shoottothrill_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>2</track>
+	</song>
+	<song id="thejack_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>8</track>
+	</song>
+	<song id="thunderstruck_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>1</track>
+	</song>
+	<song id="tnt_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>15</track>
+	</song>
+	<song id="wholelottarosie_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>13</track>
+	</song>
+	<song id="youshookme_live">
+		<album>Live</album>
+		<year>1992</year>
+		<track>14</track>
+	</song>
+</importdata>

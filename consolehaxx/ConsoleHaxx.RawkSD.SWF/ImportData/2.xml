@@ -1,0 +1,685 @@
+<importdata>
+	<global>
+		<idprefix>gh2</idprefix>
+		<nameprefix>[GH2]</nameprefix>
+		<version>1</version>
+		<difficulty instrument="guitar" rank="1" />
+		<difficulty instrument="bass" rank="1" />
+		<difficulty instrument="drum" rank="1" />
+	</global>
+	<song id="johnthefisherman">
+		<album>Frizzle Fry</album>
+		<genre>Alternative</genre>
+		<year>1990</year>
+		<track>6</track>
+		<difficulty instrument="band" rank="380" />
+		<difficulty instrument="guitar" rank="380" />
+		<difficulty instrument="bass" rank="380" />
+	</song>
+	<song id="stop">
+		<album>Ritual de lo Habitual</album>
+		<genre>Alternative</genre>
+		<year>1990</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="490" />
+		<difficulty instrument="guitar" rank="490" />
+		<difficulty instrument="bass" rank="490" />
+	</song>
+	<song id="arterialblack">
+		<album>Orchids and Ammunition</album>
+		<genre>Alternative</genre>
+		<year>2006</year>
+		<track>6</track>
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="arterialblack">
+		<album>Orchids and Ammunition</album>
+		<genre>Alternative</genre>
+		<year>2006</year>
+		<track>6</track>
+	</song>
+	<song id="collide">
+		<album>A Single Drop of Red</album>
+		<genre>Rock</genre>
+		<year>2006</year>
+		<track>2</track>
+	</song>
+	<song id="elephantbones">
+		<album>That Handsome Devil</album>
+		<genre>Alternative</genre>
+		<year>2006</year>
+		<track>4</track>
+	</song>
+	<song id="fallofpangea">
+		<album>Legend of the World</album>
+		<genre>Rock</genre>
+		<year>2006</year>
+		<track>9</track>
+	</song>
+	<song id="ftk">
+		<album>Public Display of Infection</album>
+		<genre>Rock</genre>
+		<year>2007</year>
+		<track>8</track>
+	</song>
+	<song id="gemini">
+		<album>Real Life</album>
+		<genre>Blues</genre>
+		<year>2004</year>
+		<track>10</track>
+	</song>
+	<song id="jordan">
+		<album>Jordan</album>
+		<genre>Metal</genre>
+		<year>2006</year>
+		<track>1</track>
+	</song>
+	<song id="laughtrack">
+		<album>...Go Down Swinging!</album>
+		<genre>Rock</genre>
+		<year>2006</year>
+		<track>4</track>
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="laughtrack_coop">
+		<album>...Go Down Swinging!</album>
+		<genre>Rock</genre>
+		<year>2006</year>
+		<track>4</track>
+	</song>
+	<song id="lesstalkmorerokk">
+		<album>Future Future Future Perfect</album>
+		<genre>Rock</genre>
+		<year>2007</year>
+		<track>1</track>
+		<vocalist>female</vocalist>
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="lesstalkmorerokk_coop">
+		<album>Future Future Future Perfect</album>
+		<genre>Rock</genre>
+		<year>2007</year>
+		<track>1</track>
+		<vocalist>female</vocalist>
+	</song>
+	<song id="mrfixit">
+		<album>Royal</album>
+		<genre>Rock</genre>
+		<year>2000</year>
+		<track>2</track>
+	</song>
+	<song id="onefortheroad">
+		<album>Breaking Wheel</album>
+		<genre>Rock</genre>
+		<year>2008</year>
+		<track>1</track>
+	</song>
+	<song id="parasite">
+		<album>Parasite</album>
+		<genre>Rock</genre>
+		<year>2006</year>
+		<track>1</track>
+	</song>
+	<song id="ladylightning">
+		<album>Bang Camaro</album>
+		<genre>Rock</genre>
+		<year>2007</year>
+		<track>1</track>
+	</song>
+	<song id="radiumeyes">
+		<album>Radium Eyes</album>
+		<genre>Alternative</genre>
+		<year>2007</year>
+		<track>1</track>
+	</song>
+	<song id="rawdog">
+		<album>Seal the Deal</album>
+		<genre>Rock</genre>
+		<year>2006</year>
+		<track>7</track>
+	</song>
+	<song id="redlottery">
+		<album>Megasus</album>
+		<genre>Metal</genre>
+		<year>2009</year>
+		<track>6</track>
+	</song>
+	<song id="six">
+		<album>The Fall of Ideals</album>
+		<genre>Metal</genre>
+		<year>2006</year>
+		<track>7</track>
+	</song>
+	<song id="soybomb">
+		<album>Third Time's the Charm</album>
+		<genre>Rock</genre>
+		<year>2008</year>
+		<track>5</track>
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="soybomb_coop">
+		<album>Third Time's the Charm</album>
+		<genre>Rock</genre>
+		<year>2008</year>
+		<track>5</track>
+	</song>
+	<song id="thelightthatblinds">
+		<album>The War Within</album>
+		<genre>Metal</genre>
+		<year>2004</year>
+		<track>1</track>
+	</song>
+	<song id="newblack">
+		<album>Gutter Phenomenon</album>
+		<genre>Metal</genre>
+		<year>2005</year>
+		<track>6</track>
+	</song>
+	<song id="thunderhorse">
+		<album>The Dethalbum</album>
+		<genre>Metal</genre>
+		<year>2007</year>
+		<track>9</track>
+	</song>
+	<song id="trogdor">
+		<album>Strong Bad Sings (and Other Type Hits)</album>
+		<genre>Metal</genre>
+		<year>2003</year>
+		<track>1</track>
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="trogdor_coop">
+		<album>Strong Bad Sings (and Other Type Hits)</album>
+		<genre>Metal</genre>
+		<year>2003</year>
+		<track>1</track>
+	</song>
+	<song id="xstream">
+		<album>Katorz</album>
+		<genre>Metal</genre>
+		<year>2006</year>
+		<track>9</track>
+	</song>
+	<song id="yeswecan">
+		<album>Guerillaton</album>
+		<genre>Alternative</genre>
+		<year>2008</year>
+		<track>8</track>
+		<vocalist>female</vocalist>
+	</song>
+	<song id="dead">
+		<album>The Black Parade</album>
+		<genre>Alternative</genre>
+		<year>2006</year>
+		<track>2</track>
+		<difficulty instrument="band" rank="460" />
+		<difficulty instrument="guitar" rank="460" />
+		<difficulty instrument="bass" rank="460" />
+	</song>
+	<song id="drinkup">
+		<album>Ounce of Self</album>
+		<genre>Metal</genre>
+		<year>2006</year>
+		<track>3</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="400" />
+		<difficulty instrument="bass" rank="400" />
+	</song>
+	<song id="kicked">
+		<album>Noble Rot</album>
+		<genre>Rock</genre>
+		<year>2006</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="400" />
+		<difficulty instrument="guitar" rank="400" />
+		<difficulty instrument="bass" rank="400" />
+	</song>
+	<song id="possum">
+		<album>Rubberneck</album>
+		<genre>Grunge</genre>
+		<year>1994</year>
+		<track>4</track>
+	</song>
+	<song id="badreputation">
+		<genre>Rock</genre>
+		<year>1977</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="410" />
+		<difficulty instrument="guitar" rank="410" />
+		<difficulty instrument="bass" rank="410" />
+	</song>
+	<song id="beastandtheharlot">
+		<genre>Metal</genre>
+		<year>2005</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="565" />
+		<difficulty instrument="guitar" rank="565" />
+		<difficulty instrument="bass" rank="565" />
+	</song>
+	<song id="cantyouhearme">
+		<genre>Rock</genre>
+		<year>1971</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="325" />
+		<difficulty instrument="guitar" rank="325" />
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="cantyouhearme_coop">
+		<genre>Rock</genre>
+		<year>1971</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="325" />
+		<difficulty instrument="guitar" rank="325" />
+		<difficulty instrument="bass" rank="325" />
+	</song>
+	<song id="carrymehome">
+		<genre>Punk</genre>
+		<year>2000</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="575" />
+		<difficulty instrument="guitar" rank="575" />
+		<difficulty instrument="bass" rank="575" />
+	</song>
+	<song id="carryonwayward">
+		<genre>Progressive</genre>
+		<year>1976</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="175" />
+		<difficulty instrument="guitar" rank="175" />
+		<difficulty instrument="bass" rank="175" />
+	</song>
+	<song id="cherrypie">
+		<genre>Glam</genre>
+		<year>1990</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="130" />
+		<difficulty instrument="guitar" rank="130" />
+		<difficulty instrument="bass" rank="130" />
+	</song>
+	<song id="crazyonyou">
+		<genre>Rock</genre>
+		<year>1976</year>
+		<master>false</master>
+		<vocalist>female</vocalist>
+		<difficulty instrument="band" rank="440" />
+		<difficulty instrument="guitar" rank="440" />
+		<difficulty instrument="bass" rank="440" />
+	</song>
+	<song id="freebird">
+		<genre>Southern Rock</genre>
+		<year>1973</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="600" />
+		<difficulty instrument="guitar" rank="600" />
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="freebird_coop">
+		<genre>Southern Rock</genre>
+		<year>1973</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="600" />
+		<difficulty instrument="guitar" rank="600" />
+		<difficulty instrument="bass" rank="600" />
+	</song>
+	<song id="freya">
+		<genre>Metal</genre>
+		<year>2006</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="475" />
+		<difficulty instrument="guitar" rank="475" />
+		<difficulty instrument="bass" rank="475" />
+	</song>
+	<song id="girlfriend">
+		<genre>Pop</genre>
+		<year>1991</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="295" />
+		<difficulty instrument="guitar" rank="295" />
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="girlfriend_coop">
+		<genre>Pop</genre>
+		<year>1991</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="295" />
+		<difficulty instrument="guitar" rank="295" />
+		<difficulty instrument="bass" rank="295" />
+	</song>
+	<song id="hangar18">
+		<genre>Metal</genre>
+		<year>1990</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="590" />
+		<difficulty instrument="guitar" rank="590" />
+		<difficulty instrument="bass" rank="590" />
+	</song>
+	<song id="heartshapedbox">
+		<genre>Grunge</genre>
+		<year>1993</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="45" />
+		<difficulty instrument="guitar" rank="45" />
+		<difficulty instrument="bass" rank="45" />
+	</song>
+	<song id="institutionalized">
+		<genre>Punk</genre>
+		<year>1983</year>
+		<master>false</master>
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="institutionalized_coop">
+		<genre>Punk</genre>
+		<year>1983</year>
+		<master>false</master>
+	</song>
+	<song id="jessica">
+		<genre>Southern Rock</genre>
+		<year>1973</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="395" />
+		<difficulty instrument="guitar" rank="395" />
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="jessica_coop">
+		<genre>Southern Rock</genre>
+		<year>1973</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="395" />
+		<difficulty instrument="guitar" rank="395" />
+		<difficulty instrument="bass" rank="395" />
+	</song>
+	<song id="killinginthenameof">
+		<genre>Alternative</genre>
+		<year>1992</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="470" />
+		<difficulty instrument="guitar" rank="470" />
+		<difficulty instrument="bass" rank="470" />
+	</song>
+	<song id="laidtorest">
+		<genre>Metal</genre>
+		<year>2004</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="535" />
+		<difficulty instrument="guitar" rank="535" />
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="laidtorest_coop">
+		<genre>Metal</genre>
+		<year>2004</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="535" />
+		<difficulty instrument="guitar" rank="535" />
+		<difficulty instrument="bass" rank="535" />
+	</song>
+	<song id="lastchild">
+		<genre>Rock</genre>
+		<year>1976</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="425" />
+		<difficulty instrument="guitar" rank="425" />
+		<difficulty instrument="bass" rank="425" />
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="lastchild_coop">
+		<genre>Rock</genre>
+		<year>1976</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="425" />
+		<difficulty instrument="guitar" rank="425" />
+		<difficulty instrument="bass" rank="425" />
+	</song>
+	<song id="madhouse">
+		<genre>Metal</genre>
+		<year>1985</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="505" />
+		<difficulty instrument="guitar" rank="505" />
+		<difficulty instrument="bass" rank="505" />
+	</song>
+	<song id="messageinabottle">
+		<genre>Rock</genre>
+		<year>1979</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="205" />
+		<difficulty instrument="guitar" rank="205" />
+		<difficulty instrument="bass" rank="205" />
+	</song>
+	<song id="misirlou">
+		<genre>Rock</genre>
+		<year>1962</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="580" />
+		<difficulty instrument="guitar" rank="580" />
+		<difficulty instrument="bass" rank="580" />
+	</song>
+	<song id="monkeywrench">
+		<genre>Rock</genre>
+		<year>1997</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="265" />
+		<difficulty instrument="guitar" rank="265" />
+		<difficulty instrument="bass" rank="265" />
+	</song>
+	<song id="mother">
+		<genre>Rock</genre>
+		<year>1988</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="105" />
+		<difficulty instrument="guitar" rank="105" />
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="mother_coop">
+		<genre>Rock</genre>
+		<year>1988</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="105" />
+		<difficulty instrument="guitar" rank="105" />
+		<difficulty instrument="bass" rank="105" />
+	</song>
+	<song id="psychobilly">
+		<genre>Alternative</genre>
+		<year>1990</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="545" />
+		<difficulty instrument="guitar" rank="545" />
+		<difficulty instrument="bass" rank="545" />
+	</song>
+	<song id="rockthistown">
+		<genre>Rock</genre>
+		<year>1981</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="525" />
+		<difficulty instrument="guitar" rank="525" />
+		<difficulty instrument="bass" rank="525" />
+	</song>
+	<song id="searchanddestroy">
+		<genre>Punk</genre>
+		<year>1973</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="190" />
+		<difficulty instrument="guitar" rank="190" />
+		<difficulty instrument="bass" rank="190" />
+	</song>
+	<song id="shoutatthedevil">
+		<genre>Metal</genre>
+		<year>1983</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="90" />
+		<difficulty instrument="guitar" rank="90" />
+		<difficulty instrument="bass" rank="90" />
+	</song>
+	<song id="strutter">
+		<genre>Rock</genre>
+		<year>1974</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="75" />
+		<difficulty instrument="guitar" rank="75" />
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="strutter_coop">
+		<genre>Rock</genre>
+		<year>1974</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="75" />
+		<difficulty instrument="guitar" rank="75" />
+		<difficulty instrument="bass" rank="75" />
+	</song>
+	<song id="surrender">
+		<genre>Rock</genre>
+		<year>1978</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="15" />
+		<difficulty instrument="guitar" rank="15" />
+		<difficulty instrument="bass" rank="15" />
+	</song>
+	<song id="sweetchild">
+		<genre>Rock</genre>
+		<year>1987</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="335" />
+		<difficulty instrument="guitar" rank="335" />
+		<difficulty instrument="bass" rank="335" />
+	</song>
+	<song id="tattooedloveboys">
+		<genre>Rock</genre>
+		<year>1980</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="365" />
+		<difficulty instrument="guitar" rank="365" />
+		<difficulty instrument="bass" rank="365" />
+	</song>
+	<song id="thembones">
+		<genre>Grunge</genre>
+		<year>1992</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="235" />
+		<difficulty instrument="guitar" rank="235" />
+		<difficulty instrument="bass" rank="235" />
+	</song>
+	<song id="tonightimgonna">
+		<genre>Metal</genre>
+		<year>1984</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="160" />
+		<difficulty instrument="guitar" rank="160" />
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="tonightimgonna_coop">
+		<genre>Metal</genre>
+		<year>1984</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="160" />
+		<difficulty instrument="guitar" rank="160" />
+		<difficulty instrument="bass" rank="160" />
+	</song>
+	<song id="trippinonahole">
+		<genre>Rock</genre>
+		<year>1996</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="455" />
+		<difficulty instrument="guitar" rank="455" />
+		<difficulty instrument="bass" rank="455" />
+	</song>
+	<song id="warpigs">
+		<genre>Metal</genre>
+		<year>1970</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="250" />
+		<difficulty instrument="guitar" rank="250" />
+		<difficulty instrument="bass" rank="250" />
+	</song>
+	<song id="whowasinmyroom">
+		<genre>Alternative</genre>
+		<year>1993</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="310" />
+		<difficulty instrument="guitar" rank="310" />
+		<difficulty instrument="bass" rank="0" />
+	</song>
+	<song id="whowasinmyroom_coop">
+		<genre>Alternative</genre>
+		<year>1993</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="310" />
+		<difficulty instrument="guitar" rank="310" />
+		<difficulty instrument="bass" rank="310" />
+	</song>
+	<song id="woman">
+		<genre>Rock</genre>
+		<year>2006</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="145" />
+		<difficulty instrument="guitar" rank="145" />
+		<difficulty instrument="bass" rank="145" />
+	</song>
+	<song id="youreallygotme">
+		<genre>Rock</genre>
+		<year>1978</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="150" />
+		<difficulty instrument="guitar" rank="150" />
+		<difficulty instrument="bass" rank="150" />
+	</song>
+	<song id="yyz">
+		<genre>Progressive</genre>
+		<year>1981</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="555" />
+		<difficulty instrument="guitar" rank="555" />
+		<difficulty instrument="bass" rank="555" />
+	</song>
+	<song id="billiondollar">
+		<genre>Rock</genre>
+		<year>1973</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="220" />
+		<difficulty instrument="guitar" rank="220" />
+		<difficulty instrument="bass" rank="220" />
+	</song>
+	<song id="hush">
+		<genre>Rock</genre>
+		<year>1968</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="280" />
+		<difficulty instrument="guitar" rank="280" />
+		<difficulty instrument="bass" rank="280" />
+	</song>
+	<song id="lifewasted">
+		<genre>Alternative</genre>
+		<year>2006</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="120" />
+		<difficulty instrument="guitar" rank="120" />
+		<difficulty instrument="bass" rank="120" />
+	</song>
+	<song id="rockandroll">
+		<genre>Rock</genre>
+		<year>1970</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="350" />
+		<difficulty instrument="guitar" rank="350" />
+		<difficulty instrument="bass" rank="350" />
+	</song>
+	<song id="salvation">
+		<genre>Punk</genre>
+		<year>1994</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="60" />
+		<difficulty instrument="guitar" rank="60" />
+		<difficulty instrument="bass" rank="60" />
+	</song>
+	<song id="trooper">
+		<genre>Metal</genre>
+		<year>1983</year>
+		<master>false</master>
+		<difficulty instrument="band" rank="515" />
+		<difficulty instrument="guitar" rank="515" />
+		<difficulty instrument="bass" rank="515" />
+	</song>
+	<song id="possumkingdom">
+		<difficulty instrument="band" rank="30" />
+		<difficulty instrument="guitar" rank="30" />
+		<difficulty instrument="bass" rank="30" />
+	</song>
+</importdata>

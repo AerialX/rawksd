@@ -1,0 +1,107 @@
+<importdata>
+	<global>
+		<idprefix>rbtpcl</idprefix>
+		<nameprefix>[RBCLASSIC]</nameprefix>
+		<version>1</version>
+	</global>
+	<song id="allrightnow">
+		<album>Fire and Water</album>
+		<year>1970</year>
+		<track>7</track>
+	</song>
+	<song id="babaoriley">
+		<album>Who's Next</album>
+		<year>1971</year>
+		<track>1</track>
+	</song>
+	<song id="badtothebone">
+		<album>Bad to the Bone</album>
+		<year>1982</year>
+		<track>6</track>
+	</song>
+	<song id="behindblueeyes">
+		<album>Who's Next</album>
+		<year>1971</year>
+		<track>8</track>
+	</song>
+	<song id="californiauberalles">
+		<album>Fresh Fruit for Rotting Vegetables</album>
+		<year>1980</year>
+		<track>8</track>
+	</song>
+	<song id="cantstandlosingyou">
+		<album>Outlandos d'Amour</album>
+		<year>1978</year>
+		<track>6</track>
+	</song>
+	<song id="closertotheheart">
+		<album>A Farewell to Kings</album>
+		<year>1977</year>
+		<track>3</track>
+	</song>
+	<song id="funk49">
+		<album>James Gang Rides Again</album>
+		<year>1970</year>
+		<track>1</track>
+	</song>
+	<song id="hitmewithyourbestshot">
+		<album>Crimes of Passion</album>
+		<year>1980</year>
+		<track>4</track>
+	</song>
+	<song id="holidayincambodia">
+		<album>Fresh Fruit for Rotting Vegetables</album>
+		<year>1980</year>
+		<track>13</track>
+	</song>
+	<song id="hymn43">
+		<album>Aqualung</album>
+		<year>1971</year>
+		<track>8</track>
+	</song>
+	<song id="kissthemforme">
+		<album>Superstition</album>
+		<year>1991</year>
+		<track>1</track>
+	</song>
+	<song id="letloverule">
+		<album>Let Love Rule</album>
+		<year>1989</year>
+		<track>2</track>
+	</song>
+	<song id="lovespreads">
+		<album>Second Coming</album>
+		<year>1994</year>
+		<track>12</track>
+	</song>
+	<song id="peaceofmind">
+		<album>Boston</album>
+		<year>1976</year>
+		<track>2</track>
+	</song>
+	<song id="redbarchetta">
+		<album>Moving Pictures</album>
+		<year>1981</year>
+		<track>2</track>
+	</song>
+	<song id="rockandrollband">
+		<album>Boston</album>
+		<year>1976</year>
+		<track>4</track>
+	</song>
+	<song id="takethemoney">
+		<album>Fly Like an Eagle</album>
+		<year>1976</year>
+		<track>7</track>
+	</song>
+	<song id="thejoker">
+		<album>The Joker</album>
+		<year>1973</year>
+		<track>5</track>
+	</song>
+	<song id="truthhitseverybody">
+		<album>Outlandos d'Amour</album>
+		<year>1978</year>
+		<track>7</track>
+	</song>
+</importdata>

@@ -65,19 +65,20 @@ namespace ConsoleHaxx.Common
 					} else if (b == 0xF7) {
 						throw new NotImplementedException();
 					} else { // Channel Event
-						if ((b & 0x80) == 0) {
-							b = oldb;
-							stream.Position--;
-						} else
-							oldb = b;
-
 						ChannelEvent e = new ChannelEvent();
 						e.DeltaTime = delta;
+
+						if ((b & 0x80) == 0) {
+							e.Parameter1 = b;
+							b = oldb;
+						} else {
+							oldb = b;
+							e.Parameter1 = (byte)reader.ReadByte();
+						}
 
 						e.Type = (byte)(b >> 4);
 
 						e.Channel = (byte)(b & 0x0F);
-						e.Parameter1 = (byte)reader.ReadByte();
 						if (e.Type != 0xC && e.Type != 0xD)
 							e.Parameter2 = (byte)reader.ReadByte();
 						track.Events.Add(e);

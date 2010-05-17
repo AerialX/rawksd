@@ -40,6 +40,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -59,47 +60,66 @@
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
+    <Reference Include="Tao.FFmpeg, Version=0.4.9.0, Culture=neutral, PublicKeyToken=9c7a200e36c0094e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\TaoFramework\bin\Tao.FFmpeg.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio.cs" />
-    <Compile Include="AudioFormatBeatlesBink.cs" />
-    <Compile Include="AudioFormatBink.cs" />
-    <Compile Include="AudioFormatFFmpeg.cs" />
-    <Compile Include="AudioFormatGH3WiiFSB.cs" />
-    <Compile Include="AudioFormatMogg.cs" />
-    <Compile Include="AudioFormatOgg.cs" />
-    <Compile Include="AudioFormatRB2Bink.cs" />
-    <Compile Include="AudioFormatVGS.cs" />
-    <Compile Include="ChartFormatChart.cs" />
-    <Compile Include="ChartFormatGH1.cs" />
-    <Compile Include="ChartFormatGH2.cs" />
-    <Compile Include="ChartFormatGH3.cs" />
-    <Compile Include="ChartFormatGH4.cs" />
-    <Compile Include="ChartFormatGH5.cs" />
-    <Compile Include="ChartFormatRB.cs" />
+    <Compile Include="AudioFormats\AudioFormatBeatlesBink.cs" />
+    <Compile Include="AudioFormats\AudioFormatBink.cs" />
+    <Compile Include="AudioFormats\AudioFormatFFmpeg.cs" />
+    <Compile Include="AudioFormats\AudioFormatGH3WiiFSB.cs" />
+    <Compile Include="AudioFormats\AudioFormatMogg.cs" />
+    <Compile Include="AudioFormats\AudioFormatMp3.cs" />
+    <Compile Include="AudioFormats\AudioFormatOgg.cs" />
+    <Compile Include="AudioFormats\AudioFormatRB2Bink.cs" />
+    <Compile Include="AudioFormats\AudioFormatVGS.cs" />
+    <Compile Include="AudioFormats\AudioFormatWav.cs" />
+    <Compile Include="ChartFormats\ChartFormatChart.cs" />
+    <Compile Include="ChartFormats\ChartFormatFsgMub.cs" />
+    <Compile Include="ChartFormats\ChartFormatGH1.cs" />
+    <Compile Include="ChartFormats\ChartFormatGH2.cs" />
+    <Compile Include="ChartFormats\ChartFormatGH3.cs" />
+    <Compile Include="ChartFormats\ChartFormatGH4.cs" />
+    <Compile Include="ChartFormats\ChartFormatGH5.cs" />
+    <Compile Include="ChartFormats\ChartFormatRB.cs" />
+    <Compile Include="DataArray.cs" />
+    <Compile Include="FFmpegDecoder.cs" />
     <Compile Include="FormatData.cs" />
+    <Compile Include="FreeStyleGamesMetadata.cs" />
     <Compile Include="ImportMap.cs" />
-    <Compile Include="MetadataFormatHarmonix.cs" />
-    <Compile Include="MetadataFormatNeversoft.cs" />
-    <Compile Include="PlatformGH1PS2Disc.cs" />
-    <Compile Include="PlatformGH2PS2Disc.cs" />
-    <Compile Include="PlatformGH3WiiDisc.cs" />
-    <Compile Include="PlatformGH4WiiDisc.cs" />
-    <Compile Include="PlatformGH4WiiDLC.cs" />
-    <Compile Include="PlatformGH5WiiDisc.cs" />
-    <Compile Include="PlatformGH5WiiDLC.cs" />
-    <Compile Include="PlatformLocalStorage.cs" />
-    <Compile Include="PlatformRB2360Disc.cs" />
-    <Compile Include="PlatformRB2360DLC.cs" />
-    <Compile Include="PlatformRB2360XNA.cs" />
-    <Compile Include="PlatformRB2WiiDisc.cs" />
-    <Compile Include="PlatformRB2WiiDLC.cs" />
+    <Compile Include="HarmonixMetadata.cs" />
+    <Compile Include="NeversoftMetadata.cs" />
+    <Compile Include="PlatformDetection.cs" />
+    <Compile Include="Platforms\PlatformDJHWiiDisc.cs" />
+    <Compile Include="Platforms\PlatformFretsOnFire.cs" />
+    <Compile Include="Platforms\PlatformGH2PS2Disc.cs" />
+    <Compile Include="Platforms\PlatformGH3WiiDisc.cs" />
+    <Compile Include="Platforms\PlatformGH4WiiDLC.cs" />
+    <Compile Include="Platforms\PlatformGH5WiiDisc.cs" />
+    <Compile Include="Platforms\PlatformGH5WiiDLC.cs" />
+    <Compile Include="Platforms\PlatformLocalStorage.cs" />
+    <Compile Include="Platforms\PlatformRawkFile.cs" />
+    <Compile Include="Platforms\PlatformRB2360Disc.cs" />
+    <Compile Include="Platforms\PlatformRB2360DLC.cs" />
+    <Compile Include="Platforms\PlatformRB2360RBN.cs" />
+    <Compile Include="Platforms\PlatformRB2WiiDisc.cs" />
+    <Compile Include="Platforms\PlatformRB2WiiDLC.cs" />
     <Compile Include="Platforms.cs" />
+    <Compile Include="Progress.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="RawkAudio.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RawkChart.cs" />
     <Compile Include="RawkSquish.cs" />
-    <Compile Include="PlatformRB2WiiCustomDLC.cs" />
+    <Compile Include="Platforms\PlatformRB2WiiCustomDLC.cs" />
+    <Compile Include="SongData.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ConsoleHaxx.Common\ConsoleHaxx.Common.csproj">
@@ -122,6 +142,10 @@
       <Project>{E9230C21-6B3D-481B-AB69-0A6958E0B2E9}</Project>
       <Name>ConsoleHaxx.Wii</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ConsoleHaxx.Xbox360\ConsoleHaxx.Xbox360.csproj">
+      <Project>{D0169A20-28C0-4771-86CA-495A30DF643B}</Project>
+      <Name>ConsoleHaxx.Xbox360</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -139,6 +163,22 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\rawksd_000bin" />
+    <None Include="Resources\rawksd_albumart" />
+    <None Include="Resources\rawksd_milo" />
+    <None Include="Resources\rawksd_pan" />
+    <None Include="Resources\rawksd_preview" />
+    <None Include="Resources\rawksd_savebanner" />
+    <None Include="Resources\rawksd_tmd" />
+    <None Include="Resources\rawksd_weights" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

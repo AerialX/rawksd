@@ -14,7 +14,7 @@ namespace ConsoleHaxx.Harmonix
 				throw new FormatException();
 
 			NodeTree dtb = new NodeTree();
-			dtb.Type = 0x01;
+			dtb.Type = 0x10;
 			
 			dtb.Data = stream.ReadBytes((int)dtb.Size);
 			dtb.Parse(stream);
@@ -309,6 +309,8 @@ namespace ConsoleHaxx.Harmonix
 				}
 				set
 				{
+					if (value == null)
+						value = string.Empty;
 					Contents = Util.Encoding.GetBytes(value);
 				}
 			}

@@ -25,8 +25,10 @@ namespace ConsoleHaxx.Harmonix
 			Strings = new List<string>();
 		}
 
-		public RBA(EndianReader reader) : this()
+		public RBA(Stream stream) : this()
 		{
+			EndianReader reader = new EndianReader(stream, Endianness.LittleEndian);
+
 			if (reader.ReadInt32() != Magic) // "RBSF"
 				throw new FormatException();
 
@@ -45,14 +47,8 @@ namespace ConsoleHaxx.Harmonix
 			// No, I'm not going to bother verifying them
 
 			string current = string.Empty;
-			while (reader.Position < offsets[0]) {
-				byte b = reader.ReadByte();
-				if (b == 0) {
-					Strings.Add(current);
-					current = string.Empty;
-				} else
-					current += (char)b;
-			}
+			while (reader.Position < offsets[0])
+				Strings.Add(reader.ReadString());
 
 			Data = new Substream(reader, offsets[0], sizes[0]);
 			Chart = new Substream(reader, offsets[1], sizes[1]);
@@ -63,7 +59,7 @@ namespace ConsoleHaxx.Harmonix
 			Metadata = new Substream(reader, offsets[6], sizes[6]);
 		}
 
-		public void Save(EndianReader stream)
+		public void Save(Stream stream)
 		{
 			MemoryStream strings = new MemoryStream();
 			foreach (string str in Strings) {
@@ -72,7 +68,7 @@ namespace ConsoleHaxx.Harmonix
 			}
 
 			MemoryStream mem = new MemoryStream();
-			EndianReader writer = new EndianReader(mem, stream.Endian);
+			EndianReader writer = new EndianReader(mem, Endianness.LittleEndian);
 
 			writer.Write((int)0x46534252); // Magic
 			writer.Write((int)0x3); // Version

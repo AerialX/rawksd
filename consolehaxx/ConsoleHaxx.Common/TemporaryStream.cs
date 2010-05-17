@@ -5,6 +5,8 @@ namespace ConsoleHaxx.Common
 {
 	public class TemporaryStream : Stream
 	{
+		public static string BasePath;
+
 		protected Stream Base;
 		protected string Filename;
 		protected bool Closed;
@@ -61,7 +63,10 @@ namespace ConsoleHaxx.Common
 		}
 		public TemporaryStream()
 		{
-			Filename = Path.GetTempFileName();
+			if (BasePath != null)
+				Filename = Path.Combine(BasePath, Path.GetRandomFileName());
+			else
+				Filename = Path.GetTempFileName();
 			Base = new FileStream(Filename, FileMode.Create, FileAccess.ReadWrite);
 			Closed = false;
 		}

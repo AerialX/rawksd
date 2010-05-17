@@ -11,30 +11,32 @@ namespace ConsoleHaxx.RawkSD.SWF
 {
 	public partial class PlatformForm : Form
 	{
-		protected PlatformFormReturn.PlatformFormReturnEnum Selection { get; set; }
+		public IList<Engine> Platforms;
 
 		public PlatformForm()
 		{
 			InitializeComponent();
+
+			DialogResult = DialogResult.Cancel;
 		}
 
 		private void PlatformForm_Load(object sender, EventArgs e)
 		{
-			foreach (Engine engine in Platform.Platforms)
+			foreach (Engine engine in Platforms)
 				PlatformList.Items.Add(engine);
 
 			PlatformList.SelectedIndex = 0;
 		}
 
-		public static PlatformFormReturn Show(Form parent)
+		public static PlatformFormReturn Show(string message, IList<Engine> platforms, Form parent)
 		{
 			PlatformForm form = new PlatformForm();
+			form.Platforms = platforms;
+			form.MessageLabel.Text = message;
 			PlatformFormReturn data = new PlatformFormReturn();
 			data.Result = form.ShowDialog(parent);
-			if (data.Result == DialogResult.OK) {
+			if (data.Result == DialogResult.OK)
 				data.Platform = form.PlatformList.SelectedItem as Engine;
-				data.Type = form.Selection;
-			}
 
 			return data;
 		}
@@ -42,34 +44,17 @@ namespace ConsoleHaxx.RawkSD.SWF
 		public struct PlatformFormReturn
 		{
 			public DialogResult Result { get; set; }
-			public PlatformFormReturnEnum Type { get; set; }
 			public Engine Platform { get; set; }
-
-			public enum PlatformFormReturnEnum
-			{
-				None = 0,
-				Folder,
-				File
-			}
-		}
-
-		private void OpenFolderButton_Click(object sender, EventArgs e)
-		{
-			Selection = PlatformFormReturn.PlatformFormReturnEnum.Folder;
-			DialogResult = DialogResult.OK;
-			Close();
 		}
 
 		private void OpenFileButton_Click(object sender, EventArgs e)
 		{
-			Selection = PlatformFormReturn.PlatformFormReturnEnum.File;
 			DialogResult = DialogResult.OK;
 			Close();
 		}
 
 		private void CancelButton_Click(object sender, EventArgs e)
 		{
-			DialogResult = DialogResult.Cancel;
 			Close();
 		}
 	}

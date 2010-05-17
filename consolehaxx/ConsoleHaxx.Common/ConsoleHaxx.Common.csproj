@@ -63,9 +63,13 @@
     <Compile Include="EndianReader.cs" />
     <Compile Include="Files.cs" />
     <Compile Include="ForwardStream.cs" />
+    <Compile Include="FSB.cs" />
+    <Compile Include="Ini.cs" />
+    <Compile Include="Iso9660.cs" />
     <Compile Include="LittleEndianConverter.cs" />
     <Compile Include="Mid.cs" />
     <Compile Include="Midi.cs" />
+    <Compile Include="MP3.cs" />
     <Compile Include="Multistream.cs" />
     <Compile Include="Pair.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -39,8 +39,8 @@ namespace ConsoleHaxx.Common
 
 		public override void Flush()
 		{
-			Open();
-			Base.Flush();
+			if (Base != null)
+				Base.Flush();
 		}
 
 		public override long Length
@@ -76,6 +76,15 @@ namespace ConsoleHaxx.Common
 			Open();
 			Base.Write(buffer, offset, count);
 		}
+
+		public override void Close()
+		{
+			if (Base != null) {
+				Base.Close();
+				Base = null;
+			}
+			base.Close();
+		}
 	}
 
 	public class DelayedStreamCache : IDisposable
@@ -87,10 +96,10 @@ namespace ConsoleHaxx.Common
 			Streams = new List<Stream>();
 		}
 
-		public Func<Stream> GenerateFileStream(string path, FileMode mode, FileAccess access)
+		public Func<Stream> GenerateFileStream(string path, FileMode mode, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
 		{
 			return delegate() {
-				Stream stream = new FileStream(path, mode, access);
+				Stream stream = new FileStream(path, mode, access, share);
 				AddStream(stream);
 				return stream;
 			};
@@ -103,8 +112,11 @@ namespace ConsoleHaxx.Common
 
 		public void Dispose()
 		{
-			foreach (Stream stream in Streams)
-				stream.Close();
+			foreach (Stream stream in Streams) {
+				try {
+					stream.Close();
+				} catch (ObjectDisposedException) { }
+			}
 			Streams.Clear();
 		}
 

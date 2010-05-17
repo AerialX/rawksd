@@ -90,7 +90,8 @@ namespace ConsoleHaxx.Wii
 			} else if (Content != null) {
 				byte[] iv = new byte[0x10];
 				BigEndianConverter.GetBytes(Content.Index).CopyTo(iv, 0);
-				CryptoStream astream = new CryptoStream(stream, Util.AesCBC.CreateEncryptor(Key, iv), CryptoStreamMode.Write);
+				//CryptoStream astream = new CryptoStream(stream, Util.AesCBC.CreateEncryptor(Key, iv), CryptoStreamMode.Write);
+				AesStream astream = new AesStream(stream, Key, iv);
 				Data.Position = 0;
 				Util.StreamCopy(astream, Data);
 				astream.Close();

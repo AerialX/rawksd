@@ -1,0 +1,107 @@
+<importdata>
+	<global>
+		<idprefix>rbtp1</idprefix>
+		<nameprefix>[RBTP1]</nameprefix>
+		<version>1</version>
+	</global>
+	<song id="allthesmallthings">
+		<album>Enema of the State</album>
+		<year>1999</year>
+		<track>8</track>
+	</song>
+	<song id="buddyholly">
+		<album>Weezer</album>
+		<year>1994</year>
+		<track>4</track>
+	</song>
+	<song id="callingdrlove">
+		<album>Rock and Roll Over</album>
+		<year>1976</year>
+		<track>3</track>
+	</song>
+	<song id="crushcrushcrush">
+		<album>Riot!</album>
+		<year>2007</year>
+		<track>8</track>
+	</song>
+	<song id="dieallright">
+		<album>Veni Vidi Vicious</album>
+		<year>2000</year>
+		<track>2</track>
+	</song>
+	<song id="gimmethreesteps">
+		<album>(pronounced 'lĕh-'nérd 'skin-'nérd)</album>
+		<year>1973</year>
+		<track>3</track>
+	</song>
+	<song id="interstatelovesong">
+		<album>Purple</album>
+		<year>1994</year>
+		<track>4</track>
+	</song>
+	<song id="jokerandthe">
+		<album>Wolfmother</album>
+		<year>2005</year>
+		<track>6</track>
+	</song>
+	<song id="littlesister">
+		<album>Lullabies to Paralyze</album>
+		<year>2005</year>
+		<track>7</track>
+	</song>
+	<song id="liveforever">
+		<album>Definitely Maybe</album>
+		<year>1994</year>
+		<track>3</track>
+	</song>
+	<song id="marchofthepigs">
+		<album>The Downward Spiral</album>
+		<year>1994</year>
+		<track>4</track>
+	</song>
+	<song id="moonagedaydream">
+		<album>The Rise and Fall of Ziggy Stardust and the Spiders from Mars</album>
+		<year>1972</year>
+		<track>3</track>
+	</song>
+	<song id="morethanafeeling">
+		<album>Boston</album>
+		<year>1976</year>
+		<track>1</track>
+	</song>
+	<song id="movealong">
+		<album>Move Along</album>
+		<year>2005</year>
+		<track>3</track>
+	</song>
+	<song id="siva">
+		<album>Gish</album>
+		<year>1991</year>
+		<track>2</track>
+	</song>
+	<song id="synchronicity2">
+		<album>Synchronicity</album>
+		<year>1983</year>
+		<track>6</track>
+	</song>
+	<song id="teenagelobotomy">
+		<album>Rocket to Russia</album>
+		<year>1977</year>
+		<track>8</track>
+	</song>
+	<song id="thekill">
+		<album>A Beautiful Lie</album>
+		<year>2005</year>
+		<track>3</track>
+	</song>
+	<song id="truckin">
+		<album>American Beauty</album>
+		<year>1970</year>
+		<track>10</track>
+	</song>
+	<song id="wecarealot">
+		<album>We Care a Lot</album>
+		<year>1985</year>
+		<track>1</track>
+	</song>
+</importdata>

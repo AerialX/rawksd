@@ -1,0 +1,107 @@
+<importdata>
+	<global>
+		<idprefix>rbtp2</idprefix>
+		<nameprefix>[RBTP2]</nameprefix>
+		<version>1</version>
+	</global>
+	<song id="afterlife">
+		<album>Avenged Sevenfold</album>
+		<year>2007</year>
+		<track>4</track>
+	</song>
+	<song id="callme">
+		<album>The Best of Blondie</album>
+		<year>1981</year>
+		<track>10</track>
+	</song>
+	<song id="elscorcho">
+		<album>Pinkerton</album>
+		<year>1996</year>
+		<track>7</track>
+	</song>
+	<song id="girluwant">
+		<album>Devo Rock Band Re-Records</album>
+		<year>2008</year>
+		<track>1</track>
+	</song>
+	<song id="girlswhoplayguitars">
+		<album>Our Earthly Pleasures</album>
+		<year>2007</year>
+		<track>1</track>
+	</song>
+	<song id="indestructible">
+		<album>Indestructible</album>
+		<year>2008</year>
+		<track>1</track>
+	</song>
+	<song id="ithurts">
+		<album>We Don't Need to Whisper</album>
+		<year>2006</year>
+		<track>8</track>
+	</song>
+	<song id="justwhatineeded">
+		<album>The Cars</album>
+		<year>1978</year>
+		<track>3</track>
+	</song>
+	<song id="messageinabottle">
+		<album>Reggatta de Blanc</album>
+		<year>1979</year>
+		<track>1</track>
+	</song>
+	<song id="monkeygonetoheaven">
+		<album>Doolittle</album>
+		<year>1989</year>
+		<track>7</track>
+	</song>
+	<song id="rio">
+		<album>Rio</album>
+		<year>1982</year>
+		<track>1</track>
+	</song>
+	<song id="saintsoflosangeles">
+		<album>Saints of Los Angeles</album>
+		<year>2008</year>
+		<track>5</track>
+	</song>
+	<song id="simpleman">
+		<album>(pronounced 'lĕh-'nérd 'skin-'nérd)</album>
+		<year>1973</year>
+		<track>4</track>
+	</song>
+	<song id="snowheyoh">
+		<album>Stadium Arcadium</album>
+		<year>2006</year>
+		<track>2</track>
+	</song>
+	<song id="perfectdrug">
+		<album>Lost Highway</album>
+		<year>1997</year>
+		<track>3</track>
+	</song>
+	<song id="thisaintascene">
+		<album>Infinity on High</album>
+		<year>2007</year>
+		<track>3</track>
+	</song>
+	<song id="timeisrunningout">
+		<album>The Paramour Sessions</album>
+		<year>2006</year>
+		<track>7</track>
+	</song>
+	<song id="whydoyouloveme">
+		<album>Bleed Like Me</album>
+		<year>2005</year>
+		<track>4</track>
+	</song>
+	<song id="yougotanotherthingcoming">
+		<album>Screaming for Vengeance</album>
+		<year>1982</year>
+		<track>8</track>
+	</song>
+	<song id="zero">
+		<album>Mellon Collie and the Infinite Sadness</album>
+		<year>1995</year>
+		<track>4</track>
+	</song>
+</importdata>

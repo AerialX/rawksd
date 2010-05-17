@@ -65,11 +65,11 @@ namespace ConsoleHaxx.Common
 
 		public override int Read(byte[] buffer, int offset, int count)
 		{
-			// Don't read past the length
 			if (_position + count > Length)
 				count = (int)(Length - _position);
 
-			Stream.Position = Offset + _position;
+			if (Stream.Position != Offset + _position)
+				Stream.Position = Offset + _position;
 			int ret = Stream.Read(buffer, offset, count);
 			_position += ret;
 			return ret;
@@ -101,8 +101,19 @@ namespace ConsoleHaxx.Common
 
 		public override void Write(byte[] buffer, int offset, int count)
 		{
-			Stream.Position = Offset + _position;
+			if (_position + count > Length)
+				count = (int)(Length - _position);
+
+			if (Stream.Position != Offset + _position)
+				Stream.Position = Offset + _position;
 			Stream.Write(buffer, offset, count);
+			_position += count;
+		}
+
+		public override void Close()
+		{
+			Position = 0;
+			base.Close();
 		}
 	}
 }

@@ -1,0 +1,112 @@
+<importdata>
+	<global>
+		<idprefix>rbtpco</idprefix>
+		<nameprefix>[RBCOUNTRY]</nameprefix>
+		<version>1</version>
+	</global>
+	<song id="threedimesdown">
+		<album>Brighter Than Creation's Dark</album>
+		<year>2008</year>
+		<track>2</track>
+	</song>
+	<song id="anymanofmine">
+		<album>The Woman in Me</album>
+		<year>1995</year>
+		<track>2</track>
+	</song>
+	<song id="cantletgo_lucinda">
+		<album>Car Wheels on a Gravel Road</album>
+		<year>1998</year>
+		<track>7</track>
+	</song>
+	<song id="crylonely">
+		<album>Mission California</album>
+		<year>2007</year>
+		<track>6</track>
+	</song>
+	<song id="freeandeasy">
+		<album>Long Trip Alone</album>
+		<year>2006</year>
+		<track>9</track>
+	</song>
+	<song id="gone">
+		<album>You Do Your Thing</album>
+		<year>2004</year>
+		<track>2</track>
+	</song>
+	<song id="goodtime">
+		<album>Good Time</album>
+		<year>2008</year>
+		<track>1</track>
+	</song>
+	<song id="gunpowerandlead">
+		<album>Crazy Ex-Girlfriend</album>
+		<year>2007</year>
+		<track>1</track>
+	</song>
+	<song id="hillbillydeluxe">
+		<album>Hillbilly Deluxe</album>
+		<year>2005</year>
+		<track>5</track>
+	</song>
+	<song id="itoldyouso">
+		<album>Love, Pain &amp; the Whole Crazy Thing</album>
+		<year>2006</year>
+		<track>3</track>
+	</song>
+	<song id="meandmygang">
+		<album>Me and My Gang</album>
+		<year>2006</year>
+		<track>10</track>
+	</song>
+	<song id="mudonthetires">
+		<album>Mud on the Tires</album>
+		<year>2003</year>
+		<track>1</track>
+	</song>
+	<song id="ontheroadagain">
+		<album>Honeysuckle Rose</album>
+		<year>1980</year>
+		<track>1</track>
+	</song>
+	<song id="satelliteradio">
+		<album>Washington Square Serenade</album>
+		<year>2007</year>
+		<track>3</track>
+	</song>
+	<song id="shescountry">
+		<album>Wide Open</album>
+		<year>2009</year>
+		<track>6</track>
+	</song>
+	<song id="shethinksmytractorssexy">
+		<album>Everywhere We Go</album>
+		<year>1999</year>
+		<track>7</track>
+	</song>
+	<song id="sinwagon">
+		<album>Fly</album>
+		<year>1999</year>
+		<track>8</track>
+	</song>
+	<song id="swing">
+		<album>Dangerous Man</album>
+		<year>2006</year>
+		<track>4</track>
+	</song>
+	<song id="sudsinthebucket">
+		<album>Restless</album>
+		<year>2003</year>
+		<track>13</track>
+	</song>
+	<song id="thegambler">
+		<album>The Gambler</album>
+		<year>1978</year>
+		<track>1</track>
+	</song>
+	<song id="thisonesforthegirls">
+		<album>Martina</album>
+		<year>2003</year>
+		<track>4</track>
+	</song>
+</importdata>

@@ -138,17 +138,6 @@ namespace ConsoleHaxx.Harmonix
 			tracks.Nodes.Add(new DTB.NodeKeyword() { Type = 0x05, Text = "tracks" });
 			DTB.NodeTree tracktree = new DTB.NodeTree(line); tracks.Nodes.Add(tracktree);
 			foreach (SongTracks track in Song.Tracks) {
-				//if (track.Tracks.Count == 0)
-				//continue;
-				//int drumtrackcount = 2;
-				int drumtrackcount = 6; // For safety with customs messing with mix and not knowing what they're doing
-				if (track.Name == "drum" && track.Tracks.Count < drumtrackcount && track.Tracks.Count > 0) {
-					for (int k = 0; k < drumtrackcount - track.Tracks.Count; k++) {
-						track.Tracks.Add(track.Tracks[track.Tracks.Count - 1]);
-					}
-					// Now there are duplicates... I blame RB2.
-				}
-
 				tracks = new DTB.NodeTree(line++); tracktree.Nodes.Add(tracks);
 				tracks.Nodes.Add(new DTB.NodeKeyword() { Type = 0x05, Text = track.Name });
 				if (track.Tracks.Count == 1)
