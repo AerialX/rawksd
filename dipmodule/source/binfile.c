@@ -6,17 +6,24 @@
 #include "syscalls.h"
 #include "es.h"
 #include "mem.h"
+#include "files.h"
 
 #define setAccessMask(mask, bit) (mask[bit>>3] |= (1 << (bit&7)))
 #define unsetAccessMask(mask, bit) (mask[bit>>3] &= ~(1 << (bit&7)))
 #define checkAccessMask(mask, bit) (mask[bit>>3] & (1 << (bit&7)))
 
-#define BIN_READ	1
-#define BIN_WRITE	2
-
+#if 0
+void LogPrintf(const char *fmt, ...);
+#define debug_printf LogPrintf
+#else
 #define debug_printf(fmt, args...)
+#define LogPrintf debug_printf
+#endif
 
-#define FSERR_EINVAL	-4
+#define BIN_READ  1
+#define BIN_WRITE 2
+
+#define FSERR_EINVAL	-103
 
 void dlc_aes_decrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len);
 void dlc_aes_encrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len);
@@ -75,7 +82,7 @@ int FileRead(BinFile* file, void *buf, u32 size)
 {
 	if (size==0)
 		return 0;
-	if (os_read(file->handle, buf, size)!=size)
+	if (File_Read(file->handle, buf, size)!=size)
 		return 1;
 	file->pos += size;
 	return 0;
@@ -85,7 +92,7 @@ int FileWrite(BinFile* file, void *buf, u32 size)
 {
 	if (size==0)
 		return 0;
-	if (os_write(file->handle, buf, size)!=size)
+	if (File_Write(file->handle, buf, size)!=size)
 		return 1;
 	file->pos += size;
 	return 0;
@@ -95,7 +102,7 @@ int FileSeek(BinFile* file, s32 where)
 {
 	if (file->pos==where)
 		return 0;
-	if (os_seek(file->handle, where, SEEK_SET)!=where)
+	if (File_Seek(file->handle, where, SEEK_SET)!=where)
 		return 0;
 	file->pos = where;
 	return 0;
@@ -168,8 +175,43 @@ open_error:
 	return NULL;
 }
 
+static void CloseWriteBin(BinFile* file)
+{
+	u8 zero=0;
+	u32 total_size;
+	u32 i;
+
+	file->pos &= 0xF;
+	if (file->pos)
+	{
+		LogPrintf("Flushing %u bytes\n", file->pos);
+		dlc_aes_encrypt(file->iv, file->buf, file->buf, file->pos);
+		FileWrite(file, file->buf, file->pos);
+	}
+
+	file->pos = file->data_size;
+	file->data_size = ROUND_UP(file->data_size, 64);
+	total_size = file->header_size + file->data_size;
+
+	if (file->data_size > file->pos)
+		LogPrintf("Padding with %u zeroes\n", file->data_size-file->pos);
+
+	for (i=file->pos; i < file->data_size; i++)
+		FileWrite(file, &zero, 1);
+
+	if (!FileSeek(file, 0x18))
+	{
+		if (!FileWrite(file, &file->data_size, sizeof(file->data_size)))
+			FileWrite(file, &total_size, sizeof(total_size));
+	}
+
+	LogPrintf("Closed a WriteBin file\n");
+}
+
 void CloseBin(BinFile* file)
 {
+	if (file && file->mode == BIN_WRITE)
+		CloseWriteBin(file);
     Dealloc(file);
 }
 
@@ -270,10 +312,10 @@ s32 ReadBin(BinFile* file, u8* buffer, u32 numbytes)
 		}
 	}
 
+	if (result<0)
+		LogPrintf("ReadBin failed\n");
 	return result;
 }
-
-// THE FOLLOWING FUNCTIONS HAVE NOT BEEN TESTED
 
 BinFile* CreateBinFile(u16 index, u8* tmd, u32 tmd_size, s32 file)
 {
@@ -281,22 +323,26 @@ BinFile* CreateBinFile(u16 index, u8* tmd, u32 tmd_size, s32 file)
 
     BK_Header bk_header;
 
+    LogPrintf("CreateBinFile index %u %p %u\n", index, tmd, tmd_size);
+
 	if (!tmd || !tmd_size || index>=512)
 		return NULL;
 
-	bin = (BinFile*)Alloc(sizeof(BinFile));
+	bin = (BinFile*)Memalign(32, sizeof(BinFile));
 	if (bin==NULL)
 		return NULL;
+
+	LogPrintf("Allocated BinFile header\n");
 
 	memset(bin, 0, sizeof(BinFile));
 	bin->handle = file;
 	bin->mode = BIN_WRITE;
-	bin->iv[0] = index >> 16;
+	bin->iv[0] = index >> 8;
 	bin->iv[1] = (u8)index;
 	bin->header_size = ROUND_UP(tmd_size+sizeof(bk_header), 64);
 
 	memset(&bk_header, 0, sizeof(bk_header));
-    bk_header.size = sizeof(BK_Header);
+    bk_header.size = 0x70;
     bk_header.magic = 0x426B /*'Bk'*/;
     bk_header.version = 1;
 	os_get_key(ES_KEY_CONSOLE, &bk_header.NG_id);
@@ -305,21 +351,26 @@ BinFile* CreateBinFile(u16 index, u8* tmd, u32 tmd_size, s32 file)
     bk_header.title_id_2 = *(u32*)0;
     setAccessMask(bk_header.content_mask, index);
 
-    if (FileSeek(bin, 0) ||
-    	FileWrite(bin, &bk_header, sizeof(bk_header)) ||
-    	FileSeek(bin, ROUND_UP(bin->pos, 64)) ||
-    	FileWrite(bin, &tmd, tmd_size) ||
-    	FileSeek(bin, ROUND_UP(bin->pos, 64)))
-    	goto create_error;
+	if (FileSeek(bin, 0))
+		LogPrintf("Couldn't seek back to start\n");
+	else if (FileWrite(bin, &bk_header, sizeof(bk_header)))
+		LogPrintf("Couldn't write bk_header\n");
+	else if (FileSeek(bin, ROUND_UP(bin->pos, 64)))
+		LogPrintf("Couldn't seek to 64-byte boundary\n");
+	else if (FileWrite(bin, tmd, tmd_size))
+		LogPrintf("Couldn't write TMD\n");
+	else if (FileSeek(bin, ROUND_UP(bin->pos, 64)))
+		LogPrintf("Couldn't seek to 64-byte boundary after TMD\n");
+	else {
+		LogPrintf("Created .bin file\n");
+		return bin;
+	}
 
-    return bin;
-
-create_error:
 	Dealloc(bin);
 	return NULL;
 }
 
-s32 WriteBin(BinFile* file, const u8* buffer, u32 numbytes)
+s32 WriteBin(BinFile* file, u8* buffer, u32 numbytes)
 {
 	s32 result = FSERR_EINVAL;
 
@@ -341,54 +392,36 @@ s32 WriteBin(BinFile* file, const u8* buffer, u32 numbytes)
 				file->pos -= 16;
 				dlc_aes_encrypt(file->iv, file->buf, file->buf, 16);
 				if (FileWrite(file, file->buf, 16))
+				{
+					LogPrintf("Error writing leading encrypted block\n");
 					return FSERR_EINVAL;
+				}
+				LogPrintf("WriteBin: sent 16 bytes leadin\n");
 			}
 		}
 
-		bytes_left = numbytes;
-		while (bytes_left>0)
+		bytes_left = numbytes&~0xF;
+		if (bytes_left)
 		{
-			s32 crypt_bytes = MAX(16, bytes_left);
-			memcpy(file->buf, buffer, crypt_bytes);
-			buffer += crypt_bytes;
-			bytes_left -= crypt_bytes;
-
-			if (crypt_bytes==16)
+			dlc_aes_encrypt(file->iv, buffer, buffer, bytes_left);
+			if (FileWrite(file, buffer, bytes_left))
 			{
-				dlc_aes_encrypt(file->iv, file->buf, file->buf, 16);
-				if (FileWrite(file, file->buf, 16))
-					return FSERR_EINVAL;
+				LogPrintf("Error writing bulk encrypted block\n");
+				return FSERR_EINVAL;
 			}
-			else
-				file->pos += crypt_bytes;
+			buffer += bytes_left;
+		}
+
+		bytes_left = numbytes&0xF;
+		if (bytes_left)
+		{
+			memcpy(file->buf, buffer, bytes_left);
+			file->pos += bytes_left;
 		}
 
 		file->data_size += numbytes;
-	}
+	} else
+		LogPrintf("WriteBin: Missing file or file not opened for writing\n");
 
 	return result;
-}
-
-void CloseWriteBin(BinFile* file)
-{
-	u8 zero=0;
-	u32 total_size;
-	u32 i;
-
-	if (file==NULL)
-		return;
-
-	file->data_size = ROUND_UP(file->data_size, 64);
-	total_size = file->header_size + file->data_size;
-
-	for (i=file->pos; i < ROUND_UP(file->pos, 64); i++)
-		FileWrite(file, &zero, 1);
-
-	if (!FileSeek(file, 0x18))
-	{
-		if (!FileWrite(file, &file->data_size, sizeof(file->data_size)))
-			FileWrite(file, &total_size, sizeof(total_size));
-	}
-
-	Dealloc(file);
 }

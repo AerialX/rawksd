@@ -21,7 +21,7 @@ namespace ProxiIOS { namespace EMU {
 			Delete           = ISFS::Delete,
 			Move             = ISFS::Rename,
 			CreateFile       = ISFS::CreateFile,
-			SetFileVerCtrl   = ISFS::SetFileVerCtrl,
+			SetFileVerCtrl   = ISFS::SetFileVerCtrl, // what is this I don't even
 			GetFileStats     = ISFS::GetFileStats,
 			GetUsage         = ISFS::GetUsage,       // ioctlv
 			Shutdown         = ISFS::Shutdown,
@@ -53,10 +53,10 @@ namespace ProxiIOS { namespace EMU {
 
 	struct ISFSFile {
 		u16 in_use;           // 0x00 (boolean)
-		u16 gid;              // 0x02 (ipcmessage.open)
-		u32 uid;              // 0x04 (ipcmessage.open)
+		u16 gid;              // 0x02 (from ipcmessage.open)
+		u32 uid;              // 0x04 (from ipcmessage.open)
 		u32 node_maybe;       // 0x08 (0xFFFF for /dev/fs device)
-		u32 mode;             // 0x0C (ipcmessage.open)
+		u32 mode;             // 0x0C (from ipcmessage.open)
 		u32 written_bytes;    // 0x10 (initially zero, not sure about this)
 		u32 pos;              // 0x14
 		u32 length;           // 0x18
@@ -69,16 +69,14 @@ namespace ProxiIOS { namespace EMU {
 	private:
 		char *file_name;
 		u32 file_mode;
-		u32 watched_fd;
 	protected:
 		s32 file;
 		s32 Open();
 	public:
-		int IsWatching(u32 fd);
 		virtual s32 Read(void *dest, s32 length);
 		virtual s32 Write(const void *src, s32 length);
 		virtual s32 Seek(s32 where, s32 whence);
-		RiivFile(const char *name, s32 mode, u32 watching=0);
+		RiivFile(const char *name, s32 mode);
 		virtual ~RiivFile();
 	};
 
@@ -91,19 +89,46 @@ namespace ProxiIOS { namespace EMU {
 		virtual s32 Read(void *dest, s32 length);
 		virtual s32 Write(const void *src, s32 length);
 		virtual s32 Seek(s32 where, s32 whence);
-		// TODO: overload constructor for creating
 		AppFile(const char *name);
+		AppFile(const char *name, u16 index, u32 *tmd_buf);
 		virtual ~AppFile();
 	};
 
 	class RiivDir
 	{
-	private:
+	protected:
 		char *nand_dir, *ext_dir;
 	public:
 		virtual char* GetTranslatedPath(const char *path);
+		virtual RiivFile* OpenFile(const char *path, int mode);
+		int CreateFile(const char *path);
+		virtual int Delete(const char *path);
+		virtual int ReadDir(const char* ext_path, u32 *out_count, char *names, const u32 *max_count);
+		virtual int MoveTo(const char* nand_path, const char* ext_path);
+		virtual int MoveFrom(const char* ext_path, const char* nand_path);
+		int GetUsage(const char* ext_path, u32 *files, u32 *blocks, char* next_name);
+		virtual int Exists(const char *path);
 		RiivDir(const char* _nand_dir, const char* _ext_dir);
-		virtual ~RiivDir();
+		~RiivDir();
+	};
+
+	class AppDir : public RiivDir
+	{
+	private:
+		u8 initialized;
+		s16 content_map[512];
+		s16 AppToCID(const char *app_file);
+		void IndexToBin(int index, char *bin_file);
+		int Initialize();
+	public:
+		virtual char* GetTranslatedPath(const char *path);
+		virtual RiivFile* OpenFile(const char *path, int mode);
+		virtual int Delete(const char *path);
+		virtual int ReadDir(const char*, u32 *out_count, char *names, const u32 *max_count);
+		virtual int MoveTo(const char* nand_path, const char*);
+		virtual int MoveFrom(const char*, const char* nand_path);
+		virtual int Exists(const char*);
+		AppDir(const char* _nand_dir, const char* _ext_dir);
 	};
 
 	class EMU : public ProxiIOS::Module
@@ -114,27 +139,6 @@ namespace ProxiIOS { namespace EMU {
 
 		RiivFile* open_files[MAX_EMU_OPEN];
 		int TryOpen(const char *name, u32 mode, RiivFile **x);
-
-		s32 FS_IPC(ipcmessage *msg);
-		// open
-		s32 FS_IPC(const char *device, u32 mode, u32 uid=0, u16 gid=0);
-		// close
-		s32 FS_IPC(s32 fd);
-		// read
-		s32 FS_IPC(s32 fd, void* data, u32 length);
-		// write
-		s32 FS_IPC(s32 fd, const void* data, u32 length);
-		// seek
-		s32 FS_IPC(s32 fd, s32 offset, s32 origin);
-		// ioctl
-		s32 FS_IPC(s32 fd, u32 command, const void* buffer_in, u32 length_in, void* buffer_io, u32 length_io);
-		// ioctlv
-		s32 FS_IPC(s32 fd, u32 command, u32 num_in, u32 num_io, ioctlv* vector);
-
-		int MoveTo(const char* nand_path, const char* ext_path);
-		// s32 MoveFrom(const char* ext_path, const char* nand_path);
-		int GetUsage(const char* ext_path, u32 *files, u32 *blocks, char* next_name);
-		int ReadDir(const char* ext_path, u32 *out_count, char *names, const u32 *max_count);
 	public:
 		EMU();
 

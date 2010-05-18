@@ -5,7 +5,7 @@
 #include <mem.h>
 #include <files.h>
 
-static u8 Heapspace[0x35000];
+static u8 Heapspace[0x34000];
 
 int main()
 {

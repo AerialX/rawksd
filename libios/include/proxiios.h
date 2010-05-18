@@ -45,8 +45,8 @@ namespace ProxiIOS {
 		};
 
 		struct Stats {
-			u32 Length;
-			u32 Pos;
+			s32 Length;
+			s32 Pos;
 		};
 
 		struct FSattr {

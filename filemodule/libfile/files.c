@@ -28,6 +28,7 @@
 static u32 ioctlbuffer[0x20];
 static ioctlv ioctlvbuffer[0x04];
 static int file_fd = -1;
+static Stats _st[2] __attribute__((aligned(32)));
 
 int File_Init()
 {
@@ -126,7 +127,6 @@ int File_GetMountPoint(int fs, char* mountpoint, int length)
 	return ret;
 }
 
-
 int File_Stat(const char* path, Stats* st)
 {
 	if (file_fd < 0)
@@ -135,9 +135,10 @@ int File_Stat(const char* path, Stats* st)
 	int ret;
 	int len = strlen(path) + 1;
 	os_sync_after_write((void*)path, len);
-	ret = os_ioctl(file_fd, IOCTL_Stat, (void*)path, len, st, sizeof(Stats));
+	ret = os_ioctl(file_fd, IOCTL_Stat, (void*)path, len, _st, sizeof(Stats));
 
-	os_sync_before_read(st, sizeof(Stats));
+	os_sync_before_read(_st, sizeof(Stats));
+	memcpy(st, _st, sizeof(Stats));
 	return ret;
 }
 
@@ -207,12 +208,13 @@ int File_NextDir(int dir, char* path, Stats* st)
 	ioctlvbuffer[0].len = 0x04;
 	ioctlvbuffer[1].data = path;
 	ioctlvbuffer[1].len = MAXPATHLEN;
-	ioctlvbuffer[2].data = st;
+	ioctlvbuffer[2].data = _st;
 	ioctlvbuffer[2].len = sizeof(Stats);
 	os_sync_after_write(ioctlvbuffer, sizeof(ioctlvbuffer));
 	ret = os_ioctlv(file_fd, IOCTL_NextDir, 1, 2, ioctlvbuffer);
 	os_sync_before_read(path, MAXPATHLEN);
-	os_sync_before_read(st, sizeof(Stats));
+	os_sync_before_read(_st, sizeof(Stats));
+	memcpy(st, _st, sizeof(Stats));
 
 	return ret;
 }

@@ -35,6 +35,8 @@ distribution.
 #include "timer.h"
 #include "gpio.h"
 
+#define VISUALIZE
+
 #define debug_printf(fmt, args...)
 
 #define	TAG_START						0x0BADC0DE
@@ -759,7 +761,15 @@ static bool __usbstorage_ReadSectors(u32 sector, u32 numSectors, void *buffer)
    if(__mounted != 1)
        return false;
 
+#ifdef VISUALIZE
+	gpio_set_on(GPIO_OSLOT);
+#endif
+
    retval = USBStorage_Read(&__usbfd, __lun, sector, numSectors, buffer);
+
+#ifdef VISUALIZE
+	gpio_set_off(GPIO_OSLOT);
+#endif
 
    if(retval == USBSTORAGE_ETIMEDOUT)
        __mounted = 0;
@@ -777,7 +787,15 @@ static bool __usbstorage_WriteSectors(u32 sector, u32 numSectors, const void *bu
    if(__mounted != 1)
        return false;
 
+#ifdef VISUALIZE
+	gpio_set_on(GPIO_OSLOT);
+#endif
+
    retval = USBStorage_Write(&__usbfd, __lun, sector, numSectors, buffer);
+
+#ifdef VISUALIZE
+	gpio_set_off(GPIO_OSLOT);
+#endif
 
    if(retval == USBSTORAGE_ETIMEDOUT)
        __mounted = 0;

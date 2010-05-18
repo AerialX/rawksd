@@ -41,6 +41,8 @@
 #include "syscalls.h"
 #include "gpio.h"
 
+#define VISUALIZE
+
 #define PAGE_SIZE512				512
 
 #define	SDIOHCR_RESPONSE			0x10

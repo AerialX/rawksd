@@ -441,7 +441,8 @@ static inline void ApplyBinaryPatches(s32 app_section_size)
 	}
 
 	// return to HBC
-	// PatchReturnToMenu(app_section_size, 0x000100014A4F4449llu);
+	if (*(u32*)0x80001808 == 'HAXX')
+		PatchReturnToMenu(app_section_size, 0x000100014A4F4449llu);
 
 	RVL_PatchMemory(&Disc, app_address, app_section_size);
 }

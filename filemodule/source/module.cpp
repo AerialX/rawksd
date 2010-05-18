@@ -39,7 +39,8 @@ namespace ProxiIOS { namespace Filesystem {
 	int Filesystem::HandleIoctl(ipcmessage* message)
 	{
 		u32 *buffer_in = (u32*)message->ioctl.buffer_in;
-		os_sync_before_read(buffer_in, message->ioctl.length_in);
+		if (message->ioctl.length_in)
+			os_sync_before_read(buffer_in, message->ioctl.length_in);
 
 		switch (message->ioctl.command) {
 			case Ioctl::Epoch: {
