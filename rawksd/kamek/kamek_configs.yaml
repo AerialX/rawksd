@@ -1,0 +1,9 @@
+---
+-   friendly_name: "Rock Band 2 NTSC"
+    short_name: 'ntsc'
+    defines: [REGION_NTSC, GECKO, HW_RVL]
+    includes: ["include"]
+    linker_script: kamek_ntsc.x
+    rel_area_start: 0x00000000
+    rel_area_end: 0x00000000
+  

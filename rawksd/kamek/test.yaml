@@ -1,0 +1,10 @@
+---
+source_files: [test.cpp]
+hooks:
+-   name:           TestHack
+    type:           branch_insn
+    branch_type:    b
+    src_addr_ntsc:  0x8058AC24
+    src_addr_pal:   0x00000000
+    target_func:    'TestHack'
+
