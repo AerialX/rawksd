@@ -2,6 +2,7 @@
 #include "menu.h"
 #include "wdvd.h"
 #include "riivolution.h"
+#include "fwrite.h"
 #include <files.h>
 
 #include <ogc/lwp_watchdog.h>
@@ -440,8 +441,11 @@ static inline void ApplyBinaryPatches(s32 app_section_size)
 			((u32*)found)[3] = 0x4E800020;
 	}
 
+	// Apply fwrite patch
+	Fwrite_FindPatchLocation((char*)app_address, app_section_size);
+
 	// return to HBC
-	if (*(u32*)0x80001808 == 'HAXX')
+	if (*(u32*)0x80001808 == 0x48415858) // "HAXX"
 		PatchReturnToMenu(app_section_size, 0x000100014A4F4449llu);
 
 	RVL_PatchMemory(&Disc, app_address, app_section_size);
@@ -529,6 +533,8 @@ LauncherStatus::Enum Launcher_RunApploader()
 		app_section_size = 0;
 		app_disc_offset = 0;
 	}
+
+	Fwrite_Patch();
 
 	// copy the IOS version over the expected IOS version
 	memcpy(MEM_IOSEXPECTED, MEM_IOSVERSION, 4);
