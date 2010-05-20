@@ -415,21 +415,15 @@ void dlc_aes_decrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len) {
 	u8 block[16];
 	unsigned int blockno, i;
 
-	for (blockno = 0; blockno <= (len >> 4); blockno++) {
-		unsigned int fraction;
-		if (blockno == (len >> 4)) { // last block
-			fraction = len & 0xF;
-			if (fraction == 0) break;
-			memset(block, 0, 16);
-		} else fraction = 16;
-
-		memcpy(block, inbuf + (blockno<<4), fraction);
-		memcpy(outbuf + (blockno<<4), iv, fraction);
+	// len is always a multiple of 16
+	for (blockno = 0; blockno < len; blockno+=16) {
+		memcpy(block, inbuf + blockno, 16);
+		memcpy(outbuf + blockno, iv, 16);
 		memcpy(iv, block, 16);
 		decrypt(block);
 
-		for (i=0; i < fraction; i++)
-			outbuf[(blockno<<4)+i] ^= block[i];
+		for (i=0; i < 16; i++)
+			outbuf[blockno+i] ^= block[i];
 	}
 }
 
@@ -441,7 +435,7 @@ void dlc_aes_encrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len) {
 		unsigned int fraction;
 		if (blockno == (len >> 4)) { // last block
 			fraction = len & 0xF;
-			if (fraction == 0) break;
+			if (fraction == 0) return;
 			memset(iv+fraction, 0, 16-fraction);
 		} else fraction = 16;
 

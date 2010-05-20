@@ -275,13 +275,27 @@ namespace ProxiIOS { namespace EMU {
 			LogPrintf("Added custom DLC path\n");
 			DataDirs.push_back(d);
 		}
-#if 0
-		d = new AppDir("/title/00010005/63524241/content", "/mnt/sd/private/wii/data/cRBA");
+
+		d = new AppDir("/title/00010005/63524241/content", "/mnt/usb/private/wii/data/cRBA");
 		if (d) {
 			LogPrintf("Added custom DLC path\n");
 			DataDirs.push_back(d);
 		}
-#endif
+		d = new AppDir("/title/00010005/63524242/content", "/mnt/usb/private/wii/data/cRBB");
+		if (d) {
+			LogPrintf("Added custom DLC path\n");
+			DataDirs.push_back(d);
+		}
+		d = new AppDir("/title/00010005/63524243/content", "/mnt/usb/private/wii/data/cRBC");
+		if (d) {
+			LogPrintf("Added custom DLC path\n");
+			DataDirs.push_back(d);
+		}
+		d = new AppDir("/title/00010005/63524244/content", "/mnt/usb/private/wii/data/cRBD");
+		if (d) {
+			LogPrintf("Added custom DLC path\n");
+			DataDirs.push_back(d);
+		}
 	}
 
 	u32 EMU::emu_thread(void* _p) {
@@ -977,11 +991,12 @@ namespace ProxiIOS { namespace EMU {
 				return NULL;
 			}
 
-			for (i=0; i < 512; i++) {
+			// this might be faster, but there's a tiny chance it might break something
+			for (i=MIN(511,index); i>=0; i--) {
 				if (content_map[i]==index)
 					break;
 			}
-			if (i==512)
+			if (i<0)
 				return NULL;
 
 			new_path = (char*)Memalign(32, strlen(ext_dir)+strlen("000.bin")+2);

@@ -186,10 +186,10 @@ static void CloseWriteBin(BinFile* file)
 	{
 		LogPrintf("Flushing %u bytes\n", file->pos);
 		dlc_aes_encrypt(file->iv, file->buf, file->buf, file->pos);
-		FileWrite(file, file->buf, file->pos);
+		FileWrite(file, file->buf, 16);
 	}
 
-	file->pos = file->data_size;
+	file->pos = ROUND_UP(file->data_size, 16);
 	file->data_size = ROUND_UP(file->data_size, 64);
 	total_size = file->header_size + file->data_size;
 
