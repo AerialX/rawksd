@@ -251,51 +251,6 @@ namespace ProxiIOS { namespace EMU {
 
 		stack += stacksize;
 		loop_thread = os_thread_create(emu_thread, this, stack, stacksize, 0x48, 0);
-
-		/* FIXME: Put these somewhere sensible, they don't belong here
-		 * and they only work if Riivolution doesn't unmount the usb drive */
-
-		RiivDir *d = new AppDir("/title/00010005/735a4145/content", "/mnt/usb/private/wii/data/sZAE");
-		if (d) {
-			LogPrintf("Added custom DLC path\n");
-			DataDirs.push_back(d);
-		}
-		d = new AppDir("/title/00010005/735a4245/content", "/mnt/usb/private/wii/data/sZBE");
-		if (d) {
-			LogPrintf("Added custom DLC path\n");
-			DataDirs.push_back(d);
-		}
-		d = new AppDir("/title/00010005/735a4345/content", "/mnt/usb/private/wii/data/sZCE");
-		if (d) {
-			LogPrintf("Added custom DLC path\n");
-			DataDirs.push_back(d);
-		}
-		d = new AppDir("/title/00010005/735a4445/content", "/mnt/usb/private/wii/data/sZDE");
-		if (d) {
-			LogPrintf("Added custom DLC path\n");
-			DataDirs.push_back(d);
-		}
-
-		d = new AppDir("/title/00010005/63524241/content", "/mnt/usb/private/wii/data/cRBA");
-		if (d) {
-			LogPrintf("Added custom DLC path\n");
-			DataDirs.push_back(d);
-		}
-		d = new AppDir("/title/00010005/63524242/content", "/mnt/usb/private/wii/data/cRBB");
-		if (d) {
-			LogPrintf("Added custom DLC path\n");
-			DataDirs.push_back(d);
-		}
-		d = new AppDir("/title/00010005/63524243/content", "/mnt/usb/private/wii/data/cRBC");
-		if (d) {
-			LogPrintf("Added custom DLC path\n");
-			DataDirs.push_back(d);
-		}
-		d = new AppDir("/title/00010005/63524244/content", "/mnt/usb/private/wii/data/cRBD");
-		if (d) {
-			LogPrintf("Added custom DLC path\n");
-			DataDirs.push_back(d);
-		}
 	}
 
 	u32 EMU::emu_thread(void* _p) {
@@ -357,6 +312,61 @@ namespace ProxiIOS { namespace EMU {
 		return -1;
 	}
 
+	char chartoHex(const char *x)
+	{
+		char ret = (x[0] - ((x[0]>='a') ? ('a'-10) : '0')) << 4;
+		ret |= x[1] - ((x[1]>='a') ? ('a'-10) : '0');
+		return ret;
+	}
+
+	void EMU::CheckForDLCTitle(const char *path)
+	{
+		if (!strncmp(path, "/title/00010005/", 16) && strlen(path)>=32) {
+			int i;
+			char nand_path[33];
+			char ext_path[] = "/private/wii/data/aaaa";
+			RiivDir* d;
+			std::vector<RiivDir*>::iterator it;
+
+			if (path[16]<'6' || path[16]>'7')
+				return;
+			if (path[17]<'0' || path[17]>'f' || (path[17]>'9' && path[17]<'a'))
+				return;
+
+			ext_path[18] = chartoHex(path+16);
+			if (ext_path[18]<'a' || ext_path[18]>'z')
+				return;
+
+			nand_path[24]=0;
+			strncpy(nand_path, path, 24);
+			strcat(nand_path, "/content");
+
+			for (it = DataDirs.begin(); it != DataDirs.end(); it++) {
+				char *translation = (*it)->GetTranslatedPath(nand_path);
+				if (translation) {
+					Dealloc(translation);
+					return;
+				}
+			}
+
+			LogPrintf("New App dir, %s\n", path);
+
+			for (i=0; i<3; i++)
+				ext_path[19+i] = chartoHex(path+18+(i<<1));
+
+			if (DataDirs.size()<=1) // save directory might be redirected
+			{
+				File_CreateDir("/private");
+				File_CreateDir("/private/wii");
+				File_CreateDir("/private/wii/data");
+			}
+
+			d = new AppDir(nand_path, ext_path);
+			if (d)
+				DataDirs.push_back(d);
+		}
+	}
+
 	int EMU::HandleFSMessage(ipcmessage* message, int* result)
 	{
 		int i;
@@ -364,6 +374,7 @@ namespace ProxiIOS { namespace EMU {
 		//LogMessage(message);
 
 		if (message->command == Ios::Open) {
+			CheckForDLCTitle(message->open.device);
 			// find next free slot
 			for (i=0; i < MAX_EMU_OPEN; i++) {
 				if (open_files[i]==NULL)
@@ -451,6 +462,11 @@ namespace ProxiIOS { namespace EMU {
 				default:
 					return 0;
 			}
+
+			if (path)
+				CheckForDLCTitle(path);
+			if (path2)
+				CheckForDLCTitle(path2);
 
 			for(it = DataDirs.begin();it != DataDirs.end(); it++) {
 				Stats st;
@@ -879,6 +895,8 @@ namespace ProxiIOS { namespace EMU {
 		nand_dir = (char*)Memalign(32, ISFS_MAXPATH_LEN);
 		ext_dir = (char*)Memalign(32, strlen(_ext_dir)+1);
 
+		LogPrintf("New RiivDir, internal: %s, external: %s\n", _nand_dir, _ext_dir);
+
 		if (nand_dir)
 			strncpy(nand_dir, _nand_dir, ISFS_MAXPATH_LEN);
 		if (ext_dir)
@@ -1072,7 +1090,7 @@ namespace ProxiIOS { namespace EMU {
 		char *ext_file = (char*)Alloc(strlen(ext_dir)+14);
 		char *file_names = (char*)Memalign(32, 13*512);
 		u32 *tmd_buf = (u32*)Memalign(32, MAX_SIGNED_TMD_SIZE);
-		void *buf = Memalign(32, 0x8000);
+		void *buf = Memalign(32, 0x18000);
 		if (nand_file==NULL || ext_file==NULL || file_names==NULL || buf==NULL || tmd_buf==NULL) {
 			Dealloc(tmd_buf);
 			Dealloc(buf);
@@ -1150,7 +1168,7 @@ namespace ProxiIOS { namespace EMU {
 						s32 app_in = FS_Open(nand_file, ISFS_OPEN_READ);
 						if (app_in>=0) {
 							int readed;
-							while ((readed=FS_Read(app_in, buf, 0x8000))>0)
+							while ((readed=FS_Read(app_in, buf, 0x18000))>0)
 								bin_out.Write(buf, readed);
 
 							FS_Close(app_in);
@@ -1225,7 +1243,6 @@ namespace ProxiIOS { namespace EMU {
 		for (int i=0; i < 512; i++)
 			content_map[i] = -1;
 		initialized = 0;
-		//Initialize();
 	}
 
 } }

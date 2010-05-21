@@ -88,7 +88,7 @@ int FileRead(BinFile* file, void *buf, u32 size)
 	return 0;
 }
 
-int FileWrite(BinFile* file, void *buf, u32 size)
+int FileWrite(BinFile* file, const void *buf, u32 size)
 {
 	if (size==0)
 		return 0;
@@ -114,7 +114,7 @@ BinFile* OpenBinRead(s32 file)
     BK_Header bk_header;
     tmd tmd_header;
     tmd_content content_rec;
-    BinFile* binfile = Alloc(sizeof(BinFile));
+    BinFile* binfile = (BinFile*)Memalign(32, sizeof(BinFile));
 
     if (binfile==NULL)
     	return NULL;
@@ -174,9 +174,9 @@ open_error:
 
 static void CloseWriteBin(BinFile* file)
 {
-	u8 zero=0;
+	static const u8 padding[49] ATTRIBUTE_ALIGN(32) = "BananaBananaBananaBananaBananaBananaBananaBanana";
+	u8 padding_count;
 	u32 total_size;
-	u32 i;
 
 	file->pos &= 0xF;
 	if (file->pos)
@@ -189,12 +189,12 @@ static void CloseWriteBin(BinFile* file)
 	file->pos = ROUND_UP(file->data_size, 16);
 	file->data_size = ROUND_UP(file->data_size, 64);
 	total_size = file->header_size + file->data_size;
+	padding_count = file->data_size - file->pos;
 
-	if (file->data_size > file->pos)
-		LogPrintf("Padding with %u zeroes\n", file->data_size-file->pos);
-
-	for (i=file->pos; i < file->data_size; i++)
-		FileWrite(file, &zero, 1);
+	if (padding_count) {
+		LogPrintf("Padding with %u bytes\n", padding_count);
+		FileWrite(file, padding, padding_count);
+	}
 
 	if (!FileSeek(file, 0x18))
 	{

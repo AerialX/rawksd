@@ -139,6 +139,7 @@ namespace ProxiIOS { namespace EMU {
 
 		RiivFile* open_files[MAX_EMU_OPEN];
 		int TryOpen(const char *name, u32 mode, RiivFile **x);
+		void CheckForDLCTitle(const char* path);
 	public:
 		EMU();
 
