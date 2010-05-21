@@ -5,13 +5,13 @@ hooks:
     type:           branch_insn
     branch_type:    bl
     src_addr_ntsc:  0x8013D57C 
-    src_addr_pal:   0x00000000
+    src_addr_pal:   0x8013DC98
     target_func:    'SoloLeaderboardHack'
 
 -   name:           'Band Leaderboard Hack'
     type:           branch_insn
     branch_type:    bl
     src_addr_ntsc:  0x8013E198
-    src_addr_pal:   0x00000000
+    src_addr_pal:   0x8013E8B4
     target_func:    'BandLeaderboardHack'
 
