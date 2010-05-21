@@ -79,7 +79,7 @@ SECTIONS {
 	/* RB2 Stuff */
 	_Z8MemAllocii			= 0x80506A38;
 	_Z7MemFreePv			= 0x80506C1C;
-	_Z9PoolAllocii			= 0x8050CF48;
+	_Z9PoolAllocii			= 0x8050D338;
 	_ZN8DataNode8DestructEv	= 0x8000D440;
 	_Z8PoolFreeiPv			= 0x8050D3BC;
 

@@ -16,6 +16,6 @@ hooks:
 -   name:       'Disable VerifyChecksum' # Is this even necessary anymore?
     type:       patch
     addr_ntsc:  0x8051A617
-    addr_pal:   0x8051C040
+    addr_pal:   0x8051C043
     data:       '00'
 

@@ -142,7 +142,7 @@ BinFile* OpenBinRead(s32 file)
     {
         if(checkAccessMask(bk_header.content_mask, i))
         {
-			if (FileRead(binfile, &content_rec, sizeof(tmd_content)))
+			if (FileSeek(binfile, 0x1C0+sizeof(tmd)+sizeof(tmd_content)*i) || FileRead(binfile, &content_rec, sizeof(tmd_content)))
 				goto open_error;
 			binfile->index = content_rec.index;
 			binfile->iv[0] = content_rec.index>>8;
@@ -156,9 +156,6 @@ BinFile* OpenBinRead(s32 file)
 			found = 1;
 			break;
         }
-        else
-            if (FileSeek(binfile, binfile->pos+sizeof(tmd_content)))
-            	goto open_error;
     }
 
     if (!found)
