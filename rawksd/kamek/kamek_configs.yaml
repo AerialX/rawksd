@@ -7,3 +7,11 @@
     rel_area_start: 0x00000000
     rel_area_end: 0x00000000
   
+-   friendly_name: "Rock Band 2 PAL"
+    short_name: 'pal'
+    defines: [REGION_PAL, DEBUG_DISABLED, GEKKO, HW_RVL]
+    includes: ["include", "../../filemodule/include"]
+    linker_script: kamek_pal.x
+    rel_area_start: 0x00000000
+    rel_area_end: 0x00000000
+
