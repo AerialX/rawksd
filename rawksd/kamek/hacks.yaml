@@ -1,0 +1,21 @@
+---
+source_files: []
+hooks:
+-   name:       'Skip Wiimote Screen'
+    type:       patch
+    addr_ntsc:  0x8000C2D0
+    addr_pal:   0x00000000
+    data:       '600000006000000060000000' # nop
+
+-   name:       'No Splash Screens 2'
+    type:       patch
+    addr_ntsc:  0x80347F14
+    addr_pal:   0x00000000
+    data:       '4E800020' # blr
+
+-   name:       'Disable VerifyChecksum' # Is this even necessary anymore?
+    type:       patch
+    addr_ntsc:  0x8051A617
+    addr_pal:   0x00000000
+    data:       '00'
+

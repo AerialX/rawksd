@@ -4,12 +4,8 @@
 
 void* MemAlloc(int size, int align);
 void MemFree(void* pointer);
-
-#include "rb2/Main.h"
-#include "rb2/RockCentralGateway.h"
-#include "rb2/PlatformMgr.h"
-#include "rb2/PassiveMessenger.h"
-#include "rb2/HttpWii.h"
+void* PoolAlloc(int, int);
+void PoolFree(int, void*);
 
 #define memalign(align, size) \
 	MemAlloc(size, align)
@@ -17,4 +13,29 @@ void MemFree(void* pointer);
 	MemAlloc(size, 0)
 #define free(ptr) \
 	MemFree(ptr)
+
+template<typename T, typename... Args> T* Alloc(Args... args)
+{
+	T* t = T::Alloc();
+	if (!t)
+		return NULL;
+	t->Construct(args...);
+	return t;
+}
+
+#include "rb2/Main.h"
+#include "rb2/App.h"
+#include "rb2/Splash.h"
+#include "rb2/String.h"
+#include "rb2/BinStream.h"
+#include "rb2/DataArray.h"
+
+#include "rb2/PlatformMgr.h"
+#include "rb2/SongMgr.h"
+
+#include "rb2/HttpWii.h"
+
+#include "rb2/RockCentralGateway.h"
+
+#include "rb2/PassiveMessenger.h"
 

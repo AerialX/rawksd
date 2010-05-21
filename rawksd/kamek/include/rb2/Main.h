@@ -2,10 +2,13 @@
 
 #include "rb2.h"
 
+struct ContextWrapperPool;
+
 namespace Hmx {
 	struct Object
 	{
-
+		u8 unknown[0x1C];
+		ContextWrapperPool* ContextPool; // 0x1C
 	};
 }
 

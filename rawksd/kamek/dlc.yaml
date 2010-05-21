@@ -1,0 +1,24 @@
+---
+source_files: ['dlc.cpp']
+hooks:
+-   name:           'WiiContentMgr::Load'
+    type:           branch_insn
+    branch_type:    bl
+    src_addr_ntsc:  0x804B4FE8
+    src_addr_pal:   0x00000000
+    target_func:    'WiiContentMgrHook'
+
+-   name:           'WiiContentMgr::PollContentListDownload'
+    type:           branch_insn
+    branch_type:    bl
+    src_addr_ntsc:  0x804B840C
+    src_addr_pal:   0x00000000
+    target_func:    'WiiContentMgrHook'
+
+-   name:           'WiiContentMgr::Init'
+    type:           branch_insn
+    branch_type:    bl
+    src_addr_ntsc:  0x804B47B4
+    src_addr_pal:   0x00000000
+    target_func:    'WiiContentMgrInitHook'
+

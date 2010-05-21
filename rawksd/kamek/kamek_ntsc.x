@@ -1,12 +1,11 @@
 OUTPUT_FORMAT ("binary")
 
 SECTIONS {
-	OSReport	= 0x805C4BC8;
+	__OSReport	= 0x805C4BC8;
 	
-	memcpy		= 0x804902AC;
+	memcpy		= 0x80004000;
 	memset		= 0x80004104;
 	memcmp		= 0x805345D0;
-	memcpy		= 0x805EF6E4; /* MD5_memcpy */
 	memmove		= 0x805344AC;
 	
 	strcasecmp	= 0x8053B4DC;
@@ -78,8 +77,50 @@ SECTIONS {
 	net_startupEx		= 0x8061846C;
 
 	/* RB2 Stuff */
-	MemAlloc__Fii		= 0x8050500C;
-	MemFree_FPv			= 0x805051F0;
+	_Z8MemAllocii			= 0x8050500C;
+	_Z7MemFreePv			= 0x805051F0;
+	_Z9PoolAllocii			= 0x8050B90C;
+	_Z8PoolFreeiPv			= 0x8050B990;
+
+	/* String */
+	_ZN6String9ConstructEPKc	= 0x8050C014;
+	_ZN6String8DestructEv		= 0x8050C1CC;
+	_ZN6String5c_strEv			= 0x8000D414;
+
+	/* App */
+	_ZN3App3RunEv	= 0x8000CFE8;
+
+	/* Splash */
+	_ZN9SplashWii14EndShowLoadingEv	= 0x803511C4;
+	_ZN9SplashWii8DestructEv		= 0x80350D34;
+	_ZN6Splash8DestructEv			= 0x80347E70;
+
+	/* BinStream */
+	_ZN9MemStream9ConstructEb			= 0x805064EC;
+	_ZN9BinStream17DisableEncryptionEv	= 0x804F9214;
+	_ZN9BinStream5WriteEPKvi			= 0x804F9310;
+	_ZN9BinStream4ReadEPvi				= 0x804F924C;
+	_ZN9BinStream4SeekEiNS_8SeekTypeE	= 0x804F943C;
+
+	_ZN9DataArray9ConstructEi			= 0x804D3FC4;
+	_ZN9DataArray4LoadEP9BinStream		= 0x804D470C;
+	_ZN9DataArray6InsertEiP8DataNode	= 0x804D32BC;
+	_ZN9DataArray5CloneEbb				= 0x804D3E68;
+	_ZN9DataArray8DestructEv			= 0x804D40D8;
+
+	_ZN8DataNode9ConstructEi			= 0x8000D464;
+	_ZN8DataNode5ArrayEP9DataArray		= 0x804DE2C4;
+	_ZN9DataArray11InsertNodesEiPS_		= 0x804D33F8;
+	_ZN8DataNode9ConstructEP9DataArrayi	= 0x804DE4C4;
+	_ZN8DataNode8DestructEv				= 0x8000D478;
+
+	_ZN9MemStreamD1Ev					= 0x80066D34;
+
+	_Z4__rsP9BinStreamPP9DataArray		= 0x804D5008;
+	_Z4__lsP10TextStreamPK9DataArray	= 0x804D4FB0;
+
+	_Z12SystemConfigP6SymbolS0_			= 0x804D0094;
+	_ZN8DataNode9ConstructEPKc			= 0x804DE328;
 	
 	/* RockCentralGateway */
 	_ZN18RockCentralGateway17SubmitPlayerScoreEP6SymboliiiiiPN3Hmx6ObjectE		= 0x801D0468;
@@ -88,6 +129,15 @@ SECTIONS {
 	/* PlatformMgr */
 	ThePlatformMgr	= 0x8082BD00;
 	_ZN11PlatformMgr15GetUsernameFullEv = 0x804CBABC;
+
+	/* SongMgr */
+	gSongMgrWii									= 0x808209C0;
+	gSongMgr									= 0x8082079C;
+	_ZN7SongMgr10SongArtistEP6Symbol			= 0x80078D84;
+	_ZN7SongMgr8SongNameEP6Symbol				= 0x80078CF0;
+	_ZN7SongMgr11AddSongDataEP9DataArrayPKci	= 0x8007BC88;
+	_ZN10WiiSongMgr6HandleEP9DataArrayb			= 0x8008A38C;
+	_ZN10WiiSongMgr4LoadEP9BinStream			= 0x804B4F98;
 
 	/* PassiveMessenger */
 	_Z10GetPMPanelv								= 0x80108704;

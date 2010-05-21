@@ -1,14 +1,14 @@
 ---
 source_files: [leaderboard.cpp, network_common.c]
 hooks:
--   name:           SoloLeaderboardHack
+-   name:           'Solo Leaderboard Hack'
     type:           branch_insn
     branch_type:    bl
     src_addr_ntsc:  0x8013D57C 
     src_addr_pal:   0x00000000
     target_func:    'SoloLeaderboardHack'
 
--   name:           BandLeaderboardHack
+-   name:           'Band Leaderboard Hack'
     type:           branch_insn
     branch_type:    bl
     src_addr_ntsc:  0x8013E198

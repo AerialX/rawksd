@@ -1,0 +1,9 @@
+---
+source_files: ['init.cpp', 'files.c']
+hooks:
+-   name:           'Initialisation'
+    type:           branch_insn
+    branch_type:    bl
+    src_addr_ntsc:  0x8000F5F0
+    src_addr_pal:   0x00000000
+    target_func:    'Initialise'
