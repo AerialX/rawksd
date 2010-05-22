@@ -150,7 +150,7 @@ BinFile* OpenBinRead(s32 file)
 	i = verify_bk(&bk_header);
 	if (((u32)tmd_header.title_id & 0xFFFFFF00) != 0x63524200 && i)
 		goto open_error;
-	else if (i & ~VERIFY_ERROR_TITLE2_CRB)
+	else if (i & ~(VERIFY_ERROR_TITLE2_CRB|VERIFY_ERROR_WII_ID))
 		goto open_error;
 
     binfile->header_size = ROUND_UP(bk_header.tmd_size+sizeof(bk_header), 64);
