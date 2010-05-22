@@ -23,56 +23,71 @@ void LogPrintf(const char *fmt, ...);
 #define BIN_READ  1
 #define BIN_WRITE 2
 
+#define VERIFY_ERROR_SIZE		0x00000001
+#define VERIFY_ERROR_MAGIC		0x00000002
+#define VERIFY_ERROR_VERSION	0x00000004
+#define VERIFY_ERROR_WII_ID		0x00000008
+#define VERIFY_ERROR_ZEROES		0x00000010
+#define VERIFY_ERROR_TITLE1		0x00000020
+#define VERIFY_ERROR_TITLE2     0x00000040
+#define VERIFY_ERROR_TITLE2_CRB 0x00000080
+#define VERIFY_ERROR_PADDING    0x00000100
+
 #define FSERR_EINVAL	-103
 
 void dlc_aes_decrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len);
 void dlc_aes_encrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len);
 
-int verify_bk(BK_Header *bk)
+unsigned int verify_bk(BK_Header *bk)
 {
-	int failed=0;
+	unsigned int failed=0;
 	u32 wii_id = 0;
 	os_get_key(ES_KEY_CONSOLE, &wii_id);
 
 	if (bk->size != 0x70)
 	{
 		debug_printf("bk_header.size incorrect %d\n", bk->size);
-		failed = 1;
+		failed |= VERIFY_ERROR_SIZE;
 	}
 	if (bk->magic != 0x426B)
 	{
 		debug_printf("bk_header.magic incorrect %d\n", bk->magic);
-		failed = 1;
+		failed |= VERIFY_ERROR_MAGIC;
 	}
 	if (bk->version != 1)
 	{
 		debug_printf("bk_header.version incorrect %d\n", bk->version);
-		failed = 1;
+		failed |= VERIFY_ERROR_VERSION;
 	}
 	if (bk->NG_id != wii_id)
 	{
 		debug_printf("bk_header.NG_id incorrect %08X\n", bk->NG_id);
-		failed = 1;
+		failed |= VERIFY_ERROR_WII_ID;
 	}
 	if (bk->zeroes != 0)
 	{
 		debug_printf("bk_header.zeroes not zero %08X\n", bk->zeroes);
-		failed = 1;
+		failed |= VERIFY_ERROR_ZEROES;
 	}
 	if (bk->title_id_1 != 0x00010000)
 	{
 		debug_printf("bk_header.title_id_1 incorrect %08X\n", bk->title_id_1);
-		failed =1;
+		failed |= VERIFY_ERROR_TITLE1;
 	}
-	if (bk->title_id_2 != *(u32*)0)
+	if ((bk->title_id_2>>8) != ((*(u32*)0)>>8))
 	{
-		debug_printf("bk_header.title_id_2 incorrect got=%08X expected=%08X\n", bk->title_id_2, *(u32*)0);
-		failed = 1;
+		debug_printf("bk_header.title_id_2 front incorrect got %06X expected %06X\n", bk->title_id_2>>8, (*(u32*)0)>>8);
+		failed |= VERIFY_ERROR_TITLE2;
+	}
+	if ((u8)bk->title_id_2 != *(u8*)3)
+	{
+		debug_printf("bk_header.title_id_2 tail incorrect %02X %02X\n", (u8)bk->title_id_2, *(u8*)3);
+		failed |= VERIFY_ERROR_TITLE2_CRB;
 	}
 	if (bk->padding[0] || bk->padding[1] || bk->padding[2])
 	{
 		debug_printf("bk_header.padding incorrect\n");
-		failed =1;
+		failed |= VERIFY_ERROR_PADDING;
 	}
 
 	return failed;
@@ -132,8 +147,11 @@ BinFile* OpenBinRead(s32 file)
     		goto open_error;
 		}
 
-    if (verify_bk(&bk_header))
-    	goto open_error;
+	i = verify_bk(&bk_header);
+	if (((u32)tmd_header.title_id & 0xFFFFFF00) != 0x63524200 && i)
+		goto open_error;
+	else if (i & ~VERIFY_ERROR_TITLE2_CRB)
+		goto open_error;
 
     binfile->header_size = ROUND_UP(bk_header.tmd_size+sizeof(bk_header), 64);
     binfile->data_size = bk_header.contents_size;
