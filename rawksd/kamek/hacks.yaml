@@ -7,7 +7,7 @@ hooks:
     addr_pal:   0x8000C2D0
     data:       '600000006000000060000000' # nop
 
--   name:       'No Splash Screens 2'
+-   name:       'No Splash Screens'
     type:       patch
     addr_ntsc:  0x80347F14
     addr_pal:   0x80348EA0

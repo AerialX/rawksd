@@ -87,6 +87,8 @@ SECTIONS {
 	_ZN6String8DestructEv		= 0x8050C1CC;
 	_ZN6String5c_strEv			= 0x8000D414;
 
+	_ZN6SymbolC1EPKc			= 0x8050D2C0;
+
 	/* App */
 	_ZN3App3RunEv	= 0x8000CFE8;
 
@@ -96,30 +98,35 @@ SECTIONS {
 	_ZN6Splash8DestructEv			= 0x80347E70;
 
 	/* BinStream */
-	_ZN9MemStream9ConstructEb			= 0x805064EC;
+	_ZN9MemStreamC1Eb					= 0x805064EC;
+	_ZN9MemStreamD1Ev					= 0x80066D34;
 	_ZN9BinStream17DisableEncryptionEv	= 0x804F9214;
 	_ZN9BinStream5WriteEPKvi			= 0x804F9310;
 	_ZN9BinStream4ReadEPvi				= 0x804F924C;
 	_ZN9BinStream4SeekEiNS_8SeekTypeE	= 0x804F943C;
 
-	_ZN9DataArray9ConstructEi			= 0x804D3FC4;
+	_ZN9DataArrayC1Ei					= 0x804D3FC4;
 	_ZN9DataArray4LoadEP9BinStream		= 0x804D470C;
-	_ZN9DataArray6InsertEiP8DataNode	= 0x804D32BC;
+	_ZN9DataArray6InsertEiR8DataNode	= 0x804D32BC;
 	_ZN9DataArray5CloneEbb				= 0x804D3E68;
-	_ZN9DataArray8DestructEv			= 0x804D40D8;
-
-	_ZN8DataNode9ConstructEi			= 0x8000D464;
-	_ZN8DataNode5ArrayEP9DataArray		= 0x804DE2C4;
+	_ZN9DataArrayD1Ev					= 0x804D40D8;
 	_ZN9DataArray11InsertNodesEiPS_		= 0x804D33F8;
-	_ZN8DataNode9ConstructEP9DataArrayi	= 0x804DE4C4;
+	_ZN9DataArray6RemoveEi				= 0x804D36A4;
+	_ZN9DataArray9FindArrayE6SymbolS0_	= 0x804D387C;	
+
+	_ZN8DataNodeC1EPKc					= 0x804DE328;	
+	_ZN8DataNodeC1Ei					= 0x8000D464;
+	_ZN8DataNode5ArrayEP9DataArray		= 0x804DE2C4;
+	_ZN8DataNodeC1EP9DataArrayi			= 0x804DE4C4;
 	_ZN8DataNode8DestructEv				= 0x8000D478;
+	_ZN8DataNode3StrEP9DataArray		= 0x804DE108;
+	_ZN8DataNode12LiteralArrayEP9DataArray	= 0x804DE2E8;
 
-	_ZN9MemStreamD1Ev					= 0x80066D34;
 
-	_Z4__rsP9BinStreamPP9DataArray		= 0x804D5008;
+	_Z4__rsP9BinStreamRP9DataArray		= 0x804D5008;
 	_Z4__lsP10TextStreamPK9DataArray	= 0x804D4FB0;
 
-	_Z12SystemConfigP6SymbolS0_			= 0x804D0094;
+	_Z12SystemConfig6SymbolS_			= 0x804D0094;
 	_ZN8DataNode9ConstructEPKc			= 0x804DE328;
 	
 	/* RockCentralGateway */

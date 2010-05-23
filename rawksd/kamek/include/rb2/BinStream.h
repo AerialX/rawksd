@@ -27,24 +27,17 @@ struct MemStream : BinStream
 {
 	u8 data[0x20];
 
-	int Construct(bool);
-	int Destruct();
-
+	MemStream(bool);
+	~MemStream();
+	
 	static MemStream* Alloc()
 	{
 		return (MemStream*)malloc(0x20);
 	}
 
-	static MemStream* Alloc(bool b)
-	{
-		MemStream* ret = Alloc();
-		ret->Construct(b);
-		return ret;
-	}
-
 	void Free()
 	{
-		Destruct();
+		this->~MemStream();
 		free(this);
 	}
 };

@@ -3,8 +3,7 @@
 
 extern "C" void Initialise(App* app)
 {
-	OSReport("RawkSD Haxx Commence!\n");
-	OSReport("File_Init(): %d\n", File_Init());
+	File_Init();
 	app->Run();
 }
 

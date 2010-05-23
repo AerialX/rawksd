@@ -1,25 +1,47 @@
 #include "emu.h"
 #include "es.h"
 
+#include <ctype.h>
+
 #include <files.h>
 #include <mem.h>
 
-#if 0
+#define TITLEFILE_MEMORY
+
+//#define LOG_IPC // this is commented out because it's too noisy
+
+#if 1
 #include <ch341.h>
 #include <print.h>
+
+//#define CH341
 
 static char str[1024];
 extern "C" void LogPrintf(const char *fmt, ...)
 {
+#if !defined(CH341) && defined(LOG_IPC)
+	static int deadlock = 0;
+	deadlock++;
+//	if (deadlock < 0x10)
+	if (deadlock < 0x40)
+		return;
+#endif
 	int heapfree = HeapInfo();
 	va_list arg;
 	_sprintf(str, "(%X): ", heapfree);
+#ifdef CH341
 	ch341_send(str, strlen(str));
-
+#else
+	File_Log(str, strlen(str));
+#endif
 	va_start(arg, fmt);
 	_vsprintf(str, fmt, arg);
 	va_end(arg);
+#ifdef CH341
 	ch341_send(str, strlen(str));
+#else
+	File_Log(str, strlen(str));
+#endif
 }
 
 void LogMessage(ipcmessage* message)
@@ -27,7 +49,7 @@ void LogMessage(ipcmessage* message)
 	switch (message->command) {
 		case IOS_OPEN:
 			if (!strncmp(message->open.device, "/dev/fs", 7) || strncmp(message->open.device, "/dev", 4)) {
-				if (strncmp(message->open.device, "/title/00010005/735a", 20))
+//				if (strncmp(message->open.device, "/title/00010005/735a", 20))
 					LogPrintf("IOS_Open: \"%s\" - %d - %d - %04X (%08X)\n", message->open.device, message->open.mode, message->open.uid, message->open.gid, message->result);
 			}
 			break;
@@ -241,6 +263,42 @@ namespace ProxiIOS { namespace EMU {
 		return FS_IPC(&msg);
 	}
 
+	static s32 ISFS_Exists(const char* path)
+	{
+		int fd = FS_Open(path, 0);
+		if (fd >= 0)
+			FS_Close(fd);
+		else
+			return false;
+		return true;
+	}
+
+	static s32 ISFS_CreateFile(const char* path, u8 attributes, u8 owner_perm, u8 group_perm, u8 other_perm)
+	{
+		int fsfd = FS_Open("/dev/fs", 0);
+		ISFS::FSattr* param = (ISFS::FSattr*)Memalign(32, sizeof(ISFS::FSattr));
+		param->attributes = attributes;
+		param->ownerperm = owner_perm;
+		param->groupperm = group_perm;
+		param->otherperm = other_perm;
+		strcpy(param->path, path);
+		int ret = FS_Ioctl(fsfd, ISFS::CreateFile, param, sizeof(ISFS::FSattr), NULL, 0);
+		Dealloc(param);
+		FS_Close(fsfd);
+		return ret;
+	}
+
+	static s32 ISFS_Delete(const char* path)
+	{
+		int fsfd = FS_Open("/dev/fs", 0);
+		char* name = (char*)Memalign(32, ISFS_MAXPATH_LEN);
+		strcpy(name, path);
+		int ret = FS_Ioctl(fsfd, ISFS::Delete, name, ISFS_MAXPATH_LEN, NULL, 0);
+		Dealloc(name);
+		FS_Close(fsfd);
+		return ret;
+	}
+
 	EMU::EMU() : Module(EMU_MODULE_NAME)
 	{
 		ch341_open();
@@ -251,6 +309,9 @@ namespace ProxiIOS { namespace EMU {
 
 		stack += stacksize;
 		loop_thread = os_thread_create(emu_thread, this, stack, stacksize, 0x48, 0);
+
+		TicketDir* tickets = new TicketDir();
+		DataDirs.push_back(tickets);
 	}
 
 	u32 EMU::emu_thread(void* _p) {
@@ -354,7 +415,7 @@ namespace ProxiIOS { namespace EMU {
 			for (i=0; i<3; i++)
 				ext_path[19+i] = chartoHex(path+18+(i<<1));
 
-			if (DataDirs.size()<=1) // save directory might be redirected
+			if (DataDirs.size()<=2) // save and ticket directory might be redirected
 			{
 				File_CreateDir("/private");
 				File_CreateDir("/private/wii");
@@ -370,8 +431,9 @@ namespace ProxiIOS { namespace EMU {
 	int EMU::HandleFSMessage(ipcmessage* message, int* result)
 	{
 		int i;
-		// this is commented out because it's too noisy
-		//LogMessage(message);
+#ifdef LOG_IPC
+		LogMessage(message);
+#endif
 
 		if (message->command == Ios::Open) {
 			CheckForDLCTitle(message->open.device);
@@ -981,6 +1043,9 @@ namespace ProxiIOS { namespace EMU {
 						File_CloseDir(x);
 					}
 				}
+			} else if (!strncmp(tmd_path, "/title/00010005/635242", 22)) {
+				for (i = 0; i < 0x200; i++)
+					content_map[i] = i;
 			} else
 				LogPrintf("Couldn't open TMD: %s\n", tmd_path);
 			LogPrintf("AppDir for %s initialized\n", nand_dir);
@@ -1001,32 +1066,40 @@ namespace ProxiIOS { namespace EMU {
 			new_path = (char*)Memalign(32, strlen(ext_dir)+1);
 			if (new_path)
 				strcpy(new_path, ext_dir);
-		} else if (!strncmp(path, nand_dir, strlen(nand_dir)) && strlen(path)==strlen(nand_dir)+strlen("/00000000.app") && Initialize()) {
-			int i;
-			s16 index = AppToCID(path+strlen(nand_dir)+1);
-			if (index<0) {
-				LogPrintf("AppToCID returned bad index for %s\n", path+strlen(nand_dir)+1);
-				return NULL;
-			}
+		} else if (!strncmp(path, nand_dir, strlen(nand_dir)) && Initialize()) {
+			if (strlen(path)==strlen(nand_dir)+strlen("/00000000.app")) {
+				int i;
+				s16 index = AppToCID(path+strlen(nand_dir)+1);
+				if (index<0) {
+					LogPrintf("AppToCID returned bad index for %s\n", path+strlen(nand_dir)+1);
+					return NULL;
+				}
 
-			// this might be faster, but there's a tiny chance it might break something
-			for (i=MIN(511,index); i>=0; i--) {
-				if (content_map[i]==index)
-					break;
-			}
-			if (i<0)
-				return NULL;
+				// this might be faster, but there's a tiny chance it might break something
+				for (i=MIN(511,index); i>=0; i--) {
+					if (content_map[i]==index)
+						break;
+				}
+				if (i<0)
+					return NULL;
 
-			new_path = (char*)Memalign(32, strlen(ext_dir)+strlen("000.bin")+2);
-			strcpy(new_path, ext_dir);
-			strcat(new_path, "/");
-			IndexToBin(i, new_path+strlen(ext_dir)+1);
+				new_path = (char*)Memalign(32, strlen(ext_dir)+strlen("000.bin")+2);
+				strcpy(new_path, ext_dir);
+				strcat(new_path, "/");
+				IndexToBin(i, new_path+strlen(ext_dir)+1);
+			} else if (TitleFile::IsTmdHookPath(path)) {
+				new_path = (char*)Memalign(32, strlen(path));
+				strcpy(new_path, path);
+			}
 		}
 		return new_path;
 	}
 
 	RiivFile* AppDir::OpenFile(const char* path, int mode)
 	{
+		if (TitleFile::IsTmdHookPath(path))
+			return new TitleFile(path, mode, TitleFile::Tmd);
+
 		// TODO: Handle mode != ISFS_OPEN_READ
 		if (mode != ISFS_OPEN_READ)
 			return NULL;
@@ -1245,4 +1318,242 @@ namespace ProxiIOS { namespace EMU {
 		initialized = 0;
 	}
 
+	s32 TitleFile::Read(void *dest, s32 length)
+	{
+		if (memory) {
+			memcpy(dest, memory + position, length);
+			os_sync_after_write(dest, length);
+			position += length;
+			return length;
+		} else if (fd >= 0)
+			return FS_Read(fd, dest, length);
+		return -1;
+	}
+	
+	s32 TitleFile::Write(const void *src, s32 length)
+	{
+		if (memory) {
+			os_sync_before_read(src, length);
+			memcpy(memory + position, src, length);
+			position += length;
+			return length;
+		} else if (fd >= 0)
+			return FS_Write(fd, src, length);
+		return -1;
+	}
+	
+	s32 TitleFile::Seek(s32 where, s32 whence)
+	{
+		if (memory) {
+			switch (whence) {
+				case SEEK_CUR:
+					where += position;
+					break;
+				case SEEK_END:
+					where += size;
+					break;
+				default:
+					break;
+			}
+			position = where;
+			return position;
+		} else if (fd >= 0)
+			return FS_Seek(fd, where, whence);
+		return -1;
+	}
+	
+	TitleFile::TitleFile(const char* path, s32 mode, TitleFile::Type type) : RiivFile("", mode)
+	{
+		fd = -1;
+		memory = NULL;
+		position = 0;
+		size = 0;
+
+		LogPrintf("TitleFile Proxy: %s\n", path);
+
+		fd = FS_Open(path, mode);
+
+		if (fd >= 0)
+			return;
+
+		switch (type) {
+			case Tik:
+				CreateTik(path, mode);
+				break;
+			case Tmd:
+				CreateTmd(path, mode);
+				break;
+			default:
+				break;
+		}
+	}
+	
+	TitleFile::~TitleFile()
+	{
+		if (memory)
+			Dealloc(memory);
+		if (fd >= 0)
+			FS_Close(fd);
+	}
+
+	static u32 HexToInt(const char* str, int length)
+	{
+		u32 ret;
+		u8* dest = (u8*)&ret;
+		while (length > 0) {
+			u8 chr = *str - ((*str > '9') ? ('a' - 10) : '0');
+			if (length & 1) {
+				*dest = *dest | (chr & 0x0F);
+				dest++;
+			} else
+				*dest = chr << 4;
+			str++;
+			length--;
+		}
+		return ret;
+	}
+
+	u64 TitleFile::GetTitleID(const char* path, TitleFile::Type type)
+	{
+		path += (type == Tmd ? 7 : 8);
+		return ((u64)HexToInt(path, 8) << 32) | HexToInt(path + 9, 8);
+	}
+
+	void TitleFile::CreateTmd(const char* path, s32 mode)
+	{
+		// Offsets used because devkitARM epic-fails packed structs
+		u8* stmd = (u8*)Memalign(32, 18916);
+		if (!stmd) {
+			LogPrintf("Failed to allocate memory.\n");
+			return;
+		}
+		memset(stmd, 0, 18916);
+		*(u32*)stmd = 0x00010001;
+		strcpy((char*)stmd + 0x140, "Root-CA00000001-CP00000004");
+		*(u64*)(stmd + 0x184) = 0x0000000100000025ULL;
+		*(u64*)(stmd + 0x18C) = GetTitleID(path, Tmd);
+		*(u32*)(stmd + 0x194) = 0x00000019;
+		*(u16*)(stmd + 0x198) = 0x3639;
+		*(u16*)(stmd + 0x19c) = 0x0001;
+		memset(stmd + 0x19e, 0x80, 0x10);
+		*(u16*)(stmd + 0x1DC) = 0x12;
+		*(u16*)(stmd + 0x1DE) = 0x200;
+		*(u16*)(stmd + 0x1E0) = 0x201;
+		for (int i = 0; i < 0x200; i++) {
+			u8* content = stmd + 0x1E4 + 0x24 * i;
+			*(u32*)content = i;
+			*(u16*)(content + 4) = i;
+			*(u16*)(content + 6) = (i == 0 ? 1 : 0x4001);
+			*(u64*)(content + 8) = 0x1000;
+			memset(content + 0x10, 0xFF, 0x14);
+		}
+		
+		// TODO: Fakesign();	
+
+		memory = stmd;
+		size = 18916;
+	}
+
+	static u32 consoleid = 0;
+	void TitleFile::CreateTik(const char* path, s32 mode)
+	{
+		if (!consoleid)
+			os_get_key(ES_KEY_CONSOLE, &consoleid);
+
+		// Offsets used because devkitARM epic-fails packed structs
+		u8* stik = (u8*)Memalign(32, 0x2A4);
+		if (!stik) {
+			LogPrintf("Failed to allocate memory.\n");
+			return;
+		}
+		memset(stik, 0, 0x2A4);
+		*(u32*)stik = 0x00010001;
+		strcpy((char*)stik + 0x140, "Root-CA00000001-XS00000003");
+		memcpy(stik + 0x1BF, "japaneatahand", 13);
+		memcpy(stik + 0x1D0, "[RawkSD]", 8);
+		*(u32*)(stik + 0x1D8) = consoleid;				// console_id
+		*(u64*)(stik + 0x1DC) = GetTitleID(path, Tik);	// title_id
+		*(u16*)(stik + 0x1E4) = 0xFFFF;					// access_mask
+		stik[0x1E6 + 1] = 0x39;							// reserved[1]
+		memset(stik + 0x1E6 + 6, 0xFF, 4);				// reserved[6 - 9]
+		stik[0x1E6 + 0x3B] = 1;							// reserved[0x3b]
+		memset(stik + 0x222, 0xFF, 0x40);				// cidx_mask
+
+		// TODO: Fakesign();
+
+		memory = stik;
+		size = 0x2A4;
+	}
+
+	bool TitleFile::IsTmdHookPath(const char* path)
+	{
+		if (strlen(path) == 42 && !strncmp(path, "/title/00010005/635242", 22) && !strcmp(path + 33, "title.tmd"))
+			return !ISFS_Exists(path);
+		return false;
+	}
+
+	bool TitleFile::IsTikHookPath(const char* path)
+	{
+		if (strlen(path) == 29 && !strncmp(path, "/ticket/00010005/", 17))
+			return !ISFS_Exists(path);
+		return false;
+	}
+
+	char* TicketDir::GetTranslatedPath(const char *path)
+	{
+		if (TitleFile::IsTikHookPath(path)) {
+			if (strncmp(path, "/ticket/00010005/635242", 23))
+				return NULL;
+			char* newpath = (char*)Memalign(32, strlen(path) + 1);
+			strcpy(newpath, path);
+			return newpath;
+		}
+		return NULL;
+	}
+
+	RiivFile* TicketDir::OpenFile(const char *path, int mode)
+	{
+		return new TitleFile(path, mode, TitleFile::Tik);
+	}
+
+	int TicketDir::CreateFile(const char *path)
+	{
+		return ISFS_CreateFile(path, 0, 3, 1, 1); // TODO: Let the subclasses decide whether attributes are useless, don't assume that they are
+	}
+
+	int TicketDir::Delete(const char *path)
+	{
+		return ISFS_Delete(path);
+	}
+
+	int TicketDir::ReadDir(const char* ext_path, u32 *out_count, char *names, const u32 *max_count)
+	{
+		return -1;
+	}
+
+	int TicketDir::MoveTo(const char* nand_path, const char* ext_path)
+	{
+		return -1;
+	}
+
+	int TicketDir::MoveFrom(const char* ext_path, const char* nand_path)
+	{
+		return -1;
+	}
+
+	int TicketDir::GetUsage(const char* ext_path, u32 *files, u32 *blocks, char* next_name)
+	{
+		return -1;
+	}
+
+	int TicketDir::Exists(const char *path)
+	{
+		return true; // It's already been translated, so we know it exists
+		// TODO: Here would be the place to deny fakesigned tickets
+	}
+
+	TicketDir::TicketDir() : RiivDir("/ticket/00010005/", "")  { }
+	
+	TicketDir::~TicketDir() { }
 } }
+

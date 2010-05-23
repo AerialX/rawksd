@@ -1,6 +1,12 @@
 all:
 	python kamek.py project.yaml
-#	head -n 16 mount/riivolution/test.template > mount/riivolution/test.xml
-#	cat build/ntsc_riiv.xml >> mount/riivolution/test.xml
-#	tail -n 2 mount/riivolution/test.template >> mount/riivolution/test.xml
+	@echo "Creating XML..."
+	@cat riiv.template > riiv.xml
+	@echo '<patch id="test_ntsc">' >> riiv.xml
+	@cat build/ntsc_riiv.xml >> riiv.xml
+	@echo '</patch>' >> riiv.xml
+	@echo '<patch id="test_pal">' >> riiv.xml
+	@cat build/pal_riiv.xml >> riiv.xml
+	@echo '</patch>' >> riiv.xml
+	@echo '</wiidisc>' >> riiv.xml
 

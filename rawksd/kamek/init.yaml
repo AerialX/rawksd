@@ -1,5 +1,5 @@
 ---
-source_files: ['init.cpp', 'files.c']
+source_files: ['init.cpp', 'files.c', 'include/rb2/DataArray.cpp']
 hooks:
 -   name:           'Initialisation'
     type:           branch_insn

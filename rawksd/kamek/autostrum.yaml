@@ -1,0 +1,15 @@
+---
+source_files: []
+hooks:
+-   name:       'All Hopos'
+    type:       patch
+    addr_ntsc:  0x802726C4
+    addr_pal:   0x00000000
+    data:       '386000014E800020'
+
+-   name:       'Harmless Hopos'
+    type:       patch
+    addr_ntsc:  0x8027273C
+    addr_pal:   0x00000000
+    data:       '386000014E800020'
+

@@ -1,0 +1,42 @@
+<wiidisc version="1">
+	<id game="SZA" />
+	<options>
+		<section name="RB2 Haxx">
+			<option name="Kamek Haxx" default="1">
+				<choice name="NTSC"><patch id="test_ntsc" /></choice>
+				<choice name="PAL"><patch id="test_pal" /></choice>
+			</option>
+			<option name="saveredir" default="1">
+				<choice name="Enabled"><patch id="save" /></choice>
+			</option>
+			<option name="Set ec loglevel">
+				<choice name="Error"><patch id="ec_error" /></choice>
+				<choice name="Warn"><patch id="ec_warn" /></choice>
+				<choice name="Info"><patch id="ec_info" /></choice>
+				<choice name="Fine"><patch id="ec_fine" /></choice>
+				<choice name="Finer"><patch id="ec_finer" /></choice>
+				<choice name="Finest"><patch id="ec_finest" /></choice>
+			</option>
+		</section>
+	</options>
+	<patch id="ec_error">
+		<memory offset="0x806088E4" value="38600001"/>
+	</patch>
+	<patch id="ec_warn">
+		<memory offset="0x806088E4" value="38600002"/>
+	</patch>
+	<patch id="ec_info">
+		<memory offset="0x806088E4" value="38600003"/>
+	</patch>
+	<patch id="ec_fine">
+		<memory offset="0x806088E4" value="38600004"/>
+	</patch>
+	<patch id="ec_finer">
+		<memory offset="0x806088E4" value="38600005"/>
+	</patch>
+	<patch id="ec_finest">
+		<memory offset="0x806088E4" value="38600006"/>
+	</patch>
+	<patch id="save">
+		<savegame external="/save" clone="false" />
+	</patch>

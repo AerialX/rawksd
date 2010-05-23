@@ -131,7 +131,7 @@
          addr->s_addr = htonl(val);
      return (1);
  }
-
+#if 0
 /* Convert numeric IP address into decimal dotted ASCII representation.
  * returns ptr to static buffer; not reentrant!
  */
@@ -164,7 +164,7 @@ char *inet_ntoa(struct in_addr addr)
   return str;
 }
 
-
+#endif
 #ifndef BYTE_ORDER
 #error BYTE_ORDER is not defined
 #endif

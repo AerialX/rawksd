@@ -94,6 +94,36 @@ namespace ProxiIOS { namespace EMU {
 		virtual ~AppFile();
 	};
 
+	class TitleFile : public RiivFile
+	{
+		private:
+			s32 fd;
+			u8* memory;
+			s32 size;
+			s32 position;
+		public:
+			enum Type {
+				Unknown,
+				Tik,
+				Tmd
+			};
+
+			virtual s32 Read(void *dest, s32 length);
+			virtual s32 Write(const void *src, s32 length);
+			virtual s32 Seek(s32 where, s32 whence);
+
+			TitleFile(const char *name, s32 mode, Type type);
+			virtual ~TitleFile();
+
+			static bool IsTmdHookPath(const char* path);
+			static bool IsTikHookPath(const char* path);
+
+		protected:
+			u64 GetTitleID(const char* path, Type type);
+			void CreateTmd(const char* path, s32 mode);
+			void CreateTik(const char* path, s32 mode);
+	};
+
 	class RiivDir
 	{
 	protected:
@@ -101,12 +131,12 @@ namespace ProxiIOS { namespace EMU {
 	public:
 		virtual char* GetTranslatedPath(const char *path);
 		virtual RiivFile* OpenFile(const char *path, int mode);
-		int CreateFile(const char *path);
+		virtual int CreateFile(const char *path);
 		virtual int Delete(const char *path);
 		virtual int ReadDir(const char* ext_path, u32 *out_count, char *names, const u32 *max_count);
 		virtual int MoveTo(const char* nand_path, const char* ext_path);
 		virtual int MoveFrom(const char* ext_path, const char* nand_path);
-		int GetUsage(const char* ext_path, u32 *files, u32 *blocks, char* next_name);
+		virtual int GetUsage(const char* ext_path, u32 *files, u32 *blocks, char* next_name);
 		virtual int Exists(const char *path);
 		RiivDir(const char* _nand_dir, const char* _ext_dir);
 		~RiivDir();
@@ -129,6 +159,22 @@ namespace ProxiIOS { namespace EMU {
 		virtual int MoveFrom(const char*, const char* nand_path);
 		virtual int Exists(const char*);
 		AppDir(const char* _nand_dir, const char* _ext_dir);
+	};
+
+	class TicketDir : public RiivDir
+	{
+	public:
+		char* GetTranslatedPath(const char *path);
+		RiivFile* OpenFile(const char *path, int mode);
+		int CreateFile(const char *path);
+		int Delete(const char *path);
+		int ReadDir(const char* ext_path, u32 *out_count, char *names, const u32 *max_count);
+		int MoveTo(const char* nand_path, const char* ext_path);
+		int MoveFrom(const char* ext_path, const char* nand_path);
+		int GetUsage(const char* ext_path, u32 *files, u32 *blocks, char* next_name);
+		int Exists(const char *path);
+		TicketDir();
+		~TicketDir();
 	};
 
 	class EMU : public ProxiIOS::Module

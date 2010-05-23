@@ -1,0 +1,21 @@
+---
+source_files: []
+hooks:
+-   name:       'Gem Autoplay'
+    type:       patch
+    addr_ntsc:  0x800565DC
+    addr_pal:   0x00000000
+    data:       '38800001'
+
+-   name:       'Vocals Autoplay'
+    type:       patch
+    addr_ntsc:  0x80081BF8
+    addr_pal:   0x00000000
+    data:       '38800001'
+
+-   name:       'Autoplay Overdrive'
+    type:       patch
+    addr_ntsc:  0x80265A10
+    addr_pal:   0x00000000
+    data:       '60000000'
+

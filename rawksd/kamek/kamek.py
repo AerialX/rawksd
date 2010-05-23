@@ -227,17 +227,17 @@ class KamekBuilder(object):
 		
 		file = open(self._mapFile, 'r')
 		
-#		for line in file:
-#			if '__text_start' in line:
-#				self._textSegStart = int(line.split()[0],0)
-#				break
+		for line in file:
+			if '__text_start' in line:
+				self._textSegStart = int(line.split()[0],0)
+				break
 		
 		# now read the individual symbols
 		# this is probably a bad method to parse it, but whatever
 		for line in file:
-#			if '__text_end' in line:
-#				self._textSegEnd = int(line.split()[0],0)
-#				break
+			if '__text_end' in line:
+				self._textSegEnd = int(line.split()[0],0)
+				break
 			
 			if not line.startswith('                '): continue
 			
@@ -246,10 +246,8 @@ class KamekBuilder(object):
 			self._symbols.append(sym)
 		
 		# we've found __text_end, so now we should be at the output section
-#		currentEndAddress = self._textSegEnd
+		currentEndAddress = self._textSegEnd
 		currentEndAddress = 0
-		currentStartAddress = 0xFFFFFFFF
-		file.seek(0);
 		
 		for line in file:
 			if line[0] == '.':
@@ -257,16 +255,12 @@ class KamekBuilder(object):
 				data = line.split()
 				if len(data) < 3: continue
 				
-				segType = data[0].split('.')[1]
 				segAddr = int(data[1],0)
 				segSize = int(data[2],0)
-				if segAddr < currentStartAddress and segType == 'text':
-					currentStartAddress = segAddr
 				if segAddr+segSize > currentEndAddress:
 					currentEndAddress = segAddr+segSize
 		
-#		self._codeStart = self._textSegStart
-		self._codeStart = currentStartAddress
+		self._codeStart = self._textSegStart
 		self._codeEnd = currentEndAddress
 		
 		file.close()

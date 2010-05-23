@@ -10,7 +10,7 @@ struct String : TextStream
 	u8 data[0x08];
 	const char* string;
 
-	int Construct(const char*);
+	String(const char*);
 	int Destruct();
 
 	const char* c_str();

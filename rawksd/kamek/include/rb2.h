@@ -14,13 +14,17 @@ void PoolFree(int, void*);
 #define free(ptr) \
 	MemFree(ptr)
 
+inline void* operator new(size_t size, void* ptr)
+{
+	return ptr;
+}
+
 template<typename T, typename... Args> T* Alloc(Args... args)
 {
 	T* t = T::Alloc();
 	if (!t)
 		return NULL;
-	t->Construct(args...);
-	return t;
+	return new((void*)t) T(args...);
 }
 
 #include "rb2/Main.h"

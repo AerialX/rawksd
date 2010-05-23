@@ -14,6 +14,8 @@ namespace Hmx {
 
 struct Symbol
 {
+	Symbol(const char*);
+
 	char* Name;
 };
 

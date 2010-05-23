@@ -6,9 +6,17 @@ struct DataArray;
 
 struct DataNode
 {
-	u8 data[0x10];
+	DataArray* data;	// 0x00
+	DataType type;		// 0x04
 
-	int Command(DataArray*);
+	DataNode(DataArray*, DataType);
+	DataNode(DataNode*);
+	DataNode(String*);
+	DataNode(const char*);
+	DataNode(int);
+	DataNode(const void*, int);
+
+	~DataNode();
 
 	int Construct(DataArray*, DataType);
 	int Construct(DataNode*);
@@ -20,7 +28,18 @@ struct DataNode
 
 	int Destruct();
 
+	int Command(DataArray*);
 	DataArray* Array(DataArray*);
+	float Float(DataArray*);
+	int Int(DataArray*);
+	const char* Str(DataArray*);
+	Symbol* Sym(DataArray*);
+
+	DataArray* LiteralArray(DataArray*);
+	float LiteralFloat(DataArray*);
+	int LiteralInt(DataArray*);
+	const char* LiteralStr(DataArray*);
+	Symbol* LiteralSym(DataArray*);
 	
 	static DataNode* Alloc()
 	{
@@ -36,27 +55,37 @@ struct DataNode
 
 struct DataArray
 {
-	DataNode* node;
-	u8 data[0x0C];
+	DataNode* nodes;	// 0x00
+	const char* name;	// 0x04
+	u16 size;			// 0x08
+	s16 refcount;		// 0x0A
+	u16 line;			// 0x0C
+	u16 unknown2;		// 0x0E
 
 	static DataArray* Alloc()
 	{
 		return (DataArray*)PoolAlloc(0x10, 0x10);
 	}
 
-	int Construct(const void*, int);
-	int Construct(int);
-	int Destruct();
+	DataArray(const void*, int);
+	DataArray(int);
+	~DataArray();
+	void TryDestruct()
+	{
+		refcount--;
+		if (refcount <= 0)
+			this->~DataArray();
+	}
 
 	int Load(BinStream*);
 	int Save(BinStream*);
 	
-	int Insert(int, DataNode*);
+	int Insert(int, DataNode&);
 	int InsertNodes(int, DataArray*);
 
 	int Int(int);
 
-	int Remove(DataNode*);
+	int Remove(DataNode&);
 	int Remove(int);
 	int Resize(int);
 
@@ -65,19 +94,19 @@ struct DataArray
 
 	DataArray* Clone(bool, bool);
 
-	int FindArray(Symbol*, Symbol*);
-	int FindArray(Symbol*, Symbol*, Symbol*);
-	int FindArray(Symbol*, bool);
-	int FindArray(Symbol, const char*);
-	int FindArray(int, bool);
-	int FindData(Symbol*, bool*, bool);
-	int FindData(Symbol*, const char**, bool);
+	DataArray* FindArray(Symbol, Symbol);
+	DataArray* FindArray(Symbol, Symbol, Symbol);
+	DataArray* FindArray(Symbol, bool);
+	DataArray* FindArray(Symbol, const char*);
+	DataArray* FindArray(int, bool);
+	int FindData(Symbol, bool*, bool);
+	int FindData(Symbol, const char*&, bool);
 	int FindData(Symbol, float*, bool);
 	int FindData(Symbol, int*, bool);
 };
 
-int __rs(BinStream*, DataArray**);
+int __rs(BinStream*, DataArray*&);
 int __ls(TextStream*, const DataArray*);
 
-DataArray* SystemConfig(Symbol*, Symbol*);
+DataArray* SystemConfig(Symbol, Symbol);
 

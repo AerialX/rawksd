@@ -60,7 +60,7 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 		goto onerror;
 	}
 	memcpy(&address.sin_addr, host->h_addr_list[0], host->h_length);
-	OSReport("RawkSD: %s %s\n", hostname, inet_ntoa(address.sin_addr));
+//	OSReport("RawkSD: %s %s\n", hostname, inet_ntoa(address.sin_addr));
 	address.sin_port = htons(80);
 
 	socket = net_socket(PF_INET, SOCK_STREAM, 0);

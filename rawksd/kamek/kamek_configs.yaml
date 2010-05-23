@@ -1,7 +1,7 @@
 ---
 -   friendly_name: "Rock Band 2 NTSC"
     short_name: 'ntsc'
-    defines: [REGION_NTSC, DEBUG_DISABLED, GEKKO, HW_RVL]
+    defines: [REGION_NTSC, DEBUG, GEKKO, HW_RVL]
     includes: ["include", "../../filemodule/include"]
     linker_script: kamek_ntsc.x
     rel_area_start: 0x00000000
@@ -9,7 +9,7 @@
   
 -   friendly_name: "Rock Band 2 PAL"
     short_name: 'pal'
-    defines: [REGION_PAL, DEBUG_DISABLED, GEKKO, HW_RVL]
+    defines: [REGION_PAL, DEBUG, GEKKO, HW_RVL]
     includes: ["include", "../../filemodule/include"]
     linker_script: kamek_pal.x
     rel_area_start: 0x00000000
