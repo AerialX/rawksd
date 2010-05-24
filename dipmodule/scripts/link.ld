@@ -4,16 +4,16 @@ ENTRY(_start)
  
 MEMORY {
 	ios_info_table	: ORIGIN = 0x0, LENGTH = 0x4000
-	exe(rwx)	: ORIGIN = 0x13740000, LENGTH = 0x10000
-	ram(rw)		: ORIGIN = 0x13750000, LENGTH = 0x39000
+	exe(rwx)	: ORIGIN = 0x13740000, LENGTH = 0x8000
+	ram(rw)		: ORIGIN = 0x13748000, LENGTH = 0x41000
 }
 
 
 
 __exe_start_virt__			= 0x13740000;
 __exe_start_phys__			= 0x13740000;
-__ram_start_virt__			= 0x13750000;
-__ram_start_phys__			= 0x13750000;
+__ram_start_virt__			= 0x13748000;
+__ram_start_phys__			= 0x13748000;
 __ios_info_table_start		= 0x0;
 
  

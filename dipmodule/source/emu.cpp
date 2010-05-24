@@ -275,15 +275,16 @@ namespace ProxiIOS { namespace EMU {
 
 	static s32 ISFS_CreateFile(const char* path, u8 attributes, u8 owner_perm, u8 group_perm, u8 other_perm)
 	{
+		ISFS::FSattr param;
 		int fsfd = FS_Open("/dev/fs", 0);
-		ISFS::FSattr* param = (ISFS::FSattr*)Memalign(32, sizeof(ISFS::FSattr));
-		param->attributes = attributes;
-		param->ownerperm = owner_perm;
-		param->groupperm = group_perm;
-		param->otherperm = other_perm;
-		strcpy(param->path, path);
-		int ret = FS_Ioctl(fsfd, ISFS::CreateFile, param, sizeof(ISFS::FSattr), NULL, 0);
-		Dealloc(param);
+		if (fsfd<0)
+			return fsfd;
+		param.attributes = attributes;
+		param.ownerperm = owner_perm;
+		param.groupperm = group_perm;
+		param.otherperm = other_perm;
+		strncpy(param.path, path, ISFS_MAXPATH_LEN);
+		int ret = FS_Ioctl(fsfd, ISFS::CreateFile, &param, sizeof(param), NULL, 0);
 		FS_Close(fsfd);
 		return ret;
 	}
@@ -291,10 +292,9 @@ namespace ProxiIOS { namespace EMU {
 	static s32 ISFS_Delete(const char* path)
 	{
 		int fsfd = FS_Open("/dev/fs", 0);
-		char* name = (char*)Memalign(32, ISFS_MAXPATH_LEN);
-		strcpy(name, path);
-		int ret = FS_Ioctl(fsfd, ISFS::Delete, name, ISFS_MAXPATH_LEN, NULL, 0);
-		Dealloc(name);
+		if (fsfd<0)
+			return fsfd;
+		int ret = FS_Ioctl(fsfd, ISFS::Delete, path, ISFS_MAXPATH_LEN, NULL, 0);
 		FS_Close(fsfd);
 		return ret;
 	}
@@ -311,7 +311,8 @@ namespace ProxiIOS { namespace EMU {
 		loop_thread = os_thread_create(emu_thread, this, stack, stacksize, 0x48, 0);
 
 		TicketDir* tickets = new TicketDir();
-		DataDirs.push_back(tickets);
+		if (tickets)
+			DataDirs.push_back(tickets);
 	}
 
 	u32 EMU::emu_thread(void* _p) {
@@ -348,9 +349,9 @@ namespace ProxiIOS { namespace EMU {
 		if (message->ioctlv.command == Ioctl::RedirectDir && message->ioctlv.num_in>=2) {
 			LogPrintf("New EMU dir, %s -> %s\n", message->ioctlv.vector[0].data, message->ioctlv.vector[1].data);
 			RiivDir *d = new RiivDir((const char*)message->ioctlv.vector[0].data, (const char*)message->ioctlv.vector[1].data);
-			if (d) {
+			if (d)
 				DataDirs.push_back(d);
-			}
+
 			return 1;
 		}
 		return -1;
@@ -415,7 +416,7 @@ namespace ProxiIOS { namespace EMU {
 			for (i=0; i<3; i++)
 				ext_path[19+i] = chartoHex(path+18+(i<<1));
 
-			if (DataDirs.size()<=2) // save and ticket directory might be redirected
+			if (DataDirs.size()<3) // save and ticket directory might be redirected
 			{
 				File_CreateDir("/private");
 				File_CreateDir("/private/wii");
@@ -725,7 +726,9 @@ namespace ProxiIOS { namespace EMU {
 		if (file<0 && Open()<0)
 			return FSErrors::IOError;
 
-		return ReadBin(binfile, (u8*)dest, length);
+		s32 ret = ReadBin(binfile, (u8*)dest, length);
+		os_sync_after_write(dest, length);
+		return ret;
 	}
 
 	s32 AppFile::Write(const void *src, s32 length)
@@ -760,8 +763,10 @@ namespace ProxiIOS { namespace EMU {
 
 	AppFile::~AppFile()
 	{
-		if (binfile)
+		if (binfile) {
+			LogPrintf("Closing Binfile\n");
 			CloseBin(binfile);
+		}
 	}
 
 	char* RiivDir::GetTranslatedPath(const char *path)
@@ -1044,7 +1049,7 @@ namespace ProxiIOS { namespace EMU {
 					}
 				}
 			} else if (!strncmp(tmd_path, "/title/00010005/635242", 22)) {
-				for (i = 0; i < 0x200; i++)
+				for (i = 0; i < 512; i++)
 					content_map[i] = i;
 			} else
 				LogPrintf("Couldn't open TMD: %s\n", tmd_path);
@@ -1100,7 +1105,6 @@ namespace ProxiIOS { namespace EMU {
 		if (TitleFile::IsTmdHookPath(path))
 			return new TitleFile(path, mode, TitleFile::Tmd);
 
-		// TODO: Handle mode != ISFS_OPEN_READ
 		if (mode != ISFS_OPEN_READ)
 			return NULL;
 		return new AppFile(path);
@@ -1321,27 +1325,30 @@ namespace ProxiIOS { namespace EMU {
 	s32 TitleFile::Read(void *dest, s32 length)
 	{
 		if (memory) {
-			memcpy(dest, memory + position, length);
-			os_sync_after_write(dest, length);
-			position += length;
+			length = MIN(length, size-position);
+			if (length>0) {
+				memcpy(dest, memory + position, length);
+				os_sync_after_write(dest, length);
+				position += length;
+			}
 			return length;
 		} else if (fd >= 0)
 			return FS_Read(fd, dest, length);
-		return -1;
+		return FSErrors::InvalidArgument;
 	}
-	
+
 	s32 TitleFile::Write(const void *src, s32 length)
 	{
+		// FIXME: No need to implement writing for memory based files?
 		if (memory) {
-			os_sync_before_read(src, length);
 			memcpy(memory + position, src, length);
 			position += length;
 			return length;
 		} else if (fd >= 0)
 			return FS_Write(fd, src, length);
-		return -1;
+		return FSErrors::InvalidArgument;
 	}
-	
+
 	s32 TitleFile::Seek(s32 where, s32 whence)
 	{
 		if (memory) {
@@ -1351,17 +1358,18 @@ namespace ProxiIOS { namespace EMU {
 					break;
 				case SEEK_END:
 					where += size;
-					break;
-				default:
+				default: // SEEK_SET
 					break;
 			}
-			position = where;
-			return position;
+			if (where >=0 && where <= size) {
+				position = where;
+				return position;
+			}
 		} else if (fd >= 0)
 			return FS_Seek(fd, where, whence);
-		return -1;
+		return FSErrors::InvalidArgument;
 	}
-	
+
 	TitleFile::TitleFile(const char* path, s32 mode, TitleFile::Type type) : RiivFile("", mode)
 	{
 		fd = -1;
@@ -1387,11 +1395,10 @@ namespace ProxiIOS { namespace EMU {
 				break;
 		}
 	}
-	
+
 	TitleFile::~TitleFile()
 	{
-		if (memory)
-			Dealloc(memory);
+		Dealloc(memory);
 		if (fd >= 0)
 			FS_Close(fd);
 	}
@@ -1421,68 +1428,59 @@ namespace ProxiIOS { namespace EMU {
 
 	void TitleFile::CreateTmd(const char* path, s32 mode)
 	{
-		// Offsets used because devkitARM epic-fails packed structs
-		u8* stmd = (u8*)Memalign(32, 18916);
+		u32* stmd = (u32*)Memalign(32, MAX_SIGNED_TMD_SIZE);
 		if (!stmd) {
 			LogPrintf("Failed to allocate memory.\n");
 			return;
 		}
-		memset(stmd, 0, 18916);
-		*(u32*)stmd = 0x00010001;
-		strcpy((char*)stmd + 0x140, "Root-CA00000001-CP00000004");
-		*(u64*)(stmd + 0x184) = 0x0000000100000025ULL;
-		*(u64*)(stmd + 0x18C) = GetTitleID(path, Tmd);
-		*(u32*)(stmd + 0x194) = 0x00000019;
-		*(u16*)(stmd + 0x198) = 0x3639;
-		*(u16*)(stmd + 0x19c) = 0x0001;
-		memset(stmd + 0x19e, 0x80, 0x10);
-		*(u16*)(stmd + 0x1DC) = 0x12;
-		*(u16*)(stmd + 0x1DE) = 0x200;
-		*(u16*)(stmd + 0x1E0) = 0x201;
-		for (int i = 0; i < 0x200; i++) {
-			u8* content = stmd + 0x1E4 + 0x24 * i;
-			*(u32*)content = i;
-			*(u16*)(content + 4) = i;
-			*(u16*)(content + 6) = (i == 0 ? 1 : 0x4001);
-			*(u64*)(content + 8) = 0x1000;
-			memset(content + 0x10, 0xFF, 0x14);
+		memset(stmd, 0, MAX_SIGNED_TMD_SIZE);
+		*stmd = ES_SIG_RSA2048;
+		tmd *TMD = (tmd*)SIGNATURE_PAYLOAD(stmd);
+		strcpy(TMD->issuer, "Root-CA00000001-CP00000004");
+		TMD->sys_version = 0x0000000100000025ULL;
+		TMD->title_id = GetTitleID(path, Tmd);
+		TMD->title_type = 0x19; // what is this
+		TMD->group_id = *(u16*)4;
+		TMD->region = (*(u8*)3 == 'P') ? 2 : 1;
+		memset(TMD->ratings, 0x80, 16);
+		TMD->title_version = 1;
+		TMD->num_contents = MAX_NUM_TMD_CONTENTS;
+		TMD->boot_index = 0; // not really bootable
+		for (int i=0; i < MAX_NUM_TMD_CONTENTS; i++) {
+			TMD->contents[i].cid = i;
+			TMD->contents[i].index = i;
+			TMD->contents[i].type = (i==0) ? 1 : 0x4001;
+			TMD->contents[i].size = 0x1000;
+			memset(TMD->contents[i].hash, 0xFF, sizeof(sha1));
 		}
-		
-		// TODO: Fakesign();	
 
-		memory = stmd;
-		size = 18916;
+		memory = (u8*)stmd;
+		size = SIGNED_TMD_SIZE(stmd);
 	}
 
-	static u32 consoleid = 0;
 	void TitleFile::CreateTik(const char* path, s32 mode)
 	{
-		if (!consoleid)
-			os_get_key(ES_KEY_CONSOLE, &consoleid);
-
-		// Offsets used because devkitARM epic-fails packed structs
-		u8* stik = (u8*)Memalign(32, 0x2A4);
+		u32* stik = (u32*)Memalign(32, STD_SIGNED_TIK_SIZE);
 		if (!stik) {
 			LogPrintf("Failed to allocate memory.\n");
 			return;
 		}
-		memset(stik, 0, 0x2A4);
-		*(u32*)stik = 0x00010001;
-		strcpy((char*)stik + 0x140, "Root-CA00000001-XS00000003");
-		memcpy(stik + 0x1BF, "japaneatahand", 13);
-		memcpy(stik + 0x1D0, "[RawkSD]", 8);
-		*(u32*)(stik + 0x1D8) = consoleid;				// console_id
-		*(u64*)(stik + 0x1DC) = GetTitleID(path, Tik);	// title_id
-		*(u16*)(stik + 0x1E4) = 0xFFFF;					// access_mask
-		stik[0x1E6 + 1] = 0x39;							// reserved[1]
-		memset(stik + 0x1E6 + 6, 0xFF, 4);				// reserved[6 - 9]
-		stik[0x1E6 + 0x3B] = 1;							// reserved[0x3b]
-		memset(stik + 0x222, 0xFF, 0x40);				// cidx_mask
+		memset(stik, 0, STD_SIGNED_TIK_SIZE);
+		*stik = ES_SIG_RSA2048;
+		tik *TIK = (tik*)SIGNATURE_PAYLOAD(stik);
+		strcpy(TIK->issuer, "Root-CA00000001-XS00000003");
+		strcpy((char*)TIK->cipher_title_key, "japaneatahand.com");
+		memcpy(&TIK->ticketid, "[RawkSD]", 8);
+		os_get_key(ES_KEY_CONSOLE, &TIK->devicetype);
+		TIK->titleid = GetTitleID(path, Tik);
+		TIK->access_mask = 0xFFFF;
+		TIK->reserved[1] = 0xFF;
+		memset(TIK->reserved+6, 0xFF, 4);
+		TIK->reserved[0x3B] = 1;
+		memset(TIK->cidx_mask, 0xFF, sizeof(TIK->cidx_mask));
 
-		// TODO: Fakesign();
-
-		memory = stik;
-		size = 0x2A4;
+		memory = (u8*)stik;
+		size = SIGNED_TIK_SIZE(stik);
 	}
 
 	bool TitleFile::IsTmdHookPath(const char* path)
@@ -1501,14 +1499,15 @@ namespace ProxiIOS { namespace EMU {
 
 	char* TicketDir::GetTranslatedPath(const char *path)
 	{
+		char *newpath = NULL;
 		if (TitleFile::IsTikHookPath(path)) {
-			if (strncmp(path, "/ticket/00010005/635242", 23))
-				return NULL;
-			char* newpath = (char*)Memalign(32, strlen(path) + 1);
-			strcpy(newpath, path);
-			return newpath;
+			if (!strncmp(path, "/ticket/00010005/635242", 23)) {
+				newpath = (char*)Memalign(32, strlen(path) + 1);
+				if (newpath)
+					strcpy(newpath, path);
+			}
 		}
-		return NULL;
+		return newpath;
 	}
 
 	RiivFile* TicketDir::OpenFile(const char *path, int mode)
@@ -1518,7 +1517,7 @@ namespace ProxiIOS { namespace EMU {
 
 	int TicketDir::CreateFile(const char *path)
 	{
-		return ISFS_CreateFile(path, 0, 3, 1, 1); // TODO: Let the subclasses decide whether attributes are useless, don't assume that they are
+		return ISFS_CreateFile(path, 0, 3, 3, 3); // TODO: Let the subclasses decide whether attributes are useless, don't assume that they are
 	}
 
 	int TicketDir::Delete(const char *path)
@@ -1528,22 +1527,26 @@ namespace ProxiIOS { namespace EMU {
 
 	int TicketDir::ReadDir(const char* ext_path, u32 *out_count, char *names, const u32 *max_count)
 	{
-		return -1;
+		LogPrintf("Unimplemented TicketDir::ReadDir\n");
+		return FSErrors::InvalidArgument;
 	}
 
 	int TicketDir::MoveTo(const char* nand_path, const char* ext_path)
 	{
-		return -1;
+		LogPrintf("Unimplemented TicketDir::MoveTo\n");
+		return FSErrors::InvalidArgument;
 	}
 
 	int TicketDir::MoveFrom(const char* ext_path, const char* nand_path)
 	{
-		return -1;
+		LogPrintf("Unimplemented TicketDir::MoveFrom\n");
+		return FSErrors::InvalidArgument;
 	}
 
 	int TicketDir::GetUsage(const char* ext_path, u32 *files, u32 *blocks, char* next_name)
 	{
-		return -1;
+		LogPrintf("Unimplemented TicketDir::GetUsage\n");
+		return FSErrors::InvalidArgument;
 	}
 
 	int TicketDir::Exists(const char *path)
@@ -1553,7 +1556,6 @@ namespace ProxiIOS { namespace EMU {
 	}
 
 	TicketDir::TicketDir() : RiivDir("/ticket/00010005/", "")  { }
-	
-	TicketDir::~TicketDir() { }
+
 } }
 

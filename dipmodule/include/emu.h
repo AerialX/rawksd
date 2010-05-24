@@ -174,7 +174,6 @@ namespace ProxiIOS { namespace EMU {
 		int GetUsage(const char* ext_path, u32 *files, u32 *blocks, char* next_name);
 		int Exists(const char *path);
 		TicketDir();
-		~TicketDir();
 	};
 
 	class EMU : public ProxiIOS::Module

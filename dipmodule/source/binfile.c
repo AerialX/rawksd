@@ -308,7 +308,7 @@ s32 ReadBin(BinFile* file, u8* buffer, u32 numbytes)
 		file->pos += i;
 
 		// middle bytes (16-byte blocks)
-		i = numbytes & ~15;
+		i = numbytes & ~0xF;
 		if (FileRead(file, buffer, i))
 			return FSERR_EINVAL;
 		dlc_aes_decrypt(file->iv, buffer, buffer, i);
@@ -322,6 +322,7 @@ s32 ReadBin(BinFile* file, u8* buffer, u32 numbytes)
 				return FSERR_EINVAL;
 			file->pos -= 16 - numbytes;
 			dlc_aes_decrypt(file->iv, file->buf, file->buf, 16);
+			// assumes numbytes is a multiple of 4, for MEM1 safety
 			memcpy(buffer, file->buf, numbytes);
 			memmove(file->buf, file->buf+numbytes, 16-numbytes);
 		}

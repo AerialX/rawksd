@@ -423,7 +423,8 @@ void dlc_aes_decrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len) {
 		decrypt(block);
 
 		for (i=0; i < 16; i++)
-			outbuf[blockno+i] ^= block[i];
+			block[i] ^= outbuf[blockno+i];
+		memcpy(outbuf+blockno, block, 16);
 	}
 }
 
