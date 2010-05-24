@@ -38,5 +38,5 @@
 		<memory offset="0x806088E4" value="38600006"/>
 	</patch>
 	<patch id="save">
-		<savegame external="/save" clone="false" />
+		<savegame external="/save/{$__gameid}{$__region}" clone="false" />
 	</patch>

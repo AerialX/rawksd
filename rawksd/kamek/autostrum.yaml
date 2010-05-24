@@ -4,12 +4,12 @@ hooks:
 -   name:       'All Hopos'
     type:       patch
     addr_ntsc:  0x802726C4
-    addr_pal:   0x00000000
+    addr_pal:   0x80273638
     data:       '386000014E800020'
 
 -   name:       'Harmless Hopos'
     type:       patch
     addr_ntsc:  0x8027273C
-    addr_pal:   0x00000000
+    addr_pal:   0x802736B0
     data:       '386000014E800020'
 

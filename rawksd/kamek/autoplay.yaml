@@ -4,18 +4,18 @@ hooks:
 -   name:       'Gem Autoplay'
     type:       patch
     addr_ntsc:  0x800565DC
-    addr_pal:   0x00000000
+    addr_pal:   0x80056724
     data:       '38800001'
 
 -   name:       'Vocals Autoplay'
     type:       patch
     addr_ntsc:  0x80081BF8
-    addr_pal:   0x00000000
+    addr_pal:   0x80081D64
     data:       '38800001'
 
 -   name:       'Autoplay Overdrive'
     type:       patch
     addr_ntsc:  0x80265A10
-    addr_pal:   0x00000000
+    addr_pal:   0x80266984
     data:       '60000000'
 
