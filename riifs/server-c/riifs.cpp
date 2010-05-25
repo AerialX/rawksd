@@ -263,7 +263,7 @@ TcpClient* TcpListener::AcceptTcpClient()
 	if (new_sock < 0)
 		return NULL;
 
-	return new TcpClient(new_sock, ip_to_string(ntohl(host.sin_addr.s_addr), host.sin_port));
+	return new TcpClient(new_sock, ip_to_string(ntohl(host.sin_addr.s_addr), ntohs(host.sin_port)));
 }
 
 void Thread_Sleep(int secs)
@@ -329,6 +329,7 @@ Connection::~Connection()
 	Close();
 	Connections.remove(this);
 	ReleaseLock(ConnectionsLock);
+	delete Client;
 }
 
 void Connection::Run(void *_p)
@@ -408,9 +409,9 @@ void Connection::DebugPrint(string text)
 
 void Connection::Close()
 {
-	TcpClient *tmpClient = Client;
-	if (tmpClient == NULL)
+	if (!Client->Connected)
 		return; // already closed
+	Client->Close();
 	DebugPrint("Disconnected.");
 	for (map<int, fstream*>::iterator iter=OpenFiles.begin(); iter != OpenFiles.end(); iter++)
 	{
@@ -418,9 +419,6 @@ void Connection::Close()
 		delete iter->second;
 	}
 	OpenFiles.clear();
-
-	Client = NULL;
-	delete tmpClient;
 }
 
 void Connection::Return(int value)
