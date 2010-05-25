@@ -146,6 +146,9 @@ SECTIONS {
 	_ZN7SongMgr11AddSongDataEP9DataArrayPKci	= 0x8007BDF4;
 	_ZN10WiiSongMgr6HandleEP9DataArrayb			= 0x8008A4F8;
 	_ZN10WiiSongMgr4LoadEP9BinStream			= 0x804B6164;
+	_ZN7SongMgr4DataE6Symbol					= 0x8007CBA8;
+
+	_ZN17SongOfferProvider10DataSymbolEi			= 0x80137CC4;
 
 	/* PassiveMessenger */
 	_Z10GetPMPanelv								= 0x80108924;

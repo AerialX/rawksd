@@ -26,20 +26,20 @@ hooks:
     type:           branch_insn
     branch_type:    b
     src_addr_ntsc:  0x801302E8
-    src_addr_pal:   0x00000000
+    src_addr_pal:   0x801309DC
     target_func:    'SongOfferGetIconHook'
 
 -   name:           'SongOfferProvider::getIcon'
     type:           branch_insn
     branch_type:    b
     src_addr_ntsc:  0x801374F0
-    src_addr_pal:   0x00000000
+    src_addr_pal:   0x80137BE4
     target_func:    'SongOfferProviderGetIconHook'
 
 -   name:           'StoreSort::OriginCmp'
     type:           branch_insn
     branch_type:    bl
     src_addr_ntsc:  0x801519FC
-    src_addr_pal:   0x00000000
+    src_addr_pal:   0x80152394
     target_func:    'StoreSortOriginCmpHook'
 
