@@ -112,7 +112,8 @@ SECTIONS {
 	_ZN9DataArrayD1Ev					= 0x804D40D8;
 	_ZN9DataArray11InsertNodesEiPS_		= 0x804D33F8;
 	_ZN9DataArray6RemoveEi				= 0x804D36A4;
-	_ZN9DataArray9FindArrayE6SymbolS0_	= 0x804D387C;	
+	_ZN9DataArray9FindArrayE6SymbolS0_	= 0x804D387C;
+	_ZN9DataArray9FindArrayE6Symbolb	= 0x804D3870;	
 
 	_ZN8DataNodeC1EPKc					= 0x804DE328;	
 	_ZN8DataNodeC1Ei					= 0x8000D464;
@@ -121,7 +122,7 @@ SECTIONS {
 	_ZN8DataNode8DestructEv				= 0x8000D478;
 	_ZN8DataNode3StrEP9DataArray		= 0x804DE108;
 	_ZN8DataNode12LiteralArrayEP9DataArray	= 0x804DE2E8;
-
+	_ZN8DataNode3IntEP9DataArray		= 0x804DE068;
 
 	_Z4__rsP9BinStreamRP9DataArray		= 0x804D5008;
 	_Z4__lsP10TextStreamPK9DataArray	= 0x804D4FB0;
@@ -145,6 +146,12 @@ SECTIONS {
 	_ZN7SongMgr11AddSongDataEP9DataArrayPKci	= 0x8007BC88;
 	_ZN10WiiSongMgr6HandleEP9DataArrayb			= 0x8008A38C;
 	_ZN10WiiSongMgr4LoadEP9BinStream			= 0x804B4F98;
+	_ZN7SongMgr8SongPackE6Symbol				= 0x80078F40;
+	_ZN7SongMgr10IsDownloadE6SymbolP9DataArray	= 0x800785F4;
+	_ZN7SongMgr4DataE6Symbol					= 0x8007CA3C;
+
+	_ZN17SongOfferProvider10DataSymbolEi			= 0x801375D0;
+	_ZN17SongOfferProvider12GetSongOfferE6Symbol	= 0x801317A4;
 
 	/* PassiveMessenger */
 	_Z10GetPMPanelv								= 0x80108704;

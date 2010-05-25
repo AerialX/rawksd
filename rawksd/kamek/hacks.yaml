@@ -13,9 +13,57 @@ hooks:
     addr_pal:   0x80348EA0
     data:       '4E800020' # blr
 
--   name:       'Disable VerifyChecksum' # Is this even necessary anymore?
+-   name:       'Harmless Hopos'
     type:       patch
-    addr_ntsc:  0x8051A617
-    addr_pal:   0x8051C043
-    data:       '00'
+    addr_ntsc:  0x8027273C
+    addr_pal:   0x802736B0
+    data:       '386000014E800020'
+
+#-   name:       'All Hopos Cheat'
+#    type:       patch
+#    addr_ntsc:  0x802726C4
+#    addr_pal:   0x80273638
+#    data:       '386000014E800020'
+
+#-   name:       'Disable VerifyChecksum'
+#    type:       patch
+#    addr_ntsc:  0x8051A617
+#    addr_pal:   0x8051C043
+#    data:       '00'
+
+#-   name:       'Disable Validate'
+#    type:       patch
+#    addr_ntsc:  0x80286E8C
+#    addr_pal:   0x00000000
+#    data:       '386000014E800020'
+
+#-   name:       'Disable FileStream::ValidateChecksum'
+#    type:       patch
+#    addr_ntsc:  0x804FF388
+#    addr_pal:   0x00000000
+#    data:       '386000014E800020'
+
+#-   name:       'Disable SetFileChecksumData'
+#    type:       patch
+#    addr_ntsc:  0x8000F5BC
+#    addr_pal:   0x00000000
+#    data:       '4E800020'
+
+#-   name:       'Disable SetFileChecksumData'
+#    type:       patch
+#    addr_ntsc:  0x80519558
+#    addr_pal:   0x00000000
+#    data:       '4E800020'
+
+#-   name:       'Disable HasFileChecksumData'
+#    type:       patch
+#    addr_ntsc:  0x805195EC
+#    addr_pal:   0x00000000
+#    data:       '386000004E800020'
+
+#-   name:       'Disable HasFileChecksumData'
+#    type:       patch
+#    addr_ntsc:  0x80519610
+#    addr_pal:   0x00000000
+#    data:       '386000004E800020'
 

@@ -113,14 +113,16 @@ SECTIONS {
 	_ZN9DataArray5CloneEbb				= 0x804D5894;
 	_ZN9DataArray11InsertNodesEiPS_		= 0x804D4E24;
 	_ZN9DataArray6RemoveEi				= 0x804D50D0;
-	_ZN9DataArray9FindArrayE6SymbolS0_	= 0x804D52A8;	
+	_ZN9DataArray9FindArrayE6SymbolS0_	= 0x804D52A8;
+	_ZN9DataArray9FindArrayE6Symbolb	= 0x804D529C;
 
 	_ZN8DataNodeC1EPKc					= 0x804DFD54;	
 	_ZN8DataNodeC1Ei					= 0x8000D42C;
 	_ZN8DataNode5ArrayEP9DataArray		= 0x804DFCF0;
-	_ZN8DataNodeC1EP9DataArrayi	= 0x804DFEF0;
+	_ZN8DataNodeC1EP9DataArrayi			= 0x804DFEF0;
 	_ZN8DataNode3StrEP9DataArray		= 0x804DFB34;
 	_ZN8DataNode12LiteralArrayEP9DataArray	= 0x804DFD14;
+	_ZN8DataNode3IntEP9DataArray		= 0x804DFA94;
 
 	_Z4__rsP9BinStreamRP9DataArray		= 0x804D6A34;
 	_Z4__lsP10TextStreamPK9DataArray	= 0x804D69DC;

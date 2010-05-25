@@ -16,7 +16,12 @@ struct Symbol
 {
 	Symbol(const char*);
 
-	char* Name;
+	char* name;
+
+	static Symbol* Alloc()
+	{
+		return (Symbol*)malloc(0x04);
+	}
 };
 
 struct HxGuid

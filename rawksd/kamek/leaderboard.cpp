@@ -24,6 +24,16 @@ static char* ToHttpString(const char* str, int length = 0)
 	return dest;
 }
 
+static int Checksum(const char* str, int num, int den)
+{
+	int sum = strlen(str) - 2;
+	while (*str) {
+		sum += (int)(*str - 0x10) * num / den;
+		str++;
+	}
+	return sum;
+}
+
 static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficulty, int score)
 {
 	const char* hostname = "rvlution.net";
@@ -39,8 +49,9 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 	hostent* host;
 	int size = 0;
 	int checksum = 0;
-	const char* song = symbol->Name;
+	const char* song = symbol->name;
 	const char* originalsongname = gSongMgrWii.SongName(symbol);
+	bool hasname = originalsongname && strlen(originalsongname);
 
 	memset(&address, 0, sizeof(address));
 	address.sin_family = PF_INET;
@@ -60,7 +71,6 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 		goto onerror;
 	}
 	memcpy(&address.sin_addr, host->h_addr_list[0], host->h_length);
-//	OSReport("RawkSD: %s %s\n", hostname, inet_ntoa(address.sin_addr));
 	address.sin_port = htons(80);
 
 	socket = net_socket(PF_INET, SOCK_STREAM, 0);
@@ -79,8 +89,11 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 	songname = ToHttpString(song);
 	fullsongname = ToHttpString(originalsongname);
 	artistname = ToHttpString(gSongMgrWii.SongArtist(symbol));
+
+	checksum += Checksum(username, 100, 19) + Checksum(songname, 25, 3) + console * 3 / 5 + difficulty * 4 / 3 + instrument * 9 / 5 + score * 2 / 7;
+
 	message = (char*)malloc(0x100 + strlen(username) + strlen(songname) + strlen(fullsongname) + strlen(artistname) + strlen(hostname));
-	sprintf(message, "GET /rb2/post?inst=%d&diff=%d&score=%d&console=%d&nickname=%s&songid=%s&name=%s&artist=%s&valid=%d HTTP/1.1\r\nHost: %s\r\nUser-Agent: RawkSD RB2 Patch\r\n\r\n\r\n", instrument, difficulty, score, console, username, songname, fullsongname, artistname, checksum, hostname);
+	sprintf(message, "GET /rb2/post?inst=%d&diff=%d&score=%d&console=%d&nickname=%s&songid=%s&name=%s&artist=%s&valid=%d HTTP/1.1\r\nHost: %s\r\n\r\n\r\n", instrument, difficulty, score, console, username, songname, fullsongname, artistname, checksum, hostname);
 	free(username);
 	free(songname);
 	free(fullsongname);
@@ -96,10 +109,7 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 	OSReport("RawkSD: Leaderboard submission for \"%s\" succeeded.\n", song);
 	if (!message)
 		message = (char*)malloc(0x100);
-	if (!originalsongname || !strlen(originalsongname))
-		sprintf(message, "Your new high score has been sent to the RawkSD Leaderboards!");
-	else
-		sprintf(message, "Your new high score for %s has been sent to the RawkSD Leaderboards!", originalsongname);
+	sprintf(message, "Your new high score%s%s been sent to the RawkSD Leaderboards!", hasname ? " for " : "", hasname ? originalsongname : "");
 	GetPMPanel()->QueueMessage(message);
 	free(message);
 	return true;
@@ -108,10 +118,7 @@ onerror:
 	OSReport("RawkSD: Leaderboard submission for \"%s\" failed! :(\n", song);
 	if (!message)
 		message = (char*)malloc(0x100);
-	if (!originalsongname || !strlen(originalsongname))
-		sprintf(message, "An error occurred uploading your high score to RawkSD.");
-	else
-		sprintf(message, "An error occurred uploading your high score for %s to RawkSD.", originalsongname);
+		sprintf(message, "An error occurred uploading your high score%s%s to RawkSD.", hasname ? " for " : "", hasname ? originalsongname : "");
 	GetPMPanel()->QueueMessage(message);
 	free(message);
 	return false;
@@ -119,15 +126,13 @@ onerror:
 
 extern "C" void SoloLeaderboardHack(RockCentralGateway* gateway, Symbol* symbol, int instrument, int difficulty, int score1, int score2, int player, Hmx::Object* object)
 {
-	//if (strncmp(symbol->Name, "rwk", 3))
-		gateway->SubmitPlayerScore(symbol, instrument, difficulty, score1, score2, player, object);
+	gateway->SubmitPlayerScore(symbol, instrument, difficulty, score1, score2, player, object);
 	SubmitLeaderboardRawkSD(symbol, instrument, difficulty, score1);
 }
 
 extern "C" void BandLeaderboardHack(RockCentralGateway* gateway, Symbol* symbol, int score1, int score2, int fans, HxGuid* guid, Hmx::Object* object)
 {
-	//if (strncmp(symbol->Name, "rwk", 3))
-		gateway->SubmitBandScore(symbol, score1, score2, fans, guid, object);
+	gateway->SubmitBandScore(symbol, score1, score2, fans, guid, object);
 	SubmitLeaderboardRawkSD(symbol, 4, 0, score1);
 }
 

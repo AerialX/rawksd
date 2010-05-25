@@ -1,5 +1,5 @@
 ---
-source_files: ['dlc.cpp']
+source_files: ['dlc.cpp', 'files.c', 'include/rb2/DataArray.cpp']
 hooks:
 -   name:           'WiiContentMgr::Load'
     type:           branch_insn
@@ -21,4 +21,25 @@ hooks:
     src_addr_ntsc:  0x804B47B4
     src_addr_pal:   0x804B5970
     target_func:    'WiiContentMgrInitHook'
+
+-   name:           'SongOffer::GetIcon'
+    type:           branch_insn
+    branch_type:    b
+    src_addr_ntsc:  0x801302E8
+    src_addr_pal:   0x00000000
+    target_func:    'SongOfferGetIconHook'
+
+-   name:           'SongOfferProvider::getIcon'
+    type:           branch_insn
+    branch_type:    b
+    src_addr_ntsc:  0x801374F0
+    src_addr_pal:   0x00000000
+    target_func:    'SongOfferProviderGetIconHook'
+
+-   name:           'StoreSort::OriginCmp'
+    type:           branch_insn
+    branch_type:    bl
+    src_addr_ntsc:  0x801519FC
+    src_addr_pal:   0x00000000
+    target_func:    'StoreSortOriginCmpHook'
 

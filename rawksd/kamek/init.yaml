@@ -1,9 +1,0 @@
----
-source_files: ['init.cpp', 'files.c', 'include/rb2/DataArray.cpp']
-hooks:
--   name:           'Initialisation'
-    type:           branch_insn
-    branch_type:    bl
-    src_addr_ntsc:  0x8000F5F0
-    src_addr_pal:   0x8000F5B8
-    target_func:    'Initialise'

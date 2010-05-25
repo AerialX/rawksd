@@ -202,7 +202,7 @@ class KamekBuilder(object):
 		ld_command.append('-o')
 		ld_command.append(self._outFile)
 		ld_command.append('-Ttext')
-		ld_command.append('0x80001800')
+		ld_command.append(self._config['address'])
 		ld_command.append('-T')
 		ld_command.append(self._config['linker_script'])
 		ld_command.append('-Map')
@@ -231,7 +231,7 @@ class KamekBuilder(object):
 			if '__text_start' in line:
 				self._textSegStart = int(line.split()[0],0)
 				break
-		
+
 		# now read the individual symbols
 		# this is probably a bad method to parse it, but whatever
 		for line in file:
