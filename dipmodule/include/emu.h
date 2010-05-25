@@ -28,7 +28,7 @@ namespace ProxiIOS { namespace EMU {
 
 			FSMessage        = 0x60,
 			RedirectDir,                             // ioctlv
-			//RedirectFile,
+			BanTicket,
 			NANDFSMessage,
 			ActivateHook     = 0x64,
 			DeactivateHook   = 0x6F
@@ -116,7 +116,6 @@ namespace ProxiIOS { namespace EMU {
 			virtual ~TitleFile();
 
 			static bool IsTmdHookPath(const char* path);
-			static bool IsTikHookPath(const char* path);
 
 		protected:
 			u64 GetTitleID(const char* path, Type type);
@@ -163,7 +162,10 @@ namespace ProxiIOS { namespace EMU {
 
 	class TicketDir : public RiivDir
 	{
+	private:
+		std::vector<u32> Banned;
 	public:
+		int Ban(u32 title);
 		char* GetTranslatedPath(const char *path);
 		RiivFile* OpenFile(const char *path, int mode);
 		int CreateFile(const char *path);

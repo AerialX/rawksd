@@ -61,6 +61,7 @@ int get_certs();
 int Haxx_Init();
 void Haxx_Mount(std::vector<int>* mounted);
 bool forge_sig(u8 *data, u32 length);
+int check_cert_chain(const u8 *data, const u32 data_len);
 
 #define HAXX_IOS 0x0000000100000025ULL
 #define HAXX_IOS_REVISION 3869

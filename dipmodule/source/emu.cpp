@@ -1,7 +1,7 @@
 #include "emu.h"
 #include "es.h"
 
-#include <ctype.h>
+#include <algorithm>
 
 #include <files.h>
 #include <mem.h>
@@ -269,8 +269,8 @@ namespace ProxiIOS { namespace EMU {
 		if (fd >= 0)
 			FS_Close(fd);
 		else
-			return false;
-		return true;
+			return 0;
+		return 1;
 	}
 
 	static s32 ISFS_CreateFile(const char* path, u8 attributes, u8 owner_perm, u8 group_perm, u8 other_perm)
@@ -340,6 +340,8 @@ namespace ProxiIOS { namespace EMU {
 	{
 		if (message->ioctl.command == Ioctl::FSMessage)
 			return HandleFSMessage((ipcmessage*)message->ioctl.buffer_in, (int*)message->ioctl.buffer_io);
+		if (message->ioctl.command == Ioctl::BanTicket && DataDirs.size())
+			return ((TicketDir*)DataDirs[0])->Ban(*(u32*)message->ioctl.buffer_in);
 		LogPrintf("EMU: Unknown ioctl %u\n", message->ioctl.command);
 		return -1;
 	}
@@ -1377,7 +1379,7 @@ namespace ProxiIOS { namespace EMU {
 		position = 0;
 		size = 0;
 
-		LogPrintf("TitleFile Proxy: %s\n", path);
+		//LogPrintf("TitleFile Proxy: %s\n", path);
 
 		fd = FS_Open(path, mode);
 
@@ -1403,19 +1405,14 @@ namespace ProxiIOS { namespace EMU {
 			FS_Close(fd);
 	}
 
-	static u32 HexToInt(const char* str, int length)
+	static u32 HexToInt(const char* str)
 	{
-		u32 ret;
-		u8* dest = (u8*)&ret;
-		while (length > 0) {
-			u8 chr = *str - ((*str > '9') ? ('a' - 10) : '0');
-			if (length & 1) {
-				*dest = *dest | (chr & 0x0F);
-				dest++;
-			} else
-				*dest = chr << 4;
-			str++;
-			length--;
+		u32 ret=0;
+		for (int i=0; i<8; i++) {
+			char c = str[i];
+			if (c<'0' || c>'f' || (c>'9' && c<'a'))
+				return 0xFFFFFFFF;
+			ret = (ret<<4) + (c - ((c>'9') ? ('a'-10) : '0'));
 		}
 		return ret;
 	}
@@ -1423,7 +1420,7 @@ namespace ProxiIOS { namespace EMU {
 	u64 TitleFile::GetTitleID(const char* path, TitleFile::Type type)
 	{
 		path += (type == Tmd ? 7 : 8);
-		return ((u64)HexToInt(path, 8) << 32) | HexToInt(path + 9, 8);
+		return ((u64)HexToInt(path) << 32) | HexToInt(path + 9);
 	}
 
 	void TitleFile::CreateTmd(const char* path, s32 mode)
@@ -1490,28 +1487,31 @@ namespace ProxiIOS { namespace EMU {
 		return false;
 	}
 
-	bool TitleFile::IsTikHookPath(const char* path)
-	{
-		if (strlen(path) == 29 && !strncmp(path, "/ticket/00010005/", 17))
-			return !ISFS_Exists(path);
-		return false;
-	}
-
 	char* TicketDir::GetTranslatedPath(const char *path)
 	{
 		char *newpath = NULL;
-		if (TitleFile::IsTikHookPath(path)) {
-			if (!strncmp(path, "/ticket/00010005/635242", 23)) {
-				newpath = (char*)Memalign(32, strlen(path) + 1);
-				if (newpath)
-					strcpy(newpath, path);
+		if (strlen(path) == 29 && !strncmp(path, "/ticket/00010005/", 17)) {
+			u32 title = HexToInt(path+17);
+			if (std::find(Banned.begin(), Banned.end(), title) == Banned.end()) {
+				// title isn't banned, check if it's non-custom or really exists
+				if (strncmp(path, "/ticket/00010005/635242", 23) || ISFS_Exists(path))
+					return NULL;
 			}
+			newpath = (char*)Memalign(32, strlen(path)+1);
+			if (newpath)
+				strcpy(newpath, path);
 		}
 		return newpath;
 	}
 
 	RiivFile* TicketDir::OpenFile(const char *path, int mode)
 	{
+		// only ticket paths should reach here, no need to validate
+		u32 title = HexToInt(path+17);
+		if (std::find(Banned.begin(), Banned.end(), title) != Banned.end()) {
+			LogPrintf("Attempt to open %s denied\n", path);
+			return NULL;
+		}
 		return new TitleFile(path, mode, TitleFile::Tik);
 	}
 
@@ -1552,7 +1552,12 @@ namespace ProxiIOS { namespace EMU {
 	int TicketDir::Exists(const char *path)
 	{
 		return true; // It's already been translated, so we know it exists
-		// TODO: Here would be the place to deny fakesigned tickets
+	}
+
+	int TicketDir::Ban(u32 title)
+	{
+		Banned.push_back(title);
+		return 1;
 	}
 
 	TicketDir::TicketDir() : RiivDir("/ticket/00010005/", "")  { }

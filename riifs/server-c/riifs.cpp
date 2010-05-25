@@ -327,6 +327,7 @@ Connection::~Connection()
 {
 	GetLock(ConnectionsLock);
 	Close();
+	DebugPrint("Disconnected.");
 	Connections.remove(this);
 	ReleaseLock(ConnectionsLock);
 	delete Client;
@@ -409,16 +410,13 @@ void Connection::DebugPrint(string text)
 
 void Connection::Close()
 {
-	if (!Client->Connected)
-		return; // already closed
-	Client->Close();
-	DebugPrint("Disconnected.");
 	for (map<int, fstream*>::iterator iter=OpenFiles.begin(); iter != OpenFiles.end(); iter++)
 	{
 		iter->second->close();
 		delete iter->second;
 	}
 	OpenFiles.clear();
+	Client->Close();
 }
 
 void Connection::Return(int value)

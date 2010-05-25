@@ -59,7 +59,8 @@ namespace ProxiIOS { namespace DIP {
 			Allocate                     = 0xC5,
 			AddEmu                       = 0xC6, // Ioctlv
 			SetFileProvider              = 0xC7,
-			SetShiftBase                 = 0xC8
+			SetShiftBase                 = 0xC8,
+			BanTitle                     = 0xC9
 		};
 	}
 

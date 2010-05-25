@@ -233,6 +233,14 @@ namespace ProxiIOS { namespace DIP {
 			case Ioctl::ClosePartition:
 				CurrentPartition = 0;
 				return ForwardIoctl(message);
+			case Ioctl::BanTitle: {
+				s32 emu_fd = os_open(EMU_MODULE_NAME, 0);
+				if (emu_fd<0)
+					return emu_fd;
+				int ret = os_ioctl(emu_fd, EMU::Ioctl::BanTicket, buffer_in, message->ioctl.length_in, NULL, 0);
+				os_close(emu_fd);
+				return ret;
+			}
 			default:
 				return ForwardIoctl(message);
 		}

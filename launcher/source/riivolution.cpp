@@ -1,3 +1,4 @@
+#include "haxx.h"
 #include "riivolution.h"
 #include "riivolution_config.h"
 #include "launcher.h"
@@ -28,7 +29,8 @@ namespace Ioctl { enum Enum {
 	SetClusters		= 0xC4,
 	Allocate		= 0xC5,
 	AddEmu			= 0xC6,
-	SetShiftBase	= 0xC8
+	SetShiftBase	= 0xC8,
+	BanTitle		= 0xC9
 }; }
 
 static u32 ioctlbuffer[0x08] ATTRIBUTE_ALIGN(32);
@@ -161,6 +163,12 @@ int RVL_AddEmu(const char* nandpath, const char* external, int clone)
 	vec[2].data = &clone;
 	vec[2].len = sizeof(int);
 	return IOS_Ioctlv(fd, Ioctl::AddEmu, 3, 0, vec);
+}
+
+int RVL_BanDLC(u32 title)
+{
+	ioctlbuffer[0] = title;
+	return IOS_Ioctl(fd, Ioctl::BanTitle, ioctlbuffer, 4, NULL, 0);
 }
 
 u64 RVL_GetShiftOffset(u32 length)
@@ -581,6 +589,26 @@ void RVL_Patch(RiiDisc* disc)
 
 void RVL_Unmount()
 {
+	static u32 tik_data[STD_SIGNED_TIK_SIZE/4] ATTRIBUTE_ALIGN(32);
+	char _tik_path[MAXPATHLEN] = "00/mnt/isfs/ticket/00010005/";
+	char *tik_path = _tik_path+2;
+	s32 tik_dir = File_OpenDir(tik_path);
+	if (tik_dir>=0) {
+		Stats st;
+		while (File_NextDir(tik_dir, tik_path+26, &st)>=0) {
+			if (st.Mode & S_IFDIR)
+				continue;
+			s32 tik_file = File_Open(tik_path, O_RDONLY);
+			if (tik_file>=0) {
+				File_Read(tik_file, tik_data, STD_SIGNED_TIK_SIZE);
+				if ((tik_data[0x78]>>8)!=0x00635242 && check_cert_chain((u8*)tik_data, STD_SIGNED_TIK_SIZE))
+					RVL_BanDLC(tik_data[0x78]);
+				File_Close(tik_file);
+			}
+		}
+		File_CloseDir(tik_dir);
+	}
+
 	for (vector<int>::iterator mount = Mounted.begin(); mount != Mounted.end(); mount++) {
 		bool found = false;
 		for (map<int, bool>::iterator used = UsedFilesystems.begin(); used != UsedFilesystems.end(); used++) {

@@ -113,7 +113,6 @@ void Haxx_Mount(vector<int>* mounted)
 }
 
 extern "C" void udelay(int us);
-int check_cert_chain(const u8 *data, const u32 data_len);
 
 #define HASH_CHECK_ADDRESS  (void*)0x93A752C0
 #define ES_IOS_BOOT         (void*)0x939F02C8
