@@ -19,6 +19,9 @@
 #include "logging.h"
 
 #define OPEN_MODE_BYPASS 0x80
+#define DIPIDLE_MSG 0xF17E1D7E
+#define DIPIDLE_TIMEOUT 37968750 // 20s in starlet timer units
+#define DIPIDLE_TICK 2000000 // check for idle files every 2 seconds
 
 struct TemporaryPatch
 {
@@ -30,8 +33,16 @@ struct TemporaryPatch
 namespace ProxiIOS { namespace DIP {
 	DIP::DIP() : ProxyModule("/dev/do", "/dev/di")
 	{
-		for (int i = 0; i < MAX_OPEN_FILES; i++)
-			OpenFiles[i] = -1;
+		FreeFiles = DIPFiles;
+		OpenFiles = NULL;
+		for (int i = 0; i < MAX_OPEN_FILES-1; i++) {
+			DIPFiles[i].fd = -1;
+			DIPFiles[i].next = DIPFiles+i+1;
+		}
+		DIPFiles[MAX_OPEN_FILES-1].fd = -1;
+		DIPFiles[MAX_OPEN_FILES-1].next = NULL;
+
+		Idle_Timer = os_create_timer(DIPIDLE_TICK, 0, queuehandle, DIPIDLE_MSG);
 
 		memset(Patches, 0, sizeof(Patches));
 		memset(PatchCount, 0, sizeof(PatchCount));
@@ -46,6 +57,43 @@ namespace ProxiIOS { namespace DIP {
 		PatchPartition = 0;
 
 		LogInit();
+	}
+
+	bool DIP::HandleOther(u32 message, int &result, bool &ack)
+	{
+		if (message == DIPIDLE_MSG) {
+			os_stop_timer(Idle_Timer);
+			u32 time_now = os_time_now();
+			struct DIPFile *PrevFile = NULL;
+			struct DIPFile *ThisFile = OpenFiles;
+
+			// look for "expired" open files
+			// they're sorted, so all files after the first expired one will be closed
+			while (ThisFile && (time_now - ThisFile->lastaccess) < DIPIDLE_TIMEOUT) {
+				PrevFile = ThisFile;
+				ThisFile = ThisFile->next;
+			}
+
+			if (PrevFile) // close the tail of the OpenFiles list
+				PrevFile->next = NULL;
+			else // else all files will be closed
+				OpenFiles = NULL;
+
+			while (ThisFile) {
+				PrevFile = ThisFile;
+				File_Close(ThisFile->fd);
+				ThisFile->fd = -1;
+				ThisFile = ThisFile->next;
+				PrevFile->next = FreeFiles;
+				FreeFiles = PrevFile;
+			}
+
+			os_restart_timer(Idle_Timer, DIPIDLE_TICK, 0);
+			ack = false;
+			return true;
+		}
+
+		return false;
 	}
 
 	int DIP::HandleOpen(ipcmessage* message)
@@ -451,35 +499,26 @@ namespace ProxiIOS { namespace DIP {
 		LogPrintf("\tReadFile(0x%04x, 0x%08x, 0x%08x) : ", (u32)fileid, offset, length);
 
 		FileDesc* file = (FileDesc*)Patches[PatchType::File] + fileid;
-		int openindex = IsFileOpen(fileid);
-		if (openindex < 0) { // Re-open it
-			for (int k = 0; k < MAX_OPEN_FILES; k++) {
-				if (OpenFiles[k] == -1) {
-					OpenFiles[k] = fileid;
-					openindex = k;
-					break;
-				}
-			}
-			if (openindex < 0) {
-				File_Close(OpenFds[0]);
-				for (int i = 0; i < MAX_OPEN_FILES - 1; i++) {
-					OpenFiles[i] = OpenFiles[i + 1];
-					OpenFds[i] = OpenFds[i + 1];
-				}
-				OpenFiles[MAX_OPEN_FILES - 1] = fileid;
-				openindex = MAX_OPEN_FILES - 1;
-			}
-
+		struct DIPFile *ThisFile = GetFile(fileid);
+		if (ThisFile==NULL) {
+			LogPrintf("\t\tGetFile failed! (PANIC)\n");
+			return false;
+		}
+		if (ThisFile->fd < 0) {
 			if (Clusters)
-				OpenFds[openindex] = File_Open_ID(file->Cluster, O_RDONLY);
+				ThisFile->fd = File_Open_ID(file->Cluster, O_RDONLY);
 			else
-				OpenFds[openindex] = File_Open(file->Filename, O_RDONLY);
+				ThisFile->fd = File_Open(file->Filename, O_RDONLY);
 
-			if (OpenFds[openindex] < 0) {
-				OpenFiles[openindex] = -1;
-				LogPrintf("0x%08x\n\t\tFile_Open failed!\n", OpenFds[openindex]);
+			if (ThisFile->fd < 0) { // move it back to the free list
+				LogPrintf("0x%08x\n\t\tFile_Open failed!\n", ThisFile->fd);
+				OpenFiles = ThisFile->next;
+				ThisFile->next = FreeFiles;
+				FreeFiles = ThisFile;
 				return false;
 			}
+
+			ThisFile->fileid = fileid;
 		}
 
 		if ((int)buffer & 0x1F) { // Just in case...
@@ -488,30 +527,62 @@ namespace ProxiIOS { namespace DIP {
 				data = buffer;
 		}
 
-		File_Seek(OpenFds[openindex], offset, SEEK_SET);
+		File_Seek(ThisFile->fd, offset, SEEK_SET);
 
-		int ret = File_Read(OpenFds[openindex], (u8*)data, length);
+		int ret = File_Read(ThisFile->fd, (u8*)data, length);
+
+		ThisFile->lastaccess = os_time_now();
 
 		LogPrintf("0x%08x\n", ret);
 
-		if (ret > 0) {
-			if (data != buffer) {
-				memcpy(buffer, data, ret);
-				Dealloc(data);
-			}
-			os_sync_after_write(buffer, length);
-		} else
+		if (ret <= 0)
 			LogPrintf("\t\tFile_Read error!\n");
+
+		if (data != buffer) {
+			if (ret>0)
+				memcpy(buffer, data, ret);
+			Dealloc(data);
+		}
+		os_sync_after_write(buffer, length);
 
 		return ret >= 0;
 	}
 
-	int DIP::IsFileOpen(s16 fileid)
+	struct DIP::DIPFile* DIP::GetFile(s16 fileid)
 	{
-		for (int i = 0; i < MAX_OPEN_FILES; i++)
-			if (OpenFiles[i] == fileid)
-				return i;
-		return -1;
+		struct DIPFile *ThisFile = NULL;
+		if (OpenFiles==NULL) { // take the head of the free list
+			OpenFiles = ThisFile = FreeFiles;
+			FreeFiles = FreeFiles->next;
+			ThisFile->next = NULL;
+		} else if (OpenFiles->fileid == fileid)
+			ThisFile = OpenFiles;
+		else {
+			struct DIPFile *PrevFile = OpenFiles;
+			for (ThisFile=OpenFiles->next; ThisFile->next; PrevFile=ThisFile, ThisFile=ThisFile->next) {
+				if (ThisFile->fileid == fileid) { // move it to the front of the OpenFiles list
+					PrevFile->next = ThisFile->next;
+					ThisFile->next = OpenFiles;
+					OpenFiles = ThisFile;
+					break;
+				}
+			}
+			if (ThisFile->fileid != fileid) { // need to open it
+				if (FreeFiles==NULL) { // close oldest open file and move it to the free list
+					PrevFile->next = ThisFile->next;
+					File_Close(ThisFile->fd);
+					ThisFile->fd = -1;
+					ThisFile->next = FreeFiles;
+					FreeFiles = ThisFile;
+				}
+
+				ThisFile = FreeFiles;
+				FreeFiles = FreeFiles->next;
+				ThisFile->next = OpenFiles;
+				OpenFiles = ThisFile;
+			}
+		}
+		return ThisFile;
 	}
 
 	int DIP::ForwardIoctl(ipcmessage* message)

@@ -60,7 +60,7 @@
 /* 12 */ s32       os_restart_timer(ostimer_t timer_id, s32 time_us, s32 repeat_time_us);
 /* 13 */ s32       os_stop_timer(ostimer_t timer_id);
 /* 14 */ s32       os_destroy_timer(ostimer_t time_id);
-/* 15 */ s32       os_time_now(); // just returns HW_TIMER?
+/* 15 */ u32       os_time_now(); // just returns HW_TIMER?
 /* 16 */ u32       os_heap_create(void* ptr, u32 size);
 /* 17 */ u32       os_heap_destroy(u32 heap);
 /* 18 */ void*     os_heap_alloc(u32 heap, u32 size);

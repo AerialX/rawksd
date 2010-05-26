@@ -98,6 +98,19 @@ namespace ProxiIOS { namespace DIP {
 	class DIP : public ProxiIOS::ProxyModule
 	{
 		private:
+			ostimer_t Idle_Timer;
+
+			struct DIPFile {
+				s16 fileid;
+				s32 fd;
+				u32 lastaccess;
+				struct DIPFile *next;
+			} DIPFiles[MAX_OPEN_FILES];
+
+			struct DIPFile *OpenFiles;
+			struct DIPFile *FreeFiles;
+			struct DIPFile* GetFile(s16 fileid);
+
 			int CopyDir(const char *in_dir, const char *out_dir);
 			int DoEmu(const char* nand_dir, const char* ext_dir, const int* clone);
 		public:
@@ -109,9 +122,6 @@ namespace ProxiIOS { namespace DIP {
 			u32 PatchCount[PatchType::Max];
 			void* Patches[PatchType::Max];
 
-			s32 OpenFiles[MAX_OPEN_FILES];
-			s32 OpenFds[MAX_OPEN_FILES];
-
 			bool Clusters;
 #ifdef YARR
 			DiProvider* Provider;
@@ -121,6 +131,7 @@ namespace ProxiIOS { namespace DIP {
 			int HandleOpen(ipcmessage* message);
 			int HandleIoctl(ipcmessage* message);
 			int HandleIoctlv(ipcmessage* message);
+			bool HandleOther(u32 message, int &result, bool &ack);
 
 			int ForwardIoctl(ipcmessage* message);
 			int ForwardIoctlv(ipcmessage* message);
@@ -133,6 +144,5 @@ namespace ProxiIOS { namespace DIP {
 			int AddPatch(int index, void* data);
 
 			bool ReadFile(s16 fileid, u32 offset, void* data, u32 length);
-			int IsFileOpen(s16 fileid);
 	};
 } }
