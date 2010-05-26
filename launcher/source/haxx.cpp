@@ -1417,6 +1417,7 @@ static int check_rsa(const u8 *h, const u8 *sig, const u8 *key, const u32 n)
 	if (memcmp(correct, x, n) == 0)
 		return 0;
 
+	// replicate the strncmp bug
 	if (strncmp((char*)h, (char*)x+n-20, 20)==0)
 		return -100;
 
@@ -1517,6 +1518,8 @@ int check_cert_chain(const u8 *data, const u32 data_len)
 
 		SHA1(sub, sub_len, h);
 		ret = check_hash(h, sig, key);
+		// uncomment this if you want to check the whole chain's integrity
+		// rather than just the tail certificate
 		//if (ret)
 			return ret;
 

@@ -558,14 +558,10 @@ namespace ProxiIOS { namespace DIP {
 		} else if (OpenFiles->fileid == fileid)
 			ThisFile = OpenFiles;
 		else {
-			struct DIPFile *PrevFile = OpenFiles;
+			struct DIPFile* PrevFile = OpenFiles;
 			for (ThisFile=OpenFiles->next; ThisFile->next; PrevFile=ThisFile, ThisFile=ThisFile->next) {
-				if (ThisFile->fileid == fileid) { // move it to the front of the OpenFiles list
-					PrevFile->next = ThisFile->next;
-					ThisFile->next = OpenFiles;
-					OpenFiles = ThisFile;
+				if (ThisFile->fileid == fileid)
 					break;
-				}
 			}
 			if (ThisFile->fileid != fileid) { // need to open it
 				if (FreeFiles==NULL) { // close oldest open file and move it to the free list
@@ -578,9 +574,10 @@ namespace ProxiIOS { namespace DIP {
 
 				ThisFile = FreeFiles;
 				FreeFiles = FreeFiles->next;
-				ThisFile->next = OpenFiles;
-				OpenFiles = ThisFile;
-			}
+			} else
+				PrevFile->next = ThisFile->next;
+			ThisFile->next = OpenFiles;
+			OpenFiles = ThisFile;
 		}
 		return ThisFile;
 	}
