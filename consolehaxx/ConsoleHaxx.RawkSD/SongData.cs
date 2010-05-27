@@ -52,7 +52,7 @@ namespace ConsoleHaxx.RawkSD
 
 		public int Version { get { return Tree.GetValue<int>("Version"); } set { Tree.SetValue("Version", value); RaisePropertyChangedEvent(); } }
 
-		public int HopoThreshold { get { return Tree.GetValue<int>("HopoThreshold"); } set { Tree.SetValue("HopoTheshold", value); RaisePropertyChangedEvent(); } }
+		public int HopoThreshold { get { return Tree.GetValue<int>("HopoThreshold"); } set { Tree.SetValue("HopoThreshold", value); RaisePropertyChangedEvent(); } }
 
 		public IList<int> PreviewTimes { get { return Tree.GetArray<int>("Preview"); } set { Tree.SetArray("Preview", value); RaisePropertyChangedEvent(); } }
 

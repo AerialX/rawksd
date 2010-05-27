@@ -399,9 +399,6 @@ namespace ConsoleHaxx.RawkSD
 					track.Tracks.Add(maps.IndexOf(map));
 			}
 
-			if (dta.Song.HopoThreshold.HasValue && dta.Song.HopoThreshold.Value == 0)
-				dta.Song.HopoThreshold = null;
-
 			// For safety with customs messing with mix and not knowing what they're doing
 			SongsDTA.SongTracks drumtrack = dta.Song.Tracks.FirstOrDefault(t => t.Name == "drum");
 			while (drumtrack != null && drumtrack.Tracks.Count > 0 && drumtrack.Tracks.Count < 6)

@@ -38,7 +38,8 @@ namespace ConsoleHaxx.RawkSD
 			dta.Vocalist = data.Vocalist;
 			dta.Year = data.Year;
 			dta.Version = data.Version;
-			dta.Song.HopoThreshold = data.HopoThreshold;
+			if (data.HopoThreshold > 0)
+				dta.Song.HopoThreshold = data.HopoThreshold;
 			for (Instrument instrument = Instrument.Ambient; instrument <= Instrument.Vocals; instrument++) {
 				SongsDTA.Rankings rank = dta.Rank.SingleOrDefault(r => r.Name == InstrumentToString(instrument));
 				if (rank != null)

@@ -169,6 +169,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 				}
 
 				platform = ret.Platform;
+				game = platforms.Where(p => p.Key == ret.Platform).First().Value;
 				return true;
 			} else {
 				var pair = platforms.First();

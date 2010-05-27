@@ -12,7 +12,7 @@ namespace ConsoleHaxx.RawkSD
 
 		public static SongData Load(FormatData data)
 		{
-			if ((FormatData.LocalSongCache || data is TemporaryFormatData) && Cache.ContainsKey(data))
+			if (FormatData.LocalSongCache && Cache.ContainsKey(data))
 				return Cache[data];
 			Stream stream = data.GetStream("songdata");
 			SongData song = SongData.Create(stream);
@@ -24,10 +24,11 @@ namespace ConsoleHaxx.RawkSD
 
 		public static void Save(FormatData data, SongData song)
 		{
-			if (!(data is TemporaryFormatData)) {
+			if (!FormatData.LocalSongCache) {
 				Stream stream = data.AddStream("songdata");
 				song.Save(stream);
 				data.CloseStream(stream);
+				return;
 			}
 			SongData songdata = null;
 			if (Cache.ContainsKey(data))
