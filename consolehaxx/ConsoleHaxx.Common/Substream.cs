@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Threading;
 
 namespace ConsoleHaxx.Common
 {
@@ -72,6 +73,7 @@ namespace ConsoleHaxx.Common
 				Stream.Position = Offset + _position;
 			int ret = Stream.Read(buffer, offset, count);
 			_position += ret;
+
 			return ret;
 		}
 

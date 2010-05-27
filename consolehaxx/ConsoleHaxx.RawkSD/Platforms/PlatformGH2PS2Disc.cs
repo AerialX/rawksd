@@ -10,8 +10,8 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class PlatformGH2PS2Disc : Engine
 	{
-		public static readonly PlatformGH2PS2Disc Instance;
-		static PlatformGH2PS2Disc()
+		public static PlatformGH2PS2Disc Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformGH2PS2Disc();
 
@@ -36,20 +36,23 @@ namespace ConsoleHaxx.RawkSD
 
 		public override int ID { get { throw new NotImplementedException(); } }
 
-		public override string Name { get { return "Guitar Hero 1 / 2 / 80s PS2 Disc"; } }
+		public override string Name { get { return "Guitar Hero PS2 Disc"; } }
 
 		public override bool AddSong(PlatformData data, SongData song, ProgressIndicator progress)
 		{
 			DirectoryNode songdir = data.Session["songdir"] as DirectoryNode;
 
-			if (HarmonixMetadata.GetSongsDTA(song) == null) { // GH1's <addsong />
-				SongsDTA dta = HarmonixMetadata.GetSongData(song);
+			SongsDTA dta = HarmonixMetadata.GetSongsDTA(song);
+			if (dta == null) { // GH1's <addsong />
+				dta = HarmonixMetadata.GetSongData(song);
 				dta.Song.Cores = new List<int>() { -1, -1, 1, 1 };
 				dta.Song.Vols = new List<float>() { 0, 0, 0, 0 };
 				dta.Song.Pans = new List<float>() { -1, 1, -1, 1 };
 				dta.Song.Tracks.Find(t => t.Name == "guitar").Tracks.AddRange(new int[] { 2, 3 });
 				HarmonixMetadata.SetSongsDTA(song, dta.ToDTB());
 			}
+
+			dta.Bank = "sfx/tambourine_bank.milo";
 
 			DirectoryNode songnode = songdir.Navigate(song.ID) as DirectoryNode;
 
@@ -62,24 +65,27 @@ namespace ConsoleHaxx.RawkSD
 					song = new SongData(song);
 					song.ID += "_coop";
 					song.Name += " [coop]";
+					if (dta.SongCoop != null) {
+						dta.Song = dta.SongCoop;
+						dta.SongCoop = null;
+					} else
+						return false;
 				}
+				HarmonixMetadata.SetSongsDTA(song, dta.ToDTB());
 				FormatData formatdata = new TemporaryFormatData(song, data);
 
 				FileNode songaudiofile = songnode.Find(song.ID + ".vgs") as FileNode;
-				if (songaudiofile == null) {
+				if (songaudiofile == null)
 					songaudiofile = songnode.Find(song.ID + "_sp.vgs") as FileNode;
-					if (songaudiofile == null)
-						return false;
-				}
+				if (songaudiofile == null)
+					return false;
 
 				if (data.Game == Game.GuitarHero1)
 					ChartFormatGH1.Instance.Create(formatdata, chartfile == null ? null : chartfile.Data);
 				else
 					ChartFormatGH2.Instance.Create(formatdata, chartfile == null ? null : chartfile.Data, coop == 1);
 
-				AudioFormat audio = HarmonixMetadata.GetAudioFormat(song);
-
-				AudioFormatVGS.Instance.Create(formatdata, songaudiofile.Data, audio);
+				AudioFormatVGS.Instance.Create(formatdata, songaudiofile.Data, null);
 
 				data.AddSong(formatdata);
 			}

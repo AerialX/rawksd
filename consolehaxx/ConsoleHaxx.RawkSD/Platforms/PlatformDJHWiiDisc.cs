@@ -6,12 +6,12 @@ using ConsoleHaxx.Common;
 using System.Xml;
 using System.IO;
 
-namespace ConsoleHaxx.RawkSD.Platforms
+namespace ConsoleHaxx.RawkSD
 {
 	public class PlatformDJHWiiDisc : Engine
 	{
-		public static readonly PlatformDJHWiiDisc Instance;
-		static PlatformDJHWiiDisc()
+		public static PlatformDJHWiiDisc Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformDJHWiiDisc();
 

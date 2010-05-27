@@ -4,6 +4,7 @@
 		<nameprefix>[GH1]</nameprefix>
 		<version>1</version>
 		<difficulty instrument="guitar" rank="1" />
+		<difficulty instrument="drums" rank="1" />
 	</global>
 	<addsong id="advharmony" />
 	<addsong id="graveyardshift" />

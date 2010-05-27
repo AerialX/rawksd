@@ -13,13 +13,53 @@ namespace ConsoleHaxx.RawkSD.SWF
 	{
 		public class SongListItem
 		{
-			public FormatData Data;
+			public ListViewItem Item;
+			public SongImageList Images;
 			public string SongID;
-
-			public SongListItem(FormatData data)
+			public List<FormatData> Data;
+			public FormatData PrimaryData
 			{
-				Data = data;
-				SongID = data.Song.ID;
+				get
+				{
+					return Data.FirstOrDefault(d => d.PlatformData == Program.Form.Storage) ?? Data.FirstOrDefault(d => d.PlatformData == Program.Form.SD) ?? Data.FirstOrDefault();
+				}
+			}
+
+			public void AddData(FormatData data)
+			{
+				if (!Data.Contains(data))
+					Data.Add(data);
+
+				SongData song = data.Song;
+				if (PrimaryData == data) {
+					Item.SubItems.Clear();
+					Item.Text = song.Name;
+					Item.SubItems.Add(song.Artist);
+					Item.SubItems.Add(song.Album);
+					Item.SubItems.Add(song.Year.ToString());
+					Item.SubItems.Add(song.TidyGenre);
+					Item.ToolTipText = song.Pack;
+					SongID = song.ID;
+
+					Item.SubItems.Add("");
+				}
+
+				if (song.Game != Game.Unknown)
+					Images.SetGame(song.Game);
+				if (data.PlatformData == Program.Form.Storage)
+					Images.SetImage(0, true);
+				if (data.PlatformData == Program.Form.SD)
+					Images.SetImage(1, true);
+				Item.SubItems[5].Text = Images.ToString();
+			}
+
+			public SongListItem(ListViewItem item, FormatData data)
+			{
+				Data = new List<FormatData>();
+				Images = new SongImageList();
+
+				Item = item;
+				AddData(data);
 			}
 		}
 
@@ -31,17 +71,21 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		private void UpdateSongList()
 		{
-			UpdateSongList(Storage, 0, true);
-			UpdateSongList(SD, 1);
+			UpdateSongList(Storage);
+			UpdateSongList(SD);
 			foreach (PlatformData data in Platforms)
 				UpdateSongList(data);
+			AutoResizeColumns();
 		}
 
-		private void UpdateSongList(PlatformData data, int imageindex = 2, bool master = false)
+		private void UpdateSongList(PlatformData data)
 		{
+			SongUpdateMutex.WaitOne();
+
 			if (data == null)
 				return;
 
+			data.Mutex.WaitOne();
 			foreach (FormatData song in data.Songs) {
 				SongData songdata = song.Song;
 				ListViewItem item = null;
@@ -52,37 +96,17 @@ namespace ConsoleHaxx.RawkSD.SWF
 						break;
 					}
 				}
-				SongImageList images = null;
 				if (item == null) {
 					item = new ListViewItem(songdata.Name);
-					item.Tag = new SongListItem(song);
-					item.SubItems.Add(songdata.Artist);
-					item.SubItems.Add(songdata.Album);
-					item.SubItems.Add(songdata.Year.ToString());
-					item.SubItems.Add(songdata.TidyGenre);
-					item.SubItems.Add("");
-					item.ToolTipText = songdata.Pack;
-					images = new SongImageList();
+					item.Tag = new SongListItem(item, song);
 					SongList.Items.Add(item);
-				} else if (master) {
-					item.Tag = new SongListItem(song);
-					item.Text = songdata.Name;
-					item.SubItems[1].Text = songdata.Artist;
-					item.SubItems[2].Text = songdata.Album;
-					item.SubItems[3].Text = songdata.Year.ToString();
-					item.SubItems[4].Text = songdata.TidyGenre;
-					item.ToolTipText = songdata.Pack;
+				} else {
+					(item.Tag as SongListItem).AddData(song);
 				}
-				if (images == null)
-					images = new SongImageList(item.SubItems[5].Text);
-				if (imageindex == 2 || master)
-					images.SetGame(songdata.Game);
-				if (imageindex < 2)
-					images.SetImage(imageindex);
-				item.SubItems[5].Text = images.ToString();
 			}
+			data.Mutex.ReleaseMutex();
 
-			AutoResizeColumns();
+			SongUpdateMutex.ReleaseMutex();
 		}
 
 		private void AutoResizeColumns()
@@ -166,14 +190,12 @@ namespace ConsoleHaxx.RawkSD.SWF
 							break;
 					}
 
-
 					if (diff.Value == 0 && diff.Key != Instrument.Ambient) {
 						label.Image = null;
 						label.Text = "NO PART";
 					} else {
 						label.Text = string.Empty;
 						label.Image = Tiers[ImportMap.GetBaseTier(diff.Key, diff.Value)];
-						//label. = diff.Value.ToString();
 					}
 				}
 			} else {
@@ -190,7 +212,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 		private void SongList_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			if (SongList.SelectedItems.Count > 0 && SongList.SelectedItems[0].Tag is SongListItem)
-				PopulateSongInfo((SongList.SelectedItems[0].Tag as SongListItem).Data.Song);
+				PopulateSongInfo((SongList.SelectedItems[0].Tag as SongListItem).PrimaryData.Song);
 
 			if (SongList.SelectedItems.Count > 0) {
 				MenuSongsEdit.Enabled = true;
@@ -223,9 +245,14 @@ namespace ConsoleHaxx.RawkSD.SWF
 			}
 		}
 
-		private IEnumerable<FormatData> GetSelectedSongs()
+		private IList<SongListItem> GetSelectedSongs()
 		{
-			return SongList.SelectedItems.Cast<ListViewItem>().Select(i => i.Tag as SongListItem).Where(f => f != null).Select(f => f.Data);
+			return SongList.SelectedItems.Cast<ListViewItem>().Select(i => i.Tag as SongListItem).Where(f => f != null).ToList();
+		}
+
+		private IList<FormatData> GetSelectedSongData()
+		{
+			return GetSelectedSongs().Select(s => s.PrimaryData).ToList();
 		}
 
 		private void SongList_DoubleClick(object sender, EventArgs e)
@@ -259,26 +286,22 @@ namespace ConsoleHaxx.RawkSD.SWF
 		private void SongList_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
 		{
 			if (e.ColumnIndex == 5) {
-				/*if (e.Item.Selected) {
-					e.Graphics.FillRectangle(new SolidBrush(SystemColors.Highlight), new Rectangle(e.Bounds.X - 1, e.Bounds.Y + 1, e.Bounds.Width - 1, e.Bounds.Height - 2));
-				} else*/
-					e.DrawBackground();
-				//e.DrawFocusRectangle(e.Bounds);
-				SongImageList images = new SongImageList(e.SubItem.Text);
+				e.DrawBackground();
+				SongListItem item = e.Item.Tag as SongListItem;
 				int x = e.Bounds.X;
-				if (images.Images[0])
+				if (item.Images.Images[0])
 					e.Graphics.DrawImage(Properties.Resources.IconFolder, x, e.Bounds.Y, 16, 16);
 
 				x += 20;
 
 				if (SD != null) {
-					if (images.Images[1])
+					if (item.Images.Images[1])
 						e.Graphics.DrawImage(Properties.Resources.IconRSD, x, e.Bounds.Y, 16, 16);
 					x += 20;
 				}
 
-				if (images.Game != Game.Unknown)
-					e.Graphics.DrawImage(images.GameImage, x, e.Bounds.Y, 16, 16);
+				if (item.Images.Game != Game.Unknown)
+					e.Graphics.DrawImage(item.Images.GameImage, x, e.Bounds.Y, 16, 16);
 			} else
 				e.DrawDefault = true;
 		}
@@ -310,7 +333,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			SongList.Sort();
 		}
 
-		private class SongImageList
+		public class SongImageList
 		{
 			public bool[] Images;
 			public Game Game;
@@ -348,9 +371,9 @@ namespace ConsoleHaxx.RawkSD.SWF
 				return str;
 			}
 
-			public void SetImage(int index)
+			public void SetImage(int index, bool value)
 			{
-				Images[index] = true;
+				Images[index] = value;
 			}
 
 			public void SetGame(Game game)

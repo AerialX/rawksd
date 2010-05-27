@@ -17,6 +17,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			public IChartFormat Format;
 			public bool Coop;
 			public bool ExpertPlus;
+			public bool FixForQuickplay;
 			public string Milo;
 			public string Weights;
 			public string Pan;
@@ -38,6 +39,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			result.Format = form.ChartCombo.SelectedItem as IChartFormat;
 			result.Coop = form.CoopCheckbox.Checked;
 			result.ExpertPlus = form.ExpertPlusCheckbox.Checked;
+			result.FixForQuickplay = form.FixCheckbox.Checked;
 			result.Milo = form.MiloTextbox.Text;
 			result.Weights = form.WeightsTextbox.Text;
 			result.Pan = form.PanTextbox.Text;
@@ -80,9 +82,11 @@ namespace ConsoleHaxx.RawkSD.SWF
 			if (ChartCombo.SelectedItem == ChartFormatGH2.Instance) {
 				ExpertPlusCheckbox.Visible = false;
 				CoopCheckbox.Visible = true;
+				FixCheckbox.Visible = false;
 			} else if (ChartCombo.SelectedItem == ChartFormatRB.Instance) {
 				CoopCheckbox.Visible = false;
 				ExpertPlusCheckbox.Visible = true;
+				FixCheckbox.Visible = true;
 
 				MiloTextbox.Visible = true;
 				LabelMilo.Visible = true;
@@ -98,6 +102,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			} else if (ChartCombo.SelectedItem == ChartFormatChart.Instance) {
 				ExpertPlusCheckbox.Visible = false;
 				CoopCheckbox.Visible = true;
+				FixCheckbox.Visible = false;
 			}
 
 			if (ChartCombo.SelectedItem != ChartFormatRB.Instance) {

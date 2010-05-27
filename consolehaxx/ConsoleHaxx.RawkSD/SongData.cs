@@ -12,6 +12,16 @@ using ConsoleHaxx.Common;
 
 namespace ConsoleHaxx.RawkSD
 {
+	public enum Instrument : int
+	{
+		Ambient = 0,
+		Guitar = 1,
+		Bass = 2,
+		Drums = 3,
+		Vocals = 4,
+		Preview = 5
+	}
+
 	public class SongData
 	{
 		public const string TreeName = "SongDataTree";
@@ -249,15 +259,5 @@ namespace ConsoleHaxx.RawkSD
 					id.Append(name[i]);
 			return id.ToString().ToLower();
 		}
-	}
-
-	public enum Instrument : int
-	{
-		Ambient = 0,
-		Guitar = 1,
-		Bass = 2,
-		Drums = 3,
-		Vocals = 4,
-		Preview = 5
 	}
 }

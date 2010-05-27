@@ -12,8 +12,8 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class PlatformFretsOnFire : Engine
 	{
-		public static readonly PlatformFretsOnFire Instance;
-		static PlatformFretsOnFire()
+		public static PlatformFretsOnFire Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformFretsOnFire();
 

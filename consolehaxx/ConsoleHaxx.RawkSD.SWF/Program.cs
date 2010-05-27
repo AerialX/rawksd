@@ -10,6 +10,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 		[STAThread]
 		static void Main()
 		{
+			Platform.Initialise();
+
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 			Form = new MainForm();

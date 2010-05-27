@@ -12,18 +12,15 @@ namespace ConsoleHaxx.RawkSD.SWF
 		public Dictionary<TaskScheduler, VisualTask> ProgressControls;
 		public TaskScheduler Progress { get { return ProgressList.OrderBy(p => p.Tasks.Count).FirstOrDefault(); } }
 
+		private TaskScheduler AsyncProgress = null;
+
 		public TaskScheduler GetAsyncProgress()
 		{
-			if (Progress.Tasks.Count == 0)
-				return Progress;
-			TaskScheduler progress = AddTaskScheduler();
-			progress.OnUpdate += (a, b, c, d) => {
-				if (progress.Tasks.Count == 0) {
-					progress.Exit();
-					RemoveTaskScheduler(a);
-				}
-			};
-			return progress;
+			if (AsyncProgress != null)
+				return AsyncProgress;
+			AsyncProgress = AddTaskScheduler();
+			RemoveTaskScheduler(AsyncProgress);
+			return AsyncProgress;
 		}
 
 		public class VisualTask

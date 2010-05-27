@@ -11,15 +11,15 @@ namespace ConsoleHaxx.RawkSD
 	{
 		public const string ChartName = "chart";
 
-		public static readonly ChartFormatChart Instance;
-		static ChartFormatChart()
+		public static ChartFormatChart Instance;
+		public static void Initialise()
 		{
 			Instance = new ChartFormatChart();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x07; }
+			get { return 0x40; }
 		}
 
 		public override string Name {

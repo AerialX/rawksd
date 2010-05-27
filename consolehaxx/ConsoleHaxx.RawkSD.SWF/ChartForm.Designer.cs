@@ -46,6 +46,7 @@
 			this.ButtonOK = new System.Windows.Forms.Button();
 			this.ButtonCancel = new System.Windows.Forms.Button();
 			this.OpenFile = new System.Windows.Forms.OpenFileDialog();
+			this.FixCheckbox = new System.Windows.Forms.CheckBox();
 			this.MainLayout.SuspendLayout();
 			this.ButtonLayout.SuspendLayout();
 			this.SuspendLayout();
@@ -58,23 +59,24 @@
 			this.MainLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
 			this.MainLayout.Controls.Add(this.LabelChartType, 0, 0);
 			this.MainLayout.Controls.Add(this.ChartCombo, 1, 0);
-			this.MainLayout.Controls.Add(this.CoopCheckbox, 1, 1);
-			this.MainLayout.Controls.Add(this.ExpertPlusCheckbox, 1, 2);
-			this.MainLayout.Controls.Add(this.MiloBrowseButton, 2, 3);
-			this.MainLayout.Controls.Add(this.WeightsBrowseButton, 2, 4);
-			this.MainLayout.Controls.Add(this.PanBrowseButton, 2, 5);
-			this.MainLayout.Controls.Add(this.MiloTextbox, 1, 3);
-			this.MainLayout.Controls.Add(this.WeightsTextbox, 1, 4);
-			this.MainLayout.Controls.Add(this.PanTextbox, 1, 5);
+			this.MainLayout.Controls.Add(this.MiloBrowseButton, 2, 4);
+			this.MainLayout.Controls.Add(this.WeightsBrowseButton, 2, 5);
+			this.MainLayout.Controls.Add(this.PanBrowseButton, 2, 6);
+			this.MainLayout.Controls.Add(this.MiloTextbox, 1, 4);
+			this.MainLayout.Controls.Add(this.WeightsTextbox, 1, 5);
+			this.MainLayout.Controls.Add(this.PanTextbox, 1, 6);
 			this.MainLayout.Controls.Add(this.LabelOptions, 0, 1);
-			this.MainLayout.Controls.Add(this.LabelMilo, 0, 3);
-			this.MainLayout.Controls.Add(this.LabelWeights, 0, 4);
-			this.MainLayout.Controls.Add(this.LabelPan, 0, 5);
-			this.MainLayout.Controls.Add(this.ButtonLayout, 0, 6);
+			this.MainLayout.Controls.Add(this.LabelMilo, 0, 4);
+			this.MainLayout.Controls.Add(this.LabelWeights, 0, 5);
+			this.MainLayout.Controls.Add(this.LabelPan, 0, 6);
+			this.MainLayout.Controls.Add(this.ButtonLayout, 0, 7);
+			this.MainLayout.Controls.Add(this.ExpertPlusCheckbox, 1, 3);
+			this.MainLayout.Controls.Add(this.CoopCheckbox, 1, 1);
+			this.MainLayout.Controls.Add(this.FixCheckbox, 1, 2);
 			this.MainLayout.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.MainLayout.Location = new System.Drawing.Point(0, 0);
 			this.MainLayout.Name = "MainLayout";
-			this.MainLayout.RowCount = 7;
+			this.MainLayout.RowCount = 8;
 			this.MainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.MainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.MainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -82,7 +84,8 @@
 			this.MainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.MainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.MainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.MainLayout.Size = new System.Drawing.Size(292, 192);
+			this.MainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+			this.MainLayout.Size = new System.Drawing.Size(292, 216);
 			this.MainLayout.TabIndex = 0;
 			// 
 			// LabelChartType
@@ -122,10 +125,10 @@
 			// 
 			this.ExpertPlusCheckbox.AutoSize = true;
 			this.MainLayout.SetColumnSpan(this.ExpertPlusCheckbox, 2);
-			this.ExpertPlusCheckbox.Location = new System.Drawing.Point(71, 53);
+			this.ExpertPlusCheckbox.Location = new System.Drawing.Point(71, 76);
 			this.ExpertPlusCheckbox.Name = "ExpertPlusCheckbox";
 			this.ExpertPlusCheckbox.Size = new System.Drawing.Size(62, 17);
-			this.ExpertPlusCheckbox.TabIndex = 4;
+			this.ExpertPlusCheckbox.TabIndex = 5;
 			this.ExpertPlusCheckbox.Text = "Expert+";
 			this.ExpertPlusCheckbox.UseVisualStyleBackColor = true;
 			// 
@@ -133,10 +136,10 @@
 			// 
 			this.MiloBrowseButton.AutoSize = true;
 			this.MiloBrowseButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-			this.MiloBrowseButton.Location = new System.Drawing.Point(263, 76);
+			this.MiloBrowseButton.Location = new System.Drawing.Point(263, 99);
 			this.MiloBrowseButton.Name = "MiloBrowseButton";
 			this.MiloBrowseButton.Size = new System.Drawing.Size(26, 23);
-			this.MiloBrowseButton.TabIndex = 5;
+			this.MiloBrowseButton.TabIndex = 8;
 			this.MiloBrowseButton.Text = "...";
 			this.MiloBrowseButton.UseVisualStyleBackColor = true;
 			this.MiloBrowseButton.Click += new System.EventHandler(this.MiloBrowseButton_Click);
@@ -145,10 +148,10 @@
 			// 
 			this.WeightsBrowseButton.AutoSize = true;
 			this.WeightsBrowseButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-			this.WeightsBrowseButton.Location = new System.Drawing.Point(263, 105);
+			this.WeightsBrowseButton.Location = new System.Drawing.Point(263, 128);
 			this.WeightsBrowseButton.Name = "WeightsBrowseButton";
 			this.WeightsBrowseButton.Size = new System.Drawing.Size(26, 23);
-			this.WeightsBrowseButton.TabIndex = 6;
+			this.WeightsBrowseButton.TabIndex = 11;
 			this.WeightsBrowseButton.Text = "...";
 			this.WeightsBrowseButton.UseVisualStyleBackColor = true;
 			this.WeightsBrowseButton.Click += new System.EventHandler(this.WeightsBrowseButton_Click);
@@ -157,10 +160,10 @@
 			// 
 			this.PanBrowseButton.AutoSize = true;
 			this.PanBrowseButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-			this.PanBrowseButton.Location = new System.Drawing.Point(263, 134);
+			this.PanBrowseButton.Location = new System.Drawing.Point(263, 157);
 			this.PanBrowseButton.Name = "PanBrowseButton";
 			this.PanBrowseButton.Size = new System.Drawing.Size(26, 23);
-			this.PanBrowseButton.TabIndex = 7;
+			this.PanBrowseButton.TabIndex = 14;
 			this.PanBrowseButton.Text = "...";
 			this.PanBrowseButton.UseVisualStyleBackColor = true;
 			this.PanBrowseButton.Click += new System.EventHandler(this.PanBrowseButton_Click);
@@ -168,26 +171,26 @@
 			// MiloTextbox
 			// 
 			this.MiloTextbox.Dock = System.Windows.Forms.DockStyle.Top;
-			this.MiloTextbox.Location = new System.Drawing.Point(71, 76);
+			this.MiloTextbox.Location = new System.Drawing.Point(71, 99);
 			this.MiloTextbox.Name = "MiloTextbox";
 			this.MiloTextbox.Size = new System.Drawing.Size(186, 20);
-			this.MiloTextbox.TabIndex = 8;
+			this.MiloTextbox.TabIndex = 7;
 			// 
 			// WeightsTextbox
 			// 
 			this.WeightsTextbox.Dock = System.Windows.Forms.DockStyle.Top;
-			this.WeightsTextbox.Location = new System.Drawing.Point(71, 105);
+			this.WeightsTextbox.Location = new System.Drawing.Point(71, 128);
 			this.WeightsTextbox.Name = "WeightsTextbox";
 			this.WeightsTextbox.Size = new System.Drawing.Size(186, 20);
-			this.WeightsTextbox.TabIndex = 8;
+			this.WeightsTextbox.TabIndex = 10;
 			// 
 			// PanTextbox
 			// 
 			this.PanTextbox.Dock = System.Windows.Forms.DockStyle.Top;
-			this.PanTextbox.Location = new System.Drawing.Point(71, 134);
+			this.PanTextbox.Location = new System.Drawing.Point(71, 157);
 			this.PanTextbox.Name = "PanTextbox";
 			this.PanTextbox.Size = new System.Drawing.Size(186, 20);
-			this.PanTextbox.TabIndex = 8;
+			this.PanTextbox.TabIndex = 13;
 			// 
 			// LabelOptions
 			// 
@@ -196,37 +199,37 @@
 			this.LabelOptions.Name = "LabelOptions";
 			this.LabelOptions.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
 			this.LabelOptions.Size = new System.Drawing.Size(46, 17);
-			this.LabelOptions.TabIndex = 0;
+			this.LabelOptions.TabIndex = 2;
 			this.LabelOptions.Text = "Options:";
 			// 
 			// LabelMilo
 			// 
 			this.LabelMilo.AutoSize = true;
-			this.LabelMilo.Location = new System.Drawing.Point(3, 73);
+			this.LabelMilo.Location = new System.Drawing.Point(3, 96);
 			this.LabelMilo.Name = "LabelMilo";
 			this.LabelMilo.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
 			this.LabelMilo.Size = new System.Drawing.Size(29, 17);
-			this.LabelMilo.TabIndex = 0;
+			this.LabelMilo.TabIndex = 6;
 			this.LabelMilo.Text = "Milo:";
 			// 
 			// LabelWeights
 			// 
 			this.LabelWeights.AutoSize = true;
-			this.LabelWeights.Location = new System.Drawing.Point(3, 102);
+			this.LabelWeights.Location = new System.Drawing.Point(3, 125);
 			this.LabelWeights.Name = "LabelWeights";
 			this.LabelWeights.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
 			this.LabelWeights.Size = new System.Drawing.Size(49, 17);
-			this.LabelWeights.TabIndex = 0;
+			this.LabelWeights.TabIndex = 9;
 			this.LabelWeights.Text = "Weights:";
 			// 
 			// LabelPan
 			// 
 			this.LabelPan.AutoSize = true;
-			this.LabelPan.Location = new System.Drawing.Point(3, 131);
+			this.LabelPan.Location = new System.Drawing.Point(3, 154);
 			this.LabelPan.Name = "LabelPan";
 			this.LabelPan.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
 			this.LabelPan.Size = new System.Drawing.Size(29, 17);
-			this.LabelPan.TabIndex = 0;
+			this.LabelPan.TabIndex = 12;
 			this.LabelPan.Text = "Pan:";
 			// 
 			// ButtonLayout
@@ -236,10 +239,10 @@
 			this.ButtonLayout.Controls.Add(this.ButtonCancel);
 			this.ButtonLayout.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.ButtonLayout.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-			this.ButtonLayout.Location = new System.Drawing.Point(3, 163);
+			this.ButtonLayout.Location = new System.Drawing.Point(3, 186);
 			this.ButtonLayout.Name = "ButtonLayout";
-			this.ButtonLayout.Size = new System.Drawing.Size(286, 26);
-			this.ButtonLayout.TabIndex = 9;
+			this.ButtonLayout.Size = new System.Drawing.Size(286, 27);
+			this.ButtonLayout.TabIndex = 15;
 			// 
 			// ButtonOK
 			// 
@@ -262,13 +265,23 @@
 			this.ButtonCancel.UseVisualStyleBackColor = true;
 			this.ButtonCancel.Click += new System.EventHandler(this.ButtonCancel_Click);
 			// 
+			// FixCheckbox
+			// 
+			this.FixCheckbox.AutoSize = true;
+			this.FixCheckbox.Location = new System.Drawing.Point(71, 53);
+			this.FixCheckbox.Name = "FixCheckbox";
+			this.FixCheckbox.Size = new System.Drawing.Size(107, 17);
+			this.FixCheckbox.TabIndex = 4;
+			this.FixCheckbox.Text = "Fix For Quickplay";
+			this.FixCheckbox.UseVisualStyleBackColor = true;
+			// 
 			// ChartForm
 			// 
 			this.AcceptButton = this.ButtonOK;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.ButtonCancel;
-			this.ClientSize = new System.Drawing.Size(292, 192);
+			this.ClientSize = new System.Drawing.Size(292, 216);
 			this.Controls.Add(this.MainLayout);
 			this.Name = "ChartForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -302,5 +315,6 @@
 		private System.Windows.Forms.Button ButtonOK;
 		private System.Windows.Forms.Button ButtonCancel;
 		private System.Windows.Forms.OpenFileDialog OpenFile;
+		private System.Windows.Forms.CheckBox FixCheckbox;
 	}
 }

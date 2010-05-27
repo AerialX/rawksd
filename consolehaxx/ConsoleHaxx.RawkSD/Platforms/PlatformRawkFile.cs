@@ -11,8 +11,8 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class PlatformRawkFile : Engine
 	{
-		public static readonly PlatformRawkFile Instance;
-		static PlatformRawkFile()
+		public static PlatformRawkFile Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformRawkFile();
 
@@ -28,7 +28,7 @@ namespace ConsoleHaxx.RawkSD
 
 		public override int ID { get { throw new NotImplementedException(); } }
 
-		public override string Name { get { return "RawkSD .rwk Archive"; } }
+		public override string Name { get { return "RawkSD Song Archive"; } }
 
 		public override bool AddSong(PlatformData data, SongData song, ProgressIndicator progress)
 		{
@@ -64,14 +64,14 @@ namespace ConsoleHaxx.RawkSD
 
 			if (audiofile != null) {
 				AudioFormat audio = HarmonixMetadata.GetAudioFormat(song);
-				AudioFormatMogg.Instance.Create(formatdata, audiofile.Data, previewfile == null ? null : previewfile.Data, audio);
+				AudioFormatRB2Mogg.Instance.Create(formatdata, audiofile.Data, previewfile.Data, null);
 			}
 
 			if (albumfile != null)
 				song.AlbumArt = WiiImage.Create(new EndianReader(albumfile.Data, Endianness.LittleEndian)).Bitmap;
 
 			if (chartfile != null)
-				ChartFormatRB.Instance.Create(formatdata, chartfile == null ? null : chartfile.Data, panfile == null ? null : panfile.Data, weightsfile == null ? null : weightsfile.Data, milofile == null ? null : milofile.Data, false);
+				ChartFormatRB.Instance.Create(formatdata, chartfile == null ? null : chartfile.Data, panfile == null ? null : panfile.Data, weightsfile == null ? null : weightsfile.Data, milofile == null ? null : milofile.Data, false, false);
 
 			data.AddSong(formatdata);
 

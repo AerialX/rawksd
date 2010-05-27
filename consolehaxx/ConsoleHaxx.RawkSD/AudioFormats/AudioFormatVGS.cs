@@ -12,15 +12,15 @@ namespace ConsoleHaxx.RawkSD
 		public const string FormatName = "map";
 		public const string AudioName = "audio";
 
-		public static readonly AudioFormatVGS Instance;
-		static AudioFormatVGS()
+		public static AudioFormatVGS Instance;
+		public static void Initialise()
 		{
 			Instance = new AudioFormatVGS();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x08; }
+			get { return 0x0a; }
 		}
 
 		public override string Name {
@@ -35,15 +35,20 @@ namespace ConsoleHaxx.RawkSD
 			get { return true; }
 		}
 
+		public override AudioFormat DecodeAudioFormat(FormatData data)
+		{
+			Stream stream = data.GetStream(this, FormatName);
+			if (stream == null)
+				return HarmonixMetadata.GetAudioFormat(data.Song);
+			AudioFormat format = AudioFormat.Create(stream);
+			data.CloseStream(stream);
+			return format;
+		}
+
 		public override AudioFormat DecodeAudio(FormatData data, ProgressIndicator progress)
 		{
-			if (!data.HasStream(this, FormatName) && !data.HasStream(this, AudioName))
-				throw new FormatException();
-
-			AudioFormat format = AudioFormat.Create(data.GetStream(this, FormatName));
+			AudioFormat format = DecodeAudioFormat(data);
 			format.Decoder = new RawkAudio.Decoder(data.GetStream(this, AudioName), RawkAudio.Decoder.AudioFormat.Vgs);
-
-			AudioFormat.AddPreviewDecoder(data, format, progress);
 
 			return format;
 		}
@@ -56,9 +61,11 @@ namespace ConsoleHaxx.RawkSD
 		public void Create(FormatData data, Stream audio, AudioFormat format)
 		{
 			data.SetStream(this, AudioName, audio);
-			Stream formatstream = data.AddStream(this, FormatName);
-			format.Save(formatstream);
-			data.CloseStream(formatstream);
+			if (format != null) {
+				Stream formatstream = data.AddStream(this, FormatName);
+				format.Save(formatstream);
+				data.CloseStream(formatstream);
+			}
 		}
 	}
 }

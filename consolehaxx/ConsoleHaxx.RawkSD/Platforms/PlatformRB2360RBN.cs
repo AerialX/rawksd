@@ -10,8 +10,8 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class PlatformRB2360RBN : Engine
 	{
-		public static readonly PlatformRB2360RBN Instance;
-		static PlatformRB2360RBN()
+		public static PlatformRB2360RBN Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformRB2360RBN();
 
@@ -52,7 +52,7 @@ namespace ConsoleHaxx.RawkSD
 			milo.Compressed = true;
 			milo.Save(new EndianReader(milostream, Endianness.LittleEndian));
 
-			ChartFormatRB.Instance.Create(formatdata, rba.Chart, null, rba.Weights, milostream, false);
+			ChartFormatRB.Instance.Create(formatdata, rba.Chart, null, rba.Weights, milostream, false, false);
 
 			//song.AlbumArt = XboxImage.Create(new EndianReader(albumfile.Data, Endianness.LittleEndian)).Bitmap;
 
@@ -74,6 +74,8 @@ namespace ConsoleHaxx.RawkSD
 				data.Session["rba"] = rba;
 
 				SongData song = HarmonixMetadata.GetSongData(data, DTA.Create(rba.Data));
+
+				song.ID = ImportMap.GetShortName(song.Name);
 
 				AddSong(data, song, progress);
 			}

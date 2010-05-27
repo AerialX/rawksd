@@ -52,28 +52,28 @@ namespace ConsoleHaxx.RawkSD.SWF
 				NameText.ReadOnly = true;
 				ArtistText.ReadOnly = true;
 				AlbumText.ReadOnly = true;
-				TrackNumeric.Enabled = true;
-				YearNumeric.Enabled = true;
+				TrackNumeric.Enabled = false;
+				YearNumeric.Enabled = false;
 				GenreCombo.Enabled = false;
 				VocalistCombo.Enabled = false;
 				MasterCheckbox.Enabled = false;
 
-				HopoNumeric.ReadOnly = true;
+				HopoNumeric.Enabled = false;
 				GameCombo.Enabled = false;
 				PackText.ReadOnly = true;
 				VersionNumeric.Enabled = false;
-				PreviewStartNumeric.ReadOnly = true;
-				PreviewEndNumeric.ReadOnly = true;
+				PreviewStartNumeric.Enabled = false;
+				PreviewEndNumeric.Enabled = false;
 
 				AnimationTempoCombo.Enabled = false;
-				ScrollSpeedNumeric.Enabled = true;
+				ScrollSpeedNumeric.Enabled = false;
 				BankCombo.Enabled = false;
 
-				BandTierNumeric.ReadOnly = true;
-				GuitarTierNumeric.ReadOnly = true;
-				DrumsTierNumeric.ReadOnly = true;
-				VocalsTierNumeric.ReadOnly = true;
-				BassTierNumeric.ReadOnly = true;
+				BandTierNumeric.Enabled = false;
+				GuitarTierNumeric.Enabled = false;
+				DrumsTierNumeric.Enabled = false;
+				VocalsTierNumeric.Enabled = false;
+				BassTierNumeric.Enabled = false;
 
 				ReplaceChartButton.Enabled = false;
 
@@ -121,6 +121,22 @@ namespace ConsoleHaxx.RawkSD.SWF
 					default:
 						throw new FormatException();
 				}
+				switch (dta.Bank) {
+					case "sfx/tambourine_bank.milo":
+						BankCombo.SelectedIndex = 0;
+						break;
+					case "sfx/cowbell_bank.milo":
+						BankCombo.SelectedIndex = 1;
+						break;
+					case "sfx/triangle_bank.milo":
+						BankCombo.SelectedIndex = 2;
+						break;
+					case "sfx/handclap_bank.milo":
+						BankCombo.SelectedIndex = 3;
+						break;
+					default:
+						throw new FormatException();
+				}
 			}
 			BandTierNumeric.Value = song.Difficulty[Instrument.Ambient];
 			GuitarTierNumeric.Value = song.Difficulty[Instrument.Guitar];
@@ -160,31 +176,55 @@ namespace ConsoleHaxx.RawkSD.SWF
 			if (!Writable || Song == null)
 				return;
 
+			OpenDialog.Multiselect = false;
+			OpenDialog.Title = "Select album art";
+			OpenDialog.Filter = "Common Image Files|*.png;*.jpg;*.bmp|All Files|*";
+			if (OpenDialog.ShowDialog(this) == DialogResult.Cancel)
+				return;
+
+			Bitmap image = null;
+
+			try {
+				image = new Bitmap(OpenDialog.FileName);
+			} catch { }
+			if (image != null)
+				Song.AlbumArt = image;
+			AlbumArt.Image = image;
 		}
 
 		private void BandTierNumeric_ValueChanged(object sender, EventArgs e)
 		{
 			BandTierPicture.Image = Program.Form.Tiers[ImportMap.GetBaseTier(Instrument.Ambient, (int)BandTierNumeric.Value)];
+			if (Song != null)
+				Song.Difficulty[Instrument.Ambient] = (int)BandTierNumeric.Value;
 		}
 
 		private void GuitarTierNumeric_ValueChanged(object sender, EventArgs e)
 		{
 			GuitarTierPicture.Image = Program.Form.Tiers[ImportMap.GetBaseTier(Instrument.Guitar, (int)GuitarTierNumeric.Value)];
+			if (Song != null)
+				Song.Difficulty[Instrument.Guitar] = (int)GuitarTierNumeric.Value;
 		}
 
 		private void DrumsTierNumeric_ValueChanged(object sender, EventArgs e)
 		{
 			DrumsTierPicture.Image = Program.Form.Tiers[ImportMap.GetBaseTier(Instrument.Drums, (int)DrumsTierNumeric.Value)];
+			if (Song != null)
+				Song.Difficulty[Instrument.Drums] = (int)DrumsTierNumeric.Value;
 		}
 
 		private void VocalsTierNumeric_ValueChanged(object sender, EventArgs e)
 		{
 			VocalsTierPicture.Image = Program.Form.Tiers[ImportMap.GetBaseTier(Instrument.Vocals, (int)VocalsTierNumeric.Value)];
+			if (Song != null)
+				Song.Difficulty[Instrument.Vocals] = (int)VocalsTierNumeric.Value;
 		}
 
 		private void BassTierNumeric_ValueChanged(object sender, EventArgs e)
 		{
 			BassTierPicture.Image = Program.Form.Tiers[ImportMap.GetBaseTier(Instrument.Bass, (int)BassTierNumeric.Value)];
+			if (Song != null)
+				Song.Difficulty[Instrument.Bass] = (int)BassTierNumeric.Value;
 		}
 
 		private void IdText_TextChanged(object sender, EventArgs e)
@@ -238,7 +278,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 		private void GenreCombo_SelectedIndexChanged(object sender, EventArgs e)
 		{
 			if (Song != null)
-				throw new NotImplementedException();
+				Song.Genre = GenreCombo.SelectedItem.ToString();
 		}
 
 		private void VocalistCombo_SelectedIndexChanged(object sender, EventArgs e)
@@ -331,7 +371,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			Stream pan = null;
 			Stream weights = null;
 
-			FormatData data = new TemporaryFormatData();
+			FormatData data = new TemporaryFormatData(Data.Song);
 			if (result.Format == ChartFormatRB.Instance) {
 				if (result.Milo.HasValue())
 					milo = new FileStream(result.Milo, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -340,14 +380,14 @@ namespace ConsoleHaxx.RawkSD.SWF
 				if (result.Pan.HasValue())
 					pan = new FileStream(result.Pan, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-				ChartFormatRB.Instance.Create(data, stream, pan, weights, milo, result.ExpertPlus);
+				ChartFormatRB.Instance.Create(data, stream, pan, weights, milo, result.ExpertPlus, result.FixForQuickplay);
 			} else if (result.Format == ChartFormatGH2.Instance) {
 				ChartFormatGH2.Instance.Create(data, stream, result.Coop);
 			} else if (result.Format == ChartFormatChart.Instance) {
 				ChartFormatChart.Instance.Create(data, stream, result.Coop);
 			}
 			
-			data.Save(Data);
+			data.SaveTo(Data);
 
 			stream.Close();
 
@@ -412,13 +452,81 @@ namespace ConsoleHaxx.RawkSD.SWF
 					AudioFormatOgg.Instance.Create(data, streams, format);
 				else
 					AudioFormatFFmpeg.Instance.Create(data, streams, format);
-				data.Save(Data);
+				data.SaveTo(Data);
 			}
 		}
 
 		private void ButtonCancel_Click(object sender, EventArgs e)
 		{
 			Close();
+		}
+
+		private void AnimationTempoCombo_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			if (Song == null)
+				return;
+
+			SongsDTA dta = GetOrCreateDTA();
+			switch (AnimationTempoCombo.SelectedIndex) {
+				case 0:
+					dta.AnimTempo = 0x10;
+					break;
+				case 1:
+					dta.AnimTempo = 0x20;
+					break;
+				case 2:
+					dta.AnimTempo = 0x40;
+					break;
+				default:
+					return;
+			}
+			SaveDTA(dta);
+		}
+
+		private void SaveDTA(SongsDTA dta)
+		{
+			HarmonixMetadata.SetSongsDTA(Song, dta.ToDTB());
+		}
+
+		private SongsDTA GetOrCreateDTA()
+		{
+			SongsDTA dta = HarmonixMetadata.GetSongsDTA(Song);
+			return dta ?? new SongsDTA();
+		}
+
+		private void ScrollSpeedNumeric_ValueChanged(object sender, EventArgs e)
+		{
+			if (Song == null)
+				return;
+
+			SongsDTA dta = GetOrCreateDTA();
+			dta.SongScrollSpeed = (int)ScrollSpeedNumeric.Value;
+			SaveDTA(dta);
+		}
+
+		private void BankCombo_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			if (Song == null)
+				return;
+
+			SongsDTA dta = GetOrCreateDTA();
+			switch (BankCombo.SelectedIndex) {
+				case 0:
+					dta.Bank = "sfx/tambourine_bank.milo";
+					break;
+				case 1:
+					dta.Bank = "sfx/cowbell_bank.milo";
+					break;
+				case 2:
+					dta.Bank = "sfx/triangle_bank.milo";
+					break;
+				case 3:
+					dta.Bank = "sfx/handclap_bank.milo";
+					break;
+				default:
+					return;
+			}
+			SaveDTA(dta);
 		}
 	}
 }

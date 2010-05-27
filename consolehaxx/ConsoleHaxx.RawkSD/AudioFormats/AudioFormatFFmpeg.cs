@@ -11,15 +11,15 @@ namespace ConsoleHaxx.RawkSD
 		public const string FormatName = "map";
 		public const string AudioName = "audio";
 
-		public static readonly AudioFormatFFmpeg Instance;
-		static AudioFormatFFmpeg()
+		public static AudioFormatFFmpeg Instance;
+		public static void Initialise()
 		{
 			Instance = new AudioFormatFFmpeg();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x0f; }
+			get { return 0x03; }
 		}
 
 		public override string Name {
@@ -49,6 +49,14 @@ namespace ConsoleHaxx.RawkSD
 					(format.Decoder as MultiDecoder).AddDecoder(sdecoder);
 			}
 
+			return format;
+		}
+
+		public override AudioFormat DecodeAudioFormat(FormatData data)
+		{
+			Stream stream = data.GetStream(this, FormatName);
+			AudioFormat format = AudioFormat.Create(stream);
+			data.CloseStream(stream);
 			return format;
 		}
 

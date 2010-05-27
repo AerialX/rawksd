@@ -13,15 +13,15 @@ namespace ConsoleHaxx.RawkSD
 		public const string WadName = "wad";
 		public const string DatName = "dat";
 
-		public static readonly AudioFormatGH3WiiFSB Instance;
-		static AudioFormatGH3WiiFSB()
+		public static AudioFormatGH3WiiFSB Instance;
+		public static void Initialise()
 		{
 			Instance = new AudioFormatGH3WiiFSB();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x09; }
+			get { return 0x04; }
 		}
 
 		public override string Name {

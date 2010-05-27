@@ -14,24 +14,27 @@ namespace ConsoleHaxx.RawkSD
 	{
 		public const string ChartName = "chart";
 
-		public static readonly ChartFormatGH5 Instance;
-		static ChartFormatGH5()
+		public static ChartFormatGH5 Instance;
+		public static void Initialise()
 		{
 			Instance = new ChartFormatGH5();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x05; }
+			get { return 0x46; }
 		}
 
 		public override string Name {
 			get { return "Guitar Hero 5 / Band Hero Chart"; }
 		}
 
-		public void Create(FormatData data, Stream stream, PakFormatType pak)
+		public void Create(FormatData data, Stream[] streams, bool expertplus)
 		{
-			data.SetStream(this, ChartName, stream);
+			for (int i = 0; i < streams.Length; i++)
+				data.SetStream(this, ChartName + (i == 0 ? string.Empty : ("." + i.ToString())), streams[i]);
+
+			data.Song.Data.SetValue("GH5ChartExpertPlus", expertplus);
 		}
 
 		public override bool Writable {
@@ -42,28 +45,48 @@ namespace ConsoleHaxx.RawkSD
 			get { return true; }
 		}
 
-		public ChartFormat DecodeChart(FormatData data, Stream chartstream, ProgressIndicator progress)
+		public ChartFormat DecodeChart(FormatData data, ProgressIndicator progress, params Stream[] chartstreams)
 		{
 			progress.NewTask(5 + 12);
 
 			PakFormat format = NeversoftMetadata.GetSongItemType(data.Song);
 			SongData song = NeversoftMetadata.GetSongData(data.PlatformData, NeversoftMetadata.GetSongItem(data.Song));
-			Pak chartpak = new Pak(new EndianReader(chartstream, Endianness.BigEndian)); // TODO: Endianness based on format?
-			FileNode chartfile = chartpak.Root.Find(song.ID + ".mid.qb.ngc", SearchOption.AllDirectories, true) as FileNode;
+
+			List<Pak> chartpaks = new List<Pak>();
+			foreach (Stream stream in chartstreams) {
+				chartpaks.Add(new Pak(new EndianReader(stream, Endianness.BigEndian))); // TODO: Endianness based on format?
+			}
+
+			FileNode chartfile = null;
+			foreach (Pak pak in chartpaks) {
+				chartfile = pak.Root.Find(song.ID + ".mid.qb.ngc", SearchOption.AllDirectories, true) as FileNode ?? chartfile;
+			}
+			if (chartfile == null)
+				return null;
+
 			QbFile qbchart = new QbFile(chartfile.Data, format);
 
 			StringList strings = new StringList();
-			foreach (Pak.Node n in chartpak.Nodes)
-				if (n.Filename.Length == 0)
-					strings.ParseFromStream(n.Data);
+			foreach (Pak pak in chartpaks) {
+				foreach (Pak.Node n in pak.Nodes) {
+					if (!n.Filename.HasValue())
+						strings.ParseFromStream(n.Data);
+				}
+			}
 
 			QbFile qbsections = null;
-			FileNode qbsectionfile = chartpak.Root.Find(song.ID + ".mid_text.qb.ngc", SearchOption.AllDirectories, true) as FileNode;
+			FileNode qbsectionfile = null;
+			foreach (Pak pak in chartpaks) {
+				qbsectionfile = pak.Root.Find(song.ID + ".mid_text.qb.ngc", SearchOption.AllDirectories, true) as FileNode ?? qbsectionfile;
+			}
 			if (qbsectionfile != null)
 				qbsections = new QbFile(qbsectionfile.Data, format);
 
 			Notes notes = null;
-			FileNode notesfile = chartpak.Root.Find(song.ID + ".note.ngc", SearchOption.AllDirectories, true) as FileNode;
+			FileNode notesfile = null;
+			foreach (Pak pak in chartpaks) {
+				notesfile = pak.Root.Find(song.ID + ".note.ngc", SearchOption.AllDirectories, true) as FileNode ?? notesfile;
+			}
 			if (notesfile != null)
 				notes = Notes.Create(new EndianReader(notesfile.Data, Endianness.BigEndian));
 
@@ -291,6 +314,8 @@ namespace ConsoleHaxx.RawkSD
 
 		private void DecodeChartNotes(SongData song, QbFile qbchart, Notes notes, NoteChart chart, NoteChart.TrackType track, NoteChart.Difficulty difficulty)
 		{
+			bool expertplus = song.Data.GetValue<bool>("GH5ChartExpertPlus");
+
 			uint[] values;
 			uint[][] jaggedvalues;
 			QbKey basetrack = null; QbKey basetrackstar = null; QbKey basetrackfaceoff1 = null; QbKey basetrackfaceoff2 = null; QbKey basetracktapping = null;
@@ -458,9 +483,8 @@ namespace ConsoleHaxx.RawkSD
 								if (l == 4)
 									l2 = 3;
 							}
-							if (l2 == 0 && ((fret & 0x2000) == 0)) {
-								// Expert+
-							}
+							if (l2 == 0 && ((fret & 0x2000) == 0) && !expertplus)
+								continue;
 						}
 
 						(instrument as NoteChart.IGems).Gems[difficulty][l2].Add(note);
@@ -631,16 +655,32 @@ namespace ConsoleHaxx.RawkSD
 			return nums.ToArray();
 		}
 
+		public Stream[] GetChartStreams(FormatData data)
+		{
+			List<Stream> streams = new List<Stream>();
+
+			int i = 0;
+			string name = ChartName;
+			do {
+				streams.Add(data.GetStream(this, name));
+				i++;
+				name = ChartName + "." + i.ToString();
+			} while (data.HasStream(this, name));
+
+			return streams.ToArray();
+		}
+
 		public override ChartFormat DecodeChart(FormatData data, ProgressIndicator progress)
 		{
 			if (!data.HasStream(this, ChartName))
 				throw new FormatException();
 
-			Stream chartstream = data.GetStream(this, ChartName);
+			Stream[] streams = GetChartStreams(data);
 
-			ChartFormat format = DecodeChart(data, chartstream, progress);
+			ChartFormat format = DecodeChart(data, progress, streams);
 
-			data.CloseStream(this, ChartName);
+			foreach (Stream stream in streams)
+				data.CloseStream(stream);
 
 			return format;
 		}

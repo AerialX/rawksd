@@ -62,28 +62,36 @@ namespace WiidiscExtractor
 				try {
 					Iso9660 iso = new Iso9660(stream);
 					iso.Root.Extract(dir);
-				} catch (FormatException) {
-					Disc disc = new Disc(stream);
+				} catch (Exception) {
+					try {
+						stream.Position = 0;
+						Disc disc = new Disc(stream);
 
-					File.WriteAllText(Path.Combine(dir, "title"), disc.Title);
+						File.WriteAllText(Path.Combine(dir, "title"), disc.Title);
 
-					foreach (var partition in disc.Partitions) {
-						string path = Path.Combine(dir, "partition" + disc.Partitions.IndexOf(partition).ToString());
-						Directory.CreateDirectory(path);
+						foreach (var partition in disc.Partitions) {
+							string path = Path.Combine(dir, "partition" + disc.Partitions.IndexOf(partition).ToString());
+							Directory.CreateDirectory(path);
 
-						partition.Root.Root.Extract(Path.Combine(path, "data"));
+							partition.Root.Root.Extract(Path.Combine(path, "data"));
 
-						FileStream file = new FileStream(Path.Combine(path, "partition.tik"), FileMode.Create, FileAccess.Write);
-						partition.Ticket.Save(file);
-						file.Close();
+							FileStream file = new FileStream(Path.Combine(path, "partition.tik"), FileMode.Create, FileAccess.Write);
+							partition.Ticket.Save(file);
+							file.Close();
 
-						file = new FileStream(Path.Combine(path, "partition.tmd"), FileMode.Create, FileAccess.Write);
-						partition.TMD.Save(file);
-						file.Close();
+							file = new FileStream(Path.Combine(path, "partition.tmd"), FileMode.Create, FileAccess.Write);
+							partition.TMD.Save(file);
+							file.Close();
 
-						file = new FileStream(Path.Combine(path, "partition.certs"), FileMode.Create, FileAccess.Write);
-						file.Write(partition.CertificateChain);
-						file.Close();
+							file = new FileStream(Path.Combine(path, "partition.certs"), FileMode.Create, FileAccess.Write);
+							file.Write(partition.CertificateChain);
+							file.Close();
+						}
+					} catch {
+						stream.Position = 0;
+						DlcBin bin = new DlcBin(stream);
+						U8 u8 = new U8(bin.Data);
+						u8.Root.Extract(dir);
 					}
 				}
 				stream.Close();

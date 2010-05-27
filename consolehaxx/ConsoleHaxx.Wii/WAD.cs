@@ -68,7 +68,7 @@ namespace ConsoleHaxx.Wii
 			foreach (TmdContent content in wad.TMD.Contents) {
 				byte[] iv = new byte[0x10];
 				BigEndianConverter.GetBytes(content.Index).CopyTo(iv, 0);
-				wad.Data.Add(new CryptoStream(new Substream(wad.DataEncrypted, offset), Util.AesCBC.CreateDecryptor(wad.Ticket.Key, iv), CryptoStreamMode.Read));
+				wad.Data.Add(new AesStream(new Substream(wad.DataEncrypted, offset), wad.Ticket.Key, iv));
 
 				offset = (long)Util.RoundUp(offset + content.Size, 0x40);
 			}

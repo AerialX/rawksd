@@ -15,15 +15,15 @@ namespace ConsoleHaxx.RawkSD
 		public const string ChartName = "chart";
 		public const string SectionsName = "sections";
 
-		public static readonly ChartFormatGH3 Instance;
-		static ChartFormatGH3()
+		public static ChartFormatGH3 Instance;
+		public static void Initialise()
 		{
 			Instance = new ChartFormatGH3();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x03; }
+			get { return 0x44; }
 		}
 
 		public override string Name {
@@ -246,6 +246,7 @@ namespace ConsoleHaxx.RawkSD
 
 				bool hopo = note.Time - previousnote.Time <= (ulong)data.Song.HopoThreshold;
 				bool ishopo = hopo;
+				hopo = hopo && previouschordnum == 1;
 
 				uint fret = notes.Values[k + 2];
 				for (int l = 0; l < 6; l++) {
@@ -263,10 +264,11 @@ namespace ConsoleHaxx.RawkSD
 
 				if (chordnum == 0) { // Old TheGHOST bug, should be a green note
 					chordnum = 1;
+					chord = 0;
 					(instrument as NoteChart.IGems).Gems[difficulty][0].Add(note);
 				}
 
-				if ((chordnum == 1 && chord == previouschord) || chordnum > 1)
+				if (chord == previouschord)
 					ishopo = false;
 
 				if (ishopo != hopo && chordnum == 1) {

@@ -42,9 +42,9 @@ namespace ConsoleHaxx.Wii
 
 		public static Stream Download(Uri nusbase, u64 titleid, string filename)
 		{
-			Uri url = new Uri(new Uri(nusbase, Util.ToString(titleid)), filename);
+			Uri url = new Uri(new Uri(nusbase, Util.ToString(titleid) + "/"), filename);
 
-			return new ForwardStream(Client.OpenRead(url), 0, s64.Parse(Client.ResponseHeaders[HttpRequestHeader.ContentLength]));
+			return new ForwardStream(Client.OpenRead(url), 0, s64.Parse(Client.ResponseHeaders[HttpResponseHeader.ContentLength]));
 		}
 
 		public static Ticket DownloadTicket(u64 titleid)

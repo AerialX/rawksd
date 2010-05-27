@@ -12,15 +12,15 @@ namespace ConsoleHaxx.RawkSD
 	{
 		public const string ChartFile = "chart";
 
-		public static readonly ChartFormatGH2 Instance;
-		static ChartFormatGH2()
+		public static ChartFormatGH2 Instance;
+		public static void Initialise()
 		{
 			Instance = new ChartFormatGH2();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x02; }
+			get { return 0x43; }
 		}
 
 		public override string Name {
@@ -51,28 +51,27 @@ namespace ConsoleHaxx.RawkSD
 			Midi midi = Midi.Create(Mid.Create(stream));
 			data.CloseStream(stream);
 
-			if (data.Song.Data.GetValue<bool>("GH2ChartCoop"))
-				DecodeCoop(midi);
+			DecodeCoop(midi, data.Song.Data.GetValue<bool>("GH2ChartCoop"));
 
 			ChartFormat chart = new ChartFormat(NoteChart.Create(midi));
 
-			DecodeDrums(chart.Chart, midi);
+			DecodeDrums(chart.Chart, midi, false);
 			DecodeOverdrive(chart.Chart);
 
 			return chart;
 		}
 
-		private void DecodeCoop(Midi midi)
+		private void DecodeCoop(Midi midi, bool coop)
 		{
-			Midi.Track coop = midi.Tracks.Find(t => t.Name == "PART GUITAR COOP");
-			if (coop != null) {
-				midi.Tracks.RemoveAll(t => t.Name == "PART GUITAR");
-				coop.Name = "PART GUITAR";
+			Midi.Track cooptrack = midi.GetTrack("PART GUITAR COOP");
+			if (cooptrack != null && (coop || midi.GetTrack("PART GUITAR") == null)) {
+				midi.RemoveTracks("PART GUITAR");
+				cooptrack.Name = "PART GUITAR";
 			}
-			coop = midi.Tracks.Find(t => t.Name == "PART RHYTHM");
-			if (coop != null) {
-				midi.Tracks.RemoveAll(t => t.Name == "PART BASS");
-				coop.Name = "PART BASS";
+			cooptrack = midi.GetTrack("PART RHYTHM");
+			if (cooptrack != null && (coop || midi.GetTrack("PART BASS") == null)) {
+				midi.RemoveTracks("PART BASS");
+				cooptrack.Name = "PART BASS";
 			}
 		}
 
@@ -88,68 +87,115 @@ namespace ConsoleHaxx.RawkSD
 			}
 		}
 
-		private void DecodeDrums(NoteChart chart, Midi midi)
+		public static void DecodeDrums(NoteChart chart, Midi midi, bool gh1)
 		{
 			chart.PartDrums = new NoteChart.Drums(chart);
 
-			Midi.Track track = midi.Tracks.Find(t => t.Name == "BAND DRUMS");
+			Midi.Track track;
+			if (gh1)
+				track = midi.GetTrack("TRIGGERS");	
+			else
+				track = midi.GetTrack("BAND DRUMS");
+
 			foreach (Midi.NoteEvent note in track.Notes) {
 				switch (note.Note) {
+					case 60:
 					case 36: // Kick
 						chart.PartDrums.Gems[NoteChart.Difficulty.Expert][0].Add(new NoteChart.Note(note));
 						break;
+					case 61:
 					case 37: // Crash
 						chart.PartDrums.Gems[NoteChart.Difficulty.Expert][4].Add(new NoteChart.Note(note));
 						break;
-					default:
-						throw new FormatException();
+					case 0x30:
+					case 0x31:
+					case 0x40:
+					case 0x41:
+						break;
 				}
 			}
+			
+			if (gh1)
+				track = midi.GetTrack("EVENTS");
 
 			Midi.TextEvent previouscomment = new Midi.TextEvent(0, "[nobeat]");
+			string previoustext = "nobeat";
 			foreach (var comment in track.Comments) {
 				NoteChart.Point note = new NoteChart.Point(comment.Time);
 
-				switch (comment.Text.Trim()) {
-					case "[idle]":
+				string text = comment.Text.Trim('[', ']', ' ');
+
+				if (gh1) {
+					if (text.StartsWith("drum_"))
+						text = text.Substring(5);
+					else
+						continue;
+				}
+
+				switch (text) {
+					case "idle":
+					case "off":
+					case "noplay":
 						chart.PartDrums.CharacterMoods.Add(new Pair<NoteChart.Point, NoteChart.CharacterMood>(note, NoteChart.CharacterMood.Idle));
 						break;
-					case "[play]":
+					case "play":
+					case "normal":
+					case "on":
 						chart.PartDrums.CharacterMoods.Add(new Pair<NoteChart.Point, NoteChart.CharacterMood>(note, NoteChart.CharacterMood.Play));
 						previouscomment = comment;
 						break;
 					default:
 						ulong duration = comment.Time - previouscomment.Time;
 						ulong time = previouscomment.Time;
-						float fraction;
-						switch (previouscomment.Text.Trim()) {
-							case "[play]":
-							case "[allbeat]":
+						float fraction = 0;
+						switch (previoustext) {
+							case "on":
+							case "allplay":
+							case "play":
+							case "allbeat":
+							case "allbreat":
+							case "all_beat":
+							case "normal":
+							case "norm":
+							case "nomral":
+							case "normal_tempo":
 								fraction = 1;
 								break;
-							case "[nobeat]":
+							case "off":
+							case "noplay":
+							case "nobeat":
+							case "no_beat":
 								fraction = 0;
 								break;
-							case "[double_time]":
+							case "double":
+							case "double_time":
+							case "doubletime":
+							case "double_tempo":
+							case "doulbe_time":
 								fraction = 0.5f;
 								break;
-							case "[half_time]":
+							case "half":
+							case "half_time":
+							case "halftime":
+							case "half_tempo":
 								fraction = 2;
 								break;
-							default:
-								throw new FormatException();
 						}
 						if (fraction > 0) {
 							while (time < comment.Time) {
-								chart.PartDrums.Gems[NoteChart.Difficulty.Expert][previouscomment.Text.Trim() == "[play]" ? 2 : 1].Add(new NoteChart.Note(time));
+								chart.PartDrums.Gems[NoteChart.Difficulty.Expert][(previoustext == "play" || previoustext == "normal") ? 2 : 1].Add(new NoteChart.Note(time));
 
 								time += (ulong)(midi.Division.TicksPerBeat * fraction);
 							}
 						}
 						previouscomment = comment;
+						previoustext = text;
 						break;
 				}
 			}
+
+			ChartFormatGH5.FillSections(chart, 1, 8, 1, chart.PartDrums.Overdrive, null);
+			ChartFormatGH5.FillSections(chart, 1, 4, 3, chart.PartDrums.DrumFills, null);
 		}
 
 		public override void EncodeChart(ChartFormat data, FormatData destination, ProgressIndicator progress)

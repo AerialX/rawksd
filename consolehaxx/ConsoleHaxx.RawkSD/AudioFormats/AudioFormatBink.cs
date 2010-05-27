@@ -13,15 +13,15 @@ namespace ConsoleHaxx.RawkSD
 		public const string AudioName = "audio";
 		public const string PreviewName = "preview";
 
-		public static readonly AudioFormatBink Instance;
-		static AudioFormatBink()
+		public static AudioFormatBink Instance;
+		public static void Initialise()
 		{
 			Instance = new AudioFormatBink();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x0c; }
+			get { return 0x02; }
 		}
 
 		public override string Name {
@@ -40,7 +40,7 @@ namespace ConsoleHaxx.RawkSD
 		{
 			Stream stream = GetFormatStream(data);
 			if (stream == null)
-				return null;
+				return NeversoftMetadata.GetAudioFormat(data.Song);
 			AudioFormat format = AudioFormat.Create(stream);
 			data.CloseStream(stream);
 			return format;
@@ -69,9 +69,11 @@ namespace ConsoleHaxx.RawkSD
 
 		public void Create(FormatData data, Stream audio, Stream preview, AudioFormat format)
 		{
-			Stream formatstream = data.AddStream(this, FormatName);
-			format.Save(formatstream);
-			data.CloseStream(formatstream);
+			if (format != null) {
+				Stream formatstream = data.AddStream(this, FormatName);
+				format.Save(formatstream);
+				data.CloseStream(formatstream);
+			}
 
 			data.SetStream(this, AudioName, audio);
 			if (preview != null)

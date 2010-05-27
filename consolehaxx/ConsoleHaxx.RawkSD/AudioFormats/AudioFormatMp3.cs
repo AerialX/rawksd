@@ -12,15 +12,15 @@ namespace ConsoleHaxx.RawkSD
 		public const string FormatName = "map";
 		public const string AudioName = "audio";
 
-		public static readonly AudioFormatMp3 Instance;
-		static AudioFormatMp3()
+		public static AudioFormatMp3 Instance;
+		public static void Initialise()
 		{
 			Instance = new AudioFormatMp3();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0xFF; }
+			get { return 0x06; }
 		}
 
 		public override string Name {

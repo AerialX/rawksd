@@ -16,31 +16,18 @@ namespace ConsoleHaxx.RawkSD
 		public PlatformData PlatformData { get; protected set; }
 		public virtual bool StreamOwnership { get; set; }
 
-		private SongData songdata;
 		protected List<string> Data;
 		protected Dictionary<string, Stream> Streams;
 
 		public virtual SongData Song {
 			get {
-				if (LocalSongCache && songdata != null)
-					return songdata;
-				Stream stream = GetStream("songdata");
-				songdata = SongData.Create(stream);
-				CloseStream(stream);
-				songdata.PropertyChanged += new Action<SongData>(Song_PropertyChanged);
-				return songdata;
+				return SongDataCache.Load(this);
 			} set {
-				Stream stream = AddStream("songdata");
-				value.Save(stream);
-				CloseStream(stream);
-				if (LocalSongCache && songdata != value) {
-					songdata = value;
-					songdata.PropertyChanged += new Action<SongData>(Song_PropertyChanged);
-				}
+				SongDataCache.Save(this, value);
 			}
 		}
 
-		void Song_PropertyChanged(SongData song)
+		internal void Song_PropertyChanged(SongData song)
 		{
 			Song = song;
 		}
@@ -265,9 +252,16 @@ namespace ConsoleHaxx.RawkSD
 		public void SetStream(IFormat format, string name, Stream stream) { SetStream(MixName(format, name), stream); AddFormat(format); }
 		public string MixName(IFormat format, string name) { return format.ID.ToString() + (name == null ? string.Empty : ("." + name)); }
 
-		public virtual void Save(FormatData data)
+		public virtual void SaveTo(FormatData data, FormatType type = FormatType.Unknown)
 		{
 			foreach (string name in Data) {
+				if (type != FormatType.Unknown) {
+					try {
+						int format = int.Parse(name.Split('.')[0]);
+						if (Platform.GetFormat(format).Type != type)
+							continue;
+					} catch { }
+				}
 				Util.StreamCopy(data.AddStream(name), GetStream(name));
 				data.CloseStream(name);
 				CloseStream(name);

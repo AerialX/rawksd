@@ -7,8 +7,8 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class PlatformRB2360Disc : Engine
 	{
-		public static readonly PlatformRB2360Disc Instance;
-		static PlatformRB2360Disc()
+		public static PlatformRB2360Disc Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformRB2360Disc();
 		}

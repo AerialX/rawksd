@@ -142,6 +142,7 @@ namespace ConsoleHaxx.RawkSD
 				data.Platform.AddSong(data, song, progress);
 			}
 
+			data.Mutex.WaitOne();
 			IList<FormatData> songs = data.Songs;
 			foreach (XmlNode node in Root.GetElementsByTagName("deletesong")) {
 				XmlElement element = node as XmlElement;
@@ -159,6 +160,7 @@ namespace ConsoleHaxx.RawkSD
 						data.RemoveSong(song);
 				}
 			}
+			data.Mutex.ReleaseMutex();
 		}
 
 		public static int GetBaseRank(Instrument instrument, int tier)
@@ -169,6 +171,24 @@ namespace ConsoleHaxx.RawkSD
 		public static int GetBaseTier(Instrument instrument, int rank)
 		{
 			return Math.Max(Tiers[instrument].Count(t => t <= rank) - 1, 0);
+		}
+
+		public static string GetShortGenre(string genre)
+		{
+			var items = Genres.Where(p => string.Compare(p.Value, genre, true) == 0);
+			if (items.Count() == 0)
+				return genre;
+			return items.First().Key;
+		}
+
+		public static string GetShortName(string name)
+		{
+			string id = string.Empty;
+			foreach (char letter in name) {
+				if (char.IsLetterOrDigit(letter))
+					id += char.ToLower(letter);
+			}
+			return id;
 		}
 	}
 }

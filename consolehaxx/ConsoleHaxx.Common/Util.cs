@@ -21,14 +21,14 @@ namespace ConsoleHaxx.Common
 	{
 		public static readonly Encoding Encoding = Encoding.GetEncoding(28591);
 
-		public static readonly Aes AesCBC;
+		public static readonly Rijndael AesCBC;
 
 		public const int SHA1HashSize = 0x14;
 		public const int AesKeySize = 0x10;
 
 		static Util()
 		{
-			AesCBC = Aes.Create();
+			AesCBC = Rijndael.Create();
 			AesCBC.Padding = PaddingMode.None;
 			AesCBC.Mode = CipherMode.CBC;
 		}
@@ -208,6 +208,32 @@ namespace ConsoleHaxx.Common
 		{
 			for (int i = 0; i < length; i++)
 				data[offset + i] = value;
+		}
+
+		public static bool Memcmp(byte[] data, byte[] data2)
+		{
+			return Memcmp(data, 0, data2);
+		}
+		public static bool Memcmp(byte[] data, int offset, byte[] data2)
+		{
+			return Memcmp(data, offset, data2, 0, data.Length - offset);
+		}
+		public static bool Memcmp(byte[] data, byte[] data2, int offset2)
+		{
+			return Memcmp(data, 0, data2, offset2, data2.Length - offset2);
+		}
+		public static bool Memcmp(byte[] data, int offset, byte[] data2, int length)
+		{
+			return Memcmp(data, offset, data2, 0, length);
+		}
+		public static bool Memcmp(byte[] data, int offset, byte[] data2, int offset2, int length)
+		{
+			for (int i = 0; i < length; i++) {
+				if (data[offset + i] != data2[offset2 + i])
+					return true;
+			}
+
+			return false;
 		}
 
 		public static void Memcpy<T>(T[] data, T[] value)

@@ -14,8 +14,8 @@ namespace ConsoleHaxx.RawkSD
 		public const string DtaBinName = "dta";
 		public const string ContentBinName = "bin";
 
-		public static readonly PlatformRB2WiiDLC Instance;
-		static PlatformRB2WiiDLC()
+		public static PlatformRB2WiiDLC Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformRB2WiiDLC();
 		}

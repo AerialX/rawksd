@@ -7,15 +7,15 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class AudioFormatBeatlesBink : IAudioFormat
 	{
-		public static readonly AudioFormatBeatlesBink Instance;
-		static AudioFormatBeatlesBink()
+		public static AudioFormatBeatlesBink Instance;
+		public static void Initialise()
 		{
 			Instance = new AudioFormatBeatlesBink();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x0e; }
+			get { return 0x01; }
 		}
 
 		public override string Name {

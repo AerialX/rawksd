@@ -7,8 +7,8 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class PlatformGH5WiiDLC : Engine
 	{
-		public static readonly PlatformGH5WiiDLC Instance;
-		static PlatformGH5WiiDLC()
+		public static PlatformGH5WiiDLC Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformGH5WiiDLC();
 		}

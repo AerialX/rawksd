@@ -10,11 +10,17 @@ namespace ConsoleHaxx.RawkSD.SWF
 {
 	public static class Configuration
 	{
+		private static MainForm Form;
+
+		public static string LocalPath { get; set; }
+		public static string TemporaryPath { get; set; }
 		public static int MaxConcurrentTasks { get; set; }
 		public static bool LocalTranscode { get; set; }
 		public static bool LocalTransfer { get; set; }
 		public static bool MemorySongData { get { return FormatData.LocalSongCache; } set { FormatData.LocalSongCache = value; } }
 		public static DefaultActionType DefaultAction { get; set; }
+
+		public static bool ExpertPlusGH5 { get { return PlatformGH5WiiDisc.ImportExpertPlus; } set { PlatformGH5WiiDisc.ImportExpertPlus = value; } }
 
 		public static ImportMap.NamePrefix NamePrefix { get { return ImportMap.ApplyNamePrefix; } set { ImportMap.ApplyNamePrefix = value; } }
 
@@ -22,16 +28,19 @@ namespace ConsoleHaxx.RawkSD.SWF
 		{
 			MaxConcurrentTasks = Environment.ProcessorCount;
 			LocalTranscode = false;
-			LocalTransfer = true;
+			LocalTransfer = false;
 			MemorySongData = false;
 			NamePrefix = ImportMap.NamePrefix.None;
 			DefaultAction = DefaultActionType.InstallSD;
-
-			Load();
+			LocalPath = "customs";
+			TemporaryPath = "temp";
+			ExpertPlusGH5 = false;
 		}
 
-		public static void Load()
+		public static void Load(MainForm form)
 		{
+			Form = form;
+
 			Stream stream = GetConfigurationStream(FileMode.Open, FileAccess.Read, FileShare.Read);
 			if (stream == null)
 				return;
@@ -44,6 +53,9 @@ namespace ConsoleHaxx.RawkSD.SWF
 			MemorySongData = data.GetValue<bool>("MemorySongData");
 			DefaultAction = (DefaultActionType)data.GetValue<int>("DefaultAction");
 			NamePrefix = (ImportMap.NamePrefix)data.GetValue<int>("NamePrefix");
+			LocalPath = data.GetValue<string>("LocalPath");
+			TemporaryPath = data.GetValue<string>("TemporaryPath");
+			ExpertPlusGH5 = data.GetValue<bool>("ExpertPlusGH5");
 		}
 
 		public static void Save()
@@ -58,6 +70,9 @@ namespace ConsoleHaxx.RawkSD.SWF
 			data.SetValue("MemorySongData", MemorySongData);
 			data.SetValue("DefaultAction", (int)DefaultAction);
 			data.SetValue("NamePrefix", (int)NamePrefix);
+			data.SetValue("LocalPath", LocalPath);
+			data.SetValue("TemporaryPath", TemporaryPath);
+			data.SetValue("ExpertPlusGH5", ExpertPlusGH5);
 			data.Save(stream);
 			stream.Close();
 		}
@@ -65,7 +80,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 		private static Stream GetConfigurationStream(FileMode fileMode, FileAccess fileAccess, FileShare fileShare)
 		{
 			try {
-				return new FileStream(Path.Combine(Program.Form.RootPath, "rawkswf.conf"), fileMode, fileAccess, fileShare);
+				return new FileStream(Path.Combine(Form.RootPath, "rawkswf.conf"), fileMode, fileAccess, fileShare);
 			} catch { }
 
 			return null;

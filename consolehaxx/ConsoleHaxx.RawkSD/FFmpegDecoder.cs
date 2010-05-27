@@ -73,13 +73,21 @@ namespace ConsoleHaxx.RawkSD
 
 			Channels = Codec.channels;
 			SampleRate = Codec.sample_rate;
-			Samples = AVStream.time_base.num * AVStream.duration * SampleRate / AVStream.time_base.den;
+			if (AVStream.duration < 0)
+				Samples = long.MaxValue;
+			else
+				Samples = AVStream.time_base.num * AVStream.duration * SampleRate / AVStream.time_base.den;
 
 			PacketPointer = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(FFmpeg.AVPacket)));
 			//FFmpegBufferSize = (FFmpeg.AVCODEC_MAX_AUDIO_FRAME_SIZE * 3) / 2;
 			FFmpegBufferSize = BufferSize * Channels * 2;
 			FFmpegBuffer = Marshal.AllocHGlobal(FFmpegBufferSize);
 			AudioBuffer = new JaggedShortArray(Channels, BufferSize);
+			
+			CacheBuffer = new byte[FFmpegBufferSize];
+			Cache = new MemoryStream();
+			CacheOffset = 0;
+			CacheLength = 0;
 		}
 
 		~FFmpegDecoder()
@@ -87,16 +95,23 @@ namespace ConsoleHaxx.RawkSD
 			Dispose();
 		}
 
+		public MemoryStream Cache;
+		public int CacheOffset;
+		public int CacheLength;
+		public byte[] CacheBuffer;
+
 		public int Read(int count)
 		{
-			int offset = 0;
+			int offset = ReadCache(count, 0);
 
-			short[] bitstream = new short[FFmpegBufferSize / 2];
-
-			while (count - offset >= FFmpegBufferSize / 2 / Channels) {
+			while (count - offset > 0) {
 				if (FFmpeg.av_read_frame(FormatPointer, PacketPointer) < 0)
 					break;
 				FFmpeg.AVPacket packet = (FFmpeg.AVPacket)Marshal.PtrToStructure(PacketPointer, typeof(FFmpeg.AVPacket));
+
+				Cache.Position = 0;
+				CacheOffset = 0;
+				CacheLength = 0;
 
 				while (packet.size > 0) {
 					int datasize = FFmpegBufferSize;
@@ -107,13 +122,39 @@ namespace ConsoleHaxx.RawkSD
 					if (datasize <= 0)
 						break;
 
-					int samples = datasize / 2 / Channels;
-					Marshal.Copy(FFmpegBuffer, bitstream, 0, datasize / 2);
-					AudioBuffer.DeinterlaceFrom(bitstream, samples, offset);
-					offset += samples;
+					int read = Math.Max(Math.Min(datasize, (count - offset) * 2 * Channels), 0);
+					int left = datasize - read;
+					if (read > 0) {
+						int samples = read / 2 / Channels;
+						short[] bitstream = new short[read / 2];
+						Marshal.Copy(FFmpegBuffer, bitstream, 0, read / 2);
+						AudioBuffer.DeinterlaceFrom(bitstream, samples, offset);
+						offset += samples;
+					}
+
+					if (left > 0) {
+						Marshal.Copy(new IntPtr(FFmpegBuffer.ToInt32() + read), CacheBuffer, 0, left);
+						Cache.Write(CacheBuffer, read, left);
+						CacheLength += left;
+					}
 				}
 			}
 
+			return offset;
+		}
+
+		private int ReadCache(int count, int offset)
+		{
+			Cache.Position = CacheOffset;
+			int bytesize = Math.Min((count - offset) * 2 * Channels, CacheLength - CacheOffset);
+			if (bytesize <= 0)
+				return offset;
+			short[] bitstream = new short[bytesize / 2];
+			int samples = bytesize / 2 / Channels;
+			Buffer.BlockCopy(Cache.GetBuffer(), CacheOffset, bitstream, 0, bytesize);
+			AudioBuffer.DeinterlaceFrom(bitstream, samples, offset);
+			offset += samples;
+			CacheOffset += bytesize;
 			return offset;
 		}
 

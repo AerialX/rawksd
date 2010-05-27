@@ -5,6 +5,7 @@
 		<version>1</version>
 		<difficulty instrument="guitar" rank="1" />
 		<difficulty instrument="bass" rank="1" />
+		<difficulty instrument="drum" rank="1" />
 	</global>
 	<song id="becauseitsmidnite">
 		<album>Strong Bad Sings (and Other Type Hits)</album>

@@ -12,19 +12,42 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class PlatformRB2WiiCustomDLC : Engine
 	{
-		public static readonly PlatformRB2WiiCustomDLC Instance;
-		static PlatformRB2WiiCustomDLC()
+		public static PlatformRB2WiiCustomDLC Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformRB2WiiCustomDLC();
 		}
 
 		public override int ID { get { throw new NotImplementedException(); } }
 
-		public override string Name { get { return "Rock Band 2 Wii RawkSD DLC"; } }
+		public override string Name { get { return "RawkSD Wii DLC"; } }
 
 		public override bool AddSong(PlatformData data, SongData song, ProgressIndicator progress)
 		{
 			return PlatformRB2WiiDisc.Instance.AddSong(data, song, progress);
+		}
+
+		public override void DeleteSong(PlatformData data, FormatData formatdata, ProgressIndicator progress)
+		{
+			string path = data.Session["maindirpath"] as string;
+			DirectoryNode dir = data.Session["maindir"] as DirectoryNode;
+			string dtapath = "rawk/rb2/customs/" + formatdata.Song.ID;
+			FileNode dtafile = dir.Navigate(dtapath + "/data", false, true) as FileNode;
+			if (dtafile == null)
+				return;
+
+			EndianReader reader = new EndianReader(dtafile.Data, Endianness.LittleEndian);
+			DTB.NodeTree dtb = DTB.Create(reader);
+			dtafile.Data.Close();
+
+			SongsDTA dta = SongsDTA.Create(dtb);
+			string title = dta.Song.Name.Substring(4, 4);
+			int index = int.Parse(dta.Song.Name.Substring(9, 3));
+			File.Delete(Path.Combine(path, "private/wii/data/" + title + "/" + Util.Pad((index).ToString(), 3) + ".bin"));
+			File.Delete(Path.Combine(path, "private/wii/data/" + title + "/" + Util.Pad((index + 1).ToString(), 3) + ".bin"));
+			Directory.Delete(Path.Combine(path, dtapath), true);
+
+			base.DeleteSong(data, formatdata, progress);
 		}
 
 		public override PlatformData Create(string path, Game game, ProgressIndicator progress)
@@ -61,11 +84,14 @@ namespace ConsoleHaxx.RawkSD
 				FileNode contentbin = maindir.Navigate("private/wii/data/" + dta.Song.Name.Substring(4, 4) + "/" + Util.Pad((int.Parse(dta.Song.Name.Substring(9, 3)) + 1).ToString(), 3) + ".bin", false, true) as FileNode;
 				if (contentbin == null)
 					continue;
+				if (song.ID.StartsWith("rwk"))
+					song.ID = song.ID.Substring(3);
+				song.ID = song.ID.TrimStart('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
 				DlcBin content = new DlcBin(contentbin.Data);
 				U8 u8 = new U8(content.Data);
-				DirectoryNode songdir = u8.Root.Navigate("/content/songs/", false, true) as DirectoryNode;
+				//DirectoryNode songdir = u8.Root.Navigate("/content/songs/", false, true) as DirectoryNode;
 
-				data.Session["songdir"] = songdir;
+				data.Session["songdir"] = u8.Root;
 				AddSong(data, song, progress); // TODO: Add dta bin to songdir for album art
 				data.Session.Remove("songdir");
 				contentbin.Data.Close();
@@ -89,77 +115,26 @@ namespace ConsoleHaxx.RawkSD
 			FindUnusedContent(data, formatdata.Song, out otitle, out oindex);
 			TMD tmd = GenerateDummyTMD(otitle);
 
-			progress.NewTask(26);
+			progress.NewTask(10);
 
 			using (DelayedStreamCache cache = new DelayedStreamCache()) {
+				progress.SetNextWeight(6);
 				string audioextension = ".mogg";
 				Stream audio = null;
 				Stream preview = null;
 				AudioFormat audioformat = null;
 				IList<IFormat> formats = formatdata.Formats;
-				/* if (formats.Contains(AudioFormatMogg.Instance)) {
-					audio = AudioFormatMogg.Instance.GetAudioStream(formatdata);
-					preview = AudioFormatMogg.Instance.GetPreviewStream(formatdata, progress);
-					audioformat = AudioFormatMogg.Instance.DecodeAudio(formatdata, progress);
-				} else */
-				progress.SetNextWeight(14);
-				if (formats.Contains(AudioFormatRB2Bink.Instance)) {
+				if (formats.Contains(AudioFormatRB2Mogg.Instance)) {
+					audio = AudioFormatRB2Mogg.Instance.GetAudioStream(formatdata);
+					preview = AudioFormatRB2Mogg.Instance.GetPreviewStream(formatdata);
+					audioformat = AudioFormatRB2Mogg.Instance.DecodeAudioFormat(formatdata);
+				} else if (formats.Contains(AudioFormatRB2Bink.Instance)) {
 					audio = AudioFormatRB2Bink.Instance.GetAudioStream(formatdata);
 					preview = AudioFormatRB2Bink.Instance.GetPreviewStream(formatdata, progress);
-					audioformat = AudioFormatRB2Bink.Instance.DecodeFormat(formatdata);
+					audioformat = AudioFormatRB2Bink.Instance.DecodeAudioFormat(formatdata);
 					audioextension = ".bik";
-				} else if (formats.Contains(AudioFormatWav.Instance)) {
-					audio = AudioFormatWav.Instance.GetAudioStream(formatdata);
-					audioformat = AudioFormatWav.Instance.DecodeFormat(formatdata);
-					audioextension = ".wav";
-				} else {
-					audio = new TemporaryStream();
-					cache.AddStream(audio);
-					CryptedMoggStream mogg = new CryptedMoggStream(audio);
-					mogg.WriteHeader();
-					progress.SetNextWeight(1);
-					audioformat = (formatdata.GetFormat(FormatType.Audio) as IAudioFormat).DecodeAudio(formatdata, progress);
-					ushort[] masks = RemixAudioTracks(formatdata.Song, audioformat);
-
-					progress.SetNextWeight(13);
-					RawkAudio.Encoder encoder = new RawkAudio.Encoder(mogg, audioformat.Decoder.Channels, audioformat.Decoder.SampleRate, 28000);
-					long samples = audioformat.Decoder.Samples;
-					progress.NewTask("Transcoding Audio", samples);
-					JaggedShortArray buffer = new JaggedShortArray(encoder.Channels, audioformat.Decoder.AudioBuffer.Rank2);
-					AudioFormat.ProcessOffset(audioformat.Decoder, encoder, audioformat.InitialOffset);
-					while (samples > 0) {
-						int read = audioformat.Decoder.Read((int)Math.Min(samples, audioformat.Decoder.AudioBuffer.Rank2));
-						if (read <= 0)
-							break;
-
-						audioformat.Decoder.AudioBuffer.DownmixTo(buffer, masks, read);
-
-						encoder.Write(buffer, read);
-						samples -= read;
-						progress.Progress(read);
-					}
-					progress.EndTask();
-					encoder.Dispose();
-					audio.Position = 0;
-				}
-
-				progress.Progress(14);
-
-				progress.SetNextWeight(6);
-				if (preview == null && audioformat.Decoder != null) {
-					preview = new TemporaryStream();
-					cache.AddStream(preview);
-					CryptedMoggStream mogg = new CryptedMoggStream(preview);
-					mogg.WriteHeader();
-					IList<int> previewtimes = formatdata.Song.PreviewTimes;
-					long start = Math.Min(audioformat.Decoder.Samples, (long)previewtimes[0] * audioformat.Decoder.SampleRate / 1000);
-					audioformat.Decoder.Seek(start);
-					long duration = Math.Min(audioformat.Decoder.Samples - start, (long)(previewtimes[1] - previewtimes[0]) * audioformat.Decoder.SampleRate / 1000);
-					RawkAudio.Encoder encoder = new RawkAudio.Encoder(mogg, 1, audioformat.Decoder.SampleRate);
-					AudioFormat.Transcode(encoder, audioformat.Decoder, duration, progress);
-					encoder.Dispose();
-					preview.Position = 0;
-				}
+				} else
+					throw new NotSupportedException();
 
 				progress.Progress(6);
 
@@ -177,10 +152,13 @@ namespace ConsoleHaxx.RawkSD
 					weights = new MemoryStream(Properties.Resources.rawksd_weights);
 				if (milo == null)
 					milo = new MemoryStream(Properties.Resources.rawksd_milo);
-				if (album == null)
-					album = new MemoryStream(Properties.Resources.rawksd_albumart);
+				//if (album == null)
+					//album = new MemoryStream(Properties.Resources.rawksd_albumart);
 
 				progress.SetNextWeight(2);
+
+				if (chart != null && ChartFormatRB.Instance.NeedsFixing(formatdata))
+					chart = null;
 
 				if (chart == null) {
 					chart = new TemporaryStream();
@@ -194,42 +172,46 @@ namespace ConsoleHaxx.RawkSD
 				SongData song = formatdata.Song;
 
 				SongsDTA dta = GetSongsDTA(song, audioformat);
-				dta.BaseName = "rwk" + dta.BaseName + dta.Version.ToString();
+				dta.BaseName = "rwk" + dta.Version.ToString() + dta.BaseName;
+				dta.Genre = ImportMap.GetShortGenre(dta.Genre);
 
-				dta.Song.Name = "dlc/" + otitle + "/" + Util.Pad(oindex.ToString(), 3) + "/content/songs/" + dta.BaseName + "/" + dta.BaseName;
-				dta.Song.MidiFile = "dlc/content/songs/" + dta.BaseName + "/" + dta.BaseName + ".mid";
+				dta.Song.Name = "dlc/" + otitle + "/" + Util.Pad(oindex.ToString(), 3) + "/content/songs/" + song.ID + "/" + song.ID;
+				dta.Song.MidiFile = "dlc/content/songs/" + song.ID + "/" + song.ID + ".mid";
 
 				if (album == null)
 					dta.AlbumArt = false;
 				else
 					dta.AlbumArt = true;
 
+				DTB.NodeTree dtb = dta.ToDTB();
+				HarmonixMetadata.SetSongsDTA(song, dtb);
+
 				MemoryStream songsdta = new MemoryStream();
 				cache.AddStream(songsdta);
-				dta.ToDTB().SaveDTA(songsdta);
+				dtb.SaveDTA(songsdta);
 				songsdta.Position = 0;
 
 				U8 appdta = new U8();
 				DirectoryNode dir = new DirectoryNode("content", appdta.Root);
 				dir = new DirectoryNode("songs", dir);
-				dir = new DirectoryNode(dta.BaseName, dir);
-				new FileNode(dta.BaseName + "_prev.mogg", dir, (ulong)preview.Length, preview);
+				dir = new DirectoryNode(song.ID, dir);
+				new FileNode(song.ID + "_prev.mogg", dir, (ulong)preview.Length, preview);
 				new FileNode("songs.dta", dir, (ulong)songsdta.Length, songsdta);
 				if (dta.AlbumArt.Value && album != null) {
 					dir = new DirectoryNode("gen", dir);
-					new FileNode(dta.BaseName + "_keep.png_wii", dir, (ulong)album.Length, album); // TODO: Maybe need to add "rwk" to the beginning of this filename?
+					new FileNode(song.ID + "_nomip_keep.bmp_wii", dir, (ulong)album.Length, album);
 				}
 
 				U8 appsong = new U8();
 				dir = new DirectoryNode("content", appsong.Root);
 				dir = new DirectoryNode("songs", dir);
-				dir = new DirectoryNode(dta.BaseName, dir);
-				new FileNode(dta.BaseName + audioextension, dir, (ulong)audio.Length, audio);
-				new FileNode(dta.BaseName + ".mid", dir, (ulong)chart.Length, chart);
-				new FileNode(dta.BaseName + ".pan", dir, (ulong)pan.Length, pan);
+				dir = new DirectoryNode(song.ID, dir);
+				new FileNode(song.ID + audioextension, dir, (ulong)audio.Length, audio);
+				new FileNode(song.ID + ".mid", dir, (ulong)chart.Length, chart);
+				new FileNode(song.ID + ".pan", dir, (ulong)pan.Length, pan);
 				dir = new DirectoryNode("gen", dir);
-				new FileNode(dta.BaseName + ".milo_wii", dir, (ulong)milo.Length, milo);
-				new FileNode(dta.BaseName + "_weights.bin", dir, (ulong)weights.Length, weights);
+				new FileNode(song.ID + ".milo_wii", dir, (ulong)milo.Length, milo);
+				new FileNode(song.ID + "_weights.bin", dir, (ulong)weights.Length, weights);
 
 				TmdContent contentDta = new TmdContent();
 				contentDta.ContentID = oindex;
@@ -299,8 +281,9 @@ namespace ConsoleHaxx.RawkSD
 				bin.Bk.TitleID = 0x00010000535A4145UL;
 				bin.Save(binstream);
 				binstream.Close();
-				File.Delete(Path.Combine(dirpath, Util.Pad(oindex.ToString(), 3) + ".bin"));
-				File.Move(binstream.Name, Path.Combine(dirpath, Util.Pad(oindex.ToString(), 3) + ".bin"));
+				string dtabinpath = Path.Combine(dirpath, Util.Pad(oindex.ToString(), 3) + ".bin");
+				File.Delete(dtabinpath);
+				File.Move(binstream.Name, dtabinpath);
 
 				binstream = new FileStream(Path.GetTempFileName(), FileMode.Create);
 				bin = new DlcBin();
@@ -312,8 +295,9 @@ namespace ConsoleHaxx.RawkSD
 				bin.Bk.TitleID = 0x00010000535A4145UL;
 				bin.Save(binstream);
 				binstream.Close();
-				File.Delete(Path.Combine(dirpath, Util.Pad((oindex + 1).ToString(), 3) + ".bin"));
-				File.Move(binstream.Name, Path.Combine(dirpath, Util.Pad((oindex + 1).ToString(), 3) + ".bin"));
+				string songbinpath = Path.Combine(dirpath, Util.Pad((oindex + 1).ToString(), 3) + ".bin");
+				File.Delete(songbinpath);
+				File.Move(binstream.Name, songbinpath);
 
 				binstream = new FileStream(Path.GetTempFileName(), FileMode.Create);
 				bin = new DlcBin();
@@ -325,27 +309,70 @@ namespace ConsoleHaxx.RawkSD
 				bin.Bk.TitleID = 0x00010000535A4145UL;
 				bin.Save(binstream);
 				binstream.Close();
-				File.Delete(Path.Combine(dirpath, "000.bin"));
-				File.Move(binstream.Name, Path.Combine(dirpath, "000.bin"));
+				string mainbinpath = Path.Combine(dirpath, "000.bin");
+				File.Delete(mainbinpath);
+				File.Move(binstream.Name, mainbinpath);
 
 				dirpath = Path.Combine(Path.Combine(path, "rawk"), "rb2");
 				if (!Directory.Exists(Path.Combine(dirpath, "customs")))
 					Directory.CreateDirectory(Path.Combine(dirpath, "customs"));
-				Directory.CreateDirectory(Path.Combine(Path.Combine(dirpath, "customs"), dta.BaseName));
-				FileStream savestream = new FileStream(Path.Combine(Path.Combine(Path.Combine(dirpath, "customs"), dta.BaseName), "data"), FileMode.Create);
+				Directory.CreateDirectory(Path.Combine(Path.Combine(dirpath, "customs"), song.ID));
+				FileStream savestream = new FileStream(Path.Combine(Path.Combine(Path.Combine(dirpath, "customs"), song.ID), "data"), FileMode.Create);
 				dta.ToDTB().Save(new EndianReader(savestream, Endianness.LittleEndian));
 				savestream.Close();
 
-				progress.Progress(2);
+				Stream stream = new DelayedStream(data.Cache.GenerateFileStream(songbinpath, FileMode.Open));
+				bin = new DlcBin(stream);
+				appsong = new U8(bin.Data);
 
-				data.Session["songdir"] = appsong.Root.Navigate("/content/songs/", false, true);
+				data.Session["songdir"] = appsong.Root;
 				AddSong(data, song, progress);
-				data.Session.Remove("songdir");
+				stream.Close();
+
+				cache.Dispose();
 
 				progress.Progress();
 			}
 
 			progress.EndTask();
+		}
+
+		public static void TranscodePreview(IList<int> previewtimes, List<AudioFormat.Mapping> maps, IDecoder decoder, Stream stream, ProgressIndicator progress)
+		{
+			RawkAudio.Encoder encoder;
+			if (maps != null && maps.Count(m => m.Instrument == Instrument.Preview) > 0) {
+				decoder.Seek(0);
+				List<ushort> masks = new List<ushort>();
+				foreach (var m in maps) {
+					if (m.Instrument == Instrument.Preview)
+						masks.Add((ushort)(1 << maps.IndexOf(m)));
+				}
+				ushort[] mask = masks.ToArray();
+
+				encoder = new RawkAudio.Encoder(stream, mask.Length, decoder.SampleRate, 28000);
+				long samples = decoder.Samples;
+				progress.NewTask("Transcoding Preview", samples);
+				JaggedShortArray buffer = new JaggedShortArray(encoder.Channels, decoder.AudioBuffer.Rank2);
+				while (samples > 0) {
+					int read = decoder.Read((int)Math.Min(samples, decoder.AudioBuffer.Rank2));
+					if (read <= 0)
+						break;
+
+					decoder.AudioBuffer.DownmixTo(buffer, mask, read);
+
+					encoder.Write(buffer, read);
+					samples -= read;
+					progress.Progress(read);
+				}
+				progress.EndTask();
+			} else {
+				long start = Math.Min(decoder.Samples, (long)previewtimes[0] * decoder.SampleRate / 1000);
+				decoder.Seek(start);
+				long duration = Math.Min(decoder.Samples - start, (long)(previewtimes[1] - previewtimes[0]) * decoder.SampleRate / 1000);
+				encoder = new RawkAudio.Encoder(stream, 1, decoder.SampleRate);
+				AudioFormat.Transcode(encoder, decoder, duration, progress);
+			}
+			encoder.Dispose();
 		}
 
 		public static SongsDTA GetSongsDTA(SongData song, AudioFormat audioformat)
@@ -382,7 +409,7 @@ namespace ConsoleHaxx.RawkSD
 
 			return dta;
 		}
-
+		
 		public static NoteChart AdjustChart(SongData song, AudioFormat audioformat, ChartFormat chartformat)
 		{
 			NoteChart chart = chartformat.Chart;
@@ -406,7 +433,7 @@ namespace ConsoleHaxx.RawkSD
 
 			return chart;
 		}
-
+		
 		public static ushort[] RemixAudioTracks(SongData song, AudioFormat audioformat)
 		{
 			// Audio tracks must match up with the tiers; disabled instruments (tier 0) must have no audio tracks.
@@ -422,8 +449,10 @@ namespace ConsoleHaxx.RawkSD
 				}
 
 				if (maps.Count == 0 && song.Difficulty[instrument] > 0) {
-					newmaps.Add(new AudioFormat.Mapping(0, -1, instrument)); masks.Add(0);
-					newmaps.Add(new AudioFormat.Mapping(0, 1, instrument)); masks.Add(0);
+					newmaps.Add(new AudioFormat.Mapping(0, instrument == Instrument.Drums ? -1 : 0, instrument)); masks.Add(0);
+					if (instrument == Instrument.Drums) {
+						newmaps.Add(new AudioFormat.Mapping(0, 1, instrument)); masks.Add(0);
+					}
 				} else if (maps.Count > 2 && instrument != Instrument.Drums) {
 					ushort[] submasks = new ushort[2];
 					foreach (var map in maps) {
@@ -473,6 +502,7 @@ namespace ConsoleHaxx.RawkSD
 			for (title = "cRBA"; (byte)title[3] <= (byte)'Z'; title = title.Substring(0, 3) + (char)(((byte)title[3]) + 1)) {
 				for (index = 1; index <= 510; index += 2) {
 					bool flag = false;
+					data.Mutex.WaitOne();
 					foreach (FormatData formatdata in data.Songs) {
 						SongsDTA dta = HarmonixMetadata.GetSongsDTA(formatdata.Song);
 						if (String.Compare(title, dta.Song.Name.Substring(4, 4), true) == 0 && index == ushort.Parse(dta.Song.Name.Substring(9, 3))) {
@@ -482,6 +512,7 @@ namespace ConsoleHaxx.RawkSD
 							break;
 						}
 					}
+					data.Mutex.ReleaseMutex();
 
 					if (!flag)
 						return true;

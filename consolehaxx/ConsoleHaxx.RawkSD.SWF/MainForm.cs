@@ -11,6 +11,7 @@ using System.IO;
 using ConsoleHaxx.Harmonix;
 using System.Collections;
 using ConsoleHaxx.Wii;
+using System.Threading;
 
 namespace ConsoleHaxx.RawkSD.SWF
 {
@@ -30,26 +31,37 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		public Image[] Tiers;
 
+		public Mutex SongUpdateMutex;
+		public Mutex TaskMutex;
+
 		public MainForm()
 		{
 			InitializeComponent();
+
+			SongUpdateMutex = new Mutex();
+			TaskMutex = new Mutex();
 
 			Platforms = new List<PlatformData>();
 			ProgressList = new List<TaskScheduler>();
 			ProgressControls = new Dictionary<TaskScheduler, VisualTask>();
 
-			Platform.GetFormat(0); // Force the static constructor to run
-
 			RootPath = Environment.CurrentDirectory;
-			StoragePath = Path.Combine(RootPath, "customs");
+			Configuration.Load(this);
+
 			SdPath = Path.Combine(RootPath, "rawksd");
-			TemporaryPath = Path.Combine(RootPath, "temp");
+
+			if (!Path.IsPathRooted(Configuration.LocalPath))
+				StoragePath = Path.Combine(RootPath, Configuration.LocalPath);
+			else
+				StoragePath = Configuration.LocalPath;
+			if (!Path.IsPathRooted(Configuration.TemporaryPath))
+				TemporaryPath = Path.Combine(RootPath, Configuration.TemporaryPath);
+			else
+				TemporaryPath = Configuration.TemporaryPath;
 
 			Directory.CreateDirectory(TemporaryPath);
 			DeleteTemporaryFiles();
 			TemporaryStream.BasePath = TemporaryPath;
-
-			Configuration.Load();
 
 			for (int i = 0; i < Configuration.MaxConcurrentTasks; i++)
 				AddTaskScheduler();
@@ -101,6 +113,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 			Configuration.Save();
 			foreach (TaskScheduler task in ProgressList)
 				task.Exit(true);
+			if (AsyncProgress != null)
+				AsyncProgress.Exit(true);
 		}
 
 		private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -122,14 +136,16 @@ namespace ConsoleHaxx.RawkSD.SWF
 				ImportMap map = new ImportMap(data.Game, Path.Combine(RootPath, "importdata"));
 				map.AddSongs(data, progress);
 				progress.Progress();
-				Platforms.Add(data);
+				data.Mutex.WaitOne();
 				progress.NewTask(data.Songs.Count);
 				foreach (FormatData song in data.Songs) {
 					map.Populate(song.Song);
 					progress.Progress();
 				}
+				data.Mutex.ReleaseMutex();
 				progress.EndTask();
 				progress.Progress();
+				Platforms.Add(data);
 				Invoke((Action)UpdateSongList);
 				progress.EndTask();
 			});
@@ -175,7 +191,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 				SD = PlatformRB2WiiCustomDLC.Instance.Create(SdPath, Game.Unknown, progress);
 				progress.Progress();
 				progress.EndTask();
-				Invoke((Action)UpdateSongList);
+				Invoke((Action)RefreshSongList);
 			});
 		}
 
@@ -188,9 +204,12 @@ namespace ConsoleHaxx.RawkSD.SWF
 		{
 			OpenDialog.Title = "Select a file containing songs.";
 			OpenDialog.Filter = "Supported Files|*.iso;*.wod;*.mdf;*.ark;*.hdr;*.rwk;*.rba;*.bin|All Files|*";
+			OpenDialog.Multiselect = true;
 			if (OpenDialog.ShowDialog(this) == DialogResult.Cancel)
 				return;
-			Open(OpenDialog.FileName);
+			foreach (string filename in OpenDialog.FileNames) {
+				Open(filename);
+			}
 		}
 
 		private void MenuFileOpenFolder_Click(object sender, EventArgs e)
@@ -203,48 +222,109 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		private void MenuSongsInstallLocal_Click(object sender, EventArgs e)
 		{
-			foreach (FormatData data in GetSelectedSongs()) {
-				if (data.PlatformData.Platform == PlatformLocalStorage.Instance)
+			foreach (FormatData data in GetSelectedSongData()) {
+				if (data.PlatformData == Storage)
 					continue;
-				Progress.QueueTask(progress => {
-					progress.NewTask("Ripping \"" + data.Song.Name + "\" Locally", 2);
-					FormatData destination = PlatformLocalStorage.Instance.CreateSong(Storage, data.Song);
-					Platform.Transfer(data, destination, progress);
 
-					progress.Progress();
-					PlatformLocalStorage.Instance.SaveSong(Storage, destination, progress);
-
-					progress.Progress();
-
-					progress.EndTask();
-
-					Invoke((Action)UpdateSongList);
-				});
+				QueueInstallLocal(data);
 			}
+		}
+
+		private void QueueInstallLocal(FormatData data)
+		{
+			Progress.QueueTask(progress => {
+				progress.NewTask("Ripping \"" + data.Song.Name + "\" Locally", 16);
+				FormatData destination = PlatformLocalStorage.Instance.CreateSong(Storage, data.Song);
+
+				progress.SetNextWeight(14);
+
+				bool audio = false;
+				if (Configuration.LocalTranscode && !data.Formats.Contains(AudioFormatRB2Mogg.Instance) && !data.Formats.Contains(AudioFormatRB2Bink.Instance)) {
+					TaskMutex.WaitOne();
+					TemporaryFormatData olddata = new TemporaryFormatData();
+					data.SaveTo(olddata, FormatType.Audio);
+					TaskMutex.ReleaseMutex();
+
+					audio = true;
+					Platform.Transcode(FormatType.Audio, data, new IFormat[] { AudioFormatRB2Mogg.Instance }, destination, progress);
+					olddata.Dispose();
+				}
+
+				progress.Progress(14);
+
+				TaskMutex.WaitOne();
+				data.SaveTo(destination, audio ? FormatType.Chart : FormatType.Unknown);
+				TaskMutex.ReleaseMutex();
+
+				progress.Progress();
+				PlatformLocalStorage.Instance.SaveSong(Storage, destination, progress);
+
+				progress.Progress();
+
+				progress.EndTask();
+
+				Invoke((Action)UpdateSongList);
+			});
 		}
 
 		private void MenuSongsInstallSD_Click(object sender, EventArgs e)
 		{
-			foreach (FormatData data in GetSelectedSongs()) {
-				Progress.QueueTask(progress => {
-					progress.NewTask("Installing \"" + data.Song.Name + "\" to SD", 10);
-					FormatData source = data;
-					if (data.PlatformData.Platform != PlatformLocalStorage.Instance && Configuration.LocalTransfer) {
-						source = PlatformLocalStorage.Instance.CreateSong(Storage, data.Song);
-						data.Save(source);
-					}
-					progress.Progress();
-
-					progress.SetNextWeight(9);
-
-					PlatformRB2WiiCustomDLC.Instance.SaveSong(SD, source, progress);
-					progress.Progress(9);
-
-					progress.EndTask();
-
-					Invoke((Action)UpdateSongList);
-				});
+			foreach (FormatData data in GetSelectedSongData()) {
+				QueueInstallSD(data);
 			}
+		}
+
+		private void QueueInstallSD(FormatData data)
+		{
+			Progress.QueueTask(progress => {
+				progress.NewTask("Installing \"" + data.Song.Name + "\" to SD", 10);
+				FormatData source = data;
+
+				TaskMutex.WaitOne();
+				bool local = data.PlatformData.Platform == PlatformLocalStorage.Instance;
+				bool ownformat = false;
+				if (!local) {
+					if (Configuration.LocalTransfer) {
+						source = PlatformLocalStorage.Instance.CreateSong(Storage, data.Song);
+						data.SaveTo(source);
+						local = true;
+					} else if (Configuration.MaxConcurrentTasks > 1) {
+						source = new TemporaryFormatData(data.Song, data.PlatformData);
+						data.SaveTo(source);
+						ownformat = true;
+					}
+				}
+				TaskMutex.ReleaseMutex();
+
+				progress.Progress();
+
+				FormatData dest = source;
+
+				progress.SetNextWeight(10);
+
+				if (!data.Formats.Contains(AudioFormatRB2Mogg.Instance) && !data.Formats.Contains(AudioFormatRB2Bink.Instance)) {
+					if ((!Configuration.LocalTranscode && local) || (!local && data == source)) {
+						dest = new TemporaryFormatData(data.Song, data.PlatformData);
+						source.SaveTo(dest, FormatType.Chart);
+						ownformat = true;
+					}
+					Platform.Transcode(FormatType.Audio, source, new IFormat[] { AudioFormatRB2Mogg.Instance }, dest, progress);
+				}
+
+				progress.Progress(10);
+
+				progress.SetNextWeight(3);
+
+				PlatformRB2WiiCustomDLC.Instance.SaveSong(SD, dest, progress);
+				progress.Progress(3);
+
+				if (ownformat)
+					dest.Dispose();
+
+				progress.EndTask();
+
+				Invoke((Action)UpdateSongList);
+			});
 		}
 
 		private void MenuSongsExportRawkSD_Click(object sender, EventArgs e)
@@ -254,14 +334,13 @@ namespace ConsoleHaxx.RawkSD.SWF
 			if (SaveDialog.ShowDialog(this) == DialogResult.Cancel)
 				return;
 
-			Exports.ExportRWK(SaveDialog.FileName, GetSelectedSongs());
+			Exports.ExportRWK(SaveDialog.FileName, GetSelectedSongData());
 		}
 
 		private void MenuSongsExportRBN_Click(object sender, EventArgs e)
 		{
-			var songs = GetSelectedSongs();
+			var songs = GetSelectedSongData();
 			if (songs.Count() > 1) {
-
 				return;
 			}
 
@@ -284,12 +363,12 @@ namespace ConsoleHaxx.RawkSD.SWF
 			if (FolderDialog.ShowDialog(this) == DialogResult.Cancel)
 				return;
 
-			Exports.ExportFoF(FolderDialog.SelectedPath, GetSelectedSongs());
+			Exports.ExportFoF(FolderDialog.SelectedPath, GetSelectedSongData());
 		}
 
 		private void MenuSongsEdit_Click(object sender, EventArgs e)
 		{
-			foreach (FormatData data in GetSelectedSongs()) {
+			foreach (FormatData data in GetSelectedSongData()) {
 				EditForm.Show(data, data.PlatformData == Storage, false, this);
 			}
 
@@ -298,7 +377,31 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		private void MenuSongsDelete_Click(object sender, EventArgs e)
 		{
+			List<FormatData> data = new List<FormatData>();
+			foreach (SongListItem item in GetSelectedSongs()) {
+				data.AddRange(item.Data);
+			}
+			QueueDelete(data);
+		}
 
+		private void QueueDelete(IList<FormatData> datalist)
+		{
+			if (datalist.Select(f => f.PlatformData.Platform).Distinct().Count() > 1) {
+				datalist = DeleteForm.Show(datalist, this);
+			}
+
+			if (datalist.Count == 0)
+				return;
+
+			Progress.QueueTask(progress => {
+				progress.NewTask("Deleting Songs", datalist.Count);
+				foreach (FormatData data in datalist) {
+					data.PlatformData.Platform.DeleteSong(data.PlatformData, data, progress);
+					progress.Progress();
+				}
+				Invoke((Action)RefreshSongList);
+				progress.EndTask();
+			});
 		}
 
 		private void ContextMenuEdit_Click(object sender, EventArgs e)
@@ -350,7 +453,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 					progress.NewTask("Installing \"" + data.Song.Name + "\" Locally", 2);
 
 					FormatData localdata = PlatformLocalStorage.Instance.CreateSong(Storage, data.Song);
-					data.Save(localdata);
+					data.SaveTo(localdata);
 					data.Dispose();
 					progress.Progress();
 
@@ -362,6 +465,13 @@ namespace ConsoleHaxx.RawkSD.SWF
 				});
 			} else
 				data.Dispose();
+		}
+
+		private void MenuSongsSelectAll_Click(object sender, EventArgs e)
+		{
+			SongList.SelectedIndices.Clear();
+			for (int i = 0; i < SongList.Items.Count; i++)
+				SongList.SelectedIndices.Add(i);
 		}
 	}
 }

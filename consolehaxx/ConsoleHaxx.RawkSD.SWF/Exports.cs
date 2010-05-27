@@ -39,25 +39,56 @@ namespace ConsoleHaxx.RawkSD.SWF
 		public static void ExportFoF(string path, IEnumerable<FormatData> songs)
 		{
 			foreach (FormatData data in songs) {
-				Program.Form.Progress.QueueTask(progress => {
-					progress.NewTask("Installing \"" + data.Song.Name + "\" to Frets on Fire", 1);
-
-					PlatformData platformdata = new PlatformData(PlatformFretsOnFire.Instance, Game.Unknown);
-					platformdata.Session["path"] = path;
-
-					PlatformFretsOnFire.Instance.SaveSong(platformdata, data, progress);
-					progress.Progress();
-
-					progress.EndTask();
-				});
+				QueueExportFoF(path, data);
 			}
 		}
 
-		public static void ExportRBN(string path, FormatData data)
+		private static void QueueExportFoF(string path, FormatData data)
+		{
+			Program.Form.Progress.QueueTask(progress => {
+				progress.NewTask("Installing \"" + data.Song.Name + "\" to Frets on Fire", 1);
+				FormatData source = data;
+
+				Program.Form.TaskMutex.WaitOne();
+				if ((data.PlatformData.Platform != PlatformLocalStorage.Instance || Configuration.LocalTranscode) && Configuration.LocalTransfer) {
+					source = PlatformLocalStorage.Instance.CreateSong(Program.Form.Storage, data.Song);
+					data.SaveTo(source);
+				} else if (data.PlatformData.Platform != PlatformLocalStorage.Instance && Configuration.MaxConcurrentTasks > 1) {
+					source = new TemporaryFormatData(data.Song, data.PlatformData);
+					data.SaveTo(source);
+				}
+				Program.Form.TaskMutex.ReleaseMutex();
+
+				PlatformData platformdata = new PlatformData(PlatformFretsOnFire.Instance, Game.Unknown);
+				platformdata.Session["path"] = path;
+
+				PlatformFretsOnFire.Instance.SaveSong(platformdata, data, progress);
+				progress.Progress();
+
+				if (source != data)
+					source.Dispose();
+
+				progress.EndTask();
+			});
+		}
+
+		public static void ExportRBN(string path, FormatData original)
 		{
 			Program.Form.Progress.QueueTask(progress => {
 				progress.NewTask("Exporting to RBA file", 16);
 				RBA rba = new RBA();
+
+				FormatData data = original;
+
+				Program.Form.TaskMutex.WaitOne();
+				if ((data.PlatformData.Platform != PlatformLocalStorage.Instance || Configuration.LocalTranscode) && Configuration.LocalTransfer) {
+					data = PlatformLocalStorage.Instance.CreateSong(Program.Form.Storage, data.Song);
+					original.SaveTo(data);
+				} else if (data.PlatformData.Platform != PlatformLocalStorage.Instance && Configuration.MaxConcurrentTasks > 1) {
+					data = new TemporaryFormatData(data.Song, data.PlatformData);
+					original.SaveTo(data);
+				}
+				Program.Form.TaskMutex.ReleaseMutex();
 
 				using (DelayedStreamCache cache = new DelayedStreamCache()) {
 					AudioFormat audioformat = (data.GetFormat(FormatType.Audio) as IAudioFormat).DecodeAudio(data, progress);
@@ -160,6 +191,9 @@ namespace ConsoleHaxx.RawkSD.SWF
 					Stream ostream = new FileStream(path, FileMode.Create);
 					rba.Save(ostream);
 					stream.Close();
+
+					if (data != original)
+						data.Dispose();
 
 					progress.Progress();
 					progress.EndTask();

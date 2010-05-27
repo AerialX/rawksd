@@ -129,5 +129,10 @@ namespace ConsoleHaxx.RawkSD.SWF
 			DialogResult = DialogResult.OK;
 			Close();
 		}
+
+		private void SilenceNumeric_ValueChanged(object sender, EventArgs e)
+		{
+			Format.InitialOffset = -(int)(SilenceNumeric.Value * 1000);
+		}
 	}
 }

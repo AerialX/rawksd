@@ -241,8 +241,7 @@ namespace ConsoleHaxx.Wii
 				if (isfile) {
 					file.RawData = new Substream(stream, stream.Position, Util.RoundUp(file.Size, 0x40));
 
-					file.Data = new CryptoStream(file.RawData, Util.AesCBC.CreateDecryptor(Constants.SdKey, file.IV), CryptoStreamMode.Read);
-					file.Data.SetLength(file.Size);
+					file.Data = new AesStream(file.RawData, Constants.SdKey, file.IV);
 
 					stream.Position = pos + file.RawData.Length;
 				} else {
@@ -268,7 +267,7 @@ namespace ConsoleHaxx.Wii
 		public Savegame(Stream stream)
 		{
 			long pos = stream.Position;
-			CryptoStream decrypt = new CryptoStream(stream, Util.AesCBC.CreateDecryptor(Constants.SdKey, Constants.SdIV), CryptoStreamMode.Read);
+			Stream decrypt = new AesStream(stream, Constants.SdKey, Constants.SdIV);
 			Header = SaveHeader.Create(decrypt);
 			Banner = SaveBanner.Create(decrypt, (s32)((Header.BannerSize - 0x60A0) / 0x1200));
 			stream.Position = pos + 0xF0C0;

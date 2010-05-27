@@ -8,8 +8,8 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class PlatformLocalStorage : Engine
 	{
-		public static readonly PlatformLocalStorage Instance;
-		static PlatformLocalStorage()
+		public static PlatformLocalStorage Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformLocalStorage();
 		}
@@ -44,7 +44,12 @@ namespace ConsoleHaxx.RawkSD
 
 		public override FormatData CreateSong(PlatformData data, SongData song)
 		{
-			string path = Path.Combine(data.Session["rootpath"] as string, song.ID);
+			string path = null;
+			int i = 0;
+			do {
+				path = Path.Combine(data.Session["rootpath"] as string, song.ID) + (i == 0 ? "" : i.ToString());
+				i++;
+			} while (Directory.Exists(path));
 			song.Data.SetValue("LocalStoragePath", path);
 			Directory.CreateDirectory(path);
 
@@ -57,6 +62,16 @@ namespace ConsoleHaxx.RawkSD
 		public override void SaveSong(PlatformData data, FormatData formatdata, ProgressIndicator progress)
 		{
 			
+		}
+
+		public override void DeleteSong(PlatformData data, FormatData formatdata, ProgressIndicator progress)
+		{
+			string path = formatdata.Song.Data.GetValue<string>("LocalStoragePath");
+			if (path == null)
+				return;
+			formatdata.Dispose();
+			Directory.Delete(path, true);
+			base.DeleteSong(data, formatdata, progress);
 		}
 	}
 }

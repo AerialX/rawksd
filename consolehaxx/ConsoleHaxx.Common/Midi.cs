@@ -235,6 +235,26 @@ namespace ConsoleHaxx.Common
 			return midi;
 		}
 
+		public Track GetTrack(string name)
+		{
+			return Tracks.Find(t => t.Name == name);
+		}
+
+		public void AddTrack(Track track)
+		{
+			Tracks.Add(track);
+		}
+
+		public bool RemoveTrack(Track track)
+		{
+			return Tracks.Remove(track);
+		}
+
+		public int RemoveTracks(string name)
+		{
+			return Tracks.RemoveAll(t => t.Name == name);
+		}
+
 		public class Track
 		{
 			public string Name;

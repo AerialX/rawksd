@@ -43,11 +43,11 @@
 			this.MenuSongsSep1 = new System.Windows.Forms.ToolStripSeparator();
 			this.MenuSongsEdit = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuSongsDelete = new System.Windows.Forms.ToolStripMenuItem();
-			this.MenuSongsSep2 = new System.Windows.Forms.ToolStripSeparator();
+			this.MenuSongsSep3 = new System.Windows.Forms.ToolStripSeparator();
 			this.MenuSongsInstall = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuSongsInstallLocal = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuSongsInstallSD = new System.Windows.Forms.ToolStripMenuItem();
-			this.MenuSongsSep3 = new System.Windows.Forms.ToolStripSeparator();
+			this.MenuSongsSep4 = new System.Windows.Forms.ToolStripSeparator();
 			this.MenuSongsExport = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuSongsExportRawkSD = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuSongsExportRBN = new System.Windows.Forms.ToolStripMenuItem();
@@ -104,6 +104,8 @@
 			this.DifficultyBandLabel = new System.Windows.Forms.Label();
 			this.Toolbar = new System.Windows.Forms.ToolStrip();
 			this.SaveDialog = new System.Windows.Forms.SaveFileDialog();
+			this.MenuSongsSep2 = new System.Windows.Forms.ToolStripSeparator();
+			this.MenuSongsSelectAll = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuStrip.SuspendLayout();
 			this.ToolDock.ContentPanel.SuspendLayout();
 			this.ToolDock.TopToolStripPanel.SuspendLayout();
@@ -144,49 +146,52 @@
 			// MenuFileOpenSD
 			// 
 			this.MenuFileOpenSD.Name = "MenuFileOpenSD";
-			this.MenuFileOpenSD.Size = new System.Drawing.Size(165, 22);
+			this.MenuFileOpenSD.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.B)));
+			this.MenuFileOpenSD.Size = new System.Drawing.Size(203, 22);
 			this.MenuFileOpenSD.Text = "Open &SD Card...";
 			this.MenuFileOpenSD.Click += new System.EventHandler(this.MenuFileOpenSD_Click);
 			// 
 			// MenuFileSep1
 			// 
 			this.MenuFileSep1.Name = "MenuFileSep1";
-			this.MenuFileSep1.Size = new System.Drawing.Size(162, 6);
+			this.MenuFileSep1.Size = new System.Drawing.Size(200, 6);
 			// 
 			// MenuFileOpen
 			// 
 			this.MenuFileOpen.Name = "MenuFileOpen";
-			this.MenuFileOpen.Size = new System.Drawing.Size(165, 22);
+			this.MenuFileOpen.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
+			this.MenuFileOpen.Size = new System.Drawing.Size(203, 22);
 			this.MenuFileOpen.Text = "&Open...";
 			this.MenuFileOpen.Click += new System.EventHandler(this.MenuFileOpen_Click);
 			// 
 			// MenuFileOpenFolder
 			// 
 			this.MenuFileOpenFolder.Name = "MenuFileOpenFolder";
-			this.MenuFileOpenFolder.Size = new System.Drawing.Size(165, 22);
+			this.MenuFileOpenFolder.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
+			this.MenuFileOpenFolder.Size = new System.Drawing.Size(203, 22);
 			this.MenuFileOpenFolder.Text = "Open &Folder...";
 			this.MenuFileOpenFolder.Click += new System.EventHandler(this.MenuFileOpenFolder_Click);
 			// 
 			// MenuFileSep2
 			// 
 			this.MenuFileSep2.Name = "MenuFileSep2";
-			this.MenuFileSep2.Size = new System.Drawing.Size(162, 6);
+			this.MenuFileSep2.Size = new System.Drawing.Size(200, 6);
 			// 
 			// MenuFilePreferences
 			// 
 			this.MenuFilePreferences.Name = "MenuFilePreferences";
-			this.MenuFilePreferences.Size = new System.Drawing.Size(165, 22);
+			this.MenuFilePreferences.Size = new System.Drawing.Size(203, 22);
 			this.MenuFilePreferences.Text = "&Preferences...";
 			// 
 			// MenuFileSep3
 			// 
 			this.MenuFileSep3.Name = "MenuFileSep3";
-			this.MenuFileSep3.Size = new System.Drawing.Size(162, 6);
+			this.MenuFileSep3.Size = new System.Drawing.Size(200, 6);
 			// 
 			// MenuFileExit
 			// 
 			this.MenuFileExit.Name = "MenuFileExit";
-			this.MenuFileExit.Size = new System.Drawing.Size(165, 22);
+			this.MenuFileExit.Size = new System.Drawing.Size(203, 22);
 			this.MenuFileExit.Text = "E&xit";
 			this.MenuFileExit.Click += new System.EventHandler(this.MenuFileExit_Click);
 			// 
@@ -195,11 +200,13 @@
 			this.MenuSongs.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.MenuSongsCreate,
             this.MenuSongsSep1,
+            this.MenuSongsSelectAll,
+            this.MenuSongsSep2,
             this.MenuSongsEdit,
             this.MenuSongsDelete,
-            this.MenuSongsSep2,
-            this.MenuSongsInstall,
             this.MenuSongsSep3,
+            this.MenuSongsInstall,
+            this.MenuSongsSep4,
             this.MenuSongsExport});
 			this.MenuSongs.Name = "MenuSongs";
 			this.MenuSongs.Size = new System.Drawing.Size(48, 20);
@@ -208,33 +215,35 @@
 			// MenuSongsCreate
 			// 
 			this.MenuSongsCreate.Name = "MenuSongsCreate";
-			this.MenuSongsCreate.Size = new System.Drawing.Size(130, 22);
+			this.MenuSongsCreate.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
+			this.MenuSongsCreate.Size = new System.Drawing.Size(169, 22);
 			this.MenuSongsCreate.Text = "&Create...";
 			this.MenuSongsCreate.Click += new System.EventHandler(this.MenuSongsCreate_Click);
 			// 
 			// MenuSongsSep1
 			// 
 			this.MenuSongsSep1.Name = "MenuSongsSep1";
-			this.MenuSongsSep1.Size = new System.Drawing.Size(127, 6);
+			this.MenuSongsSep1.Size = new System.Drawing.Size(166, 6);
 			// 
 			// MenuSongsEdit
 			// 
 			this.MenuSongsEdit.Name = "MenuSongsEdit";
-			this.MenuSongsEdit.Size = new System.Drawing.Size(130, 22);
+			this.MenuSongsEdit.Size = new System.Drawing.Size(169, 22);
 			this.MenuSongsEdit.Text = "&Edit...";
 			this.MenuSongsEdit.Click += new System.EventHandler(this.MenuSongsEdit_Click);
 			// 
 			// MenuSongsDelete
 			// 
 			this.MenuSongsDelete.Name = "MenuSongsDelete";
-			this.MenuSongsDelete.Size = new System.Drawing.Size(130, 22);
+			this.MenuSongsDelete.ShortcutKeys = System.Windows.Forms.Keys.Delete;
+			this.MenuSongsDelete.Size = new System.Drawing.Size(169, 22);
 			this.MenuSongsDelete.Text = "&Delete";
 			this.MenuSongsDelete.Click += new System.EventHandler(this.MenuSongsDelete_Click);
 			// 
-			// MenuSongsSep2
+			// MenuSongsSep3
 			// 
-			this.MenuSongsSep2.Name = "MenuSongsSep2";
-			this.MenuSongsSep2.Size = new System.Drawing.Size(127, 6);
+			this.MenuSongsSep3.Name = "MenuSongsSep3";
+			this.MenuSongsSep3.Size = new System.Drawing.Size(166, 6);
 			// 
 			// MenuSongsInstall
 			// 
@@ -242,27 +251,29 @@
             this.MenuSongsInstallLocal,
             this.MenuSongsInstallSD});
 			this.MenuSongsInstall.Name = "MenuSongsInstall";
-			this.MenuSongsInstall.Size = new System.Drawing.Size(130, 22);
+			this.MenuSongsInstall.Size = new System.Drawing.Size(169, 22);
 			this.MenuSongsInstall.Text = "&Install";
 			// 
 			// MenuSongsInstallLocal
 			// 
 			this.MenuSongsInstallLocal.Name = "MenuSongsInstallLocal";
-			this.MenuSongsInstallLocal.Size = new System.Drawing.Size(142, 22);
+			this.MenuSongsInstallLocal.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.L)));
+			this.MenuSongsInstallLocal.Size = new System.Drawing.Size(179, 22);
 			this.MenuSongsInstallLocal.Text = "&Local Cache";
 			this.MenuSongsInstallLocal.Click += new System.EventHandler(this.MenuSongsInstallLocal_Click);
 			// 
 			// MenuSongsInstallSD
 			// 
 			this.MenuSongsInstallSD.Name = "MenuSongsInstallSD";
-			this.MenuSongsInstallSD.Size = new System.Drawing.Size(142, 22);
+			this.MenuSongsInstallSD.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+			this.MenuSongsInstallSD.Size = new System.Drawing.Size(179, 22);
 			this.MenuSongsInstallSD.Text = "&SD Card";
 			this.MenuSongsInstallSD.Click += new System.EventHandler(this.MenuSongsInstallSD_Click);
 			// 
-			// MenuSongsSep3
+			// MenuSongsSep4
 			// 
-			this.MenuSongsSep3.Name = "MenuSongsSep3";
-			this.MenuSongsSep3.Size = new System.Drawing.Size(127, 6);
+			this.MenuSongsSep4.Name = "MenuSongsSep4";
+			this.MenuSongsSep4.Size = new System.Drawing.Size(166, 6);
 			// 
 			// MenuSongsExport
 			// 
@@ -272,34 +283,35 @@
             this.MenuSongsExport360DLC,
             this.MenuSongsExportFoF});
 			this.MenuSongsExport.Name = "MenuSongsExport";
-			this.MenuSongsExport.Size = new System.Drawing.Size(130, 22);
+			this.MenuSongsExport.Size = new System.Drawing.Size(169, 22);
 			this.MenuSongsExport.Text = "E&xport";
 			// 
 			// MenuSongsExportRawkSD
 			// 
 			this.MenuSongsExportRawkSD.Name = "MenuSongsExportRawkSD";
-			this.MenuSongsExportRawkSD.Size = new System.Drawing.Size(209, 22);
+			this.MenuSongsExportRawkSD.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
+			this.MenuSongsExportRawkSD.Size = new System.Drawing.Size(233, 22);
 			this.MenuSongsExportRawkSD.Text = "&RawkSD Archive (.rwk)";
 			this.MenuSongsExportRawkSD.Click += new System.EventHandler(this.MenuSongsExportRawkSD_Click);
 			// 
 			// MenuSongsExportRBN
 			// 
 			this.MenuSongsExportRBN.Name = "MenuSongsExportRBN";
-			this.MenuSongsExportRBN.Size = new System.Drawing.Size(209, 22);
+			this.MenuSongsExportRBN.Size = new System.Drawing.Size(233, 22);
 			this.MenuSongsExportRBN.Text = "Rock Band &Network (.rba)";
 			this.MenuSongsExportRBN.Click += new System.EventHandler(this.MenuSongsExportRBN_Click);
 			// 
 			// MenuSongsExport360DLC
 			// 
 			this.MenuSongsExport360DLC.Name = "MenuSongsExport360DLC";
-			this.MenuSongsExport360DLC.Size = new System.Drawing.Size(209, 22);
+			this.MenuSongsExport360DLC.Size = new System.Drawing.Size(233, 22);
 			this.MenuSongsExport360DLC.Text = "Rock Band &360 DLC";
 			this.MenuSongsExport360DLC.Click += new System.EventHandler(this.MenuSongsExport360DLC_Click);
 			// 
 			// MenuSongsExportFoF
 			// 
 			this.MenuSongsExportFoF.Name = "MenuSongsExportFoF";
-			this.MenuSongsExportFoF.Size = new System.Drawing.Size(209, 22);
+			this.MenuSongsExportFoF.Size = new System.Drawing.Size(233, 22);
 			this.MenuSongsExportFoF.Text = "&Frets on Fire Folder";
 			this.MenuSongsExportFoF.Click += new System.EventHandler(this.MenuSongsExportFoF_Click);
 			// 
@@ -798,6 +810,19 @@
 			this.Toolbar.TabIndex = 3;
 			this.Toolbar.Text = "toolStrip1";
 			// 
+			// MenuSongsSep2
+			// 
+			this.MenuSongsSep2.Name = "MenuSongsSep2";
+			this.MenuSongsSep2.Size = new System.Drawing.Size(166, 6);
+			// 
+			// MenuSongsSelectAll
+			// 
+			this.MenuSongsSelectAll.Name = "MenuSongsSelectAll";
+			this.MenuSongsSelectAll.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
+			this.MenuSongsSelectAll.Size = new System.Drawing.Size(169, 22);
+			this.MenuSongsSelectAll.Text = "Select &All";
+			this.MenuSongsSelectAll.Click += new System.EventHandler(this.MenuSongsSelectAll_Click);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -886,11 +911,11 @@
 		private System.Windows.Forms.ToolStripSeparator MenuSongsSep1;
 		private System.Windows.Forms.ToolStripMenuItem MenuSongsEdit;
 		private System.Windows.Forms.ToolStripMenuItem MenuSongsDelete;
-		private System.Windows.Forms.ToolStripSeparator MenuSongsSep2;
+		private System.Windows.Forms.ToolStripSeparator MenuSongsSep3;
 		private System.Windows.Forms.ToolStripMenuItem MenuSongsInstall;
 		private System.Windows.Forms.ToolStripMenuItem MenuSongsInstallLocal;
 		private System.Windows.Forms.ToolStripMenuItem MenuSongsInstallSD;
-		private System.Windows.Forms.ToolStripSeparator MenuSongsSep3;
+		private System.Windows.Forms.ToolStripSeparator MenuSongsSep4;
 		private System.Windows.Forms.ToolStripMenuItem MenuSongsExport;
 		private System.Windows.Forms.ToolStripMenuItem MenuSongsExportRawkSD;
 		private System.Windows.Forms.ToolStripMenuItem MenuSongsExportRBN;
@@ -910,6 +935,8 @@
 		private System.Windows.Forms.ToolStripMenuItem ContextMenuExportFoF;
 		private System.Windows.Forms.ToolStripSeparator ContextMenuSep2;
 		private System.Windows.Forms.SaveFileDialog SaveDialog;
+		private System.Windows.Forms.ToolStripMenuItem MenuSongsSelectAll;
+		private System.Windows.Forms.ToolStripSeparator MenuSongsSep2;
 	}
 }
 

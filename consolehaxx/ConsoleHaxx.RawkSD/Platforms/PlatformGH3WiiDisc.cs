@@ -15,8 +15,8 @@ namespace ConsoleHaxx.RawkSD
 	{
 		public static readonly PakFormat PakFormat = new PakFormat(null, null, null, PakFormatType.Wii);
 
-		public static readonly PlatformGH3WiiDisc Instance;
-		static PlatformGH3WiiDisc()
+		public static PlatformGH3WiiDisc Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformGH3WiiDisc();
 
@@ -32,7 +32,7 @@ namespace ConsoleHaxx.RawkSD
 
 		public override int ID { get { throw new NotImplementedException(); } }
 
-		public override string Name { get { return "Guitar Hero 3 / Aerosmith Wii Disc"; } }
+		public override string Name { get { return "Guitar Hero 3 Wii Disc"; } }
 
 		public override bool AddSong(PlatformData data, SongData song, ProgressIndicator progress)
 		{

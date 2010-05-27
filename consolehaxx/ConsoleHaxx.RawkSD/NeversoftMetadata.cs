@@ -79,7 +79,9 @@ namespace ConsoleHaxx.RawkSD
 			0x8D024B7C, // GH5.2
 			0x236ADAED, // GH5.3
 			0xDE932298, // GH5.4
-			0x5A93AE17 // GHVH
+			0x5A93AE17, // GHVH
+
+			0x5C04EE27, // GHWT DLC
 		};
 
 		public static string GetSongDataString(QbItemStruct item, uint[] keys, StringList strings)
@@ -106,8 +108,6 @@ namespace ConsoleHaxx.RawkSD
 				strings = new StringList();
 
 			SongData data = new SongData(platformdata);
-
-			// TODO: QbKeysDifficulty
 
 			data.ID = GetSongDataString(item, QbKeysID, strings);
 
@@ -218,6 +218,65 @@ namespace ConsoleHaxx.RawkSD
 			}
 
 			return false;
+		}
+
+		public static AudioFormat GetAudioFormat(SongData song)
+		{
+			AudioFormat audioformat = new AudioFormat();
+
+			QbItemStruct item = GetSongItem(song);
+			float bandvolume = 0;
+			float guitarvolume = 0;
+			float bassvolume = 0;
+			float drumvolume = 0;
+
+			QbItemFloat subitem = item.FindItem(QbKey.Create(0xD8F335CF), false) as QbItemFloat; // GH3: band_playback_volume
+			if (subitem != null) {
+				bandvolume = (subitem as QbItemFloat).Values[0];
+				bassvolume = bandvolume;
+			}
+			subitem = item.FindItem(QbKey.Create(0xA449CAD3), false) as QbItemFloat; // GH3: guitar_playback_volume
+			if (subitem != null)
+				guitarvolume = (subitem as QbItemFloat).Values[0];
+			subitem = item.FindItem(QbKey.Create(0x46507438), false) as QbItemFloat; // GH4: overall_song_volume
+			if (subitem != null) {
+				bandvolume = (subitem as QbItemFloat).Values[0];
+				guitarvolume = bandvolume;
+				bassvolume = bandvolume;
+				drumvolume = bandvolume;
+			}
+
+			// GH4 engine games that came out after GHWT use a different drum audio scheme; the GH5 engine uses the same as GHWT
+			bool gh4v2 = NeversoftMetadata.IsGuitarHero4(song.Game) && song.Game != Game.GuitarHeroWorldTour;
+			if (gh4v2) {
+				// Kick
+				audioformat.Mappings.Add(new AudioFormat.Mapping(drumvolume, -1, Instrument.Drums));
+				audioformat.Mappings.Add(new AudioFormat.Mapping(drumvolume, 1, Instrument.Drums));
+				// Snare
+				audioformat.Mappings.Add(new AudioFormat.Mapping(drumvolume, -1, Instrument.Drums));
+				audioformat.Mappings.Add(new AudioFormat.Mapping(drumvolume, 1, Instrument.Drums));
+			} else {
+				// Kick
+				audioformat.Mappings.Add(new AudioFormat.Mapping(drumvolume, 0, Instrument.Drums));
+				// Snare
+				audioformat.Mappings.Add(new AudioFormat.Mapping(drumvolume, 0, Instrument.Drums));
+			}
+			// Overhead
+			audioformat.Mappings.Add(new AudioFormat.Mapping(drumvolume, -1, Instrument.Drums));
+			audioformat.Mappings.Add(new AudioFormat.Mapping(drumvolume, 1, Instrument.Drums));
+			// Guitar
+			audioformat.Mappings.Add(new AudioFormat.Mapping(guitarvolume, -1, Instrument.Guitar));
+			audioformat.Mappings.Add(new AudioFormat.Mapping(guitarvolume, 1, Instrument.Guitar));
+			// Bass
+			audioformat.Mappings.Add(new AudioFormat.Mapping(bassvolume, 0, Instrument.Bass));
+			// Else / Vocals
+			audioformat.Mappings.Add(new AudioFormat.Mapping(bandvolume, -1, Instrument.Ambient));
+			audioformat.Mappings.Add(new AudioFormat.Mapping(bandvolume, 1, Instrument.Ambient));
+			// Preview
+			audioformat.Mappings.Add(new AudioFormat.Mapping(bandvolume, -1, Instrument.Preview));
+			audioformat.Mappings.Add(new AudioFormat.Mapping(bandvolume, 1, Instrument.Preview));
+
+			return audioformat;
 		}
 	}
 }

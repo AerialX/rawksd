@@ -101,9 +101,9 @@
 			this.ReplaceAudioButton = new System.Windows.Forms.Button();
 			this.ButtonLayout = new System.Windows.Forms.FlowLayoutPanel();
 			this.CloseButton = new System.Windows.Forms.Button();
+			this.ButtonCancel = new System.Windows.Forms.Button();
 			this.OpenDialog = new System.Windows.Forms.OpenFileDialog();
 			this.ErrorProvider = new System.Windows.Forms.ErrorProvider(this.components);
-			this.ButtonCancel = new System.Windows.Forms.Button();
 			this.SongLayout.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.YearNumeric)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.AlbumArt)).BeginInit();
@@ -793,6 +793,7 @@
 			this.AnimationTempoCombo.Name = "AnimationTempoCombo";
 			this.AnimationTempoCombo.Size = new System.Drawing.Size(196, 21);
 			this.AnimationTempoCombo.TabIndex = 1;
+			this.AnimationTempoCombo.SelectedIndexChanged += new System.EventHandler(this.AnimationTempoCombo_SelectedIndexChanged);
 			// 
 			// ScrollSpeedNumeric
 			// 
@@ -812,6 +813,7 @@
             0,
             0,
             0});
+			this.ScrollSpeedNumeric.ValueChanged += new System.EventHandler(this.ScrollSpeedNumeric_ValueChanged);
 			// 
 			// BankCombo
 			// 
@@ -828,6 +830,7 @@
 			this.BankCombo.Name = "BankCombo";
 			this.BankCombo.Size = new System.Drawing.Size(196, 21);
 			this.BankCombo.TabIndex = 5;
+			this.BankCombo.SelectedIndexChanged += new System.EventHandler(this.BankCombo_SelectedIndexChanged);
 			// 
 			// LabelBandTier
 			// 
@@ -1094,10 +1097,6 @@
 			this.CloseButton.UseVisualStyleBackColor = true;
 			this.CloseButton.Click += new System.EventHandler(this.CloseButton_Click);
 			// 
-			// ErrorProvider
-			// 
-			this.ErrorProvider.ContainerControl = this;
-			// 
 			// ButtonCancel
 			// 
 			this.ButtonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
@@ -1108,6 +1107,10 @@
 			this.ButtonCancel.Text = "&Cancel";
 			this.ButtonCancel.UseVisualStyleBackColor = true;
 			this.ButtonCancel.Click += new System.EventHandler(this.ButtonCancel_Click);
+			// 
+			// ErrorProvider
+			// 
+			this.ErrorProvider.ContainerControl = this;
 			// 
 			// EditForm
 			// 

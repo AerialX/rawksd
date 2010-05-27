@@ -105,19 +105,19 @@ namespace ConsoleHaxx.Harmonix
 			midi.Signature = Signature;
 
 			if (PartDrums != null)
-				midi.Tracks.Add(PartDrums.ToMidiTrack());
+				midi.AddTrack(PartDrums.ToMidiTrack());
 			if (PartBass != null)
-				midi.Tracks.Add(PartBass.ToMidiTrack());
+				midi.AddTrack(PartBass.ToMidiTrack());
 			if (PartGuitar != null)
-				midi.Tracks.Add(PartGuitar.ToMidiTrack());
+				midi.AddTrack(PartGuitar.ToMidiTrack());
 			if (PartVocals != null)
-				midi.Tracks.Add(PartVocals.ToMidiTrack());
+				midi.AddTrack(PartVocals.ToMidiTrack());
 			if (Events != null)
-				midi.Tracks.Add(Events.ToMidiTrack());
+				midi.AddTrack(Events.ToMidiTrack());
 			if (Beat != null)
-				midi.Tracks.Add(Beat.ToMidiTrack());
+				midi.AddTrack(Beat.ToMidiTrack());
 			if (Venue != null)
-				midi.Tracks.Add(Venue.ToMidiTrack());
+				midi.AddTrack(Venue.ToMidiTrack());
 			midi.Name = Name;
 
 			Random rand = new Random();

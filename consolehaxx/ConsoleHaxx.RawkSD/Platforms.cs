@@ -9,6 +9,7 @@ using ConsoleHaxx.Harmonix;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace ConsoleHaxx.RawkSD
 {
@@ -22,6 +23,8 @@ namespace ConsoleHaxx.RawkSD
 
 		public virtual FormatData CreateSong(PlatformData data, SongData song) { throw new NotImplementedException(); }
 		public virtual void SaveSong(PlatformData data, FormatData formatdata, ProgressIndicator progress) { throw new NotImplementedException(); }
+
+		public virtual void DeleteSong(PlatformData data, FormatData formatdata, ProgressIndicator progress) { formatdata.Dispose(); data.RemoveSong(formatdata); }
 
 		public override string ToString()
 		{
@@ -149,11 +152,14 @@ namespace ConsoleHaxx.RawkSD
 
 		protected List<FormatData> Data;
 
+		public Mutex Mutex;
+
 		public PlatformData(Engine platform, Game game)
 		{
 			Cache = new DelayedStreamCache();
 			Session = new Dictionary<string, object>();
 			Data = new List<FormatData>();
+			Mutex = new Mutex();
 
 			Platform = platform;
 			Game = game;
@@ -163,18 +169,28 @@ namespace ConsoleHaxx.RawkSD
 
 		public void AddSong(FormatData data)
 		{
+			Mutex.WaitOne();
+
 			Data.Add(data);
+
+			Mutex.ReleaseMutex();
 		}
 
 		public void RemoveSong(FormatData data)
 		{
+			Mutex.WaitOne();
+
 			Data.Remove(data);
+
+			Mutex.ReleaseMutex();
 		}
 
 		public void Dispose()
 		{
-			if (Cache != null)
+			if (Cache != null) {
 				Cache.Dispose();
+				Cache = null;
+			}
 		}
 
 		~PlatformData()
@@ -190,12 +206,45 @@ namespace ConsoleHaxx.RawkSD
 		public static IFormat GetFormat(int id) { return Formats.SingleOrDefault(a => a.ID == id); }
 		public static void AddFormat(IFormat format) { Formats.Add(format); }
 
-		static Platform()
+		public static void Initialise()
 		{
 			Formats = new List<IFormat>();
 
-			foreach (var type in Assembly.GetExecutingAssembly().GetTypes().Where(t => typeof(Engine).IsAssignableFrom(t) || typeof(IFormat).IsAssignableFrom(t)))
-				RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+			PlatformDJHWiiDisc.Initialise();
+			PlatformFretsOnFire.Initialise();
+			PlatformGH2PS2Disc.Initialise();
+			PlatformGH3WiiDisc.Initialise();
+			PlatformGH4WiiDLC.Initialise();
+			PlatformGH5WiiDisc.Initialise();
+			PlatformGH5WiiDLC.Initialise();
+			PlatformLocalStorage.Initialise();
+			PlatformRawkFile.Initialise();
+			PlatformRB2360Disc.Initialise();
+			PlatformRB2360DLC.Initialise();
+			PlatformRB2360RBN.Initialise();
+			PlatformRB2WiiCustomDLC.Initialise();
+			PlatformRB2WiiDisc.Initialise();
+			PlatformRB2WiiDLC.Initialise();
+
+			ChartFormatChart.Initialise();
+			ChartFormatFsgMub.Initialise();
+			ChartFormatGH1.Initialise();
+			ChartFormatGH2.Initialise();
+			ChartFormatGH3.Initialise();
+			ChartFormatGH4.Initialise();
+			ChartFormatGH5.Initialise();
+			ChartFormatRB.Initialise();
+
+			AudioFormatBeatlesBink.Initialise();
+			AudioFormatBink.Initialise();
+			AudioFormatFFmpeg.Initialise();
+			AudioFormatGH3WiiFSB.Initialise();
+			AudioFormatMogg.Initialise();
+			AudioFormatMp3.Initialise();
+			AudioFormatOgg.Initialise();
+			AudioFormatRB2Bink.Initialise();
+			AudioFormatRB2Mogg.Initialise();
+			AudioFormatVGS.Initialise();
 		}
 
 		public static Instrument InstrumentFromString(string s)

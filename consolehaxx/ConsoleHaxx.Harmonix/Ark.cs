@@ -168,7 +168,7 @@ namespace ConsoleHaxx.Harmonix
 					
 					DirectoryNode dir = Root.Navigate(pathname, true) as DirectoryNode;
 					int ark;
-					for (ark = 0; offset > arkSizes[ark]; offset -= arkSizes[ark++])
+					for (ark = 0; offset >= arkSizes[ark]; offset -= arkSizes[ark++])
 						;
 					dir.Children.Add(new FileNode(filename, dir, size, new Substream(ArkStreams[ark], offset, (long)size)));
 				}

@@ -61,6 +61,7 @@ namespace ConsoleHaxx.Common
 			File.Delete(Filename);
 			Closed = true;
 		}
+
 		public TemporaryStream()
 		{
 			if (BasePath != null)
@@ -70,6 +71,7 @@ namespace ConsoleHaxx.Common
 			Base = new FileStream(Filename, FileMode.Create, FileAccess.ReadWrite);
 			Closed = false;
 		}
+
 		~TemporaryStream()
 		{
 			if (!Closed)

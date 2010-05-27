@@ -12,15 +12,15 @@ namespace ConsoleHaxx.RawkSD
 		public const string FormatName = "map";
 		public const string AudioName = "audio";
 
-		public static readonly AudioFormatOgg Instance;
-		static AudioFormatOgg()
+		public static AudioFormatOgg Instance;
+		public static void Initialise()
 		{
 			Instance = new AudioFormatOgg();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x0a; }
+			get { return 0x07; }
 		}
 
 		public override string Name {
@@ -130,13 +130,6 @@ namespace ConsoleHaxx.RawkSD
 			stream = destination.AddStream(this, FormatName);
 			Util.StreamCopy(stream, AudioFormatMogg.Instance.GetFormatStream(data));
 			destination.CloseStream(stream);
-
-			Stream previewstream = AudioFormatMogg.Instance.GetDecryptedPreviewStream(data, progress);
-			if (previewstream != null) {
-				stream = destination.AddStream(this, AudioName + ".1");
-				Util.StreamCopy(stream, previewstream);
-				destination.CloseStream(stream);
-			}
 		}
 
 		public void Create(FormatData data, Stream[] streams, AudioFormat format)

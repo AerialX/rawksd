@@ -11,24 +11,27 @@ namespace ConsoleHaxx.RawkSD
 	{
 		public const string ChartName = "chart";
 
-		public static readonly ChartFormatGH4 Instance;
-		static ChartFormatGH4()
+		public static ChartFormatGH4 Instance;
+		public static void Initialise()
 		{
 			Instance = new ChartFormatGH4();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x04; }
+			get { return 0x45; }
 		}
 
 		public override string Name {
-			get { return "Guitar Hero World Tour / Metallica / Smash Hits / Van Halen Chart"; }
+			get { return "Guitar Hero 4 Chart"; }
 		}
 
-		public void Create(FormatData data, Stream stream, PakFormatType paktype)
+		public void Create(FormatData data, Stream[] streams, bool expertplus)
 		{
-			data.SetStream(this, ChartName, stream);
+			for (int i = 0; i < streams.Length; i++)
+				data.SetStream(this, ChartName + (i == 0 ? string.Empty : ("." + i.ToString())), streams[i]); ;
+
+			data.Song.Data.SetValue("GH5ChartExpertPlus", expertplus);
 		}
 
 		public override bool Writable {
@@ -39,16 +42,32 @@ namespace ConsoleHaxx.RawkSD
 			get { return true; }
 		}
 
+		public Stream[] GetChartStreams(FormatData data)
+		{
+			List<Stream> streams = new List<Stream>();
+
+			int i = 0;
+			string name = ChartName;
+			do {
+				streams.Add(data.GetStream(this, name));
+				i++;
+				name = ChartName + "." + i.ToString();
+			} while (data.HasStream(this, name));
+
+			return streams.ToArray();
+		}
+
 		public override ChartFormat DecodeChart(FormatData data, ProgressIndicator progress)
 		{
 			if (!data.HasStream(this, ChartName))
 				throw new FormatException();
 
-			Stream chartstream = data.GetStream(this, ChartName);
+			Stream[] streams = GetChartStreams(data);
 
-			ChartFormat format = ChartFormatGH5.Instance.DecodeChart(data, chartstream, progress);
+			ChartFormat format = ChartFormatGH5.Instance.DecodeChart(data, progress, streams);
 
-			data.CloseStream(this, ChartName);
+			foreach (Stream stream in streams)
+				data.CloseStream(stream);
 
 			return format;
 		}

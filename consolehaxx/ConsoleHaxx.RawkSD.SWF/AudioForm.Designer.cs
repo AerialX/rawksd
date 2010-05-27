@@ -43,10 +43,14 @@
 			this.ButtonLayout = new System.Windows.Forms.FlowLayoutPanel();
 			this.ButtonOK = new System.Windows.Forms.Button();
 			this.ButtonCancel = new System.Windows.Forms.Button();
+			this.LabelAudio = new System.Windows.Forms.Label();
+			this.LabelSilence = new System.Windows.Forms.Label();
+			this.SilenceNumeric = new System.Windows.Forms.NumericUpDown();
 			this.MainLayout.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.VolumeNumeric)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.BalanceNumeric)).BeginInit();
 			this.ButtonLayout.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.SilenceNumeric)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// MainLayout
@@ -69,6 +73,9 @@
 			this.MainLayout.Controls.Add(this.BalanceNumeric, 3, 3);
 			this.MainLayout.Controls.Add(this.LabelChannel, 2, 1);
 			this.MainLayout.Controls.Add(this.ButtonLayout, 0, 7);
+			this.MainLayout.Controls.Add(this.LabelAudio, 2, 5);
+			this.MainLayout.Controls.Add(this.LabelSilence, 2, 6);
+			this.MainLayout.Controls.Add(this.SilenceNumeric, 3, 6);
 			this.MainLayout.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.MainLayout.Location = new System.Drawing.Point(0, 0);
 			this.MainLayout.Name = "MainLayout";
@@ -82,6 +89,7 @@
 			this.MainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.MainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.MainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+			this.MainLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
 			this.MainLayout.Size = new System.Drawing.Size(253, 280);
 			this.MainLayout.TabIndex = 0;
 			// 
@@ -234,7 +242,7 @@
 			this.ButtonLayout.Controls.Add(this.ButtonCancel);
 			this.ButtonLayout.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.ButtonLayout.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-			this.ButtonLayout.Location = new System.Drawing.Point(3, 250);
+			this.ButtonLayout.Location = new System.Drawing.Point(3, 253);
 			this.ButtonLayout.Name = "ButtonLayout";
 			this.ButtonLayout.Size = new System.Drawing.Size(247, 27);
 			this.ButtonLayout.TabIndex = 12;
@@ -260,6 +268,47 @@
 			this.ButtonCancel.UseVisualStyleBackColor = true;
 			this.ButtonCancel.Click += new System.EventHandler(this.ButtonCancel_Click);
 			// 
+			// LabelAudio
+			// 
+			this.LabelAudio.AutoSize = true;
+			this.MainLayout.SetColumnSpan(this.LabelAudio, 2);
+			this.LabelAudio.Location = new System.Drawing.Point(141, 201);
+			this.LabelAudio.Name = "LabelAudio";
+			this.LabelAudio.Padding = new System.Windows.Forms.Padding(0, 4, 0, 4);
+			this.LabelAudio.Size = new System.Drawing.Size(75, 21);
+			this.LabelAudio.TabIndex = 7;
+			this.LabelAudio.Text = "Audio Settings";
+			// 
+			// LabelSilence
+			// 
+			this.LabelSilence.AutoSize = true;
+			this.LabelSilence.Location = new System.Drawing.Point(141, 224);
+			this.LabelSilence.Name = "LabelSilence";
+			this.LabelSilence.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
+			this.LabelSilence.Size = new System.Drawing.Size(45, 17);
+			this.LabelSilence.TabIndex = 8;
+			this.LabelSilence.Text = "Silence:";
+			// 
+			// SilenceNumeric
+			// 
+			this.SilenceNumeric.DecimalPlaces = 3;
+			this.SilenceNumeric.Dock = System.Windows.Forms.DockStyle.Top;
+			this.SilenceNumeric.Location = new System.Drawing.Point(196, 227);
+			this.SilenceNumeric.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+			this.SilenceNumeric.Minimum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            -2147483648});
+			this.SilenceNumeric.Name = "SilenceNumeric";
+			this.SilenceNumeric.Size = new System.Drawing.Size(54, 20);
+			this.SilenceNumeric.TabIndex = 13;
+			this.SilenceNumeric.ValueChanged += new System.EventHandler(this.SilenceNumeric_ValueChanged);
+			// 
 			// AudioForm
 			// 
 			this.AcceptButton = this.ButtonOK;
@@ -269,6 +318,7 @@
 			this.ClientSize = new System.Drawing.Size(253, 280);
 			this.Controls.Add(this.MainLayout);
 			this.Name = "AudioForm";
+			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Audio Configuration";
 			this.Load += new System.EventHandler(this.AudioForm_Load);
 			this.MainLayout.ResumeLayout(false);
@@ -276,6 +326,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.VolumeNumeric)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.BalanceNumeric)).EndInit();
 			this.ButtonLayout.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)(this.SilenceNumeric)).EndInit();
 			this.ResumeLayout(false);
 
 		}
@@ -298,5 +349,8 @@
 		private System.Windows.Forms.FlowLayoutPanel ButtonLayout;
 		private System.Windows.Forms.Button ButtonOK;
 		private System.Windows.Forms.Button ButtonCancel;
+		private System.Windows.Forms.Label LabelAudio;
+		private System.Windows.Forms.Label LabelSilence;
+		private System.Windows.Forms.NumericUpDown SilenceNumeric;
 	}
 }

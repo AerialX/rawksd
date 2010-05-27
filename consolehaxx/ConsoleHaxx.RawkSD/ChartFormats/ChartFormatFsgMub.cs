@@ -13,14 +13,14 @@ namespace ConsoleHaxx.RawkSD
 	{
 		public const string ChartName = "chart";
 
-		public static readonly ChartFormatFsgMub Instance;
-		static ChartFormatFsgMub()
+		public static ChartFormatFsgMub Instance;
+		public static void Initialise()
 		{
 			Instance = new ChartFormatFsgMub();
 			Platform.AddFormat(Instance);
 		}
 
-		public override int ID { get { return 0xFE; } }
+		public override int ID { get { return 0x41; } }
 
 		public override string Name { get { return "DJ Hero Chart"; } }
 

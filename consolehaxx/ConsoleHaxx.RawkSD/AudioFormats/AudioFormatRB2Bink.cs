@@ -14,15 +14,15 @@ namespace ConsoleHaxx.RawkSD
 		public const string PreviewName = "preview";
 		public const string FormatName = "map";
 
-		public static readonly AudioFormatRB2Bink Instance;
-		static AudioFormatRB2Bink()
+		public static AudioFormatRB2Bink Instance;
+		public static void Initialise()
 		{
 			Instance = new AudioFormatRB2Bink();
 			Platform.AddFormat(Instance);
 		}
 
 		public override int ID {
-			get { return 0x0d; }
+			get { return 0x08; }
 		}
 
 		public override string Name {
@@ -37,11 +37,11 @@ namespace ConsoleHaxx.RawkSD
 			get { return false; }
 		}
 
-		public AudioFormat DecodeFormat(FormatData data)
+		public override AudioFormat DecodeAudioFormat(FormatData data)
 		{
 			Stream stream = GetFormatStream(data);
 			if (stream == null)
-				return null;
+				return HarmonixMetadata.GetAudioFormat(data.Song);
 			AudioFormat format = AudioFormat.Create(stream);
 			data.CloseStream(stream);
 			return format;
@@ -60,9 +60,11 @@ namespace ConsoleHaxx.RawkSD
 		public void Create(FormatData data, Stream audio, AudioFormat format)
 		{
 			data.SetStream(this, AudioName, audio);
-			Stream formatstream = data.AddStream(this, FormatName);
-			format.Save(formatstream);
-			data.CloseStream(formatstream);
+			if (format != null) {
+				Stream formatstream = data.AddStream(this, FormatName);
+				format.Save(formatstream);
+				data.CloseStream(formatstream);
+			}
 		}
 
 		public Stream GetAudioStream(FormatData data)
@@ -74,12 +76,18 @@ namespace ConsoleHaxx.RawkSD
 		{
 			if (!data.HasStream(this, PreviewName)) {
 				AudioFormat format = new AudioFormat();
-				format.Decoder = new RawkAudio.Decoder(GetAudioStream(data), RawkAudio.Decoder.AudioFormat.BinkAudio);
-				Stream stream = AudioFormat.AddPreviewDecoder(data, format, progress);
+				try {
+					format.Decoder = new RawkAudio.Decoder(GetAudioStream(data), RawkAudio.Decoder.AudioFormat.BinkAudio);
+				} catch {
+					format.Decoder = new ZeroDecoder(1, 28000, 0x7FFFFFFFFFFFFFFF);
+				}
+				Stream previewstream = new TemporaryStream();
+				CryptedMoggStream mogg = new CryptedMoggStream(previewstream);
+				mogg.WriteHeader();
+				PlatformRB2WiiCustomDLC.TranscodePreview(data.Song.PreviewTimes, null, format.Decoder, mogg, progress);
+				previewstream.Position = 0;
 				format.Decoder.Dispose();
-				if (stream == null)
-					return null;
-				data.SetStream(this, PreviewName, stream);
+				return previewstream;
 			}
 
 			return data.GetStream(this, PreviewName);

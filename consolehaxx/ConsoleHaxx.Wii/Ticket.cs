@@ -157,12 +157,11 @@ namespace ConsoleHaxx.Wii
 			}
 		}
 
-		public CryptoStream CreateDecryptionStream(TmdContent content, Stream data)
+		public Stream CreateDecryptionStream(TmdContent content, Stream data)
 		{
 			byte[] iv = new byte[0x10];
 			BigEndianConverter.GetBytes(content.Index).CopyTo(iv, 0);
-			CryptoStream stream = new CryptoStream(data, Util.AesCBC.CreateDecryptor(Key, iv), CryptoStreamMode.Read);
-			stream.SetLength(content.Size);
+			Stream stream = new Substream(new AesStream(data, Key, iv), 0, content.Size);
 			return stream;
 		}
 	}

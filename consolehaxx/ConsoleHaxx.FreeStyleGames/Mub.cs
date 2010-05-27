@@ -139,7 +139,7 @@ namespace ConsoleHaxx.FreeStyleGames
 			mid.Signature.Add(new Midi.TimeSignatureEvent(0, 4, 2, 24, 8));
 
 			Midi.Track track = new Midi.Track();
-			mid.Tracks.Add(track);
+			mid.AddTrack(track);
 			track.Name = string.Empty;
 			mid.Name = string.Empty;
 

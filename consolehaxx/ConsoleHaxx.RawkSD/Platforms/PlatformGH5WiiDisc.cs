@@ -11,10 +11,12 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class PlatformGH5WiiDisc : Engine
 	{
+		public static bool ImportExpertPlus = false;
+
 		public static readonly PakFormat PakFormat = new PakFormat(null, null, null, PakFormatType.Wii);
 
-		public static readonly PlatformGH5WiiDisc Instance;
-		static PlatformGH5WiiDisc()
+		public static PlatformGH5WiiDisc Instance;
+		public static void Initialise()
 		{
 			Instance = new PlatformGH5WiiDisc();
 
@@ -30,7 +32,7 @@ namespace ConsoleHaxx.RawkSD
 
 		public override int ID { get { throw new NotImplementedException(); } }
 
-		public override string Name { get { return "Guitar Hero World Tour / Metallica / Smash Hits / Van Halen / 5 / Band Hero Wii Disc"; } }
+		public override string Name { get { return "Guitar Hero 4 / 5 Wii Disc"; } }
 
 		public override bool AddSong(PlatformData data, SongData song, ProgressIndicator progress)
 		{
@@ -44,46 +46,15 @@ namespace ConsoleHaxx.RawkSD
 				return false;
 
 			if (data.Game == Game.GuitarHero5 || data.Game == Game.BandHero)
-				ChartFormatGH5.Instance.Create(formatdata, chartpak.Data, PakFormat.PakFormatType);
+				ChartFormatGH5.Instance.Create(formatdata, new Stream[] { chartpak.Data }, ImportExpertPlus);
 			else
-				ChartFormatGH4.Instance.Create(formatdata, chartpak.Data, PakFormat.PakFormatType);
+				ChartFormatGH4.Instance.Create(formatdata, new Stream[] { chartpak.Data }, ImportExpertPlus);
 			
 			FileNode audiofile = dir.Navigate("music/" + song.ID + ".bik", false, true) as FileNode;
 			FileNode previewfile = dir.Navigate("music/" + song.ID + "_preview.bik", false, true) as FileNode;
 
-			AudioFormat audioformat = new AudioFormat();
-			// GH4 engine games that came out after GHWT use a different drum audio scheme; the GH5 engine uses the same as GHWT
-			bool gh4v2 = NeversoftMetadata.IsGuitarHero4(data.Game) && data.Game != Game.GuitarHeroWorldTour;
-			if (gh4v2) {
-				// Kick
-				audioformat.Mappings.Add(new AudioFormat.Mapping(0, -1, Instrument.Drums));
-				audioformat.Mappings.Add(new AudioFormat.Mapping(0, 1, Instrument.Drums));
-				// Snare
-				audioformat.Mappings.Add(new AudioFormat.Mapping(0, -1, Instrument.Drums));
-				audioformat.Mappings.Add(new AudioFormat.Mapping(0, 1, Instrument.Drums));
-			} else {
-				// Kick
-				audioformat.Mappings.Add(new AudioFormat.Mapping(0, 0, Instrument.Drums));
-				// Snare
-				audioformat.Mappings.Add(new AudioFormat.Mapping(0, 0, Instrument.Drums));
-			}
-			// Overhead
-			audioformat.Mappings.Add(new AudioFormat.Mapping(0, -1, Instrument.Drums));
-			audioformat.Mappings.Add(new AudioFormat.Mapping(0, 1, Instrument.Drums));
-			// Guitar
-			audioformat.Mappings.Add(new AudioFormat.Mapping(0, -1, Instrument.Guitar));
-			audioformat.Mappings.Add(new AudioFormat.Mapping(0, 1, Instrument.Guitar));
-			// Bass
-			audioformat.Mappings.Add(new AudioFormat.Mapping(0, 0, Instrument.Bass));
-			// Else / Vocals
-			audioformat.Mappings.Add(new AudioFormat.Mapping(0, -1, Instrument.Ambient));
-			audioformat.Mappings.Add(new AudioFormat.Mapping(0, 1, Instrument.Ambient));
-			// Preview
-			audioformat.Mappings.Add(new AudioFormat.Mapping(0, -1, Instrument.Preview));
-			audioformat.Mappings.Add(new AudioFormat.Mapping(0, 1, Instrument.Preview));
-
 			if (audiofile != null)
-				AudioFormatBink.Instance.Create(formatdata, audiofile.Data, previewfile == null ? null : previewfile.Data, audioformat);
+				AudioFormatBink.Instance.Create(formatdata, audiofile.Data, previewfile == null ? null : previewfile.Data, null);
 
 			data.AddSong(formatdata);
 
@@ -143,6 +114,9 @@ namespace ConsoleHaxx.RawkSD
 
 				progress.EndTask();
 			}
+
+			qbpak.Data.Close();
+			qspak.Data.Close();
 
 			return data;
 		}

@@ -138,6 +138,8 @@ namespace ConsoleHaxx.Harmonix
 			tracks.Nodes.Add(new DTB.NodeKeyword() { Type = 0x05, Text = "tracks" });
 			DTB.NodeTree tracktree = new DTB.NodeTree(line); tracks.Nodes.Add(tracktree);
 			foreach (SongTracks track in Song.Tracks) {
+				if (track.Tracks.Count == 0)
+					continue;
 				tracks = new DTB.NodeTree(line++); tracktree.Nodes.Add(tracks);
 				tracks.Nodes.Add(new DTB.NodeKeyword() { Type = 0x05, Text = track.Name });
 				if (track.Tracks.Count == 1)

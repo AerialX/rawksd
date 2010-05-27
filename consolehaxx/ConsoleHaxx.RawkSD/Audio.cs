@@ -161,13 +161,7 @@ namespace ConsoleHaxx.RawkSD
 				multi.AddDecoder(format.Decoder);
 
 				Stream previewstream = new TemporaryStream();
-				IEncoder encoder = new RawkAudio.Encoder(previewstream, 1, format.Decoder.SampleRate, format.Decoder.SampleRate);
-
-				long start = Math.Min(format.Decoder.Samples, (long)data.Song.PreviewTimes[0] * format.Decoder.SampleRate / 1000);
-				format.Decoder.Seek(start);
-				long duration = Math.Min(format.Decoder.Samples - start, (long)(data.Song.PreviewTimes[1] - data.Song.PreviewTimes[0]) * format.Decoder.SampleRate / 1000);
-				AudioFormat.Transcode(encoder, format.Decoder, duration, progress);
-				encoder.Dispose();
+				PlatformRB2WiiCustomDLC.TranscodePreview(data.Song.PreviewTimes, format.Mappings, format.Decoder, previewstream, progress);
 
 				previewstream.Position = 0;
 				IDecoder previewdecoder = new RawkAudio.Decoder(previewstream, RawkAudio.Decoder.AudioFormat.VorbisOgg);
