@@ -1,3 +1,25 @@
+/*
+ * RiiFS server-c declarations (C) 2010 tueidj
+ *
+ * based on code by Copyright (C) 2010 Aaron Lindsay
+ *
+ * This file is part of RiiFS server-c.
+ *
+ * server-c is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * server-c is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with server-c; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 #pragma once
 
 #include <stdio.h>
@@ -88,7 +110,7 @@ public:
 	virtual ~DirectoryInfo() {}
 };
 
-DirectoryInfo* CreateDirectoryInfo(string); 
+DirectoryInfo* CreateDirectoryInfo(string);
 
 // 2MB buffer
 #define TCP_BUFFER_LEN 0x400*0x400*2
@@ -174,7 +196,7 @@ public:
 		Handshake			= 0x00,
 		Goodbye				= 0x01,
 		Log					= 0x02,
-		
+
 		FileOpen			= 0x10,
 		FileRead			= 0x11,
 		FileWrite			= 0x12,

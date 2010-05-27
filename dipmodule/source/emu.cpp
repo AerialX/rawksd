@@ -10,7 +10,7 @@
 
 //#define LOG_IPC // this is commented out because it's too noisy
 
-#if 1
+#if 0
 #include <ch341.h>
 #include <print.h>
 
@@ -487,6 +487,7 @@ namespace ProxiIOS { namespace EMU {
 							stats->Pos = open_files[i]->Seek(0, SEEK_CUR);
 							stats->Length = open_files[i]->Seek(0, SEEK_END);
 							open_files[i]->Seek(stats->Pos, SEEK_SET);
+							os_sync_after_write(stats, sizeof(stats));
 							*result = FSErrors::OK;
 							break;
 						}
@@ -613,10 +614,7 @@ namespace ProxiIOS { namespace EMU {
 							}
 							break;
 						case Ioctl::GetUsage:
-							if (message->ioctlv.num_in!=1 || message->ioctlv.num_io!=2) {
-								*result = FSErrors::InvalidArgument;
-								break;
-							} else {
+							if (message->ioctlv.num_in==1 && message->ioctlv.num_io==2) {
 								u32 *blocks = (u32*)message->ioctlv.vector[1].data;
 								u32 *files = (u32*)message->ioctlv.vector[2].data;
 								char *next_name = (char*)Alloc(1024);
@@ -634,8 +632,9 @@ namespace ProxiIOS { namespace EMU {
 									}
 									Dealloc(next_name);
 								}
+								break;
 							}
-							break;
+							// fallthrough
 						default:
 							*result = FSErrors::InvalidArgument;
 					}
@@ -760,7 +759,7 @@ namespace ProxiIOS { namespace EMU {
 	{
 		RiivFile::Open();
 		if (file>=0)
-			binfile = CreateBinFile(index, (u8*)tmd_buf, SIGNED_TMD_SIZE(tmd_buf), file);
+			binfile = CreateBinFile(index, tmd_buf, SIGNED_TMD_SIZE(tmd_buf), file);
 	}
 
 	AppFile::~AppFile()
@@ -1242,7 +1241,7 @@ namespace ProxiIOS { namespace EMU {
 						strcpy(nand_file+strlen(nand_path)+1, current_file);
 
 						IndexToBin(i, ext_file+strlen(ext_dir)+1);
-						AppFile bin_out(ext_file, title_tmd->contents[i].index, tmd_buf);
+						AppFile bin_out(ext_file, i, tmd_buf);
 
 						s32 app_in = FS_Open(nand_file, ISFS_OPEN_READ);
 						if (app_in>=0) {
@@ -1253,7 +1252,7 @@ namespace ProxiIOS { namespace EMU {
 							FS_Close(app_in);
 							LogPrintf("Moved %s to %s\n", nand_file, ext_file);
 						}
-						if (title_tmd->contents[i].type&0x4000) {
+						if (title_tmd->contents[i].type&0x4000 && (*(u16*)4 != 0x3532 || i!=1)) {
 							if (FS_Ioctl(fd, Ioctl::Delete, nand_file, ISFS_MAXPATH_LEN, NULL, 0)>=0)
 								LogPrintf("Deleted file %s\n", nand_file);
 							else

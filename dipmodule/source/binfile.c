@@ -17,7 +17,6 @@ void LogPrintf(const char *fmt, ...);
 #define debug_printf LogPrintf
 #else
 #define debug_printf(fmt, args...)
-#define LogPrintf debug_printf
 #endif
 
 #define BIN_READ  1
@@ -199,7 +198,7 @@ static void CloseWriteBin(BinFile* file)
 	file->pos &= 0xF;
 	if (file->pos)
 	{
-		LogPrintf("Flushing %u bytes\n", file->pos);
+		debug_printf("Flushing %u bytes\n", file->pos);
 		dlc_aes_encrypt(file->iv, file->buf, file->buf, file->pos);
 		FileWrite(file, file->buf, 16);
 	}
@@ -210,7 +209,7 @@ static void CloseWriteBin(BinFile* file)
 	padding_count = file->data_size - file->pos;
 
 	if (padding_count) {
-		LogPrintf("Padding with %u bytes\n", padding_count);
+		debug_printf("Padding with %u bytes\n", padding_count);
 		FileWrite(file, padding, padding_count);
 	}
 
@@ -220,7 +219,7 @@ static void CloseWriteBin(BinFile* file)
 			FileWrite(file, &total_size, sizeof(total_size));
 	}
 
-	LogPrintf("Closed a WriteBin file\n");
+	debug_printf("Closed a WriteBin file\n");
 }
 
 void CloseBin(BinFile* file)
@@ -298,63 +297,73 @@ s32 ReadBin(BinFile* file, u8* buffer, u32 numbytes)
 
 	if (file && file->mode==BIN_READ)
 	{
+		u8 *tempbuffer;
 		result = numbytes;
 
 		// leading bytes, should already be decrypted in buffer
 		i = MIN((16 - file->pos)&0xF, numbytes);
-		memcpy(buffer, file->buf, i);
-		numbytes -= i;
-		buffer += i;
-		file->pos += i;
+		if (i) {
+			memcpy(buffer, file->buf, i);
+			numbytes -= i;
+			buffer += i;
+			file->pos += i;
+			tempbuffer = (u8*)Memalign(32, ROUND_UP(numbytes, 16));
+			if (tempbuffer==NULL)
+				return -108; // FSErrors::OutOfMemory
+		} else
+			tempbuffer = buffer;
 
-		// middle bytes (16-byte blocks)
-		i = numbytes & ~0xF;
-		if (FileRead(file, buffer, i))
-			return FSERR_EINVAL;
-		dlc_aes_decrypt(file->iv, buffer, buffer, i);
-		numbytes -= i;
-		buffer += i;
-
-		// trailing bytes
-		if (numbytes)
-		{
-			if (FileRead(file, file->buf, 16))
+		// middle bytes (16 byte blocks)
+		i = ROUND_UP(numbytes, 16);
+		if (i) {
+			if (FileRead(file, tempbuffer, i)) {
+				if (tempbuffer != buffer)
+					Dealloc(tempbuffer);
 				return FSERR_EINVAL;
-			file->pos -= 16 - numbytes;
-			dlc_aes_decrypt(file->iv, file->buf, file->buf, 16);
-			// assumes numbytes is a multiple of 4, for MEM1 safety
-			memcpy(buffer, file->buf, numbytes);
-			memmove(file->buf, file->buf+numbytes, 16-numbytes);
+			}
+			dlc_aes_decrypt(file->iv, tempbuffer, tempbuffer, i);
 		}
+
+		if (tempbuffer != buffer) {
+			memcpy(buffer, tempbuffer, numbytes);
+			if (numbytes&0xF) {
+				file->pos -= i - numbytes;
+				memcpy(file->buf, tempbuffer+numbytes, i-numbytes);
+			}
+			Dealloc(tempbuffer);
+		}
+
 	}
 
 	if (result<0)
-		LogPrintf("ReadBin failed\n");
+		debug_printf("ReadBin failed\n");
 	return result;
 }
 
-BinFile* CreateBinFile(u16 index, u8* tmd, u32 tmd_size, s32 file)
+BinFile* CreateBinFile(u16 index, u32* tmd_buf, u32 tmd_size, s32 file)
 {
 	BinFile *bin;
 
     BK_Header bk_header;
 
-    LogPrintf("CreateBinFile index %u %p %u\n", index, tmd, tmd_size);
+    debug_printf("CreateBinFile index %u %p %u\n", index, tmd, tmd_size);
 
-	if (!tmd || !tmd_size || index>=512)
+	if (!tmd_buf || !tmd_size || index>=512)
 		return NULL;
+
+	tmd_content *content = ((tmd*)SIGNATURE_PAYLOAD(tmd_buf))->contents+index;
 
 	bin = (BinFile*)Memalign(32, sizeof(BinFile));
 	if (bin==NULL)
 		return NULL;
 
-	LogPrintf("Allocated BinFile header\n");
+	debug_printf("Allocated BinFile header\n");
 
 	memset(bin, 0, sizeof(BinFile));
 	bin->handle = file;
 	bin->mode = BIN_WRITE;
-	bin->iv[0] = index >> 8;
-	bin->iv[1] = (u8)index;
+	bin->iv[0] = content->index>>8;
+	bin->iv[1] = (u8)content->index;
 	bin->header_size = ROUND_UP(tmd_size+sizeof(bk_header), 64);
 
 	memset(&bk_header, 0, sizeof(bk_header));
@@ -368,17 +377,17 @@ BinFile* CreateBinFile(u16 index, u8* tmd, u32 tmd_size, s32 file)
     setAccessMask(bk_header.content_mask, index);
 
 	if (FileSeek(bin, 0))
-		LogPrintf("Couldn't seek back to start\n");
+		debug_printf("Couldn't seek back to start\n");
 	else if (FileWrite(bin, &bk_header, sizeof(bk_header)))
-		LogPrintf("Couldn't write bk_header\n");
+		debug_printf("Couldn't write bk_header\n");
 	else if (FileSeek(bin, ROUND_UP(bin->pos, 64)))
-		LogPrintf("Couldn't seek to 64-byte boundary\n");
-	else if (FileWrite(bin, tmd, tmd_size))
-		LogPrintf("Couldn't write TMD\n");
+		debug_printf("Couldn't seek to 64-byte boundary\n");
+	else if (FileWrite(bin, tmd_buf, tmd_size))
+		debug_printf("Couldn't write TMD\n");
 	else if (FileSeek(bin, ROUND_UP(bin->pos, 64)))
-		LogPrintf("Couldn't seek to 64-byte boundary after TMD\n");
+		debug_printf("Couldn't seek to 64-byte boundary after TMD\n");
 	else {
-		LogPrintf("Created .bin file\n");
+		debug_printf("Created .bin file\n");
 		return bin;
 	}
 
@@ -395,7 +404,7 @@ s32 WriteBin(BinFile* file, u8* buffer, u32 numbytes)
 		s32 bytes_left;
 		result = numbytes;
 
-		// leading bytes, up to 16-byte boundary
+		// leading bytes, up to 16 (is this ever needed?)
 		bytes_left = MIN((16-file->pos)&0xF, numbytes);
 		if (bytes_left)
 		{
@@ -409,10 +418,10 @@ s32 WriteBin(BinFile* file, u8* buffer, u32 numbytes)
 				dlc_aes_encrypt(file->iv, file->buf, file->buf, 16);
 				if (FileWrite(file, file->buf, 16))
 				{
-					LogPrintf("Error writing leading encrypted block\n");
+					debug_printf("Error writing leading encrypted block\n");
 					return FSERR_EINVAL;
 				}
-				LogPrintf("WriteBin: sent 16 bytes leadin\n");
+				debug_printf("WriteBin: sent 16 bytes leadin\n");
 			}
 		}
 
@@ -422,7 +431,7 @@ s32 WriteBin(BinFile* file, u8* buffer, u32 numbytes)
 			dlc_aes_encrypt(file->iv, buffer, buffer, bytes_left);
 			if (FileWrite(file, buffer, bytes_left))
 			{
-				LogPrintf("Error writing bulk encrypted block\n");
+				debug_printf("Error writing bulk encrypted block\n");
 				return FSERR_EINVAL;
 			}
 			buffer += bytes_left;
@@ -437,7 +446,7 @@ s32 WriteBin(BinFile* file, u8* buffer, u32 numbytes)
 
 		file->data_size += numbytes;
 	} else
-		LogPrintf("WriteBin: Missing file or file not opened for writing\n");
+		debug_printf("WriteBin: Missing file or file not opened for writing\n");
 
 	return result;
 }

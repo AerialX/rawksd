@@ -20,7 +20,7 @@ typedef struct
 } BinFile;
 
 BinFile* OpenBinRead(s32 file);
-BinFile* CreateBinFile(u16 index, u8* tmd, u32 tmd_size, s32 file);
+BinFile* CreateBinFile(u16 index, u32* tmd, u32 tmd_size, s32 file);
 void CloseBin(BinFile* file);
 s32 SeekBin(BinFile* file, s32 where, u32 origin);
 s32 ReadBin(BinFile* file, u8* buffer, u32 numbytes);
