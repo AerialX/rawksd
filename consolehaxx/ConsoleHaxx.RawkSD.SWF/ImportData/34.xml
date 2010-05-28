@@ -8,7 +8,51 @@
 		<difficulty instrument="drums" rank="1" />
 		<difficulty instrument="vox" rank="1" />
 	</global>
+	<deletesong id="synctest" />
+	<deletesong id="synctestplaytoaudio" />
+	<deletesong id="synctestaudioandvisual" />
+	<deletesong id="synctestmuting" />
+	<deletesong id="tenseconddebug" />
+	<deletesong id="elevenseconddebug" />
+	<deletesong id="twelveseconddebug" />
+	<deletesong id="testtones" />
+	<deletesong id="Tut_Bass_OpenNote" />
+	<deletesong id="Tut_Demo" />
+	<deletesong id="Tut_Drum_Activ" />
+	<deletesong id="Tut_Drum_Beat1" />
+	<deletesong id="Tut_Drum_Beat2" />
+	<deletesong id="Tut_Drum_Beat3" />
+	<deletesong id="Tut_Drum_Break" />
+	<deletesong id="Tut_Drum_Combos" />
+	<deletesong id="Tut_Drum_Kick" />
+	<deletesong id="Tut_Drum_Free" />
+	<deletesong id="Tut_Drum_OneHand" />
+	<deletesong id="Tut_Drum_TwoHands" />
+	<deletesong id="Tut_Gtr_Chords" />
+	<deletesong id="Tut_Gtr_Combos" />
+	<deletesong id="Tut_Gtr_DiffNotes" />
+	<deletesong id="Tut_Gtr_ExtSus" />
+	<deletesong id="Tut_Gtr_HamOn" />
+	<deletesong id="Tut_Gtr_LongNotes" />
+	<deletesong id="Tut_Gtr_PlayNotes" />
+	<deletesong id="Tut_Gtr_PullOff" />
+	<deletesong id="Tut_Gtr_Slide" />
+	<deletesong id="Tut_Gtr_Tilt" />
+	<deletesong id="Tut_Gtr_Wham" />
+	<deletesong id="Tut_Vox_Activ" />
+	<deletesong id="Tut_Vox_Combos" />
+	<deletesong id="Tut_Vox_Freeform" />
+	<deletesong id="Tut_Vox_HitNotes" />
+	<deletesong id="Tut_Vox_Hype" />
+	<deletesong id="Tut_Vox_Spoken" />
+	<deletesong id="Tut_VS_BattPow" />
+	<deletesong id="Tut_VS_MultAttck" />
+	<deletesong id="Tut_VS_Recov" />
+	<deletesong id="Tut_VS_Tilt" />
+	<deletesong id="DrumStreamTest" />
+	<deletesong id="PlaceHolder" />
 	<song id="backinthesaddle">
+		<name>Back in the Saddle</name>
 		<album>Rocks</album>
 		<genre>Rock</genre>
 		<track>1</track>
@@ -19,7 +63,8 @@
 		<difficulty instrument="vocals" rank="230" />
 	</song>
 	<song id="barkatthemoon">
-		<album>Bark At The Moon</album>
+		<name>Bark at the Moon</name>
+		<album>Bark at the Moon</album>
 		<genre>Metal</genre>
 		<track>1</track>
 		<difficulty instrument="band" rank="390" />
@@ -29,6 +74,7 @@
 		<difficulty instrument="vocals" rank="390" />
 	</song>
 	<song id="barracuda">
+		<name>Barracuda</name>
 		<album>Little Queen</album>
 		<genre>Rock</genre>
 		<track>1</track>
@@ -39,6 +85,7 @@
 		<difficulty instrument="vocals" rank="320" />
 	</song>
 	<song id="beastandtheharlot">
+		<name>Beast and the Harlot</name>
 		<album>City of Evil</album>
 		<genre>Metal</genre>
 		<track>1</track>
@@ -49,6 +96,7 @@
 		<difficulty instrument="vocals" rank="540" />
 	</song>
 	<song id="carryonmywaywardson">
+		<name>Carry On Wayward Son</name>
 		<album>Leftoverture</album>
 		<genre>Prog</genre>
 		<track>1</track>
@@ -59,6 +107,7 @@
 		<difficulty instrument="vocals" rank="220" />
 	</song>
 	<song id="caughtinamosh">
+		<name>Caught in a Mosh</name>
 		<album>Among the Living</album>
 		<genre>Metal</genre>
 		<track>2</track>
@@ -69,6 +118,7 @@
 		<difficulty instrument="vocals" rank="500" />
 	</song>
 	<song id="cherrypie">
+		<name>Cherry Pie</name>
 		<album>Cherry Pie</album>
 		<genre>Glam</genre>
 		<track>1</track>
@@ -79,6 +129,7 @@
 		<difficulty instrument="vocals" rank="160" />
 	</song>
 	<song id="cowboysfromhell">
+		<name>Cowboys from Hell (Live)</name>
 		<album>Official Live: 101 Proof</album>
 		<genre>Metal</genre>
 		<track>12</track>
@@ -89,6 +140,7 @@
 		<difficulty instrument="vocals" rank="380" />
 	</song>
 	<song id="cultofpersonality">
+		<name>Cult of Personality</name>
 		<album>Vivid</album>
 		<genre>Rock</genre>
 		<track>1</track>
@@ -99,6 +151,7 @@
 		<difficulty instrument="vocals" rank="370" />
 	</song>
 	<song id="electriceye">
+		<name>Electric Eye</name>
 		<album>Screaming for Vengeance</album>
 		<genre>Metal</genre>
 		<track>2</track>
@@ -109,6 +162,7 @@
 		<difficulty instrument="vocals" rank="290" />
 	</song>
 	<song id="freebird">
+		<name>Free Bird</name>
 		<album>(pronounced 'lĕh-'nérd 'skin-'nérd)</album>
 		<genre>Southern Rock</genre>
 		<track>8</track>
@@ -119,6 +173,7 @@
 		<difficulty instrument="vocals" rank="440" />
 	</song>
 	<song id="freya">
+		<name>Freya</name>
 		<album>Age of Winters</album>
 		<genre>Metal</genre>
 		<track>3</track>
@@ -129,6 +184,7 @@
 		<difficulty instrument="vocals" rank="310" />
 	</song>
 	<song id="godzilla">
+		<name>Godzilla</name>
 		<album>Spectres</album>
 		<genre>Classic Rock</genre>
 		<track>1</track>
@@ -139,6 +195,7 @@
 		<difficulty instrument="vocals" rank="110" />
 	</song>
 	<song id="heartshapedbox">
+		<name>Heart-Shaped Box</name>
 		<album>In Utero</album>
 		<genre>Grunge</genre>
 		<track>3</track>
@@ -149,6 +206,7 @@
 		<difficulty instrument="vocals" rank="20" />
 	</song>
 	<song id="heyyou">
+		<name>Hey You</name>
 		<album>Head for the Door</album>
 		<genre>Alternative</genre>
 		<track>5</track>
@@ -159,6 +217,7 @@
 		<difficulty instrument="vocals" rank="180" />
 	</song>
 	<song id="hitmewithyourbestshot">
+		<name>Hit Me with Your Best Shot</name>
 		<album>Crimes of Passion</album>
 		<genre>Rock</genre>
 		<track>4</track>
@@ -169,6 +228,7 @@
 		<difficulty instrument="vocals" rank="30" />
 	</song>
 	<song id="iloverockandroll">
+		<name>I Love Rock 'n' Roll</name>
 		<album>I Love Rock 'n' Roll</album>
 		<genre>Rock</genre>
 		<track>1</track>
@@ -179,6 +239,7 @@
 		<difficulty instrument="vocals" rank="10" />
 	</song>
 	<song id="iwannarock">
+		<name>I Wanna Rock</name>
 		<album>Stay Hungry</album>
 		<genre>Rock</genre>
 		<track>5</track>
@@ -189,6 +250,7 @@
 		<difficulty instrument="vocals" rank="80" />
 	</song>
 	<song id="killerqueen">
+		<name>Killer Queen</name>
 		<album>Sheer Heart Attack</album>
 		<genre>Classic Rock</genre>
 		<track>2</track>
@@ -199,6 +261,7 @@
 		<difficulty instrument="vocals" rank="280" />
 	</song>
 	<song id="killinginthenameof">
+		<name>Killing in the Name</name>
 		<album>Rage Against the Machine</album>
 		<genre>Alternative</genre>
 		<track>2</track>
@@ -209,6 +272,7 @@
 		<difficulty instrument="vocals" rank="140" />
 	</song>
 	<song id="laidtorest">
+		<name>Laid to Rest</name>
 		<album>Ashes of the Wake</album>
 		<genre>Metal</genre>
 		<track>1</track>
@@ -219,6 +283,7 @@
 		<difficulty instrument="vocals" rank="420" />
 	</song>
 	<song id="laydown">
+		<name>Lay Down</name>
 		<album>Hello Master</album>
 		<genre>Rock</genre>
 		<track>2</track>
@@ -229,6 +294,7 @@
 		<difficulty instrument="vocals" rank="120" />
 	</song>
 	<song id="messageinabottle">
+		<name>Message in a Bottle</name>
 		<album>Reggatta de Blanc</album>
 		<genre>Pop-Rock</genre>
 		<track>1</track>
@@ -239,6 +305,7 @@
 		<difficulty instrument="vocals" rank="260" />
 	</song>
 	<song id="missmurder">
+		<name>Miss Murder</name>
 		<album>Decemberunderground</album>
 		<genre>Alternative</genre>
 		<track>3</track>
@@ -249,6 +316,7 @@
 		<difficulty instrument="vocals" rank="200" />
 	</song>
 	<song id="monkeywrench">
+		<name>Monkey Wrench</name>
 		<album>The Colour and the Shape</album>
 		<genre>Alternative</genre>
 		<track>2</track>
@@ -259,6 +327,7 @@
 		<difficulty instrument="vocals" rank="240" />
 	</song>
 	<song id="morethanafeeling">
+		<name>More than a Feeling</name>
 		<album>Boston</album>
 		<genre>Classic Rock</genre>
 		<track>1</track>
@@ -269,6 +338,7 @@
 		<difficulty instrument="vocals" rank="60" />
 	</song>
 	<song id="mother">
+		<name>Mother</name>
 		<album>Danzig</album>
 		<genre>Metal</genre>
 		<track>6</track>
@@ -279,6 +349,7 @@
 		<difficulty instrument="vocals" rank="250" />
 	</song>
 	<song id="nooneknows">
+		<name>No One Knows</name>
 		<album>Songs for the Deaf</album>
 		<genre>Alternative</genre>
 		<track>2</track>
@@ -289,6 +360,7 @@
 		<difficulty instrument="vocals" rank="340" />
 	</song>
 	<song id="nothinbutagoodtime">
+		<name>Nothin' but a Good Time</name>
 		<album>Open Up and Say... Ahh!</album>
 		<genre>Classic Rock</genre>
 		<track>2</track>
@@ -299,6 +371,7 @@
 		<difficulty instrument="vocals" rank="210" />
 	</song>
 	<song id="playwithme">
+		<name>Play with Me</name>
 		<album>Extreme</album>
 		<genre>Metal</genre>
 		<track>11</track>
@@ -309,6 +382,7 @@
 		<difficulty instrument="vocals" rank="480" />
 	</song>
 	<song id="psychobillyfreakout">
+		<name>Psychobilly Freakout</name>
 		<album>Smoke 'em if You Got 'em</album>
 		<genre>Alternative</genre>
 		<track>6</track>
@@ -319,6 +393,7 @@
 		<difficulty instrument="vocals" rank="360" />
 	</song>
 	<song id="rainingblood">
+		<name>Raining Blood</name>
 		<album>Reign in Blood</album>
 		<genre>Metal</genre>
 		<track>10</track>
@@ -329,6 +404,7 @@
 		<difficulty instrument="vocals" rank="520" />
 	</song>
 	<song id="rockandrollallnite">
+		<name>Rock and Roll All Nite</name>
 		<album>Dressed to Kill</album>
 		<genre>Classic Rock</genre>
 		<track>10</track>
@@ -339,6 +415,7 @@
 		<difficulty instrument="vocals" rank="40" />
 	</song>
 	<song id="roundandround">
+		<name>Round and Round</name>
 		<album>Out of the Cellar</album>
 		<genre>Metal</genre>
 		<track>3</track>
@@ -349,6 +426,7 @@
 		<difficulty instrument="vocals" rank="150" />
 	</song>
 	<song id="shoutatthedevil">
+		<name>Shout at the Devil</name>
 		<album>Shout at the Devil</album>
 		<genre>Metal</genre>
 		<track>2</track>
@@ -359,6 +437,7 @@
 		<difficulty instrument="vocals" rank="170" />
 	</song>
 	<song id="smokeonthewater">
+		<name>Smoke on the Water</name>
 		<album>Machine Head</album>
 		<genre>Classic Rock</genre>
 		<track>5</track>
@@ -369,6 +448,7 @@
 		<difficulty instrument="vocals" rank="270" />
 	</song>
 	<song id="stellar">
+		<name>Stellar</name>
 		<album>Make Yourself</album>
 		<genre>Alternative</genre>
 		<track>6</track>
@@ -379,6 +459,7 @@
 		<difficulty instrument="vocals" rank="70" />
 	</song>
 	<song id="stop">
+		<name>Stop!</name>
 		<album>Ritual de lo Habitual</album>
 		<genre>Alternative</genre>
 		<track>1</track>
@@ -389,6 +470,7 @@
 		<difficulty instrument="vocals" rank="330" />
 	</song>
 	<song id="takeitoff">
+		<name>Take it Off</name>
 		<album>Spend the Night</album>
 		<genre>Rock</genre>
 		<track>2</track>
@@ -399,6 +481,7 @@
 		<difficulty instrument="vocals" rank="130" />
 	</song>
 	<song id="takemeout">
+		<name>Take Me Out</name>
 		<album>Franz Ferdinand</album>
 		<genre>Alternative</genre>
 		<track>3</track>
@@ -409,6 +492,7 @@
 		<difficulty instrument="vocals" rank="50" />
 	</song>
 	<song id="thetrooper">
+		<name>The Trooper</name>
 		<album>Piece of Mind</album>
 		<genre>Metal</genre>
 		<track>5</track>
@@ -419,6 +503,7 @@
 		<difficulty instrument="vocals" rank="460" />
 	</song>
 	<song id="thembones">
+		<name>Them Bones</name>
 		<album>Dirt</album>
 		<genre>Grunge</genre>
 		<track>1</track>
@@ -429,6 +514,7 @@
 		<difficulty instrument="vocals" rank="100" />
 	</song>
 	<song id="throughthefire">
+		<name>Through the Fire and Flames</name>
 		<album>Inhuman Rampage</album>
 		<genre>Metal</genre>
 		<track>1</track>
@@ -439,6 +525,7 @@
 		<difficulty instrument="vocals" rank="580" />
 	</song>
 	<song id="thunderkiss65">
+		<name>Thunder Kiss '65</name>
 		<album>La Sexorcisto: Devil Music, Vol. 1</album>
 		<genre>Metal</genre>
 		<track>3</track>
@@ -449,6 +536,7 @@
 		<difficulty instrument="vocals" rank="300" />
 	</song>
 	<song id="trippinonahole">
+		<name>Trippin' on a Hole in a Paper Heart</name>
 		<album>Tiny Music... Songs from the Vatican Gift Shop</album>
 		<genre>Alternative</genre>
 		<track>7</track>
@@ -459,6 +547,7 @@
 		<difficulty instrument="vocals" rank="350" />
 	</song>
 	<song id="unsung">
+		<name>Unsung</name>
 		<album>Meantime</album>
 		<genre>Metal</genre>
 		<track>4</track>
@@ -469,6 +558,7 @@
 		<difficulty instrument="vocals" rank="190" />
 	</song>
 	<song id="woman">
+		<name>Woman</name>
 		<album>Wolfmother</album>
 		<genre>Rock</genre>
 		<track>2</track>
@@ -479,6 +569,7 @@
 		<difficulty instrument="vocals" rank="90" />
 	</song>
 	<song id="yyz">
+		<name>YYZ</name>
 		<album>Moving Pictures</album>
 		<genre>Prog</genre>
 		<track>3</track>

@@ -8,6 +8,41 @@
 		<difficulty instrument="drums" rank="1" />
 		<difficulty instrument="vox" rank="1" />
 	</global>
+	<deletesong id="Tut_Bass_OpenNote" />
+	<deletesong id="Tut_Demo" />
+	<deletesong id="Tut_Drum_Activ" />
+	<deletesong id="Tut_Drum_Beat1" />
+	<deletesong id="Tut_Drum_Beat2" />
+	<deletesong id="Tut_Drum_Beat3" />
+	<deletesong id="Tut_Drum_Break" />
+	<deletesong id="Tut_Drum_Combos" />
+	<deletesong id="Tut_Drum_Kick" />
+	<deletesong id="Tut_Drum_Free" />
+	<deletesong id="Tut_Drum_OneHand" />
+	<deletesong id="Tut_Drum_TwoHands" />
+	<deletesong id="Tut_Gtr_Chords" />
+	<deletesong id="Tut_Gtr_Combos" />
+	<deletesong id="Tut_Gtr_DiffNotes" />
+	<deletesong id="Tut_Gtr_ExtSus" />
+	<deletesong id="Tut_Gtr_HamOn" />
+	<deletesong id="Tut_Gtr_LongNotes" />
+	<deletesong id="Tut_Gtr_PlayNotes" />
+	<deletesong id="Tut_Gtr_PullOff" />
+	<deletesong id="Tut_Gtr_Slide" />
+	<deletesong id="Tut_Gtr_Tilt" />
+	<deletesong id="Tut_Gtr_Wham" />
+	<deletesong id="Tut_Vox_Activ" />
+	<deletesong id="Tut_Vox_Combos" />
+	<deletesong id="Tut_Vox_Freeform" />
+	<deletesong id="Tut_Vox_HitNotes" />
+	<deletesong id="Tut_Vox_Hype" />
+	<deletesong id="Tut_Vox_Spoken" />
+	<deletesong id="Tut_VS_BattPow" />
+	<deletesong id="Tut_VS_MultAttck" />
+	<deletesong id="Tut_VS_Recov" />
+	<deletesong id="Tut_VS_Tilt" />
+	<deletesong id="Lightshow" />
+	
 	<song id="Panama">
 		<name>Panama</name>
 		<artist>Van Halen</artist>
@@ -21,7 +56,7 @@
 		<difficulty instrument="vocals" rank="180" />
 	</song>
 
-	<song id="Runninwiththedevil">
+	<song id="RunningWithTheDevil">
 		<name>Runnin' With the Devil</name>
 		<artist>Van Halen</artist>
 		<album>Van Halen</album>
@@ -34,7 +69,7 @@
 		<difficulty instrument="vocals" rank="190" />
 	</song>
 
-	<song id="Whiteweddingpartone">
+	<song id="WhiteWedding">
 		<name>White Wedding (Part 1)</name>
 		<artist>Billy Idol</artist>
 		<album>Billy Idol</album>
@@ -127,7 +162,7 @@
 		<difficulty instrument="vocals" rank="400" />
 	</song>
 
-	<song id="Intruderohprettywoman">
+	<song id="PrettyWoman">
 		<name>Intruder/(Oh) Pretty Woman</name>
 		<artist>Van Halen</artist>
 		<album>Diver Down</album>
@@ -218,7 +253,7 @@
 		<difficulty instrument="vocals" rank="300" />
 	</song>
 
-	<song id="Theendofheartache">
+	<song id="EndOfHeartache">
 		<name>The End of Heartache</name>
 		<artist>Killswitch Engage</artist>
 		<album>The End of Heartache</album>
@@ -617,7 +652,7 @@
 		<difficulty instrument="band" rank="500" />
 		<difficulty instrument="guitar" rank="560" />
 		<difficulty instrument="bass" rank="0" />
-		<difficulty instrument="drum" rank="320" />
+		<difficulty instrument="drum" rank="0" />
 		<difficulty instrument="vocals" rank="0" />
 	</song>
 

@@ -112,8 +112,6 @@ namespace ConsoleHaxx.RawkSD
 
 			string otitle;
 			ushort oindex;
-			FindUnusedContent(data, formatdata.Song, out otitle, out oindex);
-			TMD tmd = GenerateDummyTMD(otitle);
 
 			progress.NewTask(10);
 
@@ -175,16 +173,12 @@ namespace ConsoleHaxx.RawkSD
 				dta.BaseName = "rwk" + dta.Version.ToString() + dta.BaseName;
 				dta.Genre = ImportMap.GetShortGenre(dta.Genre);
 
-				dta.Song.Name = "dlc/" + otitle + "/" + Util.Pad(oindex.ToString(), 3) + "/content/songs/" + song.ID + "/" + song.ID;
-				dta.Song.MidiFile = "dlc/content/songs/" + song.ID + "/" + song.ID + ".mid";
-
 				if (album == null)
 					dta.AlbumArt = false;
 				else
 					dta.AlbumArt = true;
 
 				DTB.NodeTree dtb = dta.ToDTB();
-				HarmonixMetadata.SetSongsDTA(song, dtb);
 
 				MemoryStream songsdta = new MemoryStream();
 				cache.AddStream(songsdta);
@@ -213,6 +207,32 @@ namespace ConsoleHaxx.RawkSD
 				new FileNode(song.ID + ".milo_wii", dir, (ulong)milo.Length, milo);
 				new FileNode(song.ID + "_weights.bin", dir, (ulong)weights.Length, weights);
 
+				Stream memoryDta = new TemporaryStream();
+				cache.AddStream(memoryDta);
+				appdta.Save(memoryDta);
+
+				Stream memorySong = new TemporaryStream();
+				cache.AddStream(memorySong);
+				appsong.Save(memorySong);
+
+				data.Mutex.WaitOne();
+
+				FindUnusedContent(data, formatdata.Song, out otitle, out oindex);
+				TMD tmd = GenerateDummyTMD(otitle);
+
+				dta.Song.Name = "dlc/" + otitle + "/" + Util.Pad(oindex.ToString(), 3) + "/content/songs/" + song.ID + "/" + song.ID;
+				dta.Song.MidiFile = "dlc/content/songs/" + song.ID + "/" + song.ID + ".mid";
+				dtb = dta.ToDTB();
+				HarmonixMetadata.SetSongsDTA(song, dtb);
+
+				string dirpath = Path.Combine(Path.Combine(path, "rawk"), "rb2");
+				if (!Directory.Exists(Path.Combine(dirpath, "customs")))
+					Directory.CreateDirectory(Path.Combine(dirpath, "customs"));
+				Directory.CreateDirectory(Path.Combine(Path.Combine(dirpath, "customs"), song.ID));
+				FileStream savestream = new FileStream(Path.Combine(Path.Combine(Path.Combine(dirpath, "customs"), song.ID), "data"), FileMode.Create);
+				dtb.Save(new EndianReader(savestream, Endianness.LittleEndian));
+				savestream.Close();
+
 				TmdContent contentDta = new TmdContent();
 				contentDta.ContentID = oindex;
 				contentDta.Index = oindex;
@@ -223,20 +243,12 @@ namespace ConsoleHaxx.RawkSD
 				contentSong.Index = (ushort)(oindex + 1);
 				contentSong.Type = 0x4001;
 
-				SHA1 sha1 = SHA1.Create();
-
-				Stream memoryDta = new TemporaryStream();
-				cache.AddStream(memoryDta);
-				appdta.Save(memoryDta);
 				memoryDta.Position = 0;
-				contentDta.Hash = sha1.ComputeHash(memoryDta);
+				contentDta.Hash = Util.SHA1Hash(memoryDta);
 				contentDta.Size = memoryDta.Length;
 
-				Stream memorySong = new TemporaryStream();
-				cache.AddStream(memorySong);
-				appsong.Save(memorySong);
 				memorySong.Position = 0;
-				contentSong.Hash = sha1.ComputeHash(memorySong);
+				contentSong.Hash = Util.SHA1Hash(memorySong);
 				contentSong.Size = memorySong.Length;
 
 				for (int i = 1; i <= oindex + 1; i++) {
@@ -254,7 +266,7 @@ namespace ConsoleHaxx.RawkSD
 
 				progress.Progress();
 
-				string dirpath = Path.Combine(Path.Combine(Path.Combine(Path.Combine(path, "private"), "wii"), "data"), "sZAE");
+				dirpath = Path.Combine(Path.Combine(Path.Combine(Path.Combine(path, "private"), "wii"), "data"), "sZAE");
 				FileStream binstream;
 				DlcBin bin;
 				if (consoleid != 0 && !File.Exists(Path.Combine(dirpath, "000.bin"))) {
@@ -313,14 +325,6 @@ namespace ConsoleHaxx.RawkSD
 				File.Delete(mainbinpath);
 				File.Move(binstream.Name, mainbinpath);
 
-				dirpath = Path.Combine(Path.Combine(path, "rawk"), "rb2");
-				if (!Directory.Exists(Path.Combine(dirpath, "customs")))
-					Directory.CreateDirectory(Path.Combine(dirpath, "customs"));
-				Directory.CreateDirectory(Path.Combine(Path.Combine(dirpath, "customs"), song.ID));
-				FileStream savestream = new FileStream(Path.Combine(Path.Combine(Path.Combine(dirpath, "customs"), song.ID), "data"), FileMode.Create);
-				dta.ToDTB().Save(new EndianReader(savestream, Endianness.LittleEndian));
-				savestream.Close();
-
 				Stream stream = new DelayedStream(data.Cache.GenerateFileStream(songbinpath, FileMode.Open));
 				bin = new DlcBin(stream);
 				appsong = new U8(bin.Data);
@@ -328,6 +332,8 @@ namespace ConsoleHaxx.RawkSD
 				data.Session["songdir"] = appsong.Root;
 				AddSong(data, song, progress);
 				stream.Close();
+
+				data.Mutex.ReleaseMutex();
 
 				cache.Dispose();
 
@@ -497,7 +503,7 @@ namespace ConsoleHaxx.RawkSD
 		private static bool FindUnusedContent(PlatformData data, SongData song, out string title, out ushort index)
 		{
 			for (title = "cRBA"; (byte)title[3] <= (byte)'Z'; title = title.Substring(0, 3) + (char)(((byte)title[3]) + 1)) {
-				for (index = 1; index <= 510; index += 2) {
+				for (index = 1; index < 510; index += 2) {
 					bool flag = false;
 					data.Mutex.WaitOne();
 					foreach (FormatData formatdata in data.Songs) {

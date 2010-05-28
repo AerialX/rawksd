@@ -8,7 +8,51 @@
 		<difficulty instrument="drums" rank="1" />
 		<difficulty instrument="vox" rank="1" />
 	</global>
-	<song>
+
+	<deletesong id="synctest" />
+	<deletesong id="synctestplaytoaudio" />
+	<deletesong id="synctestaudioandvisual" />
+	<deletesong id="synctestmuting" />
+	<deletesong id="tenseconddebug" />
+	<deletesong id="elevenseconddebug" />
+	<deletesong id="twelveseconddebug" />
+	<deletesong id="testtones" />
+	<deletesong id="Tut_Bass_OpenNote" />
+	<deletesong id="Tut_Demo" />
+	<deletesong id="Tut_Drum_Activ" />
+	<deletesong id="Tut_Drum_Beat1" />
+	<deletesong id="Tut_Drum_Beat2" />
+	<deletesong id="Tut_Drum_Beat3" />
+	<deletesong id="Tut_Drum_Break" />
+	<deletesong id="Tut_Drum_Combos" />
+	<deletesong id="Tut_Drum_Kick" />
+	<deletesong id="Tut_Drum_Free" />
+	<deletesong id="Tut_Drum_OneHand" />
+	<deletesong id="Tut_Drum_TwoHands" />
+	<deletesong id="Tut_Gtr_Chords" />
+	<deletesong id="Tut_Gtr_Combos" />
+	<deletesong id="Tut_Gtr_DiffNotes" />
+	<deletesong id="Tut_Gtr_ExtSus" />
+	<deletesong id="Tut_Gtr_HamOn" />
+	<deletesong id="Tut_Gtr_LongNotes" />
+	<deletesong id="Tut_Gtr_PlayNotes" />
+	<deletesong id="Tut_Gtr_PullOff" />
+	<deletesong id="Tut_Gtr_Slide" />
+	<deletesong id="Tut_Gtr_Tilt" />
+	<deletesong id="Tut_Gtr_Wham" />
+	<deletesong id="Tut_Vox_Activ" />
+	<deletesong id="Tut_Vox_Combos" />
+	<deletesong id="Tut_Vox_Freeform" />
+	<deletesong id="Tut_Vox_HitNotes" />
+	<deletesong id="Tut_Vox_Hype" />
+	<deletesong id="Tut_Vox_Spoken" />
+	<deletesong id="Tut_VS_BattPow" />
+	<deletesong id="Tut_VS_MultAttck" />
+	<deletesong id="Tut_VS_Recov" />
+	<deletesong id="Tut_VS_Tilt" />
+	<deletesong id="DrumStreamTest" />
+	
+	<song id="AceOfSpades">
 		<name>Ace of Spades</name>
 		<artist>Motörhead</artist>
 		<album>Ace of Spades</album>
@@ -99,7 +143,7 @@
 		<difficulty instrument="vocals" rank="400" />
 	</song>
 
-	<song id="Theblackriver">
+	<song id="BlackRiver">
 		<name>The Black River</name>
 		<artist>The Sword</artist>
 		<album>Gods of the Earth</album>
@@ -125,7 +169,7 @@
 		<difficulty instrument="vocals" rank="400" />
 	</song>
 
-	<song id="Theboysarebackintown">
+	<song id="TheBoysAreBack">
 		<name>The Boys Are Back in Town</name>
 		<artist>Thin Lizzy</artist>
 		<album>Jailbreak</album>
@@ -138,8 +182,8 @@
 		<difficulty instrument="vocals" rank="400" />
 	</song>
 
-	<song id="Brokenbeatenscarred">
-		<name>Broken, Beat & Scarred</name>
+	<song id="BrokenBeatAndScarred">
+		<name>Broken, Beat &amp; Scarred</name>
 		<artist>Metallica</artist>
 		<album>Death Magnetic</album>
 		<genre>metal</genre>
@@ -190,7 +234,7 @@
 		<difficulty instrument="vocals" rank="400" />
 	</song>
 
-	<song id="Disposableheroes">
+	<song id="DisposeableHeroes">
 		<name>Disposable Heroes</name>
 		<artist>Metallica</artist>
 		<album>Master of Puppets</album>
@@ -440,7 +484,7 @@
 	<song id="Noleafclover">
 		<name>No Leaf Clover</name>
 		<artist>Metallica</artist>
-		<album>S&M</album>
+		<album>S&amp;M</album>
 		<genre>metal</genre>
 		<track>8</track>
 		<difficulty instrument="band" rank="400" />
@@ -502,8 +546,8 @@
 		<difficulty instrument="vocals" rank="375" />
 	</song>
 
-	<song id="Seekdestroy">
-		<name>Seek & Destroy</name>
+	<song id="SeekAndDestroy">
+		<name>Seek &amp; Destroy</name>
 		<artist>Metallica</artist>
 		<album>Kill 'Em All</album>
 		<genre>metal</genre>
@@ -554,7 +598,7 @@
 		<difficulty instrument="vocals" rank="375" />
 	</song>
 
-	<song id="Thethingthatshouldnotbe">
+	<song id="TheThingThat">
 		<name>The Thing That Should Not Be</name>
 		<artist>Metallica</artist>
 		<album>Master of Puppets</album>
@@ -645,7 +689,7 @@
 		<difficulty instrument="vocals" rank="375" />
 	</song>
 
-	<song id="Welcomehomesanitarium">
+	<song id="Sanitarium">
 		<name>Welcome Home (Sanitarium)</name>
 		<artist>Metallica</artist>
 		<album>Master of Puppets</album>

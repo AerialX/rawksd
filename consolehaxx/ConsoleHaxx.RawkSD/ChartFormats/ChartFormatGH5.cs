@@ -483,13 +483,13 @@ namespace ConsoleHaxx.RawkSD
 								if (l == 4)
 									l2 = 3;
 							}
-							if (l2 == 0 && ((fret & 0x2000) == 0) && !expertplus)
+							if (l2 == 0 && ((fret & 0x2000) != 0) && !expertplus)
 								continue;
 						}
 
 						(instrument as NoteChart.IGems).Gems[difficulty][l2].Add(note);
 
-						if (instrument is NoteChart.Drums) 
+						if (instrument is NoteChart.Drums)
 							ExpandDrumRoll(chart, difficulty, note, l2);
 					}
 				}

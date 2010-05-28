@@ -59,7 +59,6 @@ namespace ConsoleHaxx.RawkSD
 				Instrument = instrument;
 			}
 
-
 			public float Volume { get { return (float)Values[0]; } set { Values[0] = (float)value; } }
 			public float Balance { get { return (float)Values[1]; } set { Values[1] = (float)value; } }
 			public Instrument Instrument { get { return (Instrument)Values[2]; } set { Values[2] = (int)value; } }

@@ -25,7 +25,7 @@ namespace ConsoleHaxx.RawkSD
 		}
 
 		public override string Name {
-			get { return "Bink Audio"; }
+			get { return "Guitar Hero Bink Audio"; }
 		}
 
 		public override bool Writable {

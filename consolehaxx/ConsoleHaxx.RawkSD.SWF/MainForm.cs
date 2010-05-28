@@ -394,7 +394,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			if (datalist.Count == 0)
 				return;
 
-			Progress.QueueTask(progress => {
+			GetAsyncProgress().QueueTask(progress => {
 				progress.NewTask("Deleting Songs", datalist.Count);
 				foreach (FormatData data in datalist) {
 					data.PlatformData.Platform.DeleteSong(data.PlatformData, data, progress);
