@@ -28,11 +28,11 @@
 		private void InitializeComponent()
 		{
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-			this.LabelDescription = new System.Windows.Forms.Label();
-			this.PlatformList = new System.Windows.Forms.ListBox();
 			this.ButtonLayout = new System.Windows.Forms.FlowLayoutPanel();
 			this.CloseButton = new System.Windows.Forms.Button();
 			this.ButtonCancel = new System.Windows.Forms.Button();
+			this.LabelDescription = new System.Windows.Forms.Label();
+			this.PlatformList = new System.Windows.Forms.ListBox();
 			this.tableLayoutPanel1.SuspendLayout();
 			this.ButtonLayout.SuspendLayout();
 			this.SuspendLayout();
@@ -54,25 +54,6 @@
 			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.tableLayoutPanel1.Size = new System.Drawing.Size(292, 148);
 			this.tableLayoutPanel1.TabIndex = 0;
-			// 
-			// LabelDescription
-			// 
-			this.LabelDescription.AutoSize = true;
-			this.LabelDescription.Location = new System.Drawing.Point(3, 0);
-			this.LabelDescription.Name = "LabelDescription";
-			this.LabelDescription.Size = new System.Drawing.Size(219, 13);
-			this.LabelDescription.TabIndex = 0;
-			this.LabelDescription.Text = "Select the platforms to delete the songs from:";
-			// 
-			// PlatformList
-			// 
-			this.PlatformList.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.PlatformList.FormattingEnabled = true;
-			this.PlatformList.Location = new System.Drawing.Point(3, 16);
-			this.PlatformList.Name = "PlatformList";
-			this.PlatformList.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
-			this.PlatformList.Size = new System.Drawing.Size(286, 94);
-			this.PlatformList.TabIndex = 1;
 			// 
 			// ButtonLayout
 			// 
@@ -107,6 +88,26 @@
 			this.ButtonCancel.Text = "&Cancel";
 			this.ButtonCancel.UseVisualStyleBackColor = true;
 			this.ButtonCancel.Click += new System.EventHandler(this.ButtonCancel_Click);
+			// 
+			// LabelDescription
+			// 
+			this.LabelDescription.AutoSize = true;
+			this.LabelDescription.Location = new System.Drawing.Point(3, 0);
+			this.LabelDescription.Name = "LabelDescription";
+			this.LabelDescription.Size = new System.Drawing.Size(219, 13);
+			this.LabelDescription.TabIndex = 0;
+			this.LabelDescription.Text = "Select the platforms to delete the songs from:";
+			// 
+			// PlatformList
+			// 
+			this.PlatformList.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.PlatformList.FormattingEnabled = true;
+			this.PlatformList.Location = new System.Drawing.Point(3, 16);
+			this.PlatformList.Name = "PlatformList";
+			this.PlatformList.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
+			this.PlatformList.Size = new System.Drawing.Size(286, 94);
+			this.PlatformList.TabIndex = 1;
+			this.PlatformList.DoubleClick += new System.EventHandler(this.PlatformList_DoubleClick);
 			// 
 			// DeleteForm
 			// 

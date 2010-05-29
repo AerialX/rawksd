@@ -41,6 +41,8 @@
 			this.MenuSongs = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuSongsCreate = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuSongsSep1 = new System.Windows.Forms.ToolStripSeparator();
+			this.MenuSongsSelectAll = new System.Windows.Forms.ToolStripMenuItem();
+			this.MenuSongsSep2 = new System.Windows.Forms.ToolStripSeparator();
 			this.MenuSongsEdit = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuSongsDelete = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuSongsSep3 = new System.Windows.Forms.ToolStripSeparator();
@@ -62,13 +64,6 @@
 			this.FolderDialog = new System.Windows.Forms.FolderBrowserDialog();
 			this.OpenDialog = new System.Windows.Forms.OpenFileDialog();
 			this.ToolDock = new System.Windows.Forms.ToolStripContainer();
-			this.SongList = new ConsoleHaxx.RawkSD.SWF.MainForm.DoubleBufferedListView();
-			this.SongListColumnSong = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.SongListColumnArtist = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.SongListColumnAlbum = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.SongListColumnYear = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.SongListColumnGenre = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.SongListColumnAvailability = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.SongContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.ContextMenuEdit = new System.Windows.Forms.ToolStripMenuItem();
 			this.ContextMenuDelete = new System.Windows.Forms.ToolStripMenuItem();
@@ -104,8 +99,13 @@
 			this.DifficultyBandLabel = new System.Windows.Forms.Label();
 			this.Toolbar = new System.Windows.Forms.ToolStrip();
 			this.SaveDialog = new System.Windows.Forms.SaveFileDialog();
-			this.MenuSongsSep2 = new System.Windows.Forms.ToolStripSeparator();
-			this.MenuSongsSelectAll = new System.Windows.Forms.ToolStripMenuItem();
+			this.SongList = new ConsoleHaxx.RawkSD.SWF.MainForm.DoubleBufferedListView();
+			this.SongListColumnSong = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.SongListColumnArtist = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.SongListColumnAlbum = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.SongListColumnYear = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.SongListColumnGenre = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.SongListColumnAvailability = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.MenuStrip.SuspendLayout();
 			this.ToolDock.ContentPanel.SuspendLayout();
 			this.ToolDock.TopToolStripPanel.SuspendLayout();
@@ -182,6 +182,7 @@
 			this.MenuFilePreferences.Name = "MenuFilePreferences";
 			this.MenuFilePreferences.Size = new System.Drawing.Size(203, 22);
 			this.MenuFilePreferences.Text = "&Preferences...";
+			this.MenuFilePreferences.Click += new System.EventHandler(this.MenuFilePreferences_Click);
 			// 
 			// MenuFileSep3
 			// 
@@ -224,6 +225,19 @@
 			// 
 			this.MenuSongsSep1.Name = "MenuSongsSep1";
 			this.MenuSongsSep1.Size = new System.Drawing.Size(166, 6);
+			// 
+			// MenuSongsSelectAll
+			// 
+			this.MenuSongsSelectAll.Name = "MenuSongsSelectAll";
+			this.MenuSongsSelectAll.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
+			this.MenuSongsSelectAll.Size = new System.Drawing.Size(169, 22);
+			this.MenuSongsSelectAll.Text = "Select &All";
+			this.MenuSongsSelectAll.Click += new System.EventHandler(this.MenuSongsSelectAll_Click);
+			// 
+			// MenuSongsSep2
+			// 
+			this.MenuSongsSep2.Name = "MenuSongsSep2";
+			this.MenuSongsSep2.Size = new System.Drawing.Size(166, 6);
 			// 
 			// MenuSongsEdit
 			// 
@@ -289,7 +303,7 @@
 			// MenuSongsExportRawkSD
 			// 
 			this.MenuSongsExportRawkSD.Name = "MenuSongsExportRawkSD";
-			this.MenuSongsExportRawkSD.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
+			this.MenuSongsExportRawkSD.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
 			this.MenuSongsExportRawkSD.Size = new System.Drawing.Size(233, 22);
 			this.MenuSongsExportRawkSD.Text = "&RawkSD Archive (.rwk)";
 			this.MenuSongsExportRawkSD.Click += new System.EventHandler(this.MenuSongsExportRawkSD_Click);
@@ -329,24 +343,25 @@
 			// MenuHelpGuide
 			// 
 			this.MenuHelpGuide.Name = "MenuHelpGuide";
-			this.MenuHelpGuide.Size = new System.Drawing.Size(157, 22);
+			this.MenuHelpGuide.ShortcutKeys = System.Windows.Forms.Keys.F1;
+			this.MenuHelpGuide.Size = new System.Drawing.Size(176, 22);
 			this.MenuHelpGuide.Text = "Usage &Guide...";
 			// 
 			// MenuHelpDonate
 			// 
 			this.MenuHelpDonate.Name = "MenuHelpDonate";
-			this.MenuHelpDonate.Size = new System.Drawing.Size(157, 22);
+			this.MenuHelpDonate.Size = new System.Drawing.Size(176, 22);
 			this.MenuHelpDonate.Text = "&Donate...";
 			// 
 			// MenuHelpSep1
 			// 
 			this.MenuHelpSep1.Name = "MenuHelpSep1";
-			this.MenuHelpSep1.Size = new System.Drawing.Size(154, 6);
+			this.MenuHelpSep1.Size = new System.Drawing.Size(173, 6);
 			// 
 			// MenuHelpAbout
 			// 
 			this.MenuHelpAbout.Name = "MenuHelpAbout";
-			this.MenuHelpAbout.Size = new System.Drawing.Size(157, 22);
+			this.MenuHelpAbout.Size = new System.Drawing.Size(176, 22);
 			this.MenuHelpAbout.Text = "&About";
 			// 
 			// StatusBar
@@ -377,60 +392,6 @@
 			// 
 			this.ToolDock.TopToolStripPanel.Controls.Add(this.Toolbar);
 			// 
-			// SongList
-			// 
-			this.SongList.AllowColumnReorder = true;
-			this.SongList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.SongListColumnSong,
-            this.SongListColumnArtist,
-            this.SongListColumnAlbum,
-            this.SongListColumnYear,
-            this.SongListColumnGenre,
-            this.SongListColumnAvailability});
-			this.SongList.ContextMenuStrip = this.SongContextMenu;
-			this.SongList.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.SongList.FullRowSelect = true;
-			this.SongList.Location = new System.Drawing.Point(0, 0);
-			this.SongList.Name = "SongList";
-			this.SongList.OwnerDraw = true;
-			this.SongList.ShowItemToolTips = true;
-			this.SongList.Size = new System.Drawing.Size(648, 286);
-			this.SongList.SmallImageList = this.SongListRowSizeHack;
-			this.SongList.TabIndex = 5;
-			this.SongList.UseCompatibleStateImageBehavior = false;
-			this.SongList.View = System.Windows.Forms.View.Details;
-			this.SongList.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.SongList_ColumnClick);
-			this.SongList.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.SongList_DrawColumnHeader);
-			this.SongList.DrawItem += new System.Windows.Forms.DrawListViewItemEventHandler(this.SongList_DrawItem);
-			this.SongList.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.SongList_DrawSubItem);
-			this.SongList.SelectedIndexChanged += new System.EventHandler(this.SongList_SelectedIndexChanged);
-			this.SongList.DoubleClick += new System.EventHandler(this.SongList_DoubleClick);
-			// 
-			// SongListColumnSong
-			// 
-			this.SongListColumnSong.Text = "Song";
-			// 
-			// SongListColumnArtist
-			// 
-			this.SongListColumnArtist.Text = "Artist";
-			// 
-			// SongListColumnAlbum
-			// 
-			this.SongListColumnAlbum.Text = "Album";
-			// 
-			// SongListColumnYear
-			// 
-			this.SongListColumnYear.Text = "Year";
-			// 
-			// SongListColumnGenre
-			// 
-			this.SongListColumnGenre.Text = "Genre";
-			// 
-			// SongListColumnAvailability
-			// 
-			this.SongListColumnAvailability.Text = "Availability";
-			this.SongListColumnAvailability.Width = 71;
-			// 
 			// SongContextMenu
 			// 
 			this.SongContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -441,26 +402,26 @@
             this.ContextMenuSep2,
             this.ContextMenuExport});
 			this.SongContextMenu.Name = "ContextMenuStrip";
-			this.SongContextMenu.Size = new System.Drawing.Size(153, 126);
+			this.SongContextMenu.Size = new System.Drawing.Size(118, 104);
 			// 
 			// ContextMenuEdit
 			// 
 			this.ContextMenuEdit.Name = "ContextMenuEdit";
-			this.ContextMenuEdit.Size = new System.Drawing.Size(152, 22);
+			this.ContextMenuEdit.Size = new System.Drawing.Size(117, 22);
 			this.ContextMenuEdit.Text = "&Edit...";
 			this.ContextMenuEdit.Click += new System.EventHandler(this.ContextMenuEdit_Click);
 			// 
 			// ContextMenuDelete
 			// 
 			this.ContextMenuDelete.Name = "ContextMenuDelete";
-			this.ContextMenuDelete.Size = new System.Drawing.Size(152, 22);
+			this.ContextMenuDelete.Size = new System.Drawing.Size(117, 22);
 			this.ContextMenuDelete.Text = "&Delete";
 			this.ContextMenuDelete.Click += new System.EventHandler(this.ContextMenuDelete_Click);
 			// 
 			// ContextMenuSep1
 			// 
 			this.ContextMenuSep1.Name = "ContextMenuSep1";
-			this.ContextMenuSep1.Size = new System.Drawing.Size(149, 6);
+			this.ContextMenuSep1.Size = new System.Drawing.Size(114, 6);
 			// 
 			// ContextMenuInstall
 			// 
@@ -468,7 +429,7 @@
             this.ContextMenuInstallLocal,
             this.ContextMenuInstallSD});
 			this.ContextMenuInstall.Name = "ContextMenuInstall";
-			this.ContextMenuInstall.Size = new System.Drawing.Size(152, 22);
+			this.ContextMenuInstall.Size = new System.Drawing.Size(117, 22);
 			this.ContextMenuInstall.Text = "&Install";
 			// 
 			// ContextMenuInstallLocal
@@ -488,7 +449,7 @@
 			// ContextMenuSep2
 			// 
 			this.ContextMenuSep2.Name = "ContextMenuSep2";
-			this.ContextMenuSep2.Size = new System.Drawing.Size(149, 6);
+			this.ContextMenuSep2.Size = new System.Drawing.Size(114, 6);
 			// 
 			// ContextMenuExport
 			// 
@@ -498,7 +459,7 @@
             this.ContextMenuExport360DLC,
             this.ContextMenuExportFoF});
 			this.ContextMenuExport.Name = "ContextMenuExport";
-			this.ContextMenuExport.Size = new System.Drawing.Size(152, 22);
+			this.ContextMenuExport.Size = new System.Drawing.Size(117, 22);
 			this.ContextMenuExport.Text = "E&xport";
 			// 
 			// ContextMenuExportRawkSD
@@ -810,18 +771,59 @@
 			this.Toolbar.TabIndex = 3;
 			this.Toolbar.Text = "toolStrip1";
 			// 
-			// MenuSongsSep2
+			// SongList
 			// 
-			this.MenuSongsSep2.Name = "MenuSongsSep2";
-			this.MenuSongsSep2.Size = new System.Drawing.Size(166, 6);
+			this.SongList.AllowColumnReorder = true;
+			this.SongList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.SongListColumnSong,
+            this.SongListColumnArtist,
+            this.SongListColumnAlbum,
+            this.SongListColumnYear,
+            this.SongListColumnGenre,
+            this.SongListColumnAvailability});
+			this.SongList.ContextMenuStrip = this.SongContextMenu;
+			this.SongList.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.SongList.FullRowSelect = true;
+			this.SongList.Location = new System.Drawing.Point(0, 0);
+			this.SongList.Name = "SongList";
+			this.SongList.OwnerDraw = true;
+			this.SongList.ShowItemToolTips = true;
+			this.SongList.Size = new System.Drawing.Size(648, 286);
+			this.SongList.SmallImageList = this.SongListRowSizeHack;
+			this.SongList.TabIndex = 5;
+			this.SongList.UseCompatibleStateImageBehavior = false;
+			this.SongList.View = System.Windows.Forms.View.Details;
+			this.SongList.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.SongList_ColumnClick);
+			this.SongList.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.SongList_DrawColumnHeader);
+			this.SongList.DrawItem += new System.Windows.Forms.DrawListViewItemEventHandler(this.SongList_DrawItem);
+			this.SongList.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.SongList_DrawSubItem);
+			this.SongList.SelectedIndexChanged += new System.EventHandler(this.SongList_SelectedIndexChanged);
+			this.SongList.DoubleClick += new System.EventHandler(this.SongList_DoubleClick);
 			// 
-			// MenuSongsSelectAll
+			// SongListColumnSong
 			// 
-			this.MenuSongsSelectAll.Name = "MenuSongsSelectAll";
-			this.MenuSongsSelectAll.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
-			this.MenuSongsSelectAll.Size = new System.Drawing.Size(169, 22);
-			this.MenuSongsSelectAll.Text = "Select &All";
-			this.MenuSongsSelectAll.Click += new System.EventHandler(this.MenuSongsSelectAll_Click);
+			this.SongListColumnSong.Text = "Song";
+			// 
+			// SongListColumnArtist
+			// 
+			this.SongListColumnArtist.Text = "Artist";
+			// 
+			// SongListColumnAlbum
+			// 
+			this.SongListColumnAlbum.Text = "Album";
+			// 
+			// SongListColumnYear
+			// 
+			this.SongListColumnYear.Text = "Year";
+			// 
+			// SongListColumnGenre
+			// 
+			this.SongListColumnGenre.Text = "Genre";
+			// 
+			// SongListColumnAvailability
+			// 
+			this.SongListColumnAvailability.Text = "Availability";
+			this.SongListColumnAvailability.Width = 71;
 			// 
 			// MainForm
 			// 

@@ -106,6 +106,13 @@ namespace ConsoleHaxx.Common
 				if (!(current is DirectoryNode))
 					return null; // Only the last node in the path can be a file
 
+				if (name == ".")
+					continue;
+				else if (name == "..") {
+					current = current.Parent;
+					continue;
+				}
+
 				Node node = (current as DirectoryNode).Find(name, ignorecase);
 
 				if (node == null && create)

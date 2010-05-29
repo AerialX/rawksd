@@ -131,11 +131,11 @@ namespace ConsoleHaxx.RawkSD
 
 			List<Pair<int, Stream>> arkfiles = new List<Pair<int, Stream>>();
 			Stream hdrfile = null;
-			foreach (FileNode file in gen.Children.Where(n => n is FileNode)) {
+			foreach (FileNode file in gen.Children.OfType<FileNode>()) {
 				if (file.Name.ToLower().EndsWith(".hdr"))
 					hdrfile = file.Data;
 				else if (file.Name.ToLower().EndsWith(".ark")) {
-					Match match = Regex.Match(file.Name.ToLower(), @"_(\d+).ark");
+					Match match = Regex.Match(file.Name, @"_(\d+).ark$", RegexOptions.IgnoreCase);
 					if (match.Success)
 						arkfiles.Add(new Pair<int, Stream>(int.Parse(match.Groups[1].Value), file.Data));
 					else

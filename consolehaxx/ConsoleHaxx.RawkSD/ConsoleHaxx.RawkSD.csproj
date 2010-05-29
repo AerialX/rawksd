@@ -177,7 +177,6 @@
     <None Include="Resources\rawksd_albumart" />
     <None Include="Resources\rawksd_milo" />
     <None Include="Resources\rawksd_pan" />
-    <None Include="Resources\rawksd_preview" />
     <None Include="Resources\rawksd_savebanner" />
     <None Include="Resources\rawksd_tmd" />
     <None Include="Resources\rawksd_weights" />

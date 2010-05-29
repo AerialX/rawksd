@@ -73,7 +73,7 @@ namespace ConsoleHaxx.RawkSD
 					audio = HarmonixMetadata.GetAudioFormat(song);
 					audio.InitialOffset = 3000;
 				}
-					AudioFormatMogg.Instance.Create(formatdata, songaudiofile.Data, audio);
+				AudioFormatMogg.Instance.Create(formatdata, songaudiofile.Data, audio);
 			} else {
 				AudioFormatRB2Bink.Instance.Create(formatdata, songaudiofile.Data, null);
 			}
@@ -149,6 +149,7 @@ namespace ConsoleHaxx.RawkSD
 				progress.EndTask();
 				progress.Progress();
 			}
+
 			progress.EndTask();
 
 			return data;

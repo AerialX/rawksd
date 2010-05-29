@@ -92,7 +92,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 		private void MainForm_Load(object sender, EventArgs e)
 		{
 			Progress.QueueTask(progress => {
-				progress.NewTask("Loading Local Content");
+				progress.NewTask("Loading local content");
 				Storage = PlatformLocalStorage.Instance.Create(StoragePath, Game.Unknown, progress);
 				progress.Progress();
 				progress.EndTask();
@@ -100,7 +100,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			});
 
 			Progress.QueueTask(progress => {
-				progress.NewTask("Loading SD Content");
+				progress.NewTask("Loading SD content");
 				SD = PlatformRB2WiiCustomDLC.Instance.Create(SdPath, Game.Unknown, progress);
 				progress.Progress();
 				progress.EndTask();
@@ -130,7 +130,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 				return;
 
 			GetAsyncProgress().QueueTask(progress => {
-				progress.NewTask("Loading Content from " + platform.Name, 3);
+				progress.NewTask("Loading content from " + platform.Name, 3);
 				PlatformData data = platform.Create(path, game, progress);
 				progress.Progress();
 				ImportMap map = new ImportMap(data.Game, Path.Combine(RootPath, "importdata"));
@@ -145,6 +145,14 @@ namespace ConsoleHaxx.RawkSD.SWF
 				data.Mutex.ReleaseMutex();
 				progress.EndTask();
 				progress.Progress();
+
+				if (data.Game == Game.LegoRockBand) {
+					progress.NewTask("Loading Rock Band 1 content from Lego Rock Band");
+					Exports.ImportRB1Lipsync(data);
+					progress.Progress();
+					progress.EndTask();
+				}
+
 				Platforms.Add(data);
 				Invoke((Action)UpdateSongList);
 				progress.EndTask();
@@ -234,7 +242,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 		private void QueueInstallLocal(FormatData data)
 		{
 			Progress.QueueTask(progress => {
-				progress.NewTask("Ripping \"" + data.Song.Name + "\" Locally", 16);
+				progress.NewTask("Ripping \"" + data.Song.Name + "\" locally", 16);
 				FormatData destination = PlatformLocalStorage.Instance.CreateSong(Storage, data.Song);
 
 				progress.SetNextWeight(14);
@@ -451,7 +459,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			FormatData data = new TemporaryFormatData(song, Storage);
 			if (EditForm.Show(data, true, true, this) != DialogResult.Cancel) {
 				Progress.QueueTask(progress => {
-					progress.NewTask("Installing \"" + data.Song.Name + "\" Locally", 2);
+					progress.NewTask("Installing \"" + data.Song.Name + "\" locally", 2);
 
 					FormatData localdata = PlatformLocalStorage.Instance.CreateSong(Storage, data.Song);
 					data.SaveTo(localdata);
@@ -473,6 +481,11 @@ namespace ConsoleHaxx.RawkSD.SWF
 			SongList.SelectedIndices.Clear();
 			for (int i = 0; i < SongList.Items.Count; i++)
 				SongList.SelectedIndices.Add(i);
+		}
+
+		private void MenuFilePreferences_Click(object sender, EventArgs e)
+		{
+			SettingsForm.Show(this);
 		}
 	}
 }

@@ -88,13 +88,6 @@ namespace ConsoleHaxx.RawkSD.Properties {
             }
         }
         
-        public static byte[] rawksd_preview {
-            get {
-                object obj = ResourceManager.GetObject("rawksd_preview", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
         public static byte[] rawksd_savebanner {
             get {
                 object obj = ResourceManager.GetObject("rawksd_savebanner", resourceCulture);

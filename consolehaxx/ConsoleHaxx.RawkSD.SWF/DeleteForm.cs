@@ -45,5 +45,10 @@ namespace ConsoleHaxx.RawkSD.SWF
 			DialogResult = DialogResult.OK;
 			Close();
 		}
+
+		private void PlatformList_DoubleClick(object sender, EventArgs e)
+		{
+			CloseButton_Click(sender, e);
+		}
 	}
 }

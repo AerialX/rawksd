@@ -14,7 +14,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 		public static void ExportRWK(string path, IEnumerable<FormatData> songs)
 		{
 			Program.Form.Progress.QueueTask(progress => {
-				progress.NewTask("Exporting to RawkSD Archive", 2);
+				progress.NewTask("Exporting to RawkSD archive", 2);
 
 				U8 u8 = new U8();
 				foreach (FormatData data in songs) {
@@ -199,6 +199,50 @@ namespace ConsoleHaxx.RawkSD.SWF
 					progress.EndTask();
 				}
 			});
+		}
+
+		public static void ImportRB1Lipsync(PlatformData lrb)
+		{
+			DirectoryNode root = lrb.Session["songdir"] as DirectoryNode;
+
+			root = root.Navigate("songs/rb1") as DirectoryNode;
+			if (root == null)
+				return;
+
+			List<PlatformData> platforms = new List<PlatformData>(Program.Form.Platforms);
+			platforms.Add(Program.Form.Storage);
+
+			foreach (PlatformData platform in platforms) {
+				platform.Mutex.WaitOne();
+
+				foreach (FormatData data in platform.Songs) {
+					if (data.Formats.Contains(ChartFormatRB.Instance) && !data.HasStream(ChartFormatRB.Instance, ChartFormatRB.MiloFile)) {
+						string songid = data.Song.ID;
+						if (songid.StartsWith("rb1")) {
+							songid = songid.Substring(3);
+							DirectoryNode songdir = root.Navigate(songid) as DirectoryNode;
+							FileNode node = songdir.Navigate("gen/" + songid + ".milo_wii") as FileNode;
+							if (node != null) {
+								node.Data.Position = 0;
+								Stream stream = data.AddStream(ChartFormatRB.Instance, ChartFormatRB.MiloFile);
+								Util.StreamCopy(stream, node.Data);
+								data.CloseStream(stream);
+								node.Data.Close();
+							}
+							node = songdir.Navigate("gen/" + songid + "_keep.png_wii") as FileNode;
+							if (node == null)
+								node = songdir.Navigate("gen/" + songid + "_nomip_keep.bmp_wii") as FileNode;
+							if (node != null) {
+								node.Data.Position = 0;
+								data.Song.AlbumArt = WiiImage.Create(new EndianReader(node.Data, Endianness.LittleEndian)).Bitmap;
+								node.Data.Close();
+							}
+						}
+					}
+				}
+
+				platform.Mutex.ReleaseMutex();
+			}
 		}
 	}
 }

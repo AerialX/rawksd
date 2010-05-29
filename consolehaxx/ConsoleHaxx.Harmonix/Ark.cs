@@ -160,17 +160,12 @@ namespace ConsoleHaxx.Harmonix
 
 					stringTable.Position = offsetTable[filenameStringIndex];
 					string filename = Util.ReadCString(stringTable);
-
-					if (pathname.StartsWith("./"))
-						pathname = pathname.Substring(2);
-					if (pathname == ".")
-						pathname = string.Empty;
 					
 					DirectoryNode dir = Root.Navigate(pathname, true) as DirectoryNode;
 					int ark;
 					for (ark = 0; offset >= arkSizes[ark]; offset -= arkSizes[ark++])
 						;
-					dir.Children.Add(new FileNode(filename, dir, size, new Substream(ArkStreams[ark], offset, (long)size)));
+					new FileNode(filename, dir, size, new Substream(ArkStreams[ark], offset, (long)size));
 				}
 			}
 		}

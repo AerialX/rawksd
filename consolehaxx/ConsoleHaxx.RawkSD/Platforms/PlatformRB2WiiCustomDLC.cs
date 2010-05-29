@@ -142,8 +142,6 @@ namespace ConsoleHaxx.RawkSD
 				Stream weights = formatdata.GetStream(ChartFormatRB.Instance, ChartFormatRB.WeightsFile);
 				Stream milo = formatdata.GetStream(ChartFormatRB.Instance, ChartFormatRB.MiloFile);
 
-				if (preview == null)
-					preview = new MemoryStream(Properties.Resources.rawksd_preview);
 				if (pan == null)
 					pan = new MemoryStream(Properties.Resources.rawksd_pan);
 				if (weights == null)
