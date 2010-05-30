@@ -1174,6 +1174,7 @@ static bool do_exploit()
 {
 	s32 es_fd = -1;
 	int patch_failed = 0;
+	u32 sneek=0;
 
 	printf("Grabbin' HAXX\n");
 
@@ -1206,7 +1207,8 @@ static bool do_exploit()
 				patch_failed = 1;
 				printf("NAND Permissions patch failed\n");
 			}
-		}
+		} else
+			sneek = 1;
 
 		read_otp();
 		if (ES_GetDeviceID(&ng_id) || ng_id != otp.ng_id) // wtf how
@@ -1233,6 +1235,8 @@ static bool do_exploit()
 		if (!patch_failed)
 			patch_failed = !do_patch(NAND_PERMS_INDEX);
 
+		patch_failed |= sneek;
+
 		if (!patch_failed)
 		{
 			patch_failed = !(load_sdhc_module(0x0000000100000038llu) || load_sdhc_module(0x000000010000003Cllu) || \
@@ -1254,6 +1258,14 @@ static bool do_exploit()
 		*(u16*)0x93A752E6 = 0x2000;
 		DCFlushRange((void*)0x93A752E0, 32);
 #endif
+
+		if (sneek) {
+			printf("SNEEK found, have to reboot again *sigh*\n");
+			if (es_fd >=0 )
+				IOS_Close(es_fd);
+			IOS_ReloadIOS((u32)HAXX_IOS);
+			return do_exploit();
+		}
 
 		if (!patch_failed)
 			printf("All patching done!\n");

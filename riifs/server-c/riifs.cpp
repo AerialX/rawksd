@@ -677,19 +677,7 @@ bool Connection::WaitForAction()
 					string path = GetPath();
 					dprint << "File_Delete(\"" << path << "\");";
 					DebugPrint(dprint.str());
-					FileInfo file(path);
-					if (file.Exists) {
-						unlink(path.c_str());
-						Return(1);
-					} else {
-						DirectoryInfo* dir = CreateDirectoryInfo(path);
-						if (dir->Exists) {
-							rmdir(path.c_str());
-							Return(1);
-						} else
-							Return(0);
-						delete dir;
-					}
+					Return (!remove(path.c_str()));
 					break;
 				}
 				case Command::FileRename: {
@@ -712,7 +700,7 @@ bool Connection::WaitForAction()
 					DebugPrint(dprint.str());
 					DirectoryInfo* dir = CreateDirectoryInfo(path);
 					if (!dir->Exists)
-						_mkdir(path.c_str());
+						mkdir(path.c_str());
 					Return(1);
 					delete dir;
 					break;

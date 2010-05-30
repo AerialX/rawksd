@@ -48,9 +48,8 @@
 
 #define THREAD __stdcall
 #define getcwd _getcwd
-#define unlink _unlink
-#define rmdir _rmdir
 #define stat _stat
+#define mkdir _mkdir
 #define MIN(a, b) min(a, b)
 #define MSG_TOO_BIG (WSAGetLastError()==WSAEMSGSIZE)
 
@@ -65,7 +64,7 @@ typedef int socklen_t;
 #include <netinet/in.h>
 
 #define THREAD
-#define _mkdir(a) mkdir(a, 0777)
+#define mkdir(a) mkdir(a, 0777)
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define MSG_TOO_BIG 0
 #define closesocket close

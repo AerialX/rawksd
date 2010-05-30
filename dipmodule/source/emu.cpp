@@ -1440,9 +1440,9 @@ namespace ProxiIOS { namespace EMU {
 		TMD->region = (*(u8*)3 == 'P') ? 2 : 1;
 		memset(TMD->ratings, 0x80, 16);
 		TMD->title_version = 1;
-		TMD->num_contents = MAX_NUM_TMD_CONTENTS;
+		TMD->num_contents = MAX_NUM_TMD_CONTENTS-1;
 		TMD->boot_index = 0; // not really bootable
-		for (int i=0; i < MAX_NUM_TMD_CONTENTS; i++) {
+		for (int i=0; i < MAX_NUM_TMD_CONTENTS-1; i++) {
 			TMD->contents[i].cid = i;
 			TMD->contents[i].index = i;
 			TMD->contents[i].type = (i==0) ? 1 : 0x4001;
