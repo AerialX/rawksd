@@ -107,11 +107,11 @@ namespace ConsoleHaxx.RawkSD
 		public FormatData(SongData song) : this(song, null) { }
 		public FormatData(SongData song, PlatformData data) : this()
 		{
+			PlatformData = data;
 			if (song != null) {
 				Song = song;
 				song.PropertyChanged += new Action<SongData>(Song_PropertyChanged);
 			}
-			PlatformData = data;
 		}
 
 		public FormatData()
@@ -359,12 +359,15 @@ namespace ConsoleHaxx.RawkSD
 		{
 			Folder = path;
 
+			if (!Directory.Exists(Folder))
+				Directory.CreateDirectory(Folder);
+
 			Refresh();
 
-			if (song != null)
-				Song = song;
 			if (data != null)
 				PlatformData = data;
+			if (song != null)
+				Song = song;
 		}
 
 		private void Refresh()

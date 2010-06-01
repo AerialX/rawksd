@@ -24,11 +24,10 @@ namespace ConsoleHaxx.RawkSD
 
 		public static void Save(FormatData data, SongData song)
 		{
-			if (!FormatData.LocalSongCache) {
+			if (!FormatData.LocalSongCache || (data.PlatformData != null && data.PlatformData.Platform == PlatformLocalStorage.Instance)) {
 				Stream stream = data.AddStream("songdata");
 				song.Save(stream);
 				data.CloseStream(stream);
-				return;
 			}
 			SongData songdata = null;
 			if (Cache.ContainsKey(data))

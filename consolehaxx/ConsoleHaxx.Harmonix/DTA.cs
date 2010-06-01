@@ -158,34 +158,46 @@ namespace ConsoleHaxx.Harmonix
 
 		public static void SaveDTA(this DTB.NodeTree dtb, Stream stream)
 		{
-			dtb.SaveDTA(new StreamWriter(stream, Util.Encoding));
+			StreamWriter writer = new StreamWriter(stream, Util.Encoding);
+			writer.NewLine = "\r\n";
+			dtb.SaveDTA(writer);
 		}
 
-		public static void SaveDTA(this DTB.NodeTree dtb, StreamWriter writer)
+		private static void Indent(StreamWriter writer, int indent)
 		{
-			writer.Write("(\r\n");
+			for (int i = 0; i < indent; i++)
+				writer.Write("    ");
+		}
+
+		public static void SaveDTA(this DTB.NodeTree dtb, StreamWriter writer, int indent = 0)
+		{
+			Indent(writer, indent++);
+			writer.WriteLine("(");
 			foreach (DTB.Node node in dtb.Nodes) {
 				if (node is DTB.NodeTree) {
-					SaveDTA(node as DTB.NodeTree, writer);
+					SaveDTA(node as DTB.NodeTree, writer, indent);
 				}
 				if (node is DTB.NodeFloat32) {
-					writer.Write((node as DTB.NodeFloat32).Number.ToString("0.00", CultureInfo.InvariantCulture));
-					writer.Write(" ");
+					Indent(writer, indent);
+					writer.WriteLine((node as DTB.NodeFloat32).Number.ToString("0.00", CultureInfo.InvariantCulture));
 				}
 				if (node is DTB.NodeKeyword) {
+					Indent(writer, indent);
 					writer.Write("'"); // RBN likes to do this?
 					writer.Write((node as DTB.NodeKeyword).Text);
-					writer.Write("' ");
+					writer.WriteLine("'");
 				} else if (node is DTB.NodeString) {
+					Indent(writer, indent);
 					writer.Write("\"");
 					writer.Write((node as DTB.NodeString).Text);
-					writer.Write("\" ");
+					writer.WriteLine("\"");
 				} else if (node is DTB.NodeInt32) {
-					writer.Write((node as DTB.NodeInt32).Number.ToString(CultureInfo.InvariantCulture));
-					writer.Write(" ");
+					Indent(writer, indent);
+					writer.WriteLine((node as DTB.NodeInt32).Number.ToString(CultureInfo.InvariantCulture));
 				}
 			}
-			writer.Write(")\r\n");
+			Indent(writer, --indent);
+			writer.WriteLine(")");
 			writer.Flush();
 		}
 	}

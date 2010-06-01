@@ -49,6 +49,8 @@ namespace ConsoleHaxx.RawkSD
 					(format.Decoder as MultiDecoder).AddDecoder(sdecoder);
 			}
 
+			format.SetDisposeStreams(data, streams);
+
 			return format;
 		}
 

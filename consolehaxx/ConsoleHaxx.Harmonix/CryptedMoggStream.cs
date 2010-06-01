@@ -20,6 +20,9 @@ namespace ConsoleHaxx.Harmonix
 		private long Size;
 		private uint HeaderSize;
 		private bool Encrypted;
+		private List<Pair<uint, uint>> Entries;
+		private long CurrentSample;
+		private int CurrentEntry;
 
 		public CryptedMoggStream(Stream stream)
 		{
@@ -204,24 +207,67 @@ namespace ConsoleHaxx.Harmonix
 			}
 		}
 
-		public void WriteHeader()
+		public void WriteHeader(long samples = 0)
 		{
+			int entrysize = 0x4E20;
+			Entries = new List<Pair<uint, uint>>();
+			for (; samples > 0; samples -= entrysize) {
+				Entries.Insert(0, new Pair<uint, uint>((uint)samples, 0));
+			}
+			Entries.Insert(0, new Pair<uint, uint>(0, 0));
+
+			HeaderSize = 36 + (uint)Entries.Count * 8;
+
 			EndianReader writer = new EndianReader(Base, Endianness.LittleEndian);
 			writer.Write(0x0B); // Encrypted
-			writer.Write(44); // Offset to OGG
+			writer.Write(HeaderSize); // Offset to OGG
 
 			writer.Write(0x0F); // Unknown; channels?
-			writer.Write(0x4E20); // Unknown
-			writer.Write(0x01); // Number of entries
-			writer.Write(0x00);
-			writer.Write(0x00);
+			writer.Write(entrysize); // Unknown
+
+			writer.Write((uint)Entries.Count); // Number of entries
+			WriteEntries(writer);
 			writer.Write(Util.Encoding.GetBytes("imrightbehindyou")); // MOGG Key
 
 			Encrypted = true;
 
-			HeaderSize = 44;
 			Offset = 1;
 			Position = 0;
+		}
+
+		public void WriteEntries()
+		{
+			Base.Position = 20;
+			WriteEntries(new EndianReader(Base, Endianness.LittleEndian));
+		}
+
+		private void WriteEntries(EndianReader writer)
+		{
+			foreach (var entry in Entries) {
+				writer.Write(entry.Value);
+				writer.Write(entry.Key);
+			}
+		}
+
+		public void Update(long samples)
+		{
+			CurrentSample += samples;
+			if (Entries.Count == CurrentEntry + 1)
+				return;
+
+			var entry = Entries[CurrentEntry];
+			var nextentry = Entries[CurrentEntry + 1];
+			if ((uint)CurrentSample < nextentry.Key) {
+				uint position = (uint)Util.RoundDown(Offset, 0x8000);
+				if (entry.Value < position) {
+					entry.Key = (uint)CurrentSample;
+					entry.Value = position;
+				}
+			} else {
+				CurrentEntry++;
+				nextentry.Value = entry.Value;
+				nextentry.Key = entry.Key;
+			}
 		}
 
 		public static void WriteHeader(EndianReader writer)

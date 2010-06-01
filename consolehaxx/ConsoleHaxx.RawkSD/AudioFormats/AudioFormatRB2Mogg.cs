@@ -56,6 +56,12 @@ namespace ConsoleHaxx.RawkSD
 			Stream audio = GetDecryptedAudioStream(data);
 			Stream preview = GetDecryptedPreviewStream(data);
 
+			List<Stream> streams = new List<Stream>();
+			if (audio is CryptedMoggStream)
+				streams.Add((audio as CryptedMoggStream).Base);
+			if (preview is CryptedMoggStream)
+				streams.Add((preview as CryptedMoggStream).Base);
+
 			format.Decoder = AudioFormatOgg.Instance.DecodeOggAudio(audio, preview);
 			MultiDecoder multi = format.Decoder as MultiDecoder;
 			if (multi != null) {
@@ -65,6 +71,8 @@ namespace ConsoleHaxx.RawkSD
 				}
 			}
 
+			format.SetDisposeStreams(data, streams);
+
 			return format;
 		}
 
@@ -73,20 +81,23 @@ namespace ConsoleHaxx.RawkSD
 			progress.NewTask(20);
 
 			Stream audio = formatdata.AddStream(this, AudioName);
-			CryptedMoggStream mogg = new CryptedMoggStream(audio);
-			mogg.WriteHeader();
 			progress.SetNextWeight(1);
 			List<AudioFormat.Mapping> oldmaps = audioformat.Mappings;
 			ushort[] masks = PlatformRB2WiiCustomDLC.RemixAudioTracks(formatdata.Song, audioformat);
 
 			progress.SetNextWeight(14);
-			RawkAudio.Encoder encoder = new RawkAudio.Encoder(mogg, audioformat.Channels, audioformat.Decoder.SampleRate, 28000);
 			long samples = audioformat.Decoder.Samples;
+			CryptedMoggStream mogg = new CryptedMoggStream(audio);
+			//mogg.WriteHeader(samples);
+			mogg.WriteHeader();
+			RawkAudio.Encoder encoder = new RawkAudio.Encoder(mogg, audioformat.Channels, audioformat.Decoder.SampleRate, 28000);
 			progress.NewTask("Transcoding Audio", samples);
 			JaggedShortArray buffer = new JaggedShortArray(encoder.Channels, audioformat.Decoder.AudioBuffer.Rank2);
 			AudioFormat.ProcessOffset(audioformat.Decoder, encoder, audioformat.InitialOffset);
 			while (samples > 0) {
-				int read = audioformat.Decoder.Read((int)Math.Min(samples, audioformat.Decoder.AudioBuffer.Rank2));
+				//int read = audioformat.Decoder.Read((int)Math.Min(samples, 0x4E20));
+				//int read = audioformat.Decoder.Read((int)Math.Min(samples, 0x20));
+				int read = audioformat.Decoder.Read((int)Math.Min(samples, buffer.Rank2));
 				if (read <= 0)
 					break;
 
@@ -95,10 +106,12 @@ namespace ConsoleHaxx.RawkSD
 				encoder.Write(buffer, read);
 				samples -= read;
 				progress.Progress(read);
+				//mogg.Update(read);
 			}
 			progress.EndTask();
 			progress.Progress(14);
 			encoder.Dispose();
+			mogg.WriteEntries();
 			formatdata.CloseStream(audio);
 
 			progress.SetNextWeight(6);

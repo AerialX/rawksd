@@ -32,7 +32,7 @@ namespace ConsoleHaxx.RawkSD
 	#endregion
 
 	#region AudioFormat
-	public class AudioFormat
+	public class AudioFormat : IDisposable
 	{
 		protected enum BlockType : int
 		{
@@ -51,8 +51,7 @@ namespace ConsoleHaxx.RawkSD
 
 			public Mapping() : this(0.0f, 0.0f, Instrument.Ambient) { }
 
-			public Mapping(float volume, float balance, Instrument instrument)
-				: base(Instance)
+			public Mapping(float volume, float balance, Instrument instrument) : base(Instance)
 			{
 				Volume = volume;
 				Balance = balance;
@@ -65,12 +64,12 @@ namespace ConsoleHaxx.RawkSD
 		}
 
 		public IDecoder Decoder;
-
-		public List<Mapping> Mappings;
-
-		public int Channels { get { return Mappings.Count; } }
-
 		public int InitialOffset;
+		public List<Mapping> Mappings;
+		public int Channels { get { return Mappings.Count; } }
+		
+		public Action DisposeCallback;
+		protected bool disposed;
 
 		public AudioFormat()
 		{
@@ -175,6 +174,34 @@ namespace ConsoleHaxx.RawkSD
 			}
 
 			return null;
+		}
+
+		public void Dispose()
+		{
+			if (disposed)
+				return;
+			if (Decoder != null)
+				Decoder.Dispose();
+			if (DisposeCallback != null)
+				DisposeCallback();
+
+			disposed = true;
+		}
+
+		public void SetDisposeStreams(FormatData data, IEnumerable<Stream> streams)
+		{
+			List<Stream> list = new List<Stream>(streams);
+			SetDisposeCallback(delegate() {
+				foreach (Stream stream in list) {
+					if (stream != null)
+						data.CloseStream(stream);
+				}
+			});
+		}
+
+		public void SetDisposeCallback(Action action)
+		{
+			DisposeCallback = action;
 		}
 	}
 	#endregion

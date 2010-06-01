@@ -165,7 +165,9 @@ namespace ConsoleHaxx.RawkSD
 
 		public void Seek(long sample)
 		{
-			FFmpeg.av_seek_frame(FormatPointer, StreamIndex, AVStream.time_base.num * sample / AVStream.time_base.den / SampleRate, FFmpeg.AVSEEK_FLAG_ANY);
+			FFmpeg.av_seek_frame(FormatPointer, StreamIndex, AVStream.time_base.den * sample / AVStream.time_base.num / SampleRate, FFmpeg.AVSEEK_FLAG_ANY);
+			CacheOffset = 0;
+			CacheLength = 0;
 		}
 
 		public void Dispose()

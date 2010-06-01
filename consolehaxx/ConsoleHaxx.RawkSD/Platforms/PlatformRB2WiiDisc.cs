@@ -109,8 +109,7 @@ namespace ConsoleHaxx.RawkSD
 		{
 			PlatformData data = new PlatformData(this, game);
 
-			DirectoryNode dir = data.GetDirectoryStructure(path);
-			Ark ark = HarmonixMetadata.GetHarmonixArk(dir);
+			Ark ark = data.GetHarmonixArk(path);
 
 			data.Game = Platform.DetermineGame(data);
 

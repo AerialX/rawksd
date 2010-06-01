@@ -136,6 +136,8 @@ namespace ConsoleHaxx.RawkSD
 			if (DecodeChartVocals(song, qbchart, strings, notes, chart))
 				DecodeChartVocalPhrases(song, qbchart, notes, chart);
 
+			ImportMap.ImportChart(data.Song, chart);
+
 			progress.Progress();
 
 			progress.EndTask();
@@ -440,6 +442,7 @@ namespace ConsoleHaxx.RawkSD
 			NoteChart.Note previousnote = new NoteChart.Note(uint.MaxValue);
 
 			int note32 = chart.Division.TicksPerBeat / 8;
+			int note16 = chart.Division.TicksPerBeat / 4;
 
 			values = GetChartValues(notes, qbchart, basetrack, basetrack, 4, 4);
 			for (int k = 0; k < values.Length; k += 2) {
@@ -460,7 +463,7 @@ namespace ConsoleHaxx.RawkSD
 				int chord = 0;
 
 				// Cut off sustains to a 32nd note before the next
-				previousnote.Duration = (ulong)Math.Max(Math.Min((long)previousnote.Duration, (long)note.Time - (long)previousnote.Time - note32), note32);
+				previousnote.Duration = (ulong)Math.Max(Math.Min((long)previousnote.Duration, (long)note.Time - (long)previousnote.Time - note16), note32);
 
 				uint numfrets = 5;
 				if (track == NoteChart.TrackType.Drums)

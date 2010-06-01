@@ -15,6 +15,8 @@ namespace ConsoleHaxx.RawkSD
 {
 	public class ImportMap
 	{
+		public static string RootPath;
+
 		public enum NamePrefix
 		{
 			None = 0,
@@ -56,22 +58,102 @@ namespace ConsoleHaxx.RawkSD
 			{ Instrument.Drums, new int[] { 1, 136, 169, 208, 296, 350, 402 } }
 		};
 
+		public struct SoloInfo
+		{
+			public SoloInfo(string start, float starto, string end, float endo)
+			{
+				StartSection = start;
+				StartOffset = starto;
+
+				EndSection = end;
+				EndOffset = endo;
+			}
+
+			public string StartSection;
+			public string EndSection;
+
+			// Beats (positive means into, negative before)
+			public float StartOffset;
+			public float EndOffset;
+		}
+
 		public XmlElement Root;
 		public Game Game;
-		public string RootPath;
 
-		public ImportMap(Game game, string path)
+		public ImportMap(Game game)
 		{
 			Game = game;
-			RootPath = path;
 
 			try {
-				byte[] xmldata = File.ReadAllBytes(Path.Combine(RootPath, ((int)Game).ToString() + ".xml"));
-				XmlReader reader = XmlReader.Create(new MemoryStream(xmldata));
+				Stream stream = new FileStream(Path.Combine(RootPath, ((int)Game).ToString() + ".xml"), FileMode.Open, FileAccess.Read, FileShare.Read);
+				XmlReader reader = XmlReader.Create(stream);
 				XmlDocument doc = new XmlDocument();
 				doc.Load(reader);
 				Root = doc.DocumentElement;
+				reader.Close();
+				stream.Close();
 			} catch { }
+		}
+
+		public bool PopulateChart(SongData song, NoteChart chart)
+		{
+			if (Root == null)
+				return false;
+
+			string idprefix = string.Empty;
+
+			bool ret = false;
+
+			foreach (XmlElement node in Root.GetElementsByTagName("global")) {
+				foreach (XmlElement element in node.GetElementsByTagName("idprefix"))
+					idprefix = element.InnerText;
+			}
+
+			string songid = song.ID;
+			if (songid.StartsWith(idprefix))
+				songid = songid.Substring(idprefix.Length);
+
+			List<SoloInfo> solos = new List<SoloInfo>();
+
+			foreach (XmlElement element in Root.GetElementsByTagName("song")) {
+				if (element.Attributes["game"] != null && int.Parse(element.Attributes["game"].Value) != (int)Game)
+					continue;
+
+				if (string.Compare(element.Attributes["id"].Value, songid, true) == 0) {
+					foreach (XmlElement soloelement in element.GetElementsByTagName("solo")) {
+						string startsection = soloelement.Attributes["start"] != null ? soloelement.Attributes["start"].Value : string.Empty;
+						string endsection = soloelement.Attributes["end"] != null ? soloelement.Attributes["end"].Value : startsection;
+						float startoffset = float.Parse(soloelement.Attributes["startoffset"] != null ? soloelement.Attributes["startoffset"].Value : "0");
+						float endoffset = float.Parse(soloelement.Attributes["endoffset"] != null ? soloelement.Attributes["endoffset"].Value : "0");
+						Instrument instrument = soloelement.Attributes["instrument"] != null ? Platform.InstrumentFromString(soloelement.Attributes["instrument"].Value) : Instrument.Guitar;
+						if (!startsection.HasValue())
+							continue;
+
+						NoteChart.Point start = new NoteChart.Point(chart.Events.Sections.Find(e => string.Compare(e.Value, startsection.Replace(' ', '_'), true) == 0).Key.Time);
+						int endindex = chart.Events.Sections.FindIndex(e => string.Compare(e.Value, endsection.Replace(' ', '_'), true) == 0);
+						NoteChart.Point end;
+						if (endindex + 1 < chart.Events.Sections.Count)
+							end = new NoteChart.Point(chart.Events.Sections[endindex + 1].Key.Time);
+						else
+							end = new NoteChart.Point(chart.Events.End.Time);
+
+						start.Time += (ulong)(startoffset * (float)chart.Division.TicksPerBeat);
+						end.Time += (ulong)(endoffset * (float)chart.Division.TicksPerBeat);
+
+						NoteChart.Note note = new NoteChart.Note(start.Time, end.Time - start.Time);
+
+						if (instrument == Instrument.Guitar)
+							chart.PartGuitar.SoloSections.Add(note);
+						else if (instrument == Instrument.Bass)
+							chart.PartBass.SoloSections.Add(note);
+						else if (instrument == Instrument.Drums)
+							chart.PartDrums.SoloSections.Add(note);
+						ret = true;
+					}
+				}
+			}
+
+			return ret;
 		}
 
 		public bool Populate(SongData song)
@@ -93,9 +175,7 @@ namespace ConsoleHaxx.RawkSD
 					nameprefix = element.InnerText;
 			}
 
-			foreach (XmlNode node in Root.GetElementsByTagName("song")) {
-				XmlElement element = node as XmlElement;
-
+			foreach (XmlElement element in Root.GetElementsByTagName("song")) {
 				if (element.Attributes["game"] != null && int.Parse(element.Attributes["game"].Value) != (int)Game)
 					continue;
 
@@ -189,6 +269,12 @@ namespace ConsoleHaxx.RawkSD
 					id += char.ToLower(letter);
 			}
 			return id;
+		}
+
+		public static bool ImportChart(SongData song, NoteChart chart)
+		{
+			ImportMap import = new ImportMap(song.Game);
+			return import.PopulateChart(song, chart);
 		}
 	}
 }

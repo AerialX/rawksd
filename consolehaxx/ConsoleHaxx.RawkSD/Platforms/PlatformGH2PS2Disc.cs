@@ -104,9 +104,7 @@ namespace ConsoleHaxx.RawkSD
 
 			data.Game = Platform.DetermineGame(data);
 
-			DirectoryNode dir = data.GetDirectoryStructure(path);
-
-			Ark ark = HarmonixMetadata.GetHarmonixArk(dir);
+			Ark ark = data.GetHarmonixArk(path);
 
 			DirectoryNode songdir = ark.Root.Find("songs", true) as DirectoryNode;
 			if (songdir == null)

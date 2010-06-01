@@ -58,6 +58,8 @@ namespace ConsoleHaxx.RawkSD
 			DecodeDrums(chart.Chart, midi, false);
 			DecodeOverdrive(chart.Chart);
 
+			ImportMap.ImportChart(data.Song, chart.Chart);
+
 			return chart;
 		}
 

@@ -38,7 +38,7 @@ namespace ConsoleHaxx.Wii
 			Bitmap image = new Bitmap((int)width, (int)height);
 
 			EndianReader reader = new EndianReader(stream, Endianness.BigEndian);
-
+			
 			for (int y = 0; y < height; y += 8) {
 				for (int x = 0; x < width; x += 8) {
 					for (int y2 = 0; y2 < 8; y2 += 4) {

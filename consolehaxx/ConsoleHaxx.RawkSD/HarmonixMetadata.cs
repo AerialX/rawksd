@@ -38,6 +38,10 @@ namespace ConsoleHaxx.RawkSD
 			dta.Vocalist = data.Vocalist;
 			dta.Year = data.Year;
 			dta.Version = data.Version;
+			if (data.PreviewTimes.Count == 2) {
+				dta.Preview[0] = data.PreviewTimes[0];
+				dta.Preview[1] = data.PreviewTimes[1];
+			}
 			if (data.HopoThreshold > 0)
 				dta.Song.HopoThreshold = data.HopoThreshold;
 			for (Instrument instrument = Instrument.Ambient; instrument <= Instrument.Vocals; instrument++) {
@@ -121,6 +125,24 @@ namespace ConsoleHaxx.RawkSD
 			}
 
 			destination.Song.Data.SetSubtree("HmxSongsDtb", dta.ToDTB());
+		}
+
+		public static Ark GetHarmonixArk(this PlatformData data, string path)
+		{
+			DirectoryNode dir = null;
+			try {
+				dir = data.GetDirectoryStructure(path);
+			} catch {
+				if (File.Exists(path))
+					path = Path.GetDirectoryName(path);
+				if (!Directory.Exists(path))
+					throw new FormatException();
+				dir = DirectoryNode.FromPath(path, data.Cache);
+			}
+
+			Ark ark = GetHarmonixArk(dir);
+			data.Session["ark"] = ark;
+			return ark;
 		}
 
 		public static Ark GetHarmonixArk(DirectoryNode dir)

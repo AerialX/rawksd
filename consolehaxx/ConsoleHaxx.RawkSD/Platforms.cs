@@ -366,7 +366,10 @@ namespace ConsoleHaxx.RawkSD
 
 		public static void TranscodeOnly(IFormat format, FormatData data, IFormat target, FormatData destination, ProgressIndicator progress)
 		{
-			target.Encode(format.Decode(data, progress), destination, progress);
+			object decode = format.Decode(data, progress);
+			target.Encode(decode, destination, progress);
+			if (decode is IDisposable)
+				(decode as IDisposable).Dispose();
 		}
 
 		public static void Transfer(IFormat format, FormatData data, FormatData destination, ProgressIndicator progress)
@@ -509,12 +512,71 @@ namespace ConsoleHaxx.RawkSD
 
 		public static Game DetermineGame(DirectoryNode root)
 		{
-			if (root.Find("SLES_541.32", true) != null || root.Find("SLUS_212.24", true) != null)
+			if (root.Find("SLES_541.32") != null || root.Find("SLUS_212.24") != null)
 				return Game.GuitarHero1;
-			else if (root.Find("SLES_544.42", true) != null || root.Find("SLUS_214.47", true) != null)
+			else if (root.Find("SLES_544.42") != null || root.Find("SLUS_214.47") != null)
 				return Game.GuitarHero2;
-			else if (root.Find("SLES_548.59", true) != null || root.Find("SLUS_215.86", true) != null || root.Find("SLES_548.60", true) != null)
+			else if (root.Find("SLES_548.59") != null || root.Find("SLUS_215.86") != null || root.Find("SLES_548.60") != null)
 				return Game.GuitarHero80s;
+
+			FileNode rawksdnode = root.Find("disc_id") as FileNode;
+			if (rawksdnode != null) {
+				StreamReader reader = new StreamReader(rawksdnode.Data);
+				string name = reader.ReadLine();
+				rawksdnode.Data.Close();
+				switch (name) {
+					case "RB1":
+						return Game.RockBand;
+					case "RB_TP1":
+						return Game.RockBandTP1;
+					case "RB_TP2":
+						return Game.RockBandTP2;
+					case "RB_ACDC":
+						return Game.RockBandACDC;
+					case "RB_CLASSIC":
+						return Game.RockBandClassicTP;
+					case "RB_COUNTRY":
+						return Game.RockBandCountryTP;
+					case "RB_METAL":
+						return Game.RockBandMetalTP;
+					case "LRB":
+						return Game.LegoRockBand;
+					case "RB2":
+						return Game.RockBand2;
+					case "TBRB":
+						return Game.RockBandBeatles;
+					case "GDRB":
+						return Game.RockBandGreenDay;
+					case "RB3":
+						return Game.RockBand3;
+
+					case "GH":
+					case "GH1":
+						return Game.GuitarHero1;
+					case "GH2":
+						return Game.GuitarHero2;
+					case "GH80s":
+						return Game.GuitarHero80s;
+					case "GH3":
+						return Game.GuitarHero3;
+					case "GHA":
+						return Game.GuitarHeroAerosmith;
+					case "GHWT":
+						return Game.GuitarHeroWorldTour;
+					case "GHM":
+						return Game.GuitarHeroMetallica;
+					case "GHSH":
+						return Game.GuitarHeroSmashHits;
+					case "GHVH":
+						return Game.GuitarHeroVanHalen;
+					case "GH5":
+						return Game.GuitarHero5;
+					case "GH6":
+						return Game.GuitarHero6;
+					case "BH":
+						return Game.BandHero;
+				}
+			}
 
 			return Game.Unknown;
 		}
@@ -544,6 +606,8 @@ namespace ConsoleHaxx.RawkSD
 					return "Guitar Hero 5";
 				case Game.BandHero:
 					return "Band Hero";
+				case Game.GuitarHero6:
+					return "Guitar Hero 6";
 				case Game.DjHero:
 					return "DJ Hero";
 				case Game.RockBand:
@@ -582,6 +646,7 @@ namespace ConsoleHaxx.RawkSD
 				Game.GuitarHero3, Game.GuitarHeroAerosmith,
 				Game.GuitarHeroWorldTour, Game.GuitarHeroMetallica, Game.GuitarHeroSmashHits, Game.GuitarHeroVanHalen,
 				Game.GuitarHero5, Game.BandHero,
+				Game.GuitarHero6,
 				Game.DjHero,
 				Game.RockBand, Game.RockBandACDC, Game.RockBandTP1, Game.RockBandTP2, Game.RockBandCountryTP, Game.RockBandClassicTP, Game.RockBandMetalTP, 
 				Game.RockBand2, Game.RockBandBeatles, Game.LegoRockBand, Game.RockBandGreenDay, 
@@ -608,6 +673,8 @@ namespace ConsoleHaxx.RawkSD
 		GuitarHero5 = 0x30,
 		BandHero = 0x31,
 
+		GuitarHero6 = 0x40,
+
 		DjHero = 0x70,
 
 		RockBand = 0x80,
@@ -623,6 +690,6 @@ namespace ConsoleHaxx.RawkSD
 		LegoRockBand = 0x92,
 		RockBandGreenDay = 0x93,
 
-		RockBand3 = 0xA0
+		RockBand3 = 0xA0,
 	}
 }

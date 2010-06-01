@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ConsoleHaxx.RawkSD.Properties {
+namespace ConsoleHaxx.Xbox360.Properties {
     using System;
     
     
@@ -22,7 +22,7 @@ namespace ConsoleHaxx.RawkSD.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Resources {
+    internal class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,10 +36,10 @@ namespace ConsoleHaxx.RawkSD.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
+        internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ConsoleHaxx.RawkSD.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ConsoleHaxx.Xbox360.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -51,7 +51,7 @@ namespace ConsoleHaxx.RawkSD.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
+        internal static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -60,37 +60,16 @@ namespace ConsoleHaxx.RawkSD.Properties {
             }
         }
         
-        public static byte[] rawksd_000bin {
+        internal static byte[] XK3 {
             get {
-                object obj = ResourceManager.GetObject("rawksd_000bin", resourceCulture);
+                object obj = ResourceManager.GetObject("XK3", resourceCulture);
                 return ((byte[])(obj));
             }
         }
         
-        public static byte[] rawksd_albumart {
+        internal static byte[] XK4 {
             get {
-                object obj = ResourceManager.GetObject("rawksd_albumart", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        public static byte[] rawksd_milo {
-            get {
-                object obj = ResourceManager.GetObject("rawksd_milo", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        public static byte[] rawksd_savebanner {
-            get {
-                object obj = ResourceManager.GetObject("rawksd_savebanner", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        public static byte[] rawksd_tmd {
-            get {
-                object obj = ResourceManager.GetObject("rawksd_tmd", resourceCulture);
+                object obj = ResourceManager.GetObject("XK4", resourceCulture);
                 return ((byte[])(obj));
             }
         }

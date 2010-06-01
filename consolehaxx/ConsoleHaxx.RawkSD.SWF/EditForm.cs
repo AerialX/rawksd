@@ -144,21 +144,29 @@ namespace ConsoleHaxx.RawkSD.SWF
 			VocalsTierNumeric.Value = song.Difficulty[Instrument.Vocals];
 			BassTierNumeric.Value = song.Difficulty[Instrument.Bass];
 
-			// Chart
+			UpdateChartSizes();
+
+			UpdateAudioSizes();
+
+			Song = song;
+		}
+
+		private void UpdateChartSizes()
+		{
 			IFormat chartformat = Data.GetFormatAny(FormatType.Chart);
 			if (chartformat != null) {
 				ChartNameLabel.Text = chartformat.Name;
 				ChartSizeLabel.Text = CalculateFormatSize(chartformat);
 			}
+		}
 
-			// Audio
+		private void UpdateAudioSizes()
+		{
 			IFormat audioformat = Data.GetFormatAny(FormatType.Audio);
 			if (audioformat != null) {
 				AudioNameLabel.Text = audioformat.Name;
 				AudioSizeLabel.Text = CalculateFormatSize(audioformat);
 			}
-
-			Song = song;
 		}
 
 		private string CalculateFormatSize(IFormat chartformat)
@@ -397,6 +405,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 				pan.Close();
 			if (weights != null)
 				weights.Close();
+
+			UpdateChartSizes();
 		}
 
 		private void ReplaceAudioButton_Click(object sender, EventArgs e)
@@ -454,6 +464,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 					AudioFormatFFmpeg.Instance.Create(data, streams, format);
 				data.SaveTo(Data);
 			}
+
+			UpdateAudioSizes();
 		}
 
 		private void ButtonCancel_Click(object sender, EventArgs e)

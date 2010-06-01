@@ -62,6 +62,8 @@
 		<difficulty instrument="bass" rank="234" />
 		<difficulty instrument="drum" rank="234" />
 		<difficulty instrument="vocals" rank="234" />
+
+		<solo start="Solo" />
 	</song>
 	<song id="Aggro">
 		<name>Aggro</name>
@@ -86,6 +88,9 @@
 		<difficulty instrument="bass" rank="168" />
 		<difficulty instrument="drum" rank="168" />
 		<difficulty instrument="vocals" rank="168" />
+
+		<solo start="Solo 3A" end="Solo 3B" />
+		<solo start="Solo 4A" end="Goodbye American Woman" />
 	</song>
 	<song id="Antisocial">
 		<name>Antisocial</name>
@@ -98,6 +103,8 @@
 		<difficulty instrument="bass" rank="438" />
 		<difficulty instrument="drum" rank="438" />
 		<difficulty instrument="vocals" rank="438" />
+
+		<solo start="Solo" />
 	</song>
 	<song id="AreYouGonnaGoMyWay">
 		<name>Are You Gonna Go My Way</name>
@@ -110,6 +117,8 @@
 		<difficulty instrument="bass" rank="198" />
 		<difficulty instrument="drum" rank="198" />
 		<difficulty instrument="vocals" rank="198" />
+
+		<solo start="Solo Start!" end="Go Lenny Go!" />
 	</song>
 	<song id="Assassin">
 		<name>Assassin</name>
@@ -146,6 +155,8 @@
 		<difficulty instrument="bass" rank="210" />
 		<difficulty instrument="drum" rank="210" />
 		<difficulty instrument="vocals" rank="210" />
+
+		<solo start="Solo 1" startoffset="-2" end="Solo 3" />
 	</song>
 	<song id="BeautifulDisaster">
 		<name>Beautiful Disaster</name>
@@ -206,6 +217,8 @@
 		<difficulty instrument="bass" rank="432" />
 		<difficulty instrument="drum" rank="432" />
 		<difficulty instrument="vocals" rank="432" />
+
+		<solo start="Solo" />
 	</song>
 	<song id="Dammit">
 		<name>Dammit</name>
@@ -242,6 +255,10 @@
 		<difficulty instrument="bass" rank="144" />
 		<difficulty instrument="drum" rank="144" />
 		<difficulty instrument="vocals" rank="144" />
+
+		<solo start="Guitar Intro 2" end="Guitar Intro 4" />
+		<solo start="Electric Sitar Lead" end="Organ Lead" />
+		<solo start="Breakin' it Down" end="One Last Chorus" />
 	</song>
 	<song id="EscuelaDeCalor">
 		<name>Escuela De Calor</name>
@@ -290,6 +307,8 @@
 		<difficulty instrument="bass" rank="60" />
 		<difficulty instrument="drum" rank="60" />
 		<difficulty instrument="vocals" rank="60" />
+
+		<solo start="Solo A" end="Solo B" />
 	</song>
 	<song id="FloatOn">
 		<name>Float On</name>
@@ -338,6 +357,8 @@
 		<difficulty instrument="bass" rank="222" />
 		<difficulty instrument="drum" rank="222" />
 		<difficulty instrument="vocals" rank="222" />
+
+		<solo start="Outro A" startoffset="-8" end="Outro A" endoffset="32" />
 	</song>
 	<song id="HailToTheFreaks">
 		<name>Hail to the Freaks</name>
@@ -362,6 +383,8 @@
 		<difficulty instrument="bass" rank="204" />
 		<difficulty instrument="drum" rank="204" />
 		<difficulty instrument="vocals" rank="204" />
+
+		<solo start="Solo Your Heart Out A" end="Solo Your Heart Out C" />
 	</song>
 	<song id="HeyManNiceShot">
 		<name>Hey Man Nice Shot</name>
@@ -398,6 +421,8 @@
 		<difficulty instrument="bass" rank="162" />
 		<difficulty instrument="drum" rank="162" />
 		<difficulty instrument="vocals" rank="162" />
+
+		<solo start="Solo A" startoffset="-1" end="Solo E" />
 	</song>
 	<song id="HotForTeacher">
 		<name>Hot for Teacher</name>
@@ -410,6 +435,9 @@
 		<difficulty instrument="bass" rank="468" />
 		<difficulty instrument="drum" rank="468" />
 		<difficulty instrument="vocals" rank="468" />
+
+		<solo start="Temperature's Rising" startoffset="-5" />
+		<solo start="Eddie Shreds!  Part 1" startoffset="-9" end="Eddie Shreds!  Part 3" />
 	</song>
 	<song id="KickOutTheJams">
 		<name>Kick Out the Jams</name>
@@ -422,6 +450,8 @@
 		<difficulty instrument="bass" rank="276" />
 		<difficulty instrument="drum" rank="276" />
 		<difficulty instrument="vocals" rank="276" />
+
+		<solo start="Kick Out That Solo A" end="Kick Out That Solo C" />
 	</song>
 	<song id="Labamba">
 		<name>La Bamba</name>
@@ -434,6 +464,8 @@
 		<difficulty instrument="bass" rank="453" />
 		<difficulty instrument="drum" rank="453" />
 		<difficulty instrument="vocals" rank="453" />
+
+		<solo start="Solo A" end="Solo C" />
 	</song>
 	<song id="LazyEye">
 		<name>Lazy Eye</name>
@@ -446,6 +478,8 @@
 		<difficulty instrument="bass" rank="306" />
 		<difficulty instrument="drum" rank="306" />
 		<difficulty instrument="vocals" rank="306" />
+
+		<solo start="Twinkles" end="Fuzzy Twinkles" />
 	</song>
 	<song id="LivingOnAPrayer">
 		<name>Livin' on a Prayer</name>
@@ -458,6 +492,8 @@
 		<difficulty instrument="bass" rank="96" />
 		<difficulty instrument="drum" rank="96" />
 		<difficulty instrument="vocals" rank="96" />
+		
+		<solo start="Solo" endoffset="-10" />
 	</song>
 	<song id="LoveMeTwoTimes">
 		<name>Love Me Two Times</name>
@@ -482,6 +518,9 @@
 		<difficulty instrument="bass" rank="48" />
 		<difficulty instrument="drum" rank="48" />
 		<difficulty instrument="vocals" rank="48" />
+
+		<solo start="Guitar Solo 1A" end="Guitar Solo 1C" />
+		<solo start="Guitar Solo 2" end="Coda" />
 	</song>
 	<song id="LoveSpreads">
 		<name>Love Spreads</name>
@@ -494,6 +533,8 @@
 		<difficulty instrument="bass" rank="474" />
 		<difficulty instrument="drum" rank="474" />
 		<difficulty instrument="vocals" rank="474" />
+
+		<solo start="Intro" />
 	</song>
 	<song id="LViaLViaquez">
 		<name>L'Via L'Viaquez</name>
@@ -506,6 +547,10 @@
 		<difficulty instrument="bass" rank="348" />
 		<difficulty instrument="drum" rank="348" />
 		<difficulty instrument="vocals" rank="348" />
+
+		<solo start="Intro Solo" endoffset="2" />
+		<solo start="Guitar Solo" endoffset="1" />
+		<solo start="Latin Breakdown 2B" end="Latin Breakdown 2C" endoffset="8.5" />
 	</song>
 	<song id="MiseryBusiness">
 		<name>Misery Business</name>
@@ -518,6 +563,8 @@
 		<difficulty instrument="bass" rank="114" />
 		<difficulty instrument="drum" rank="114" />
 		<difficulty instrument="vocals" rank="114" />
+		
+		<solo start="Guitar Solo A" end="Guitar Solo B" />
 	</song>
 	<song id="Monsoon">
 		<name>Monsoon</name>
@@ -542,6 +589,8 @@
 		<difficulty instrument="bass" rank="30" />
 		<difficulty instrument="drum" rank="30" />
 		<difficulty instrument="vocals" rank="30" />
+
+		<solo start="Verse Solo" end="Bridge Solo" endoffset="4" />
 	</song>
 	<song id="MrCrowley">
 		<name>Mr. Crowley</name>
@@ -554,6 +603,9 @@
 		<difficulty instrument="bass" rank="426" />
 		<difficulty instrument="drum" rank="426" />
 		<difficulty instrument="vocals" rank="426" />
+
+		<solo start="Rhoad to 28 Part 1" startoffset="-0.25" end="Rhoad to 28 Part 2" />
+		<solo start="Blizzard of Thoth 1" end="Blizzard of Thoth 8" endoffset="-1" />
 	</song>
 	<song id="NeverTooLate">
 		<name>Never Too Late</name>
@@ -566,6 +618,9 @@
 		<difficulty instrument="bass" rank="480" />
 		<difficulty instrument="drum" rank="480" />
 		<difficulty instrument="vocals" rank="480" />
+
+		<solo start="Intro" />
+		<solo start="Solo 1" end="Solo 6" endoffset="0.25" />
 	</song>
 	<song id="NoSleepTillBrooklyn">
 		<name>No Sleep Till Brooklyn</name>
@@ -578,6 +633,9 @@
 		<difficulty instrument="bass" rank="228" />
 		<difficulty instrument="drum" rank="228" />
 		<difficulty instrument="vocals" rank="228" />
+
+		<solo start="Manhattan" startoffset="-0.5" />
+		<solo start="Bridge" startoffset="15.5" end="Brooklyn" />
 	</song>
 	<song id="Nuvole">
 		<name>Nuvole</name>
@@ -626,6 +684,8 @@
 		<difficulty instrument="bass" rank="108" />
 		<difficulty instrument="drum" rank="108" />
 		<difficulty instrument="vocals" rank="108" />
+
+		<solo start="Bridge" end="Solo" />
 	</song>
 	<song id="OnTheRoadAgain">
 		<name>On the Road Again (Live)</name>
@@ -638,6 +698,8 @@
 		<difficulty instrument="bass" rank="150" />
 		<difficulty instrument="drum" rank="150" />
 		<difficulty instrument="vocals" rank="150" />
+
+		<solo start="Guitar Lead A" end="Guitar Lead B" />
 	</song>
 	<song id="OurTruth">
 		<name>Our Truth</name>
@@ -662,6 +724,11 @@
 		<difficulty instrument="bass" rank="402" />
 		<difficulty instrument="drum" rank="402" />
 		<difficulty instrument="vocals" rank="402" />
+
+		<solo start="Solo 1A" end="Solo 1B" />
+		<solo start="Solo 2A" end="Solo 2B" />
+		<solo start="Solo 3A" startoffset="24" end="Solo 3B" />
+		<solo start="One More Guitar Solo" startoffset="8" end="Almost There..." endoffset="-0.5" />
 	</song>
 	<song id="Parabola">
 		<name>Parabola</name>
@@ -698,6 +765,8 @@
 		<difficulty instrument="bass" rank="408" />
 		<difficulty instrument="drum" rank="408" />
 		<difficulty instrument="vocals" rank="408" />
+
+		<solo start="Taptastic Solo Intro" end="Solo B" endoffset="-8" />
 	</song>
 	<song id="PullMeUnder">
 		<name>Pull Me Under</name>
@@ -710,6 +779,8 @@
 		<difficulty instrument="bass" rank="492" />
 		<difficulty instrument="drum" rank="492" />
 		<difficulty instrument="vocals" rank="492" />
+
+		<solo start="Guitar Solo Part 1" end="Bridge 3" />
 	</song>
 	<song id="PurpleHaze">
 		<name>Purple Haze</name>
@@ -722,6 +793,8 @@
 		<difficulty instrument="bass" rank="366" />
 		<difficulty instrument="drum" rank="366" />
 		<difficulty instrument="vocals" rank="366" />
+
+		<solo start="Solo 1A" end="Solo 1B" />
 	</song>
 	<song id="RamblinMan">
 		<name>Ramblin' Man</name>
@@ -734,6 +807,8 @@
 		<difficulty instrument="bass" rank="102" />
 		<difficulty instrument="drum" rank="102" />
 		<difficulty instrument="vocals" rank="102" />
+
+		<solo start="The Solo Begins" startoffset="4" end="Solo 1B" endoffset="0.25" />
 	</song>
 	<song id="RebelYell">
 		<name>Rebel Yell</name>
@@ -746,6 +821,8 @@
 		<difficulty instrument="bass" rank="36" />
 		<difficulty instrument="drum" rank="36" />
 		<difficulty instrument="vocals" rank="36" />
+
+		<solo start="Lead" />
 	</song>
 	<song id="ReEdThroughLabor">
 		<name>Re-education Through Labor</name>
@@ -782,6 +859,8 @@
 		<difficulty instrument="bass" rank="288" />
 		<difficulty instrument="drum" rank="288" />
 		<difficulty instrument="vocals" rank="288" />
+
+		<solo start="Solo" />
 	</song>
 	<song id="SatchBoogie">
 		<name>Satch Boogie</name>
@@ -794,6 +873,8 @@
 		<difficulty instrument="bass" rank="498" />
 		<difficulty instrument="drum" rank="498" />
 		<difficulty instrument="vocals" rank="50" />
+
+		<solo start="Solo A" end="Solo F" />
 	</song>
 	<song id="Schism">
 		<name>Schism</name>
@@ -818,6 +899,8 @@
 		<difficulty instrument="bass" rank="420" />
 		<difficulty instrument="drum" rank="420" />
 		<difficulty instrument="vocals" rank="420" />
+
+		<solo start="Solo A" end="Solo D" />
 	</song>
 	<song id="Shiver">
 		<name>Shiver</name>
@@ -842,6 +925,9 @@
 		<difficulty instrument="bass" rank="12" />
 		<difficulty instrument="drum" rank="12" />
 		<difficulty instrument="vocals" rank="12" />
+
+		<solo start="Solo 1A" />
+		<solo start="Solo 2" />
 	</song>
 	<song id="SoulDoubt">
 		<name>Soul Doubt</name>
@@ -854,6 +940,8 @@
 		<difficulty instrument="bass" rank="486" />
 		<difficulty instrument="drum" rank="486" />
 		<difficulty instrument="vocals" rank="486" />
+
+		<solo start="Solo" />
 	</song>
 	<song id="Spiderwebs">
 		<name>Spiderwebs</name>
@@ -866,6 +954,9 @@
 		<difficulty instrument="bass" rank="192" />
 		<difficulty instrument="drum" rank="192" />
 		<difficulty instrument="vocals" rank="192" />
+
+		<solo start="Arachnid-Solo" />
+		<solo start="Eight-Legged Licks A" end="Eight-Legged Licks B" />
 	</song>
 	<song id="Stillborn">
 		<name>Stillborn</name>
@@ -878,6 +969,8 @@
 		<difficulty instrument="bass" rank="156" />
 		<difficulty instrument="drum" rank="156" />
 		<difficulty instrument="vocals" rank="156" />
+
+		<solo start="Solo A" end="Solo C" />
 	</song>
 	<song id="Stranglehold">
 		<name>Stranglehold</name>
@@ -890,6 +983,10 @@
 		<difficulty instrument="bass" rank="216" />
 		<difficulty instrument="drum" rank="216" />
 		<difficulty instrument="vocals" rank="216" />
+
+		<solo start="Solo 1" />
+		<solo start="Solo 2" />
+		<solo start="Solo 3" end="Solo 5" endoffset="20" />
 	</song>
 	<song id="SweetHomeAlabama">
 		<name>Sweet Home Alabama</name>
@@ -902,6 +999,10 @@
 		<difficulty instrument="bass" rank="336" />
 		<difficulty instrument="drum" rank="336" />
 		<difficulty instrument="vocals" rank="336" />
+
+		<solo start="Solo 1" />
+		<solo start="Solo 2A" end="Solo 2D" />
+		<solo start="Solo 3E" startoffset="4" />
 	</song>
 	<song id="TheJoker">
 		<name>The Joker</name>
@@ -914,6 +1015,9 @@
 		<difficulty instrument="bass" rank="84" />
 		<difficulty instrument="drum" rank="84" />
 		<difficulty instrument="vocals" rank="84" />
+
+		<solo start="Solo 1" />
+		<solo start="Solo 2" />
 	</song>
 	<song id="TheKill">
 		<name>The Kill</name>
@@ -938,6 +1042,8 @@
 		<difficulty instrument="bass" rank="24" />
 		<difficulty instrument="drum" rank="24" />
 		<difficulty instrument="vocals" rank="24" />
+
+		<solo start="Solo A" end="Solo B" />
 	</song>
 	<song id="TheOneILove">
 		<name>The One I Love</name>
@@ -950,6 +1056,8 @@
 		<difficulty instrument="bass" rank="78" />
 		<difficulty instrument="drum" rank="78" />
 		<difficulty instrument="vocals" rank="78" />
+
+		<solo start="Guitar Solo" end="Guitar Solo" endoffset="0.5" />
 	</song>
 	<song id="Today">
 		<name>Today</name>
@@ -962,6 +1070,8 @@
 		<difficulty instrument="bass" rank="66" />
 		<difficulty instrument="drum" rank="66" />
 		<difficulty instrument="vocals" rank="66" />
+
+		<solo start="Solo" />
 	</song>
 	<song id="TooMuchTooYoung">
 		<name>Too Much Too Young</name>
@@ -974,6 +1084,9 @@
 		<difficulty instrument="bass" rank="264" />
 		<difficulty instrument="drum" rank="264" />
 		<difficulty instrument="vocals" rank="264" />
+
+		<solo start="Solo 1" end="Solo 3" />
+		<solo start="Outro" startoffset="-1.5" end="Breakdown" endoffset="36" />
 	</song>
 	<song id="ToyBoy">
 		<name>Toy Boy</name>
@@ -998,6 +1111,10 @@
 		<difficulty instrument="bass" rank="450" />
 		<difficulty instrument="drum" rank="450" />
 		<difficulty instrument="vocals" rank="450" />
+
+		<solo start="Intro Solo" />
+		<solo start="Solo 1" />
+		<solo start="Solo 2 A" end="Solo 2 B" />
 	</song>
 	<song id="UpAroundTheBend">
 		<name>Up Around the Bend</name>
@@ -1010,6 +1127,8 @@
 		<difficulty instrument="bass" rank="6" />
 		<difficulty instrument="drum" rank="6" />
 		<difficulty instrument="vocals" rank="6" />
+
+		<solo start="Solo" />
 	</song>
 	<song id="Vicarious">
 		<name>Vicarious</name>
@@ -1070,6 +1189,8 @@
 		<difficulty instrument="bass" rank="360" />
 		<difficulty instrument="drum" rank="360" />
 		<difficulty instrument="vocals" rank="360" />
+
+		<solo start="Solo" />
 	</song>
 	<song id="YoureGonnaSayYeah">
 		<name>You're Gonna Say Yeah</name>

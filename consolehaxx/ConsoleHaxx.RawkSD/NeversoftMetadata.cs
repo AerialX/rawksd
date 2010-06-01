@@ -185,7 +185,10 @@ namespace ConsoleHaxx.RawkSD
 
 		public static QbItemStruct GetSongItem(SongData song)
 		{
-			QbItemBase item = new QbFile(new MemoryStream(song.Data.GetValue<byte[]>("NeversoftSongItem")), GetSongItemType(song)).FindItem(QbKey.Create(song.Data.GetValue<uint>("NeversoftSongItemKey")), true);
+			byte[] data = song.Data.GetValue<byte[]>("NeversoftSongItem");
+			if (data == null || data.Length == 0)
+				return null;
+			QbItemBase item = new QbFile(new MemoryStream(data), GetSongItemType(song)).FindItem(QbKey.Create(song.Data.GetValue<uint>("NeversoftSongItemKey")), true);
 			if (item is QbItemArray) {
 				item.Items[0].ItemQbKey = item.ItemQbKey;
 				item = item.Items[0];

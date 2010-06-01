@@ -90,18 +90,9 @@ namespace ConsoleHaxx.Common
 			return (long)read;
 		}
 
-		public static string Pad(string str, int num, char ch)
+		public static string Pad(string str, int num, char ch = '0')
 		{
-			for (int i = str.Length; i < num; i++) {
-				str = ch + str;
-			}
-
-			return str;
-		}
-
-		public static string Pad(string str, int num)
-		{
-			return Pad(str, num, '0');
+			return str.PadLeft(num, ch);
 		}
 
 		public static string GetTitlePath(ulong titleID)

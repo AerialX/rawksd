@@ -55,6 +55,8 @@ namespace ConsoleHaxx.RawkSD
 			ChartFormatGH2.DecodeDrums(chart.Chart, midi, true);
 			ChartFormatGH2.DecodeOverdrive(chart.Chart);
 
+			ImportMap.ImportChart(data.Song, chart.Chart);
+
 			return chart;
 		}
 

@@ -30,15 +30,13 @@ namespace ConsoleHaxx.RawkSD
 		public override void DeleteSong(PlatformData data, FormatData formatdata, ProgressIndicator progress)
 		{
 			string path = data.Session["maindirpath"] as string;
-			DirectoryNode dir = data.Session["maindir"] as DirectoryNode;
 			string dtapath = "rawk/rb2/customs/" + formatdata.Song.ID;
-			FileNode dtafile = dir.Navigate(dtapath + "/data", false, true) as FileNode;
-			if (dtafile == null)
-				return;
 
-			EndianReader reader = new EndianReader(dtafile.Data, Endianness.LittleEndian);
+			FileStream dtafile = new FileStream(Path.Combine(path, dtapath + "/data"), FileMode.Open, FileAccess.Read, FileShare.Read);
+
+			EndianReader reader = new EndianReader(dtafile, Endianness.LittleEndian);
 			DTB.NodeTree dtb = DTB.Create(reader);
-			dtafile.Data.Close();
+			dtafile.Close();
 
 			SongsDTA dta = SongsDTA.Create(dtb);
 			string title = dta.Song.Name.Substring(4, 4);
@@ -142,34 +140,46 @@ namespace ConsoleHaxx.RawkSD
 				Stream weights = formatdata.GetStream(ChartFormatRB.Instance, ChartFormatRB.WeightsFile);
 				Stream milo = formatdata.GetStream(ChartFormatRB.Instance, ChartFormatRB.MiloFile);
 
-				if (pan == null)
-					pan = new MemoryStream(Properties.Resources.rawksd_pan);
-				if (weights == null)
-					weights = new MemoryStream(Properties.Resources.rawksd_weights);
-				if (milo == null)
-					milo = new MemoryStream(Properties.Resources.rawksd_milo);
-				//if (album == null)
-					//album = new MemoryStream(Properties.Resources.rawksd_albumart);
-
 				progress.SetNextWeight(2);
 
-				if (chart != null && ChartFormatRB.Instance.NeedsFixing(formatdata))
+				if (chart != null && ChartFormatRB.Instance.NeedsFixing(formatdata)) {
+					formatdata.CloseStream(chart);
 					chart = null;
+				}
+
+				ChartFormat chartformat = (formatdata.GetFormat(FormatType.Chart) as IChartFormat).DecodeChart(formatdata, progress);
 
 				if (chart == null) {
 					chart = new TemporaryStream();
 					cache.AddStream(chart);
-					AdjustChart(formatdata.Song, audioformat, (formatdata.GetFormat(FormatType.Chart) as IChartFormat).DecodeChart(formatdata, progress)).ToMidi().ToMid().Save(chart);
+					AdjustChart(formatdata.Song, audioformat, chartformat).ToMidi().ToMid().Save(chart);
 					chart.Position = 0;
 				}
+
+				if (weights == null) {
+					weights = new TemporaryStream();
+					cache.AddStream(weights);
+					CreateWeights(weights, chartformat);
+					weights.Position = 0;
+				}
+
+				if (pan == null) {
+					pan = new TemporaryStream();
+					cache.AddStream(pan);
+					CreatePan(pan, chartformat);
+					pan.Position = 0;
+				}
+
+				if (milo == null)
+					milo = new MemoryStream(Properties.Resources.rawksd_milo);
+				//if (album == null)
+				//	album = new MemoryStream(Properties.Resources.rawksd_albumart);
 
 				progress.Progress(2);
 
 				SongData song = formatdata.Song;
 
 				SongsDTA dta = GetSongsDTA(song, audioformat);
-				dta.BaseName = "rwk" + dta.Version.ToString() + dta.BaseName;
-				dta.Genre = ImportMap.GetShortGenre(dta.Genre);
 
 				if (album == null)
 					dta.AlbumArt = false;
@@ -214,6 +224,14 @@ namespace ConsoleHaxx.RawkSD
 				appsong.Save(memorySong);
 
 				data.Mutex.WaitOne();
+
+				formatdata.CloseStream(audio);
+				formatdata.CloseStream(preview);
+				formatdata.CloseStream(chart);
+				formatdata.CloseStream(album);
+				formatdata.CloseStream(pan);
+				formatdata.CloseStream(weights);
+				formatdata.CloseStream(milo);
 
 				FindUnusedContent(data, formatdata.Song, out otitle, out oindex);
 				TMD tmd = GenerateDummyTMD(otitle);
@@ -341,6 +359,48 @@ namespace ConsoleHaxx.RawkSD
 			progress.EndTask();
 		}
 
+		public static void CreateWeights(Stream weights, ChartFormat chartformat)
+		{
+			EndianReader writer = new EndianReader(weights, Endianness.LittleEndian);
+
+			NoteChart chart = chartformat.Chart;
+			//if (chart.PartVocals == null)
+			//	return;
+
+			ulong duration = chart.GetTime(chart.FindLastNote());
+			for (ulong i = 0; i < 60 * duration / 1000000; i++)
+				writer.Write((byte)0x00);
+			/* foreach (var lyric in chart.PartVocals.Lyrics) {
+				if (!lyric.Value.EndsWith("#") && !lyric.Value.EndsWith("^"))
+					continue;
+
+				var gem = chart.PartVocals.Gems.FirstOrDefault(g => g.Time == lyric.Key.Time);
+				if (gem == null)
+					continue;
+
+				ulong time = chart.GetTime(gem.Time);
+				time = 60 * time / 1000000;
+				for (ulong i = (ulong)writer.Position; i < time; i++)
+					writer.Write((byte)0xFE);
+				ulong duration = chart.GetTimeDuration(gem.Time, gem.Duration);
+				for (ulong i = 0; i < duration; i += 1000000/60)
+					writer.Write((byte)0x90);
+			} */
+		}
+
+		public static void CreatePan(Stream pan, ChartFormat chartformat)
+		{
+			EndianReader writer = new EndianReader(pan, Endianness.LittleEndian);
+
+			NoteChart chart = chartformat.Chart;
+			//if (chart.PartVocals == null)
+			//	return;
+
+			ulong duration = chart.GetTime(chart.FindLastNote());
+			for (ulong i = 0; i < 8 * 60 * duration / 1000000; i++)
+				writer.Write((byte)0x00);
+		}
+
 		public static void TranscodePreview(IList<int> previewtimes, List<AudioFormat.Mapping> maps, IDecoder decoder, Stream stream, ProgressIndicator progress)
 		{
 			RawkAudio.Encoder encoder;
@@ -379,13 +439,15 @@ namespace ConsoleHaxx.RawkSD
 			encoder.Dispose();
 		}
 
-		public static SongsDTA GetSongsDTA(SongData song, AudioFormat audioformat)
+		public static SongsDTA GetSongsDTA(SongData song, AudioFormat audioformat, bool idioticdrums = true)
 		{
 			SongsDTA dta = HarmonixMetadata.GetSongData(song);
 
 			dta.Downloaded = true;
 			if ((dta.Decade == null || dta.Decade.Length == 0) && dta.Year.ToString().Length > 2)
 				dta.Decade = "the" + dta.Year.ToString()[2] + "0s";
+			dta.BaseName = "rwk" + dta.Version.ToString() + dta.BaseName;
+			dta.Genre = ImportMap.GetShortGenre(dta.Genre);
 
 			dta.Song.Cores.Clear();
 			dta.Song.Pans.Clear();
@@ -403,10 +465,12 @@ namespace ConsoleHaxx.RawkSD
 					track.Tracks.Add(maps.IndexOf(map));
 			}
 
-			// For safety with customs messing with mix and not knowing what they're doing
-			SongsDTA.SongTracks drumtrack = dta.Song.Tracks.FirstOrDefault(t => t.Name == "drum");
-			while (drumtrack != null && drumtrack.Tracks.Count > 0 && drumtrack.Tracks.Count < 6)
-				drumtrack.Tracks.Add(drumtrack.Tracks[drumtrack.Tracks.Count - 1]);
+			if (idioticdrums) {
+				// For safety with customs messing with mix and not knowing what they're doing
+				SongsDTA.SongTracks drumtrack = dta.Song.Tracks.FirstOrDefault(t => t.Name == "drum");
+				while (drumtrack != null && drumtrack.Tracks.Count > 0 && drumtrack.Tracks.Count < 6)
+					drumtrack.Tracks.Add(drumtrack.Tracks[drumtrack.Tracks.Count - 1]);
+			}
 
 			return dta;
 		}
@@ -500,25 +564,31 @@ namespace ConsoleHaxx.RawkSD
 
 		private static bool FindUnusedContent(PlatformData data, SongData song, out string title, out ushort index)
 		{
+			data.Mutex.WaitOne();
+
 			for (title = "cRBA"; (byte)title[3] <= (byte)'Z'; title = title.Substring(0, 3) + (char)(((byte)title[3]) + 1)) {
 				for (index = 1; index < 510; index += 2) {
 					bool flag = false;
-					data.Mutex.WaitOne();
 					foreach (FormatData formatdata in data.Songs) {
 						SongsDTA dta = HarmonixMetadata.GetSongsDTA(formatdata.Song);
 						if (String.Compare(title, dta.Song.Name.Substring(4, 4), true) == 0 && index == ushort.Parse(dta.Song.Name.Substring(9, 3))) {
-							if (song.ID == formatdata.Song.ID)
+							if (song.ID == formatdata.Song.ID) {
+								data.Mutex.ReleaseMutex();
 								return true;
+							}
 							flag = true;
 							break;
 						}
 					}
-					data.Mutex.ReleaseMutex();
 
-					if (!flag)
+					if (!flag) {
+						data.Mutex.ReleaseMutex();
 						return true;
+					}
 				}
 			}
+
+			data.Mutex.ReleaseMutex();
 
 			title = null;
 			index = 0;

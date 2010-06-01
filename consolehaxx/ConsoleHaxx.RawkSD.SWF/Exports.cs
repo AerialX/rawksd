@@ -6,6 +6,7 @@ using ConsoleHaxx.Wii;
 using ConsoleHaxx.Common;
 using System.IO;
 using ConsoleHaxx.Harmonix;
+using ConsoleHaxx.Xbox360;
 
 namespace ConsoleHaxx.RawkSD.SWF
 {
@@ -98,7 +99,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 					progress.Progress();
 
 					// RBN Required DTA settings
-					SongsDTA dta = PlatformRB2WiiCustomDLC.GetSongsDTA(data.Song, audioformat);
+					SongsDTA dta = PlatformRB2WiiCustomDLC.GetSongsDTA(data.Song, audioformat, false);
 					dta.AlbumArt = true;
 					dta.BaseName = "song";
 					dta.Song.Name = "songs/" + dta.BaseName + "/" + dta.BaseName;
@@ -120,14 +121,14 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 					rba.Audio = new TemporaryStream();
 					cache.AddStream(rba.Audio);
-					CryptedMoggStream mogg = new CryptedMoggStream(rba.Audio);
-					mogg.WriteHeader();
-					RawkAudio.Encoder encoder = new RawkAudio.Encoder(mogg, audioformat.Mappings.Count, audioformat.Decoder.SampleRate);
 
 					progress.Progress();
 
 					progress.SetNextWeight(10);
 					long samples = audioformat.Decoder.Samples;
+					CryptedMoggStream mogg = new CryptedMoggStream(rba.Audio);
+					mogg.WriteHeader();
+					RawkAudio.Encoder encoder = new RawkAudio.Encoder(mogg, audioformat.Mappings.Count, audioformat.Decoder.SampleRate);
 					progress.NewTask("Transcoding Audio", samples);
 					JaggedShortArray buffer = new JaggedShortArray(encoder.Channels, audioformat.Decoder.AudioBuffer.Rank2);
 					AudioFormat.ProcessOffset(audioformat.Decoder, encoder, audioformat.InitialOffset);
@@ -190,7 +191,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 					Stream ostream = new FileStream(path, FileMode.Create);
 					rba.Save(ostream);
-					stream.Close();
+					ostream.Close();
 
 					if (data != original)
 						data.Dispose();
@@ -243,6 +244,178 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 				platform.Mutex.ReleaseMutex();
 			}
+		}
+
+		internal static void Export360(string path, FormatData original)
+		{
+			Program.Form.Progress.QueueTask(progress => {
+				progress.NewTask("Exporting to 360 DLC file", 16);
+
+				SongData song = original.Song;
+
+				StfsArchive stfs = new StfsArchive();
+				stfs.Stfs.ContentType = StfsFile.ContentTypes.Marketplace;
+				stfs.Stfs.TitleID = 0x45410829;
+				for (int i = 0; i < stfs.Stfs.DisplayName.Length; i++)
+					stfs.Stfs.DisplayName[i] = song.Artist + " - " + song.Name;
+				for (int i = 0; i < stfs.Stfs.DisplayDescription.Length; i++)
+					stfs.Stfs.DisplayDescription[i] = "RawkSD DLC - http://rawksd.japaneatahand.com";
+				stfs.Stfs.TitleName = "Rawk Band 2";
+				stfs.Stfs.Publisher = "RawkSD";
+				stfs.Stfs.TitleThumbnail = WiiImage.Create(new EndianReader(new MemoryStream(ConsoleHaxx.RawkSD.Properties.Resources.rawksd_albumart), Endianness.LittleEndian)).Bitmap;
+				if (song.AlbumArt != null)
+					stfs.Stfs.Thumbnail = song.AlbumArt;
+				else
+					stfs.Stfs.Thumbnail = stfs.Stfs.TitleThumbnail;
+				StfsFile.SignedHeader header = new StfsFile.SignedHeader(StfsFile.FileTypes.LIVE);
+				stfs.Stfs.Header = header;
+				header.Licenses[0].ID = 0xFFFFFFFFFFFFFFFF;
+				stfs.Stfs.MetadataVersion = 2;
+				StfsFile.PackageDescriptor desc = new StfsFile.PackageDescriptor();
+				stfs.Stfs.Descriptor = desc;
+				desc.StructSize = 0x24;
+				desc.BlockSeparation = 1;
+				desc.FileTableBlockCount = 0x100; // byte apparently
+				stfs.Stfs.TransferFlags = 0xC0;
+
+				FormatData data = original;
+
+				Program.Form.TaskMutex.WaitOne();
+				if ((data.PlatformData.Platform != PlatformLocalStorage.Instance || Configuration.LocalTranscode) && Configuration.LocalTransfer) {
+					data = PlatformLocalStorage.Instance.CreateSong(Program.Form.Storage, data.Song);
+					original.SaveTo(data);
+				} else if (data.PlatformData.Platform != PlatformLocalStorage.Instance && Configuration.MaxConcurrentTasks > 1) {
+					data = new TemporaryFormatData(data.Song, data.PlatformData);
+					original.SaveTo(data);
+				}
+				Program.Form.TaskMutex.ReleaseMutex();
+
+				Stream songs = null;
+				Stream audio = null;
+				Stream chart = data.GetStream(ChartFormatRB.Instance, ChartFormatRB.ChartFile);
+				Stream pan = data.GetStream(ChartFormatRB.Instance, ChartFormatRB.PanFile);
+				Stream weights = data.GetStream(ChartFormatRB.Instance, ChartFormatRB.WeightsFile);
+				Stream milo = data.GetStream(ChartFormatRB.Instance, ChartFormatRB.MiloFile);
+				milo = new MemoryStream(Properties.Resources.rbn_milo); // TODO: properly convert milo
+				
+				if (milo == null)
+					milo = new MemoryStream(ConsoleHaxx.RawkSD.Properties.Resources.rawksd_milo);
+
+				using (DelayedStreamCache cache = new DelayedStreamCache()) {
+					AudioFormat audioformat = (data.GetFormat(FormatType.Audio) as IAudioFormat).DecodeAudio(data, progress);
+
+					ushort[] masks = PlatformRB2WiiCustomDLC.RemixAudioTracks(data.Song, audioformat);
+
+					progress.Progress();
+
+					// RBN Required DTA settings
+					SongsDTA dta = PlatformRB2WiiCustomDLC.GetSongsDTA(song, audioformat, false);
+					dta.AlbumArt = false;
+					dta.Song.Name = "songs/" + song.ID + "/" + song.ID;
+					dta.Song.MidiFile = "songs/" + song.ID + "/" + song.ID + ".mid";
+					dta.Rating = 4;
+					dta.SubGenre = "subgenre_core";
+					dta.Format = 4;
+					//dta.SongID = 0;
+					dta.Origin = "rb2";
+					//dta.Ugc = 1;
+					//dta.SongLength = 300000;
+					dta.Context = 2000;
+					dta.BasePoints = 0;
+					if (!dta.TuningOffsetCents.HasValue)
+						dta.TuningOffsetCents = 0;
+
+					audio = new TemporaryStream();
+					cache.AddStream(audio);
+
+					progress.Progress();
+
+					progress.SetNextWeight(10);
+					long samples = audioformat.Decoder.Samples;
+					CryptedMoggStream mogg = new CryptedMoggStream(audio);
+					mogg.WriteHeader();
+					RawkAudio.Encoder encoder = new RawkAudio.Encoder(mogg, audioformat.Mappings.Count, audioformat.Decoder.SampleRate);
+					progress.NewTask("Transcoding Audio", samples);
+					JaggedShortArray buffer = new JaggedShortArray(encoder.Channels, audioformat.Decoder.AudioBuffer.Rank2);
+					AudioFormat.ProcessOffset(audioformat.Decoder, encoder, audioformat.InitialOffset);
+					while (samples > 0) {
+						int read = audioformat.Decoder.Read((int)Math.Min(samples, audioformat.Decoder.AudioBuffer.Rank2));
+						if (read <= 0)
+							break;
+
+						audioformat.Decoder.AudioBuffer.DownmixTo(buffer, masks, read);
+
+						encoder.Write(buffer, read);
+						samples -= read;
+						progress.Progress(read);
+					}
+					progress.EndTask();
+					progress.Progress(10);
+
+					encoder.Dispose();
+					audioformat.Decoder.Dispose();
+					audio.Position = 0;
+
+					dta.Song.TracksCount.Add(audioformat.Mappings.Count(m => m.Instrument == Instrument.Drums));
+					dta.Song.TracksCount.Add(audioformat.Mappings.Count(m => m.Instrument == Instrument.Bass));
+					dta.Song.TracksCount.Add(audioformat.Mappings.Count(m => m.Instrument == Instrument.Guitar));
+					dta.Song.TracksCount.Add(audioformat.Mappings.Count(m => m.Instrument == Instrument.Vocals));
+					dta.Song.TracksCount.Add(audioformat.Mappings.Count(m => m.Instrument == Instrument.Ambient));
+
+					for (int i = 0; i < dta.Song.Cores.Count; i++)
+						dta.Song.Cores[i] = -1;
+
+					songs = new TemporaryStream();
+					cache.AddStream(songs);
+					dta.ToDTB().SaveDTA(songs);
+
+					ChartFormat chartformat = (data.GetFormat(FormatType.Chart) as IChartFormat).DecodeChart(data, progress);
+					if (chart != null && ChartFormatRB.Instance.NeedsFixing(data))
+						chart = null;
+
+					if (chart == null) {
+						chart = new TemporaryStream();
+						cache.AddStream(chart);
+						PlatformRB2WiiCustomDLC.AdjustChart(song, audioformat, chartformat).ToMidi().ToMid().Save(chart);
+						chart.Position = 0;
+					}
+
+					if (weights == null) {
+						weights = new TemporaryStream();
+						cache.AddStream(weights);
+						PlatformRB2WiiCustomDLC.CreateWeights(weights, chartformat);
+						weights.Position = 0;
+					}
+
+					if (pan == null) {
+						pan = new TemporaryStream();
+						cache.AddStream(pan);
+						PlatformRB2WiiCustomDLC.CreatePan(pan, chartformat);
+						pan.Position = 0;
+					}
+
+					progress.Progress(3);
+
+					DirectoryNode dir = new DirectoryNode("songs", stfs.Root);
+					new FileNode("songs.dta", dir, (ulong)songs.Length, songs);
+					dir = new DirectoryNode(song.ID, dir);
+					new FileNode(song.ID + ".mogg", dir, (ulong)audio.Length, audio);
+					new FileNode(song.ID + ".mid", dir, (ulong)chart.Length, chart);
+					dir = new DirectoryNode("gen", dir);
+					new FileNode(song.ID + ".milo_xbox", dir, (ulong)milo.Length, milo);
+					new FileNode(song.ID + "_weights.bin", dir, (ulong)weights.Length, weights);
+
+					Stream ostream = new FileStream(path, FileMode.Create);
+					stfs.Save(ostream);
+					ostream.Close();
+
+					if (data != original)
+						data.Dispose();
+
+					progress.Progress();
+					progress.EndTask();
+				}
+			});
 		}
 	}
 }

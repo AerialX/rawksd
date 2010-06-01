@@ -49,15 +49,19 @@ namespace ConsoleHaxx.RawkSD
 		public override AudioFormat DecodeAudio(FormatData data, ProgressIndicator progress)
 		{
 			AudioFormat format = DecodeFormat(data);
-			format.Decoder = new RawkAudio.Decoder(data.GetStream(this, AudioName), RawkAudio.Decoder.AudioFormat.BinkAudio);
+			Stream audio = data.GetStream(this, AudioName);
+			Stream preview = null;
+			format.Decoder = new RawkAudio.Decoder(audio, RawkAudio.Decoder.AudioFormat.BinkAudio);
 			if (data.HasStream(this, PreviewName)) {
-				Stream preview = data.GetStream(this, PreviewName);
+				preview = data.GetStream(this, PreviewName);
 				IDecoder decoder = new RawkAudio.Decoder(preview, RawkAudio.Decoder.AudioFormat.BinkAudio);
 				MultiDecoder multi = new MultiDecoder(RawkAudio.Decoder.BufferSize);
 				multi.AddDecoder(format.Decoder);
 				multi.AddDecoder(decoder);
 				format.Decoder = multi;
 			}
+
+			format.SetDisposeStreams(data, new Stream[] { audio, preview });
 
 			return format;
 		}

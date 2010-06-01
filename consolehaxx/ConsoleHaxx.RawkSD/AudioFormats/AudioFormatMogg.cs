@@ -52,11 +52,11 @@ namespace ConsoleHaxx.RawkSD
 				return null;
 
 			AudioFormat format = DecodeAudioFormat(data);
-			Stream audio = GetAudioStream(data);
-			if (audio != null)
-				audio = new CryptedMoggStream(audio);
+			Stream audio = GetDecryptedAudioStream(data);
 
 			format.Decoder = AudioFormatOgg.Instance.DecodeOggAudio(audio);
+
+			format.SetDisposeStreams(data, new Stream[] { (audio as CryptedMoggStream).Base });
 
 			return format;
 		}
@@ -110,7 +110,10 @@ namespace ConsoleHaxx.RawkSD
 
 		public Stream GetDecryptedAudioStream(FormatData data)
 		{
-			return new CryptedMoggStream(GetAudioStream(data));
+			Stream stream = GetAudioStream(data);
+			if (stream == null)
+				return null;
+			return new CryptedMoggStream(stream);
 		}
 
 		public Stream GetFormatStream(FormatData data)

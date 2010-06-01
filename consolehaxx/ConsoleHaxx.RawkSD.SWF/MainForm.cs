@@ -48,6 +48,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 			RootPath = Environment.CurrentDirectory;
 			Configuration.Load(this);
 
+			ImportMap.RootPath = Path.Combine(RootPath, "importdata");
+
 			SdPath = Path.Combine(RootPath, "rawksd");
 
 			if (!Path.IsPathRooted(Configuration.LocalPath))
@@ -96,7 +98,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 				Storage = PlatformLocalStorage.Instance.Create(StoragePath, Game.Unknown, progress);
 				progress.Progress();
 				progress.EndTask();
-				Invoke((Action)RefreshSongList);
+				RefreshSongList();
 			});
 
 			Progress.QueueTask(progress => {
@@ -104,7 +106,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 				SD = PlatformRB2WiiCustomDLC.Instance.Create(SdPath, Game.Unknown, progress);
 				progress.Progress();
 				progress.EndTask();
-				Invoke((Action)UpdateSongList);
+				UpdateSongList();
 			});
 		}
 
@@ -133,7 +135,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 				progress.NewTask("Loading content from " + platform.Name, 3);
 				PlatformData data = platform.Create(path, game, progress);
 				progress.Progress();
-				ImportMap map = new ImportMap(data.Game, Path.Combine(RootPath, "importdata"));
+				ImportMap map = new ImportMap(data.Game);
 				map.AddSongs(data, progress);
 				progress.Progress();
 				data.Mutex.WaitOne();
@@ -153,8 +155,11 @@ namespace ConsoleHaxx.RawkSD.SWF
 					progress.EndTask();
 				}
 
+				SongUpdateMutex.WaitOne();
 				Platforms.Add(data);
-				Invoke((Action)UpdateSongList);
+				SongUpdateMutex.ReleaseMutex();
+
+				UpdateSongList();
 				progress.EndTask();
 			});
 		}
@@ -200,7 +205,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 				SD = PlatformRB2WiiCustomDLC.Instance.Create(SdPath, Game.Unknown, progress);
 				progress.Progress();
 				progress.EndTask();
-				Invoke((Action)RefreshSongList);
+				RefreshSongList();
 			});
 		}
 
@@ -272,7 +277,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 				progress.EndTask();
 
-				Invoke((Action)UpdateSongList);
+				UpdateSongList();
 			});
 		}
 
@@ -332,7 +337,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 				progress.EndTask();
 
-				Invoke((Action)UpdateSongList);
+				UpdateSongList();
 			});
 		}
 
@@ -353,22 +358,38 @@ namespace ConsoleHaxx.RawkSD.SWF
 				return;
 			}
 
+			FormatData data = songs.Single();
+
 			SaveDialog.Title = "Save Rock Band Network Archive";
 			SaveDialog.Filter = "Rock Band Audition File (*.rba)|*.rba|All Files|*";
+			SaveDialog.FileName = data.Song.ID;
 			if (SaveDialog.ShowDialog(this) == DialogResult.Cancel)
 				return;
 
-			Exports.ExportRBN(SaveDialog.FileName, songs.Single());
+			Exports.ExportRBN(SaveDialog.FileName, data);
 		}
 
 		private void MenuSongsExport360DLC_Click(object sender, EventArgs e)
 		{
+			var songs = GetSelectedSongData();
+			if (songs.Count() > 1) {
+				return;
+			}
 
+			FormatData data = songs.Single();
+
+			SaveDialog.Title = "Save Rock Band 360 DLC";
+			SaveDialog.Filter = "Rock Band DLC File (*.dlc)|*.dlc|All Files|*";
+			SaveDialog.FileName = data.Song.ID;
+			if (SaveDialog.ShowDialog(this) == DialogResult.Cancel)
+				return;
+
+			Exports.Export360(SaveDialog.FileName, data);
 		}
 
 		private void MenuSongsExportFoF_Click(object sender, EventArgs e)
 		{
-			FolderDialog.Description = "Select your Frets on Fire songs/ folder.";
+			FolderDialog.Description = "Select your Frets on Fire songs folder.";
 			if (FolderDialog.ShowDialog(this) == DialogResult.Cancel)
 				return;
 
@@ -408,7 +429,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 					data.PlatformData.Platform.DeleteSong(data.PlatformData, data, progress);
 					progress.Progress();
 				}
-				Invoke((Action)RefreshSongList);
+				RefreshSongList();
 				progress.EndTask();
 			});
 		}
@@ -470,7 +491,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 					progress.Progress();
 
 					progress.EndTask();
-					Invoke((Action)UpdateSongList);
+					UpdateSongList();
 				});
 			} else
 				data.Dispose();

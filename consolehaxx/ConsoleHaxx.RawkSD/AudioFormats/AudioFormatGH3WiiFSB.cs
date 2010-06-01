@@ -72,6 +72,8 @@ namespace ConsoleHaxx.RawkSD
 					format.Mappings.Add(new AudioFormat.Mapping(0, 0, instrument));
 			}
 
+			format.SetDisposeStreams(data, new Stream[] { wad, dat });
+
 			format.AutoBalance();
 
 			return format;

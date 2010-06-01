@@ -48,7 +48,10 @@ namespace ConsoleHaxx.RawkSD
 		public override AudioFormat DecodeAudio(FormatData data, ProgressIndicator progress)
 		{
 			AudioFormat format = DecodeAudioFormat(data);
-			format.Decoder = new RawkAudio.Decoder(data.GetStream(this, AudioName), RawkAudio.Decoder.AudioFormat.Vgs);
+			Stream stream = data.GetStream(this, AudioName);
+			format.Decoder = new RawkAudio.Decoder(stream, RawkAudio.Decoder.AudioFormat.Vgs);
+
+			format.SetDisposeStreams(data, new Stream[] { stream });
 
 			return format;
 		}

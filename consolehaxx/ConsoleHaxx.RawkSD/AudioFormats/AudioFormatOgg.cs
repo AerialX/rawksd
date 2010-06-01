@@ -67,6 +67,8 @@ namespace ConsoleHaxx.RawkSD
 			AudioFormat format = DecodeAudioFormat(data);
 			format.Decoder = DecodeOggAudio(streams.ToArray());
 
+			format.SetDisposeStreams(data, streams);
+
 			return format;
 		}
 

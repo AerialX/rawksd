@@ -95,6 +95,8 @@ namespace ConsoleHaxx.RawkSD
 
 			DecodeChartVenue(song, qbchart, chart);
 
+			ImportMap.ImportChart(data.Song, chart);
+
 			progress.Progress();
 
 			data.CloseStream(chartstream);
@@ -235,6 +237,7 @@ namespace ConsoleHaxx.RawkSD
 			}
 
 			int note32 = chart.Division.TicksPerBeat / 8;
+			int note16 = chart.Division.TicksPerBeat / 4;
 
 			for (int k = 0; k < notes.Values.Length; k += 3) {
 				NoteChart.Note note = new NoteChart.Note(chart.GetTicks(notes.Values[k]), chart.GetTicksDuration(notes.Values[k], notes.Values[k + 1]));
@@ -242,7 +245,7 @@ namespace ConsoleHaxx.RawkSD
 				int chord = 0;
 
 				// Cut off sustains to a 32nd note before the next
-				previousnote.Duration = (ulong)Math.Max(Math.Min((long)previousnote.Duration, (long)note.Time - (long)previousnote.Time - note32), note32);
+				previousnote.Duration = (ulong)Math.Max(Math.Min((long)previousnote.Duration, (long)note.Time - (long)previousnote.Time - note16), note32);
 
 				bool hopo = note.Time - previousnote.Time <= (ulong)data.Song.HopoThreshold;
 				bool ishopo = hopo;

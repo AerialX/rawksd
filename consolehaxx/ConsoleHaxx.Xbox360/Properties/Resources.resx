@@ -117,20 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="rawksd_000bin" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\rawksd_000bin;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="XK3" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\XK3.bin;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="rawksd_albumart" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\rawksd_albumart;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="rawksd_milo" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\rawksd_milo;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="rawksd_savebanner" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\rawksd_savebanner;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="rawksd_tmd" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\rawksd_tmd;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="XK4" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\XK4.bin;System.Byte[], mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

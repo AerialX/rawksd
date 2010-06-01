@@ -5,18 +5,21 @@ using System.Text;
 using System.Drawing;
 using System.IO;
 using ConsoleHaxx.Common;
+using System.Drawing.Imaging;
+using System.Security.Cryptography;
 
 namespace ConsoleHaxx.Xbox360
 {
 	public class StfsArchive
 	{
-		StfsFile Stfs;
+		public StfsFile Stfs;
 
 		public DirectoryNode Root;
 
 		public StfsArchive()
 		{
 			Stfs = new StfsFile();
+			Root = new DirectoryNode();
 		}
 
 		public StfsArchive(Stream stream)
@@ -35,6 +38,39 @@ namespace ConsoleHaxx.Xbox360
 					Directories.Add(i, directory);
 				} else
 					new FileNode(file.Name, parent, file.Size, new Substream(Stfs.Stream, Stfs.Stream.GetBlockOffset(file.Block), file.Size));
+			}
+		}
+
+		public void Save(Stream stream)
+		{
+			Stfs.Files.Clear();
+			uint block = 1;
+			SaveFolder(Root, 0xFFFF, ref block);
+			Stfs.Save(stream);
+		}
+
+		private void SaveFolder(DirectoryNode Root, ushort parent, ref uint block)
+		{
+			foreach (var node in Root.Children) {
+				StfsFile.FileDescriptor desc = new StfsFile.FileDescriptor();
+				if (node.Name.Length > 0x3F)
+					throw new FormatException();
+				desc.Name = node.Name;
+				desc.Flags = (byte)desc.Name.Length;
+				desc.Flags |= 0x40; // Unknown bit, seems to be set.
+				desc.Parent = parent;
+				Stfs.Files.Add(desc);
+				if (node is DirectoryNode) {
+					desc.Flags |= 0x80;
+					SaveFolder(node as DirectoryNode, (ushort)Stfs.Files.IndexOf(desc), ref block);
+				} else if (node is FileNode) {
+					FileNode file = node as FileNode;
+					desc.Size = (uint)file.Size;
+					desc.Block = block;
+					desc.BlockSize = (uint)(Util.RoundUp(file.Size, StfsFile.BlockSize) / StfsFile.BlockSize);
+					desc.Data = file.Data;
+					block += desc.BlockSize;
+				}
 			}
 		}
 	}
@@ -94,6 +130,7 @@ namespace ConsoleHaxx.Xbox360
 			DisplayName = new string[0x12];
 			DisplayDescription = new string[0x12];
 			BaseBlock = 0x0C;
+			EntryID = 0xAD0E;
 
 			Files = new List<FileDescriptor>();
 		}
@@ -150,10 +187,240 @@ namespace ConsoleHaxx.Xbox360
 			Stream.SeekBlock(Descriptor.FileTableBlock);
 			EndianReader blockreader = new EndianReader(Stream, Endianness.BigEndian);
 			while (true) {
-				FileDescriptor file = FileDescriptor.Create(blockreader);
+				FileDescriptor file = FileDescriptor.Create(blockreader, Stream);
 				if (file.IsNull())
 					break;
 				Files.Add(file);
+			}
+		}
+
+		public void Save(Stream stream)
+		{
+			EndianReader writer = new EndianReader(stream, Endianness.BigEndian);
+
+			Header.Save(writer);
+
+			writer.Write(ContentID);
+			writer.Write(EntryID);
+			writer.Write((uint)ContentType);
+			writer.Write(MetadataVersion);
+			writer.Write(ContentSize);
+			writer.Write(MediaID);
+			writer.Write(Version);
+			writer.Write(BaseVersion);
+			writer.Write(TitleID);
+			writer.Write(Platform);
+			writer.Write(ExecutableType);
+			writer.Write(DiscNumber);
+			writer.Write(DiscInSet);
+			writer.Write(SaveGameID);
+			writer.Write(ConsoleID);
+			writer.Write(ProfileID);
+			Descriptor.Save(writer);
+			writer.Write(DataFiles);
+			writer.Write(DataFileSize);
+			writer.Write(Reserved);
+			writer.Write(Padding);
+			writer.Write(DeviceID);
+			for (int i = 0; i < DisplayName.Length; i++)
+				WriteString(writer, DisplayName[i]);
+			for (int i = 0; i < DisplayDescription.Length; i++)
+				WriteString(writer, DisplayDescription[i]);
+			WriteString(writer, Publisher);
+			WriteString(writer, TitleName);
+			writer.Write(TransferFlags);
+
+			MemoryStream thumbnail = new MemoryStream();
+			new Bitmap(Thumbnail, 64, 64).Save(thumbnail, ImageFormat.Png);
+			MemoryStream titlethumbnail = new MemoryStream();
+			new Bitmap(TitleThumbnail, 64, 64).Save(titlethumbnail, ImageFormat.Png);
+
+			if (thumbnail.Length > 0x4000 || titlethumbnail.Length > 0x4000)
+				throw new FormatException();
+
+			writer.Write((uint)thumbnail.Length);
+			writer.Write((uint)titlethumbnail.Length);
+
+			writer.Position = 0x171A;
+			thumbnail.Position = 0;
+			Util.StreamCopy(writer, thumbnail);
+			thumbnail.Close();
+
+			writer.Position = 0x571A;
+			titlethumbnail.Position = 0;
+			Util.StreamCopy(writer, titlethumbnail);
+			titlethumbnail.Close();
+
+			BlockStream block = new BlockStream(this, stream);
+			block.SeekBlock(Descriptor.FileTableBlock);
+			EndianReader blockwriter = new EndianReader(block, Endianness.BigEndian);
+			foreach (FileDescriptor file in Files) {
+				file.Save(blockwriter);
+			}
+			FileDescriptor.Null.Save(blockwriter);
+
+			foreach (FileDescriptor file in Files) {
+				if ((file.Flags & 0x80) == 0) {
+					block.SeekBlock(file.Block);
+					file.Data.Position = 0;
+					Util.StreamCopy(block, file.Data, file.Size);
+				}
+			}
+
+			block.Position = block.Length;
+			blockwriter.PadToMultiple(BlockSize);
+
+			uint current = 0;
+			uint blocks = (uint)(block.Length / BlockSize);
+			uint subhashblock = 0;
+			HashTable master = new HashTable();
+			while (current < blocks) {
+				HashTable hashes = new HashTable();
+				block.SeekBlock(current);
+				hashes.HashBlocks(blockwriter, current, blocks - current);
+				for (uint fileblock = 0; fileblock < 0xAA; fileblock++) {
+					HashTable.Hash hash = hashes.Hashes[fileblock];
+					if (hash == null)
+						continue;
+					foreach (FileDescriptor file in Files) {
+						if ((file.Flags & 0x80) == 0) {
+							if (fileblock + current == file.Block + file.BlockSize - 1) {
+								hash.ID = 0x80FFFFFF;
+							}
+						}
+					}
+					if (fileblock + current == 0)
+						hash.ID = 0x80FFFFFF; // File table counts as a file
+				}
+				current += 0xAA;
+				long position = BlockSize * 0xB;
+				if (subhashblock > 0 && blocks > 0xAA)
+					position = BlockSize * (0x0C + subhashblock * (0xB7 - 0x0C));
+				stream.Position = position;
+				hashes.Save(writer);
+				stream.Position = position;
+				master.HashBlock(stream, (int)(subhashblock % 0xAA), 0);
+				subhashblock++;
+			}
+			stream.Position = BlockSize * 0xB6;
+			master.Save(writer);
+			if (blocks > 0xAA) {
+				stream.Position = 0xB6FF0;
+				writer.Write(blocks);
+			}
+			stream.Position = 0x395;
+			writer.Write(blocks);
+
+			writer.Position = 0x34C;
+			writer.Write((ulong)(stream.Length - 0xB * BlockSize));
+
+			stream.Position = blocks > 0xAA ? (BlockSize * 0xB6) : (BlockSize * 0x0B);
+			byte[] sha1 = Util.SHA1Hash(stream, BlockSize);
+			writer.Position = 0x381;
+			writer.Write(sha1);
+
+			stream.Position = 0x344;
+			sha1 = Util.SHA1Hash(stream, 0xACBC);
+			writer.Position = 0x32C;
+			writer.Write(sha1);
+
+			stream.Position = 0x22C;
+			sha1 = Util.SHA1Hash(stream, 0x118);
+			writer.Position = 4;
+			RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+			RSAPKCS1SignatureFormatter rsaformat = new RSAPKCS1SignatureFormatter();
+			RSAParameters rsaparams = new RSAParameters();
+			EndianReader reader = new EndianReader(new MemoryStream(Properties.Resources.XK4), Endianness.LittleEndian);
+			rsaparams.Exponent = new byte[] { 0, 0, 0, 3 };
+			rsaparams.D = Properties.Resources.XK3;
+			reader.Position = 0;
+			rsaparams.Modulus = reader.ReadBytes(0x100);
+			rsaparams.P = reader.ReadBytes(0x80);
+			rsaparams.Q = reader.ReadBytes(0x80);
+			rsaparams.DP = reader.ReadBytes(0x80);
+			rsaparams.DQ = reader.ReadBytes(0x80);
+			rsaparams.InverseQ = reader.ReadBytes(0x80);
+			rsa.ImportParameters(rsaparams);
+			rsaformat.SetHashAlgorithm("SHA1");
+			rsaformat.SetKey(rsa);
+			byte[] signature = rsaformat.CreateSignature(sha1);
+			reader.Base.Close();
+			Array.Reverse(signature);
+			writer.Write(signature);
+			writer.Pad(0x128);
+		}
+
+		public class HashTable
+		{
+			public Hash[] Hashes;
+
+			public HashTable()
+			{
+				Hashes = new Hash[0xAA];
+			}
+
+			public static HashTable Create(EndianReader reader)
+			{
+				HashTable table = new HashTable();
+				for (int i = 0; i < table.Hashes.Length; i++)
+					table.Hashes[i] = Hash.Create(reader);
+				return table;
+			}
+
+			public void HashBlocks(Stream stream, uint current, uint number)
+			{
+				number = Math.Min(0xAA, number);
+				for (int i = 0; i < number; i++, current++) {
+					HashBlock(stream, i, 0x80000000 | (current + 1));
+				}
+			}
+
+			public void HashBlock(Stream stream, int index, uint id)
+			{
+				Hashes[index] = new Hash(Util.SHA1Hash(stream, BlockSize), id);
+			}
+
+			public void Save(EndianReader writer)
+			{
+				foreach (Hash hash in Hashes) {
+					if (hash == null)
+						new Hash().Save(writer);
+					else
+						hash.Save(writer);
+				}
+			}
+
+			public class Hash
+			{
+				public byte[] SHA1;
+				public uint ID;
+
+				public Hash()
+				{
+					SHA1 = new byte[0x14];
+				}
+
+				public Hash(byte[] hash, uint id)
+				{
+					SHA1 = hash;
+					ID = id;
+				}
+
+				public static Hash Create(EndianReader reader)
+				{
+					Hash hash = new Hash();
+
+					reader.ReadBytes(hash.SHA1);
+					hash.ID = reader.ReadUInt32();
+
+					return hash;
+				}
+
+				public void Save(EndianReader writer)
+				{
+					writer.Write(SHA1);
+					writer.Write(ID);
+				}
 			}
 		}
 
@@ -165,6 +432,7 @@ namespace ConsoleHaxx.Xbox360
 			protected long Offset;
 			protected uint Block;
 			protected int BlockOffset;
+			protected long length;
 
 			public BlockStream(StfsFile stfs, Stream stream)
 			{
@@ -202,6 +470,8 @@ namespace ConsoleHaxx.Xbox360
 					if (Base.Position != position)
 						Base.Position = position;
 					Offset = value;
+					if (Offset > Length)
+						SetLength(Offset);
 				}
 			}
 
@@ -216,7 +486,7 @@ namespace ConsoleHaxx.Xbox360
 				throw new NotImplementedException();
 			}
 
-			public override long Length { get { throw new NotImplementedException(); } }
+			public override long Length { get { return length; } }
 
 			public override int Read(byte[] buffer, int offset, int count)
 			{
@@ -259,12 +529,26 @@ namespace ConsoleHaxx.Xbox360
 
 			public override void SetLength(long value)
 			{
-				throw new NotImplementedException();
+				length = value;
 			}
 
 			public override void Write(byte[] buffer, int offset, int count)
 			{
-				throw new NotImplementedException();
+				int pos = 0;
+				while (pos < count) {
+					int read = Math.Min(StfsFile.BlockSize - BlockOffset, count - pos);
+					Base.Write(buffer, offset + pos, read);
+
+					pos += read;
+					Offset += read;
+					BlockOffset += read;
+
+					if (BlockOffset == StfsFile.BlockSize)
+						Position = Offset;
+
+					if (Offset > Length)
+						SetLength(Offset);
+				}
 			}
 		}
 
@@ -273,11 +557,22 @@ namespace ConsoleHaxx.Xbox360
 			return Encoding.BigEndianUnicode.GetString(reader.ReadBytes(0x80)).Trim('\0');
 		}
 
+		internal static void WriteString(EndianReader writer, string str)
+		{
+			writer.Write(Encoding.BigEndianUnicode.GetBytes(str.PadRight(0x40, '\0')));
+		}
+
 		internal static uint ReadUInt24LE(EndianReader reader)
 		{
 			byte[] data = new byte[0x04];
 			reader.Read(data, 0, 3);
 			return LittleEndianConverter.ToUInt32(data);
+		}
+
+		internal static void WriteUInt24LE(EndianReader writer, uint value)
+		{
+			byte[] data = LittleEndianConverter.GetBytes(value);
+			writer.Write(data, 0, 3);
 		}
 
 		public class FileDescriptor
@@ -291,7 +586,16 @@ namespace ConsoleHaxx.Xbox360
 			public uint UpdateTime;
 			public uint AccessTime;
 
-			public static FileDescriptor Create(EndianReader reader)
+			public Stream Data;
+
+			public FileDescriptor()
+			{
+				Name = string.Empty;
+			}
+
+			public static FileDescriptor Null { get { return new FileDescriptor(); } }
+
+			public static FileDescriptor Create(EndianReader reader, BlockStream block)
 			{
 				FileDescriptor file = new FileDescriptor();
 
@@ -307,7 +611,23 @@ namespace ConsoleHaxx.Xbox360
 				file.UpdateTime = reader.ReadUInt32();
 				file.AccessTime = reader.ReadUInt32();
 
+				if ((file.Flags & 0x80) == 0)
+					file.Data = new Substream(block, block.GetBlockOffset(file.Block), file.Size);
+
 				return file;
+			}
+
+			public void Save(EndianReader writer)
+			{
+				writer.Write(Name, 0x28);
+				writer.Write((byte)(Name.Length | Flags));
+				WriteUInt24LE(writer, BlockSize);
+				WriteUInt24LE(writer, BlockSize);
+				WriteUInt24LE(writer, Block);
+				writer.Write(Parent);
+				writer.Write(Size);
+				writer.Write(UpdateTime);
+				writer.Write(AccessTime);
 			}
 
 			public bool IsNull()
@@ -347,6 +667,18 @@ namespace ConsoleHaxx.Xbox360
 
 				return descriptor;
 			}
+
+			public void Save(EndianReader writer)
+			{
+				writer.Write(StructSize);
+				writer.Write(Reserved);
+				writer.Write(BlockSeparation);
+				writer.Write(FileTableBlockCount);
+				WriteUInt24LE(writer, FileTableBlock);
+				writer.Write(HashTableHash);
+				writer.Write(TotalAllocatedBlocks);
+				writer.Write(TotalUnallocatedBlocks);
+			}
 		}
 
 		public static class Locales
@@ -373,6 +705,8 @@ namespace ConsoleHaxx.Xbox360
 				Signature = new byte[0x100];
 				Data = new byte[0x128];
 				Licenses = new License[0x10];
+				for (int i = 0; i < Licenses.Length; i++)
+					Licenses[i] = new License();
 			}
 
 			public override void Populate(EndianReader reader)
@@ -381,6 +715,15 @@ namespace ConsoleHaxx.Xbox360
 				reader.ReadBytes(Data);
 				for (int i = 0; i < Licenses.Length; i++)
 					Licenses[i] = License.Create(reader);
+			}
+
+			public override void Save(EndianReader writer)
+			{
+				WriteMagic(writer);
+				writer.Write(Signature);
+				writer.Write(Data);
+				foreach (License license in Licenses)
+					license.Save(writer);
 			}
 		}
 
@@ -397,6 +740,13 @@ namespace ConsoleHaxx.Xbox360
 				license.Bits = reader.ReadUInt32();
 				license.Flags = reader.ReadUInt32();
 				return license;
+			}
+
+			public void Save(EndianReader writer)
+			{
+				writer.Write(ID);
+				writer.Write(Bits);
+				writer.Write(Flags);
 			}
 		}
 
@@ -415,6 +765,13 @@ namespace ConsoleHaxx.Xbox360
 			{
 				reader.ReadBytes(ConsoleData);
 				reader.ReadBytes(FileData);
+			}
+
+			public override void Save(EndianReader writer)
+			{
+				WriteMagic(writer);
+				writer.Write(ConsoleData);
+				writer.Write(FileData);
 			}
 		}
 
@@ -447,18 +804,20 @@ namespace ConsoleHaxx.Xbox360
 
 			private static FileTypes FromMagic(uint value)
 			{
-				switch (value) {
-					case 0x4C495645: // "LIVE"
-						return FileTypes.LIVE;
-					case 0x50495253: // "PIRS"
-						return FileTypes.PIRS;
-					case 0x434f4e20: // "CON "
-						return FileTypes.CON;
-				}
-				return FileTypes.Unknown;
+				FileTypes type = (FileTypes)value;
+				if (type != FileTypes.CON && type != FileTypes.LIVE && type != FileTypes.PIRS)
+					return FileTypes.Unknown;
+				return type;
+			}
+
+			protected void WriteMagic(EndianReader writer)
+			{
+				writer.Write((uint)Type);
 			}
 
 			public abstract void Populate(EndianReader reader);
+
+			public abstract void Save(EndianReader writer);
 		}
 
 		public enum ContentTypes : int
@@ -504,9 +863,9 @@ namespace ConsoleHaxx.Xbox360
 		public enum FileTypes
 		{
 			Unknown = 0,
-			CON,
-			LIVE,
-			PIRS
+			CON = 0x434f4e20,
+			LIVE = 0x4C495645,
+			PIRS = 0x50495253
 		}
 	}
 }

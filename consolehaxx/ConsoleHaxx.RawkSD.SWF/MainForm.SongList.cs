@@ -21,7 +21,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			{
 				get
 				{
-					return Data.FirstOrDefault(d => d.PlatformData == Program.Form.Storage) ?? Data.FirstOrDefault(d => d.PlatformData == Program.Form.SD) ?? Data.FirstOrDefault();
+					return Data.FirstOrDefault(d => d.PlatformData == Program.Form.Storage) ?? Data.FirstOrDefault(d => d.PlatformData != Program.Form.SD) ?? Data.FirstOrDefault();
 				}
 			}
 
@@ -65,27 +65,44 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		private void RefreshSongList()
 		{
-			SongList.Items.Clear();
+			Invoke((Action)ClearSongList);
 			UpdateSongList();
+		}
+
+		private void ClearSongList()
+		{
+			SongUpdateMutex.WaitOne();
+
+			SongList.Items.Clear();
+
+			SongUpdateMutex.ReleaseMutex();
 		}
 
 		private void UpdateSongList()
 		{
+			SongUpdateMutex.WaitOne();
+
 			UpdateSongList(Storage);
 			UpdateSongList(SD);
 			foreach (PlatformData data in Platforms)
 				UpdateSongList(data);
-			AutoResizeColumns();
+			Invoke((Action)AutoResizeColumns);
+
+			SongUpdateMutex.ReleaseMutex();
 		}
 
 		private void UpdateSongList(PlatformData data)
 		{
-			SongUpdateMutex.WaitOne();
-
 			if (data == null)
 				return;
 
 			data.Mutex.WaitOne();
+			Invoke((Action<PlatformData>)UpdateSongListBase, data);
+			data.Mutex.ReleaseMutex();
+		}
+
+		private void UpdateSongListBase(PlatformData data)
+		{
 			foreach (FormatData song in data.Songs) {
 				SongData songdata = song.Song;
 				ListViewItem item = null;
@@ -104,9 +121,6 @@ namespace ConsoleHaxx.RawkSD.SWF
 					(item.Tag as SongListItem).AddData(song);
 				}
 			}
-			data.Mutex.ReleaseMutex();
-
-			SongUpdateMutex.ReleaseMutex();
 		}
 
 		private void AutoResizeColumns()
