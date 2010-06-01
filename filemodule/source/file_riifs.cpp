@@ -172,10 +172,8 @@ namespace ProxiIOS { namespace Filesystem {
 	{
 		int read = 0;
 		while (read < size) {
-			// don't attempt to read more than 0x1000 - IOS will only return 0x1C84
-			// bytes max, and often returns less which results in the pointer
-			// becoming non 32 byte aligned.
-			int ret = net_recv(socket, data + read, MIN(0x1000, size - read), opts);
+			// don't attempt to read more than 0x2000 in case a temp buffer is needed
+			int ret = net_recv(socket, data + read, MIN(0x2000, size - read), opts);
 
 			if (ret < 0)
 				return ret;
@@ -191,29 +189,32 @@ namespace ProxiIOS { namespace Filesystem {
 	int RiiHandler::ReceiveCommand(int type, void* data, int size)
 	{
 		bool fail = false;
-		static u32 message[0x02] ATTRIBUTE_ALIGN(32);
+		STACK_ALIGN(u32, message, 2, 32);
+		STACK_ALIGN(int, ret, 1, 32);
 		message[0] = RII_RECEIVE;
 		message[1] = type;
 		fail |= net_send(Socket, message, 0x08, 0) != 8;
-		static int ret ATTRIBUTE_ALIGN(32);
-		ret = 0;
+		*ret = 0;
 		if (!fail && size) {
 			if (data)
 				fail |= netrecv(Socket, (u8*)data, size, 0) != size;
 			else {
 				void* temp = Memalign(32, size);
-				fail |= netrecv(Socket, (u8*)temp, size, 0) != size;
-				Dealloc(temp);
+				if (temp) {
+					fail |= netrecv(Socket, (u8*)temp, size, 0) != size;
+					Dealloc(temp);
+				} else
+					fail = 1;
 			}
 		}
 		if (!fail)
-			fail |= netrecv(Socket, (u8*)&ret, 4, 0) != 4;
+			fail |= netrecv(Socket, (u8*)ret, 4, 0) != 4;
 
 		IdleCount = 0;
 		if (fail)
 			return -1;
 
-		return ret;
+		return *ret;
 	}
 
 	int RiiHandler::Unmount()
@@ -240,27 +241,12 @@ namespace ProxiIOS { namespace Filesystem {
 		if (ret < 0)
 			return NULL;
 		x = new RiiFileInfo(this, ret);
-#ifdef RIIFS_LOCAL_SEEKING
-		if (x) {
-			Stats st;
-			st.Size = 0;
-			ReceiveCommand(RII_FILE_STAT, &st, sizeof(Stats));
-			x->Size = st.Size;
-		}
-#endif
 		return x;
 	}
 
 	int RiiHandler::Read(FileInfo* file, u8* buffer, int length)
 	{
 		RiiFileInfo* info = (RiiFileInfo*)file;
-
-#ifdef RIIFS_LOCAL_SEEKING
-		// don't request more bytes than there is available
-		if (length > int(info->Size - info->Position))
-			length = info->Size - info->Position;
-#endif
-
 		SendCommand(RII_OPTION_FILE, &info->File, 4);
 		SendCommand(RII_OPTION_LENGTH, &length, 4);
 		int ret = ReceiveCommand(RII_FILE_READ, buffer, length);
@@ -279,11 +265,8 @@ namespace ProxiIOS { namespace Filesystem {
 		SendCommand(RII_OPTION_DATA, buffer, length);
 		int ret = ReceiveCommand(RII_FILE_WRITE);
 #ifdef RIIFS_LOCAL_SEEKING
-		if (ret > 0) {
+		if (ret > 0)
 			info->Position += ret;
-			if (info->Position > info->Size)
-				info->Size = info->Position;
-		}
 #endif
 		return ret;
 	}
@@ -309,7 +292,7 @@ namespace ProxiIOS { namespace Filesystem {
 			else if (whence == SEEK_SET)
 				info->Position = where;
 			else // SEEK_END
-				info->Position = info->Size + where;
+				info->Position = ReceiveCommand(RII_FILE_TELL);
 			return info->Position;
 		}
 #endif
@@ -420,6 +403,7 @@ namespace ProxiIOS { namespace Filesystem {
 		return -2;
 	}
 #endif
+
 	int RiiHandler::NextDir(FileInfo* dir, char* filename, Stats* st)
 	{
 		RiiFileInfo* info = (RiiFileInfo*)dir;

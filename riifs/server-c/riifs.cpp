@@ -202,6 +202,16 @@ int TcpClient::Write(ifstream *src, int len)
 	return (int)read;
 }
 
+void TcpClient::Pad(int len)
+{
+	memset(buffer, 0, TCP_BUFFER_LEN);
+	while (len>0) {
+		int to_send = MIN(TCP_BUFFER_LEN, len);
+		Write(buffer, to_send);
+		len -= to_send;
+	}
+}
+
 TcpListener::TcpListener(int _port) : port(_port)
 {
 	SOCKADDR_IN saddr;
@@ -533,17 +543,16 @@ bool Connection::WaitForAction()
 					break;
 				}
 				case Command::FileRead: {
+					int ret = 0;
 					int fd = GetFD();
 					int length = be32(Options[Option::Length]);
 					dprint << "File_Read(" << fd << ", " << length << ");";
 					DebugPrint(dprint.str());
-					if (!OpenFiles.count(fd))
-						Return(0);
-					else
-					{
-						int ret = Client->Write((ifstream*)OpenFiles[fd], length);
-						Return(ret);
-					}
+					if (OpenFiles.count(fd))
+						ret = Client->Write((ifstream*)OpenFiles[fd], length);
+					if (ret < length)
+						Client->Pad(length - ret);
+					Return(ret);
 					break;
 				}
 				case Command::FileWrite: {

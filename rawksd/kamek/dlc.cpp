@@ -6,27 +6,28 @@
 #include <fcntl.h>
 #include <files.h>
 
-static DataArray* LoadDTB(const char* filename, u64 size)
+static DataArray* LoadDTB(const char* filename, s32 size)
 {
 	MemStream* mem = Alloc<MemStream, bool>(true);
 	mem->DisableEncryption();
-	Stats stat;
 	int fd = File_Open(filename, O_RDONLY);
 	if (fd < 0)
 		return NULL;
 	u8* buffer = (u8*)memalign(32, 0x1000);
+	if (buffer==NULL) {
+		File_Close(fd);
+		return NULL;
+	}
 	while (size > 0) {
 		int read = File_Read(fd, buffer, 0x1000);
-		if (!read)
-			break;
-		if (read < 0) {
+		if (read <= 0) {
 			free(buffer);
 			File_Close(fd);
 			return NULL;
 		}
 
 		mem->Write(buffer, read);
-		stat.Size -= read;
+		size -= read;
 	}
 	free(buffer);
 	File_Close(fd);
@@ -135,11 +136,13 @@ static void RefreshCustomsList()
 			continue;
 		strcat(custompath + 2, "/data");
 		if (!File_Stat(custompath + 2, &stats)) {
-			DataArray* song = LoadDTB(custompath + 2, stats.Size);
-			const char* id = GetSongID(song);
-			if (strncmp(id, "rwk", 3))
-				continue;
-			AddDTB(song);
+			DataArray* song = LoadDTB(custompath + 2, (s32)stats.Size);
+			if (song) {
+				const char* id = GetSongID(song);
+				if (strncmp(id, "rwk", 3))
+					continue;
+				AddDTB(song);
+			}
 		}
 	}
 	File_CloseDir(fd);

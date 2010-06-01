@@ -66,7 +66,6 @@ namespace ProxiIOS { namespace Filesystem {
 		}
 
 #ifdef RIIFS_LOCAL_SEEKING
-		u64 Size;
 		u64 Position;
 #endif
 #ifdef RIIFS_LOCAL_DIRNEXT

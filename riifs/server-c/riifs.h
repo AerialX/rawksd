@@ -131,7 +131,7 @@ public:
 	int Read(ofstream*, int);
 	int Write(ifstream*, int);
 	template<class Type> int Write(Type *a)	{return Write((void*)a, sizeof(Type));}
-
+	void Pad(int len);
 };
 
 class TcpListener
