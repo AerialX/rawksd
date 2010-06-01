@@ -79,10 +79,13 @@ static bool GetSongDownloaded(DataArray* song)
 
 static const char* GetSongTitle(DataArray* song)
 {
-	const char* name = GetSongName(song);
 	static char title[5];
-	strncpy(title, name + 4, 4);
-	title[4] = '\0';
+	const char* name = GetSongName(song);
+	if (name) {
+		strncpy(title, name + 4, 4);
+		title[4] = 0;
+	} else
+		title[0]= 0;
 	return title;
 }
 
@@ -91,7 +94,7 @@ static DataArray* customs = NULL;
 static void AddDTB(DataArray* song)
 {
 	const char* title = GetSongTitle(song);
-	if (!strncmp(title, "sZ", 2))
+	if (title[0]=='s' && title[1]=='Z')
 		return;
 	bool found = false;
 	for (int i = 0; i < titlearray->size; i++) {
@@ -139,7 +142,7 @@ static void RefreshCustomsList()
 			DataArray* song = LoadDTB(custompath + 2, (s32)stats.Size);
 			if (song) {
 				const char* id = GetSongID(song);
-				if (strncmp(id, "rwk", 3))
+				if (id==NULL || id[0]!='r' || id[1]!='w' || id[2]!='k')
 					continue;
 				AddDTB(song);
 			}
@@ -189,10 +192,10 @@ extern "C" Symbol SongOfferGetIconHook(SongOffer* offer)
 	if (!offer->data)
 		return Symbol("");
 	const char* songid = GetSongID(offer->data);
-	if (strncmp(songid, "rwk", 3))
+	if (songid==NULL || songid[0]!='r' || songid[1]!='w' || songid[2]!='k')
 		return GetSongDownloaded(offer->data) ? Symbol("download") : Symbol("rb2_icon");
 	const char* pack = GetSongPack(offer->data);
-	if (!pack || !strlen(pack))
+	if (!pack || !pack[0])
 		return Symbol("Custom Songs");
 	return Symbol(pack);
 }
@@ -200,8 +203,8 @@ extern "C" Symbol SongOfferGetIconHook(SongOffer* offer)
 extern "C" Symbol SongOfferProviderGetIconHook(SongOfferProvider* provider, int index)
 {
 	const char* symbol = provider->DataSymbol(index);
-	if (!strncmp(symbol, "rwk", 3)) {
-		if (!strncmp(symbol + 4, "rb", 2))
+	if (symbol[0]=='r' && symbol[1]=='w' && symbol[2]=='k' && symbol[3]) {
+		if (symbol[4]=='r' && symbol[5]=='b')
 			return Symbol("rb1_icon");
 		return Symbol("download");
 	}
