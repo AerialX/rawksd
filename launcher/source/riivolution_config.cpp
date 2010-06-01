@@ -410,7 +410,15 @@ versionisvalid:
 					ELEMENT_ATTRIBUTE("clone", true)
 						savegame.Clone = ELEMENT_BOOL();
 
-					patch.Savegames.push_back(savegame);
+					patch.Savegame = savegame;
+				}
+
+				ELEMENT_START("dlc") {
+					RiiDLCPatch dlc;
+					ELEMENT_ATTRIBUTE("external", true)
+						dlc.External = AbsolutePathCombine(patchroot, attribute, rootfs);
+
+					patch.DLC = dlc;
 				}
 
 				ELEMENT_START("memory") {

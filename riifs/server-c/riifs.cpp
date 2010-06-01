@@ -709,8 +709,9 @@ bool Connection::WaitForAction()
 					DebugPrint(dprint.str());
 					DirectoryInfo* dir = CreateDirectoryInfo(path);
 					if (!dir->Exists)
-						mkdir(path.c_str());
-					Return(1);
+						Return(!mkdir(path.c_str()));
+					else
+						Return(1);
 					delete dir;
 					break;
 				}

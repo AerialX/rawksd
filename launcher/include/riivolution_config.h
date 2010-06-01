@@ -91,6 +91,10 @@ struct RiiSavegamePatch {
 	int Clone;
 };
 
+struct RiiDLCPatch {
+	std::string External;
+};
+
 struct RiiMemoryPatch {
 	RiiMemoryPatch()
 	{
@@ -125,7 +129,8 @@ struct RiiPatch {
 	std::vector<RiiFolderPatch> Folders;
 	std::vector<RiiShiftPatch> Shifts;
 	std::vector<RiiMemoryPatch> Memory;
-	std::vector<RiiSavegamePatch> Savegames;
+	RiiSavegamePatch Savegame;
+	RiiDLCPatch DLC;
 };
 
 struct RiiDisc

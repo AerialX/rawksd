@@ -299,7 +299,7 @@ namespace ProxiIOS { namespace EMU {
 		return ret;
 	}
 
-	EMU::EMU() : Module(EMU_MODULE_NAME)
+	EMU::EMU() : Module(EMU_MODULE_NAME), DLCPath(NULL)
 	{
 		ch341_open();
 		memset(open_files, 0, sizeof(open_files));
@@ -338,11 +338,31 @@ namespace ProxiIOS { namespace EMU {
 
 	int EMU::HandleIoctl(ipcmessage* message)
 	{
-		if (message->ioctl.command == Ioctl::FSMessage)
-			return HandleFSMessage((ipcmessage*)message->ioctl.buffer_in, (int*)message->ioctl.buffer_io);
-		if (message->ioctl.command == Ioctl::BanTicket && DataDirs.size())
-			return ((TicketDir*)DataDirs[0])->Ban(*(u32*)message->ioctl.buffer_in);
-		LogPrintf("EMU: Unknown ioctl %u\n", message->ioctl.command);
+		switch (message->ioctl.command) {
+			case Ioctl::FSMessage:
+				return HandleFSMessage((ipcmessage*)message->ioctl.buffer_in, (int*)message->ioctl.buffer_io);
+			case Ioctl::BanTicket:
+				if (DataDirs.size()) // this should never be false
+					return ((TicketDir*)DataDirs[0])->Ban(*(u32*)message->ioctl.buffer_in);
+				break;
+			case Ioctl::DLCDir: {
+				const char *ext = (const char*)message->ioctl.buffer_in;
+				if (ext==NULL)
+					break;
+				Dealloc(DLCPath);
+				DLCPath = (char*)Alloc(strlen(ext)+23);
+				if (DLCPath) {
+					strcpy(DLCPath, ext);
+					if (!DLCPath[0] || DLCPath[strlen(DLCPath)-1]!='/')
+						strcat(DLCPath, "/");
+					strcat(DLCPath, "private/wii/data/aaaa");
+					LogPrintf("DLC Path: %s\n", DLCPath);
+				}
+			}
+				break;
+			default:
+				LogPrintf("EMU: Unknown ioctl %u\n", message->ioctl.command);
+		}
 		return -1;
 	}
 
@@ -385,12 +405,21 @@ namespace ProxiIOS { namespace EMU {
 
 	void EMU::CheckForDLCTitle(const char *path)
 	{
-		if (!strncmp(path, "/title/00010005/", 16) && strlen(path)>=32) {
+		if (DLCPath && !strncmp(path, "/title/00010005/", 16) && strlen(path)>=32) {
 			int i;
 			char nand_path[33];
-			char ext_path[] = "/private/wii/data/aaaa";
 			RiivDir* d;
 			std::vector<RiivDir*>::iterator it;
+			char *ext_path;
+
+			// this is a strstr() replacement
+			for (ext_path=DLCPath;*ext_path;ext_path++) {
+				if (!strncmp(ext_path, "/private/wii/data", 17))
+					break;
+			}
+
+			if (!ext_path[0])
+				return;
 
 			if (path[16]<'6' || path[16]>'7')
 				return;
@@ -398,6 +427,7 @@ namespace ProxiIOS { namespace EMU {
 				return;
 
 			ext_path[18] = chartoHex(path+16);
+			// DLC directories always start with a lowercase letter
 			if (ext_path[18]<'a' || ext_path[18]>'z')
 				return;
 
@@ -420,12 +450,21 @@ namespace ProxiIOS { namespace EMU {
 
 			if (DataDirs.size()<3) // save and ticket directory might be redirected
 			{
-				File_CreateDir("/private");
-				File_CreateDir("/private/wii");
-				File_CreateDir("/private/wii/data");
+				ext_path[0]=0;
+				File_CreateDir(DLCPath); // DLC root
+				ext_path[0]='/';
+				ext_path[8]=0;
+				File_CreateDir(DLCPath); // root/private
+				ext_path[8]='/';
+				ext_path[12]=0;
+				File_CreateDir(DLCPath); // root/private/wii
+				ext_path[12]='/';
+				ext_path[17]=0;
+				File_CreateDir(DLCPath); // root/private/wii/data
+				ext_path[17]='/';
 			}
 
-			d = new AppDir(nand_path, ext_path);
+			d = new AppDir(nand_path, DLCPath);
 			if (d)
 				DataDirs.push_back(d);
 		}

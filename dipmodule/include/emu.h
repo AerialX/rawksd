@@ -31,6 +31,7 @@ namespace ProxiIOS { namespace EMU {
 			BanTicket,
 			NANDFSMessage,
 			ActivateHook     = 0x64,
+			DLCDir,
 			DeactivateHook   = 0x6F
 		};
 	}
@@ -181,6 +182,7 @@ namespace ProxiIOS { namespace EMU {
 	class EMU : public ProxiIOS::Module
 	{
 	private:
+		char *DLCPath;
 		int loop_thread;
 		std::vector<RiivDir*> DataDirs;
 

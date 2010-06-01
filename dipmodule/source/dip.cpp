@@ -289,6 +289,14 @@ namespace ProxiIOS { namespace DIP {
 				os_close(emu_fd);
 				return ret;
 			}
+			case Ioctl::DLCDir: {
+				s32 emu_fd = os_open(EMU_MODULE_NAME, 0);
+				if (emu_fd<0)
+					return emu_fd;
+				int ret = os_ioctl(emu_fd, EMU::Ioctl::DLCDir, buffer_in, message->ioctl.length_in, NULL, 0);
+				os_close(emu_fd);
+				return ret;
+			}
 			default:
 				return ForwardIoctl(message);
 		}
@@ -352,7 +360,7 @@ namespace ProxiIOS { namespace DIP {
 				if (nandfile[0]=='.')
 					continue;
 				ret = CopyDir(in_string, out_string);
-			} else if (st.Mode & S_IFREG && st.Size) { // S_IFREG test is just a precaution
+			} else if (st.Mode & S_IFREG) { // S_IFREG test is just a precaution
 				int in_file = -1;
 				int out_file;
 
@@ -406,16 +414,35 @@ namespace ProxiIOS { namespace DIP {
 	int DIP::DoEmu(const char* nand_dir, const char* ext_dir, const int* clone)
 	{
 		int i=0;
+		char *mnt_dir;
+		char *end_path;
 
-		int emu_fd = os_open(EMU_MODULE_NAME, 0);
-		if (emu_fd<0)
-			return emu_fd;
+		if (strlen(ext_dir)<=0 || strlen(nand_dir)<=0)
+			return -1;
 
-		if (File_CreateDir(ext_dir)==ERROR_NOTMOUNTED)
-			return ERROR_NOTMOUNTED;
+		mnt_dir = (char*)Memalign(32, strlen(ext_dir)+1);
+		if (mnt_dir==NULL)
+			return ERROR_OUTOFMEMORY;
+
+		strcpy(mnt_dir, ext_dir);
+		if (!strncmp(mnt_dir, "/mnt/net/", 9))
+			end_path = strchr(mnt_dir+9, '/')+1;
+		else if (!strncmp(mnt_dir, "/mnt/", 5))
+			end_path = strchr(mnt_dir+5, '/')+1;
+		else
+			end_path = mnt_dir+1;
+		while ((end_path = strchr(end_path, '/'))) {
+			*end_path = 0;
+			File_CreateDir(mnt_dir);
+			*end_path++ = '/';
+		}
+		if (mnt_dir[strlen(mnt_dir)-1]!='/')
+			File_CreateDir(mnt_dir);
+
+		Dealloc(mnt_dir);
 
 		if (*clone) {
-			char *mnt_dir = (char*)Alloc(strlen(nand_dir)+11);
+			mnt_dir = (char*)Memalign(32, strlen(nand_dir)+11);
 			if (mnt_dir) {
 				strcpy(mnt_dir, "/mnt/isfs");
 				strcat(mnt_dir, nand_dir);
@@ -426,17 +453,22 @@ namespace ProxiIOS { namespace DIP {
 		}
 
 		if (i>=0) {
-			LogPrintf("DIP->EMU ioctl\n");
-			ioctlv vec[2];
-			vec[0].data = (void*)nand_dir;
-			vec[0].len = strlen(nand_dir)+1;
-			vec[1].data = (void*)ext_dir;
-			vec[1].len = strlen(ext_dir)+1;
-			os_sync_after_write(vec, sizeof(ioctlv)*2);
-			i = os_ioctlv(emu_fd, EMU::Ioctl::RedirectDir, 2, 0, vec);
+			int emu_fd = os_open(EMU_MODULE_NAME, 0);
+			if (emu_fd<0)
+				i = emu_fd;
+			else {
+				LogPrintf("DIP->EMU ioctl\n");
+				ioctlv vec[2];
+				vec[0].data = (void*)nand_dir;
+				vec[0].len = strlen(nand_dir)+1;
+				vec[1].data = (void*)ext_dir;
+				vec[1].len = strlen(ext_dir)+1;
+				os_sync_after_write(vec, sizeof(ioctlv)*2);
+				i = os_ioctlv(emu_fd, EMU::Ioctl::RedirectDir, 2, 0, vec);
+				os_close(emu_fd);
+			}
 		}
 
-		os_close(emu_fd);
 		return i;
 	}
 

@@ -30,7 +30,8 @@ namespace Ioctl { enum Enum {
 	Allocate		= 0xC5,
 	AddEmu			= 0xC6,
 	SetShiftBase	= 0xC8,
-	BanTitle		= 0xC9
+	BanTitle		= 0xC9,
+	DLC				= 0xCA
 }; }
 
 static u32 ioctlbuffer[0x08] ATTRIBUTE_ALIGN(32);
@@ -169,6 +170,11 @@ int RVL_BanDLC(u32 title)
 {
 	ioctlbuffer[0] = title;
 	return IOS_Ioctl(fd, Ioctl::BanTitle, ioctlbuffer, 4, NULL, 0);
+}
+
+int RVL_DLC(const char* path)
+{
+	return IOS_Ioctl(fd, Ioctl::DLC, (void*)path, strlen(path) + 1, NULL, 0);
 }
 
 u64 RVL_GetShiftOffset(u32 length)
@@ -480,6 +486,15 @@ static void RVL_Patch(RiiSavegamePatch* save, string commonfs)
 	RVL_AddEmu(nandpath, external.c_str(), save->Clone);
 }
 
+static void RVL_Patch(RiiDLCPatch* DLC, string commonfs)
+{
+	string external = DLC->External;
+	if (commonfs.size() && !commonfs.compare(0, commonfs.size(), external))
+		external = external.substr(commonfs.size());
+
+	RVL_DLC(external.c_str());
+}
+
 static void ApplyParams(std::string* str, map<string, string>* params)
 {
 	bool found = false;
@@ -514,14 +529,20 @@ static void RVL_Patch(RiiPatch* patch, map<string, string>* params, string commo
 	for (vector<RiiShiftPatch>::iterator shift = patch->Shifts.begin(); shift != patch->Shifts.end(); shift++) {
 		RVL_Patch(&*shift);
 	}
-	for (vector<RiiSavegamePatch>::iterator save = patch->Savegames.begin(); save != patch->Savegames.end(); save++) {
-		RiiSavegamePatch temp = *save;
-		ApplyParams(&temp.External, params);
-		RVL_Patch(&temp, commonfs);
+	if (patch->Savegame.External.size()) {
+		ApplyParams(&patch->Savegame.External, params);
+		RVL_Patch(&patch->Savegame, commonfs);
+	}
+	if (patch->DLC.External.size()) {
+		ApplyParams(&patch->DLC.External, params);
+		RVL_Patch(&patch->DLC, commonfs);
 	}
 }
 
 #define ADD_DEFAULT_PARAMS(params) { \
+	char sng_id[9]; \
+	sprintf(sng_id, "%08X", otp.ng_id); \
+	params["__ngid"] = string(sng_id); \
 	params["__gameid"] = string((char*)MEM_BASE, 3); \
 	params["__region"] = string((char*)MEM_BASE + 3, 1); \
 	params["__maker"] = string((char*)MEM_BASE + 4, 2); \
@@ -540,7 +561,8 @@ void RVL_Patch(RiiDisc* disc)
 
 			for (vector<RiiChoice::Patch>::iterator patch = choice->Patches.begin(); patch != choice->Patches.end(); patch++) {
 				map<string, RiiPatch>::iterator currentpatch = disc->Patches.find(patch->ID);
-				if (currentpatch->second.Files.size() || currentpatch->second.Folders.size() || currentpatch->second.Savegames.size()) {
+				if (currentpatch->second.Files.size() || currentpatch->second.Folders.size() || \
+						currentpatch->second.Savegame.External.size() || currentpatch->second.DLC.External.size()) {
 					// Only keep the filesystem mounted if a patch that needs to be running during the game is using it
 					UsedFilesystems[choice->Filesystem] = true;
 					break;
