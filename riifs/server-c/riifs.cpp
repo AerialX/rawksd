@@ -517,13 +517,9 @@ bool Connection::WaitForAction()
 					DebugPrint(dprint.str());
 
 					int fd = -1;
-					ios_base::openmode fmode = ios_base::binary; // no more ios_base::nocreate, so O_CREAT is ignored here
-					if (mode & O_WRONLY)
+					ios_base::openmode fmode = ios_base::binary|ios_base::in; // no more ios_base::nocreate, so O_CREAT is ignored here
+					if (mode&O_RDWR || mode&O_WRONLY)
 						fmode |= ios_base::out;
-					else if (mode & O_RDWR)
-						fmode |= ios_base::out|ios_base::in;
-					else
-						fmode |= ios_base::in;
 
 					if (mode & ARM_O_TRUNC)
 						fmode |= ios_base::trunc;

@@ -301,7 +301,9 @@ namespace ProxiIOS { namespace EMU {
 
 	EMU::EMU() : Module(EMU_MODULE_NAME), DLCPath(NULL)
 	{
+#ifdef CH341
 		ch341_open();
+#endif
 		memset(open_files, 0, sizeof(open_files));
 
 		const int stacksize = 0x2000;
