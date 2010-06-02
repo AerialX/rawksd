@@ -18,6 +18,7 @@
 #include "riivolution_config.h"
 #include "launcher.h"
 #include "installer.h"
+#include "wdvd.h"
 
 extern "C" void Init_DebugConsole();
 
@@ -27,7 +28,7 @@ bool PressA()
 	while (true) {
 		WPAD_ScanPads();
 
-		int down = WPAD_ButtonsDown(WPAD_CHAN_0);
+		int down = WPAD_ButtonsDown(WPAD_CHAN_ALL);
 		if (down & WPAD_BUTTON_A)
 			return true;
 		if (down & WPAD_BUTTON_HOME)
@@ -38,12 +39,9 @@ bool PressA()
 void PressHome()
 {
 	printf("\tPress Home to exit.\n");
-	while (true) {
+	do {
 		WPAD_ScanPads();
-
-		if (WPAD_ButtonsDown(WPAD_CHAN_0) & WPAD_BUTTON_HOME)
-			return;
-	}
+	} while (!(WPAD_ButtonsDown(WPAD_CHAN_ALL) & WPAD_BUTTON_HOME));
 }
 
 static volatile int ShutdownParam = 0;
@@ -65,8 +63,13 @@ static void CallbackPoweroff()
 
 void CheckShutdown()
 {
-	if (ShutdownParam)
-		SYS_ResetSystem(ShutdownParam, 0, 0);
+	switch (ShutdownParam) {
+		case SYS_POWEROFF:
+			// stop the disc
+			WDVD_StopMotor(false, false);
+		case SYS_RETURNTOMENU:
+			SYS_ResetSystem(ShutdownParam, 0, 0);
+	}
 }
 
 u32 MALLOC_MEM2 = 1;

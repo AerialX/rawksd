@@ -4,7 +4,7 @@
 
 #include <gctypes.h>
 
-// taken from mini
+// taken from MINI
 typedef struct
 {
 	u8 boot1_hash[20];
@@ -21,7 +21,7 @@ typedef struct
 		};
 	};
 	u8 nand_key[16];
-	u8 rng_key[16];
+	u8 prng_key[16];
 	u32 unk1;
 	u32 unk2; // 0x00000007
 } __attribute__((packed)) otp_t;
