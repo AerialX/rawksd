@@ -3,8 +3,8 @@
 	<options>
 		<section name="RB2 Haxx">
 			<option name="Kamek Haxx" default="1">
-				<choice name="NTSC"><patch id="test_ntsc" /></choice>
-				<choice name="PAL"><patch id="test_pal" /></choice>
+				<choice name="NTSC"><patch id="test_ntsc" /><patch id="dlc" /></choice>
+				<choice name="PAL"><patch id="test_pal" /><patch id="dlc" /></choice>
 			</option>
 			<option name="saveredir" default="1">
 				<choice name="Enabled"><patch id="save" /></choice>
@@ -39,4 +39,7 @@
 	</patch>
 	<patch id="save">
 		<savegame external="/save/{$__gameid}{$__region}" clone="false" />
+	</patch>
+	<patch id="dlc">
+		<dlc external="/" />
 	</patch>
