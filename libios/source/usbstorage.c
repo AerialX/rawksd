@@ -326,7 +326,7 @@ static s32 __usbstorage_clearerrors(usbstorage_handle *dev, u8 lun)
 	if(retval < 0)
 		return retval;
 
-	if(status != 0)
+	if (status != 0)
 	{
 		cmd[0] = SCSI_REQUEST_SENSE;
 		cmd[1] = lun << 5;
@@ -338,7 +338,12 @@ static s32 __usbstorage_clearerrors(usbstorage_handle *dev, u8 lun)
 			return retval;
 
 		status = sense[2] & 0x0F;
-		if(status == SCSI_SENSE_NOT_READY || status == SCSI_SENSE_MEDIUM_ERROR || status == SCSI_SENSE_HARDWARE_ERROR) return USBSTORAGE_ESENSE;
+		switch (status) {
+			case SCSI_SENSE_NOT_READY:
+			case SCSI_SENSE_MEDIUM_ERROR:
+			case SCSI_SENSE_HARDWARE_ERROR:
+				return USBSTORAGE_ESENSE;
+		}
 	}
 
 	return retval;
@@ -450,13 +455,9 @@ found:
 	debug_printf("Found USB Mass storage device\n");
 
 	retval = USBSTORAGE_EINIT;
-	if(USB_GetConfiguration(dev->usbdev, &conf) < 0)
-	{
-		debug_printf("USB_GetConfiguration failed\n");
-		goto free_and_return;
-	}
-	if(conf != dev->configuration && USB_SetConfiguration(dev->usbdev, dev->configuration) < 0)
-	{
+	conf = 0;
+	USB_GetConfiguration(dev->usbdev, &conf); // don't care about the result
+	if (conf != dev->configuration && USB_SetConfiguration(dev->usbdev, dev->configuration) < 0) {
 		debug_printf("USB_SetConfiguration failed\n");
 		goto free_and_return;
 	}
@@ -554,8 +555,10 @@ s32 USBStorage_MountLUN(usbstorage_handle *dev, u8 lun)
 		return IPC_EINVAL;
 
 	retval = __usbstorage_clearerrors(dev, lun);
-	if(retval < 0)
+	if(retval < 0) {
+		debug_printf("MountLUN: Couldn't clear errors (%d)\n", retval);
 		return retval;
+	}
 
 	retval = USBStorage_ReadCapacity(dev, lun, &dev->sector_size[lun], NULL);
 	return retval;
@@ -567,15 +570,25 @@ s32 USBStorage_ReadCapacity(usbstorage_handle *dev, u8 lun, u32 *sector_size, u3
 	u8 cmd[] = {SCSI_READ_CAPACITY, lun << 5};
 	u8 response[8];
 
+	memset(response, 0, sizeof(response));
 	retval = __cycle(dev, lun, response, 8, cmd, 2, 0, NULL, NULL);
 	if(retval >= 0)
 	{
+		u32 _n_sectors, _sector_size;
+		memcpy(&_n_sectors, response, 4);
+		memcpy(&_sector_size, response+4, 4);
+		debug_printf("Number of sectors: %u, Sector size %u (%08X)\n", _n_sectors, _sector_size, retval);
+		if (_sector_size !=512) { // only multiples of 512 supported (multiples other than 1 not currently implemented)
+			debug_printf("Invalid sector size, not a multiple of 512\n");
+			return IPC_EINVAL; // proper error code?
+		}
 		if(n_sectors != NULL)
-			memcpy(n_sectors, response, 4);
+			*n_sectors = _n_sectors;
 		if(sector_size != NULL)
-			memcpy(sector_size, response + 4, 4);
+			*sector_size = _sector_size;
 		retval = USBSTORAGE_OK;
-	}
+	} else
+		debug_printf("ReadCapacity failed %d\n", retval);
 
 	return retval;
 }
@@ -584,6 +597,10 @@ s32 USBStorage_Read(usbstorage_handle *dev, u8 lun, u32 sector, u16 n_sectors, u
 {
 	u8 status = 0;
 	s32 retval;
+
+	if(lun >= dev->max_lun)
+		return IPC_EINVAL;
+
 	u8 cmd[] = {
 		SCSI_READ_10,
 		lun << 5,
@@ -596,8 +613,7 @@ s32 USBStorage_Read(usbstorage_handle *dev, u8 lun, u32 sector, u16 n_sectors, u
 		n_sectors,
 		0
 		};
-	if(lun >= dev->max_lun || dev->sector_size[lun] == 0)
-		return IPC_EINVAL;
+
 	retval = __cycle(dev, lun, buffer, n_sectors * dev->sector_size[lun], cmd, sizeof(cmd), 0, &status, NULL);
 	if(retval > 0 && status != 0)
 		retval = USBSTORAGE_ESTATUS;
@@ -608,6 +624,9 @@ s32 USBStorage_Write(usbstorage_handle *dev, u8 lun, u32 sector, u16 n_sectors, 
 {
 	u8 status = 0;
 	s32 retval;
+	if(lun >= dev->max_lun)
+		return IPC_EINVAL;
+
 	u8 cmd[] = {
 		SCSI_WRITE_10,
 		lun << 5,
@@ -620,8 +639,7 @@ s32 USBStorage_Write(usbstorage_handle *dev, u8 lun, u32 sector, u16 n_sectors, 
 		n_sectors,
 		0
 		};
-	if(lun >= dev->max_lun || dev->sector_size[lun] == 0)
-		return IPC_EINVAL;
+
 	retval = __cycle(dev, lun, (u8 *)buffer, n_sectors * dev->sector_size[lun], cmd, sizeof(cmd), 1, &status, NULL);
 	if(retval > 0 && status != 0)
 		retval = USBSTORAGE_ESTATUS;
@@ -674,10 +692,7 @@ static bool __usbstorage_IsInserted(void)
    {
 	   debug_printf("Couldn't get USB device list\n");
 		if(__vid!=0 || __pid!=0)
-		{
 			USBStorage_Close(&__usbfd);
-			memset(&__usbfd, 0, sizeof(__usbfd));
-		}
 
        __lun = 0;
        __vid = 0;
@@ -687,8 +702,7 @@ static bool __usbstorage_IsInserted(void)
    }
 
    debug_printf("Found %d USB Mass Storage devices\n", cnt_device);
-
-	usleep(100);
+   usleep(100);
 
    if(__vid!=0 || __pid!=0)
    {
@@ -710,7 +724,6 @@ static bool __usbstorage_IsInserted(void)
        }
 	   debug_printf("Couldn't find existing device, was it removed?\n");
 	   USBStorage_Close(&__usbfd);
-		memset(&__usbfd, 0, sizeof(__usbfd));
    }
 
    __lun = 0;
@@ -727,7 +740,6 @@ static bool __usbstorage_IsInserted(void)
        if(USBStorage_Open(&__usbfd, "oh0", vid, pid) < 0)
            continue;
 
-
        maxLun = USBStorage_GetMaxLUN(&__usbfd);
 	   debug_printf("Storage device maxLUN is %d\n", maxLun-1);
        for(j = maxLun-1; j >=0; j--)
@@ -735,18 +747,25 @@ static bool __usbstorage_IsInserted(void)
 		   debug_printf("Trying to mount LUN %d\n", j);
            retval = USBStorage_MountLUN(&__usbfd, j);
 
-           if(retval == USBSTORAGE_ETIMEDOUT)
+           if(retval == USBSTORAGE_ETIMEDOUT) {
+			   debug_printf("Timed out trying to mount LUN %d\n", j);
                break;
-           if(retval < 0)
+		   }
+           if(retval < 0) {
+			   debug_printf("Error trying to mount LUN %d\n", j);
                continue;
+		   }
 
            __mounted = 1;
            __lun = j;
            __vid = vid;
            __pid = pid;
-           i = DEVLIST_MAXSIZE;
+           i = cnt_device;
            break;
        }
+
+       if (!__mounted)
+           USBStorage_Close(&__usbfd);
    }
    Dealloc(buffer);
    if(__mounted == 1)
