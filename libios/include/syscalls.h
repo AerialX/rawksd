@@ -75,7 +75,7 @@
 /* 21 */ s32       os_ioctl(s32 fd, s32 request, const void* buffer_in, s32 bytes_in, void* buffer_io, s32 bytes_io);
 /* 22 */ s32       os_ioctlv(s32 fd, s32 request, s32 count_in, s32 count_out, const ioctlv* vector);
 /* 23 */ s32       os_open_async(const char* device, s32 mode, osqueue_t cb, ipcmessage* cb_data);
-/* 24 */ s32       os_close_async(s32 fd, osqueue_t cb, void* cb_data);
+/* 24 */ s32       os_close_async(s32 fd, osqueue_t cb, ipcmessage* cb_data);
 /* 25 */ s32       os_read_async(s32 fd, void* buffer, s32 length, osqueue_t cb, ipcmessage* cb_data);
 /* 26 */ s32       os_write_async(s32 fd, const void* buffer, s32 length, osqueue_t cb, ipcmessage* cb_data);
 /* 27 */ s32       os_seek_async(s32 fd, s32 where, s32 whence, osqueue_t cb, ipcmessage *cb_data);
