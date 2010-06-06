@@ -756,9 +756,9 @@ namespace ConsoleHaxx.Harmonix
 					MusicStart = new Point(0);
 				ulong lastnote = Chart.FindLastNote();
 				if (MusicEnd == null)
-					MusicEnd = new Point(lastnote - 200);
+					MusicEnd = new Point(lastnote);
 				if (End == null)
-					End = new Point(lastnote + 800);
+					End = new Point(Chart.GetTicks(Chart.GetTime(lastnote) / 1000 + 3000));
 				if (Sections.Count == 0)
 					Sections.Add(new Pair<Point, string>(new Point(0), "rawk'd"));
 				if (Crowd.Count == 0)
@@ -782,7 +782,7 @@ namespace ConsoleHaxx.Harmonix
 				track.Comments.Add(new Midi.TextEvent(MusicEnd.Time, "[music_end]"));
 				track.Comments.Add(new Midi.TextEvent(End.Time, "[end]"));
 				track.Comments.AddRange(Crowd.ConvertAll(c => new Midi.TextEvent(c.Key.Time, "[" + c.Value.ToShortString() + "]")));
-				track.Comments.AddRange(Sections.ConvertAll(c => new Midi.TextEvent(c.Key.Time, "[section " + c.Value + "]")));
+				track.Comments.AddRange(Sections.ConvertAll(c => new Midi.TextEvent(c.Key.Time, "[section " + c.Value.Replace(' ', '_').Trim().ToLower() + "]")));
 				if (Chart.BigRockEnding != null)
 					track.Comments.Add(new Midi.TextEvent(Chart.BigRockEnding.Time, "[coda]"));
 

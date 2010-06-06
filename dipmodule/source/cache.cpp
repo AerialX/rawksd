@@ -35,8 +35,11 @@
 
 #include <string.h>
 #include <limits.h>
+#include <syscalls.h>
 
 #include "cache.h"
+
+#ifdef YARR
 
 Cache::Cache(u32 pages, u32 sectorsPerPage, u32 sectorSize, ReadSectorsFunction readsectors, void* userdata) :
 	ReadDiskSectors(readsectors), UserData(userdata), Pages(pages), SectorsPerPage(sectorsPerPage), SectorSize(sectorSize) {
@@ -111,6 +114,7 @@ bool Cache::ReadSectors(u32 sector, u32 numSectors, void* buffer)
 			secs_to_read = numSectors;
 
 		memcpy(dest, entry->Data + (sec * SectorSize), secs_to_read * SectorSize);
+		os_sync_after_write(dest, secs_to_read * SectorSize);
 
 		dest += secs_to_read * SectorSize;
 		sector += secs_to_read;
@@ -131,7 +135,8 @@ bool Cache::ReadPartialSector(void* buffer, u32 sector, u32 offset, u32 size)
 	
 	u32 sec = sector - entry->Sector;
 	memcpy(buffer, entry->Data + (sec * SectorSize) + offset, size);
-	
+	os_sync_after_write(buffer, size);
+
 	return true;
 }
 
@@ -140,15 +145,16 @@ bool Cache::Read(void* buffer, u64 offset, u32 size)
 	// RE: The werid shifting... I blame the b0rked u64 division
 
 	u8* data = (u8*)buffer;
-	u32 sector = (u32)(offset >> 2) / (u32)(SectorSize >> 2);
-	u32 read = MIN(size, SectorSize - offset);
-	ReadPartialSector(data, sector, ((u32)(offset >> 2) % ((u32)SectorSize >> 2)) << 2, read);
+	u32 sector = (u32)(offset >> 2) / (SectorSize >> 2);
+	u32 sectoroffset = ((u32)(offset >> 2) % (SectorSize >> 2)) << 2;
+	u32 read = MIN(size, SectorSize - sectoroffset);
+	ReadPartialSector(data, sector, sectoroffset, read);
 	data += read;
 	size -= read;
 	sector++;
 	
 	if (size > SectorSize) {
-		u32 sectors = (u32)(size >> 2) / ((u32)SectorSize >> 2);
+		u32 sectors = (u32)(size >> 2) / (SectorSize >> 2);
 		ReadSectors(sector, sectors, data);
 		sector += sectors;
 		
@@ -157,8 +163,9 @@ bool Cache::Read(void* buffer, u64 offset, u32 size)
 		size -= sectors;
 	}
 	
-	if (size > 0)
+	if (size > 0) {
 		ReadPartialSector(data, sector, 0, size);
+	}
 	
 	return true;
 }
@@ -171,3 +178,6 @@ void Cache::Clear()
 		Entries[i].Sector = CACHE_FREE;
 	}
 }
+
+#endif
+

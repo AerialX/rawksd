@@ -12,7 +12,7 @@ static char* ToHttpString(const char* str, int length = 0)
 	for (int i = 0; i < length; i++) {
 		char chr = str[i];
 		char temp[0x08];
-		if (strchr(" <>#%{}|\\^~[]`;/?:@=&$", chr)) {
+		if (strchr(" <>#%{}|\\^~[]`;/?:@=&$+", chr)) {
 			sprintf(temp, "%%%02X", (int)chr);
 		} else {
 			temp[0] = chr;
@@ -22,16 +22,6 @@ static char* ToHttpString(const char* str, int length = 0)
 	}
 
 	return dest;
-}
-
-static int Checksum(const char* str, int num, int den)
-{
-	int sum = strlen(str) - 2;
-	while (*str) {
-		sum += (int)(*str - 0x10) * num / den;
-		str++;
-	}
-	return sum;
 }
 
 static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficulty, int score)
@@ -89,8 +79,6 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 	songname = ToHttpString(song);
 	fullsongname = ToHttpString(originalsongname);
 	artistname = ToHttpString(gSongMgrWii.SongArtist(symbol));
-
-	checksum += Checksum(username, 100, 19) + Checksum(songname, 25, 3) + console * 3 / 5 + difficulty * 4 / 3 + instrument * 9 / 5 + score * 2 / 7;
 
 	message = (char*)malloc(0x100 + strlen(username) + strlen(songname) + strlen(fullsongname) + strlen(artistname) + strlen(hostname));
 	sprintf(message, "GET /rb2/post?inst=%d&diff=%d&score=%d&console=%d&nickname=%s&songid=%s&name=%s&artist=%s&valid=%d HTTP/1.1\r\nHost: %s\r\n\r\n\r\n", instrument, difficulty, score, console, username, songname, fullsongname, artistname, checksum, hostname);

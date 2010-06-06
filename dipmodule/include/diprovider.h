@@ -39,8 +39,8 @@ namespace ProxiIOS { namespace DIP {
 		virtual int StopLaser() { return ForwardIoctl(); }
 		virtual int Offset(int param1, int param2) { return ForwardIoctl(); }
 		virtual int ReadBCA(void* buffer, u32 length) { return ForwardIoctl(); }
-		virtual int VerifyCover(u32* output) { return ForwardIoctl(); }
-		virtual int RequestError(u32* errorcode) { return ForwardIoctl(); }
+		virtual int VerifyCover(void* output) { return ForwardIoctl(); }
+		virtual int RequestError(void* errorcode) { return ForwardIoctl(); }
 		virtual int StopMotor(bool eject, bool kill) { return ForwardIoctl(); }
 		virtual int EnableAudio(bool enable) { return ForwardIoctl(); }
 		virtual int CoverRegister() { return ForwardIoctl(); }

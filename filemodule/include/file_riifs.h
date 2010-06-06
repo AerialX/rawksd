@@ -59,6 +59,7 @@ namespace ProxiIOS { namespace Filesystem {
 			File = fd;
 #ifdef RIIFS_LOCAL_SEEKING
 			Position = 0;
+			SeekDirty = false;
 #endif
 #ifdef RIIFS_LOCAL_DIRNEXT
 			DirCache = NULL;
@@ -67,6 +68,7 @@ namespace ProxiIOS { namespace Filesystem {
 
 #ifdef RIIFS_LOCAL_SEEKING
 		u64 Position;
+		bool SeekDirty;
 #endif
 #ifdef RIIFS_LOCAL_DIRNEXT
 		void* DirCache;
@@ -116,6 +118,7 @@ namespace ProxiIOS { namespace Filesystem {
 			int Read(FileInfo* file, u8* buffer, int length);
 			int Write(FileInfo* file, const u8* buffer, int length);
 			int Seek(FileInfo* file, int where, int whence);
+			int RiiSeek(RiiFileInfo* file, int where, int whence);
 			int Tell(FileInfo* file);
 			int Sync(FileInfo* file);
 			int Close(FileInfo* file);

@@ -108,11 +108,11 @@ namespace ConsoleHaxx.RawkSD
 
 			progress.Progress();
 
-			DecodeChartSections(song, qbchart, strings, qbsections, notes, chart);
+			DecodeChartFretbars(song, qbchart, notes, chart);
 
 			progress.Progress();
 
-			DecodeChartFretbars(song, qbchart, notes, chart);
+			DecodeChartSections(song, qbchart, strings, qbsections, notes, chart);
 
 			progress.Progress();
 
@@ -576,14 +576,14 @@ namespace ConsoleHaxx.RawkSD
 					uint time = values[k];
 					string text = strings.FindItem(QbKey.Create(values[k + 1]));
 
-					chart.Events.Sections.Add(new Pair<NoteChart.Point, string>(new NoteChart.Point(chart.GetTicks(time)), text.Replace(' ', '_').Trim().ToLower()));
+					chart.Events.Sections.Add(new Pair<NoteChart.Point, string>(new NoteChart.Point(chart.GetTicks(time)), text));
 				}
 			} else {
 				QbItemStructArray markers = (qbchart.FindItem(QbKey.Create(song.ID + "_guitar_markers"), false) as QbItemArray).Items[0] as QbItemStructArray;
 				foreach (QbItemStruct mark in markers.Items) {
 					QbItemQbKey section = qbsections.FindItem((mark.Items[1] as QbItemQbKey).Values[0], false) as QbItemQbKey;
 
-					chart.Events.Sections.Add(new Pair<NoteChart.Point, string>(new NoteChart.Point(chart.GetTicks((mark.Items[0] as QbItemInteger).Values[0])), strings.FindItem(section.Values[0]).Replace(' ', '_').Trim().ToLower()));
+					chart.Events.Sections.Add(new Pair<NoteChart.Point, string>(new NoteChart.Point(chart.GetTicks((mark.Items[0] as QbItemInteger).Values[0])), strings.FindItem(section.Values[0])));
 				}
 			}
 		}

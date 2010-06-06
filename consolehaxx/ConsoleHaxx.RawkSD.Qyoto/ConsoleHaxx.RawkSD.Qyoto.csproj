@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{5AB894CA-AB6D-4059-9480-142C422861F5}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ConsoleHaxx.RawkSD.Qyoto</RootNamespace>
+    <AssemblyName>ConsoleHaxx.RawkSD.Qyoto</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="qt-dotnet">
+      <HintPath>..\qt-dotnet.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="MainForm.cs" />
+    <Compile Include="MainForm.Designer.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ConsoleHaxx.Common\ConsoleHaxx.Common.csproj">
+      <Project>{EA22859F-2A36-43F4-9402-8E78910698D6}</Project>
+      <Name>ConsoleHaxx.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ConsoleHaxx.Harmonix\ConsoleHaxx.Harmonix.csproj">
+      <Project>{64055A28-36FB-48B9-B8D4-8B3F39D31EB0}</Project>
+      <Name>ConsoleHaxx.Harmonix</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ConsoleHaxx.Neversoft\ConsoleHaxx.Neversoft.csproj">
+      <Project>{BCFE649C-90E8-4BE4-904A-CCB9165740D4}</Project>
+      <Name>ConsoleHaxx.Neversoft</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ConsoleHaxx.RawkSD\ConsoleHaxx.RawkSD.csproj">
+      <Project>{EA64750E-6CC3-4930-9ACC-57AC5CD19B10}</Project>
+      <Name>ConsoleHaxx.RawkSD</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ConsoleHaxx.Wii\ConsoleHaxx.Wii.csproj">
+      <Project>{E9230C21-6B3D-481B-AB69-0A6958E0B2E9}</Project>
+      <Name>ConsoleHaxx.Wii</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ConsoleHaxx.Xbox360\ConsoleHaxx.Xbox360.csproj">
+      <Project>{D0169A20-28C0-4771-86CA-495A30DF643B}</Project>
+      <Name>ConsoleHaxx.Xbox360</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

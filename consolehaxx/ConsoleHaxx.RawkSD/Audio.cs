@@ -246,6 +246,52 @@ namespace ConsoleHaxx.RawkSD
 		public void Dispose() { }
 	}
 
+	public class AmplifyDecoder : IDecoder
+	{
+		public IDecoder Decoder;
+		public JaggedShortArray AudioBuffer { get { return Decoder.AudioBuffer; } }
+		public int Channels { get { return Decoder.Channels; } }
+		public int SampleRate { get { return Decoder.SampleRate; } }
+		public long Samples { get { return Decoder.Samples; } }
+
+		private float Amplification;
+
+		public AmplifyDecoder(IDecoder decoder, float amplification)
+		{
+			Amplification = amplification;
+
+			Decoder = decoder;
+		}
+
+		public int Read(int count)
+		{
+			int ret = Decoder.Read(count);
+
+			for (int i = 0; i < Channels; i++) {
+				for (int j = 0; j < ret; j++) {
+					Decoder.AudioBuffer.Array[i][j] = (short)((float)Decoder.AudioBuffer.Array[i][j] * Amplification);
+				}
+			}
+
+			return ret;
+		}
+
+		public int Read()
+		{
+			return Read(AudioBuffer.Rank2);
+		}
+
+		public void Seek(long sample)
+		{
+			Decoder.Seek(sample);
+		}
+
+		public void Dispose()
+		{
+			Decoder.Dispose();
+		}
+	}
+
 	public class MultiDecoder : IDecoder
 	{
 		public List<IDecoder> Decoders;

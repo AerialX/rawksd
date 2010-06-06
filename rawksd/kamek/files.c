@@ -129,8 +129,6 @@ int File_GetMountPoint(int fs, char* mountpoint, int length)
 	return ret;
 }
 
-#endif
-
 int File_Stat(const char* path, Stats* st)
 {
 	if (file_fd < 0)
@@ -145,8 +143,6 @@ int File_Stat(const char* path, Stats* st)
 	memcpy(st, _st, sizeof(Stats));
 	return ret;
 }
-
-#if 0
 
 int File_CreateFile(const char* path)
 {

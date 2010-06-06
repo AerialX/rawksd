@@ -65,15 +65,36 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		private void RefreshSongList()
 		{
-			Invoke((Action)ClearSongList);
+			Invoke((Action)ClearSongListData);
 			UpdateSongList();
+			Invoke((Action)ClearSongList);
+		}
+
+		private void ClearSongListData()
+		{
+			SongUpdateMutex.WaitOne();
+
+			foreach (ListViewItem item in SongList.Items) {
+				SongListItem song = item.Tag as SongListItem;
+				song.Data.Clear();
+			}
+
+			SongUpdateMutex.ReleaseMutex();
 		}
 
 		private void ClearSongList()
 		{
 			SongUpdateMutex.WaitOne();
 
-			SongList.Items.Clear();
+			List<ListViewItem> todelete = new List<ListViewItem>();
+			foreach (ListViewItem item in SongList.Items) {
+				SongListItem song = item.Tag as SongListItem;
+				if (song.Data.Count == 0)
+					todelete.Add(item);
+			}
+			foreach (ListViewItem item in todelete) {
+				SongList.Items.Remove(item);
+			}
 
 			SongUpdateMutex.ReleaseMutex();
 		}
@@ -225,8 +246,11 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		private void SongList_SelectedIndexChanged(object sender, EventArgs e)
 		{
-			if (SongList.SelectedItems.Count > 0 && SongList.SelectedItems[0].Tag is SongListItem)
-				PopulateSongInfo((SongList.SelectedItems[0].Tag as SongListItem).PrimaryData.Song);
+			if (SongList.SelectedItems.Count > 0 && SongList.SelectedItems[0].Tag is SongListItem) {
+				FormatData data = (SongList.SelectedItems[0].Tag as SongListItem).PrimaryData;
+				if (data != null)
+					PopulateSongInfo(data.Song);
+			}
 
 			if (SongList.SelectedItems.Count > 0) {
 				MenuSongsEdit.Enabled = true;

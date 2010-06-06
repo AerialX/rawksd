@@ -636,7 +636,7 @@ namespace ProxiIOS { namespace DIP {
 	{
 #ifdef YARR
 		if (Provider && !bypass)
-			return Provider->HandleIoctl(message);
+			return Provider->HandleIoctlv(message);
 		else
 #endif
 			return ProxyModule::ForwardIoctlv(message);

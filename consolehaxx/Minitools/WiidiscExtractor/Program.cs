@@ -14,12 +14,17 @@ namespace WiidiscExtractor
 	{
 		static void Main(string[] args)
 		{
-			if (args.Length != 2) {
+			string dir = string.Empty;
+
+			if (args.Length == 2)
+				dir = args[1];
+			else if (args.Length == 1)
+				dir = args[0] + ".ext";
+			else {
 				Console.WriteLine("Usage: wiidiscextractor /path/to/disc.iso /extract/path");
 				return;
 			}
 
-			string dir = args[1];
 			Directory.CreateDirectory(dir);
 
 			try {
@@ -88,10 +93,22 @@ namespace WiidiscExtractor
 							file.Close();
 						}
 					} catch {
-						stream.Position = 0;
-						DlcBin bin = new DlcBin(stream);
-						U8 u8 = new U8(bin.Data);
-						u8.Root.Extract(dir);
+						try {
+							stream.Position = 0;
+							DlcBin bin = new DlcBin(stream);
+							U8 u8 = new U8(bin.Data);
+							u8.Root.Extract(dir);
+						} catch {
+							try {
+								stream.Position = 0;
+								U8 u8 = new U8(stream);
+								u8.Root.Extract(dir);
+							} catch {
+								stream.Position = 0;
+								Rarc rarc = new Rarc(stream);
+								rarc.Root.Extract(dir);
+							}
+						}
 					}
 				}
 				stream.Close();

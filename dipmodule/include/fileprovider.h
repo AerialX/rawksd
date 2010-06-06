@@ -33,6 +33,8 @@ namespace ProxiIOS { namespace DIP {
 
 		int UnencryptedRead(void* buffer, u32 size, u64 offset);
 
+		virtual int Reset(int param);
+		virtual int VerifyCover(void* output);
 		virtual int ReadDiscID(void* discid) { return UnencryptedRead(discid, 0x20, (u64)0); }
 		virtual int Read(void* buffer, u32 size, u32 offset);
 		virtual int ClosePartition();

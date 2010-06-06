@@ -72,11 +72,11 @@ namespace ConsoleHaxx.RawkSD
 
 			progress.Progress();
 
-			DecodeChartMarkers(song, qbsections, qbchart, chart);
+			DecodeChartFretbars(song, qbchart, chart);
 
 			progress.Progress();
 
-			DecodeChartFretbars(song, qbchart, chart);
+			DecodeChartMarkers(song, qbsections, qbchart, chart);
 
 			progress.Progress();
 
@@ -318,7 +318,7 @@ namespace ConsoleHaxx.RawkSD
 				foreach (QbItemStruct mark in markers.Items) {
 					QbItemString section = qbsections.FindItem((mark.Items[1] as QbItemQbKey).Values[0], false) as QbItemString;
 
-					chart.Events.Sections.Add(new Pair<NoteChart.Point, string>(new NoteChart.Point(chart.GetTicks((mark.Items[0] as QbItemInteger).Values[0])), section.Strings[0].Replace(' ', '_').Trim().ToLower()));
+					chart.Events.Sections.Add(new Pair<NoteChart.Point, string>(new NoteChart.Point(chart.GetTicks((mark.Items[0] as QbItemInteger).Values[0])), section.Strings[0]));
 				}
 			}
 		}

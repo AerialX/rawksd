@@ -39,8 +39,6 @@ void MainMenu(Menus::Enum menu);
 void ResumeGui();
 void HaltGui();
 
-void CheckShutdown();
-
 Menus::Enum MenuMount();
 Menus::Enum MenuInit();
 Menus::Enum MenuMain();

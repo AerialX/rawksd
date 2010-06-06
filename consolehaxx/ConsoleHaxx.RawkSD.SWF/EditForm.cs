@@ -158,6 +158,11 @@ namespace ConsoleHaxx.RawkSD.SWF
 				ChartNameLabel.Text = chartformat.Name;
 				ChartSizeLabel.Text = CalculateFormatSize(chartformat);
 			}
+
+			var chart = (Data.GetFormat(FormatType.Chart) as IChartFormat).DecodeChart(Data, new ProgressIndicator());
+			FileStream temp = new FileStream(@"Z:\temp.mid", FileMode.Create);
+			chart.Save(temp);
+			temp.Close();
 		}
 
 		private void UpdateAudioSizes()

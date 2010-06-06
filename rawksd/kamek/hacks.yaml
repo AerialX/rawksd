@@ -1,5 +1,5 @@
 ---
-source_files: []
+source_files: [hacks.cpp]
 hooks:
 -   name:       'Skip Wiimote Screen'
     type:       patch
@@ -24,6 +24,13 @@ hooks:
 #    addr_ntsc:  0x802726C4
 #    addr_pal:   0x80273638
 #    data:       '386000014E800020'
+
+-   name:           'Heap::FreeBlockStats'
+    type:           branch_insn
+    branch_type:    b
+    src_addr_ntsc:  0x80504328
+    src_addr_pal:   0x80505d54
+    target_func:    'HeapFreeBlockStatsHook'
 
 #-   name:       'Disable VerifyChecksum'
 #    type:       patch

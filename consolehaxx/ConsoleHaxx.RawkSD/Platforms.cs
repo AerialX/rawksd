@@ -414,6 +414,7 @@ namespace ConsoleHaxx.RawkSD
 				platform.Cache.AddStream(stream);
 
 				try {
+					stream.Position = 0;
 					Iso9660 iso = new Iso9660(stream);
 					platform.Session["iso"] = iso;
 					platform.Session["rootdirnode"] = iso.Root;
@@ -421,6 +422,7 @@ namespace ConsoleHaxx.RawkSD
 				} catch (FormatException) { }
 
 				try {
+					stream.Position = 0;
 					Disc disc = new Disc(stream);
 
 					platform.Session["wiidisc"] = disc;
@@ -431,6 +433,14 @@ namespace ConsoleHaxx.RawkSD
 
 					platform.Session["rootdirnode"] = partition.Root.Root;
 					return partition.Root.Root;
+				} catch (FormatException) { }
+
+				try {
+					stream.Position = 0;
+					U8 u8 = new U8(stream);
+					platform.Session["u8"] = u8;
+					platform.Session["rootdirnode"] = u8.Root;
+					return u8.Root;
 				} catch (FormatException) { }
 			}
 

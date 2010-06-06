@@ -6,36 +6,33 @@
 #include <fcntl.h>
 #include <files.h>
 
-static DataArray* LoadDTB(const char* filename, s32 size)
+static DataArray* LoadDTB(const char* filename)
 {
 	MemStream* mem = Alloc<MemStream, bool>(true);
 	mem->DisableEncryption();
 	int fd = File_Open(filename, O_RDONLY);
 	if (fd < 0)
 		return NULL;
-	u8* buffer = (u8*)memalign(32, 0x1000);
-	if (buffer==NULL) {
+	u8* buffer = (u8*)memalign(32, 0x8000);
+	if (!buffer) {
 		File_Close(fd);
 		return NULL;
 	}
-	while (size > 0) {
-		int read = File_Read(fd, buffer, 0x1000);
-		if (read <= 0) {
-			free(buffer);
-			File_Close(fd);
-			return NULL;
-		}
+	int read;
+	do {
+		read = File_Read(fd, buffer, 0x8000);
 
-		mem->Write(buffer, read);
-		size -= read;
-	}
+		if (read > 0)
+			mem->Write(buffer, read);
+	} while (read > 0);
 	free(buffer);
 	File_Close(fd);
 
 	DataArray* dtb;
 	mem->Seek(0, BinStream::Start);
 	__rs(mem, dtb);
-	return dtb; // TODO: Leaking mem because the destructor crashages
+	mem->~MemStream();
+	return dtb;
 }
 
 static DataNode* GetSongDataNode(DataArray* song, const char* id)
@@ -120,7 +117,6 @@ static void RefreshCustomsList()
 		while (customs->size)
 			customs->Remove(0);
 	}
-
 	if (!titlearray) {
 		titlearray = Alloc<DataArray, int>(0);
 		DataNode crbanode("cRBA");
@@ -130,39 +126,54 @@ static void RefreshCustomsList()
 	STACK_ALIGN(char, custompath, MAXPATHLEN + 20, 0x20);
 	strcpy(custompath + 2, "/rawk/rb2/customs/");
 
-	int fd = File_OpenDir(custompath + 2);
-	if (fd <= 0)
-		return;
-	Stats stats;
-	while (File_NextDir(fd, custompath + 20, &stats) >= 0) {
-		if (!(stats.Mode & S_IFDIR) || custompath[20] == '.')
-			continue;
-		strcat(custompath + 2, "/data");
-		if (!File_Stat(custompath + 2, &stats)) {
-			DataArray* song = LoadDTB(custompath + 2, (s32)stats.Size);
+	strcpy(custompath + 20, "data");
+	DataArray* songs = LoadDTB(custompath + 2);
+	if (songs) {
+		while (songs->size) {
+			if (songs->nodes->type == 0x10) {
+				const char* id = GetSongID(songs->nodes->LiteralArray(songs));
+				if (id && !strncmp(id, "rwk", 3))
+					customs->Insert(0, songs->nodes[0]);
+			}
+			songs->Remove(0);
+		}
+		songs->TryDestruct();
+	} else {
+		custompath[20] = '\0';
+		int fd = File_OpenDir(custompath + 2);
+		if (fd <= 0)
+			return;
+		Stats stats;
+		while (File_NextDir(fd, custompath + 20, &stats) >= 0) {
+			if (!(stats.Mode & S_IFDIR) || custompath[20] == '.')
+				continue;
+			strcat(custompath + 2, "/data");
+			DataArray* song = LoadDTB(custompath + 2);
 			if (song) {
 				const char* id = GetSongID(song);
-				if (id==NULL || id[0]!='r' || id[1]!='w' || id[2]!='k')
-					continue;
-				AddDTB(song);
+				if (id && !strncmp(id, "rwk", 3))
+					AddDTB(song);
 			}
 		}
+		File_CloseDir(fd);
 	}
-	File_CloseDir(fd);
 }
 
 extern "C" void WiiContentMgrHook(BinStream* stream, DataArray*& dtb)
 {
 	__rs(stream, dtb);
 	if (!dtb) {
-		dtb = Alloc<DataArray, int>(0);
-	}
-	for (int i = 0; i < dtb->size; i++) {
-		DataNode* node = dtb->nodes + i;
-		if (node->type == 0x10 && !strncmp(GetSongID(node->LiteralArray(dtb)), "rwk", 3)) {
-			dtb->Remove(i);
-			i--;
-			continue;
+		if (!customs->size)
+			return;
+		else
+			dtb = Alloc<DataArray, int>(0);
+	} else {
+		for (int i = 0; i < dtb->size; i++) {
+			DataNode* node = dtb->nodes + i;
+			if (node->type == 0x10 && !strncmp(GetSongID(node->LiteralArray(dtb)), "rwk", 3)) {
+				dtb->Remove(i);
+				i--;
+			}
 		}
 	}
 
@@ -192,7 +203,7 @@ extern "C" Symbol SongOfferGetIconHook(SongOffer* offer)
 	if (!offer->data)
 		return Symbol("");
 	const char* songid = GetSongID(offer->data);
-	if (songid==NULL || songid[0]!='r' || songid[1]!='w' || songid[2]!='k')
+	if (!songid || strncmp(songid, "rwk", 3))
 		return GetSongDownloaded(offer->data) ? Symbol("download") : Symbol("rb2_icon");
 	const char* pack = GetSongPack(offer->data);
 	if (!pack || !pack[0])
@@ -203,8 +214,8 @@ extern "C" Symbol SongOfferGetIconHook(SongOffer* offer)
 extern "C" Symbol SongOfferProviderGetIconHook(SongOfferProvider* provider, int index)
 {
 	const char* symbol = provider->DataSymbol(index);
-	if (symbol[0]=='r' && symbol[1]=='w' && symbol[2]=='k' && symbol[3]) {
-		if (symbol[4]=='r' && symbol[5]=='b')
+	if (symbol && !strncmp(symbol, "rwk", 3)) {
+		if (symbol[4] == 'r' && symbol[5] == 'b')
 			return Symbol("rb1_icon");
 		return Symbol("download");
 	}

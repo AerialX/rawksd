@@ -56,12 +56,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 			NamePrefixCombo.SelectedIndex = (int)Configuration.NamePrefix;
 			GH5ExpertPlusCheckbox.Checked = Configuration.ExpertPlusGH5;
-			if (Configuration.LocalTransfer && Configuration.LocalTranscode)
-				LocalStorageCombo.SelectedIndex = -1;
-			else if (Configuration.LocalTransfer)
+			if (Configuration.LocalTranscode)
 				LocalStorageCombo.SelectedIndex = 1;
-			else if (Configuration.LocalTranscode)
-				LocalStorageCombo.SelectedIndex = 2;
 			else
 				LocalStorageCombo.SelectedIndex = 0;
 		}
@@ -112,15 +108,9 @@ namespace ConsoleHaxx.RawkSD.SWF
 			switch (LocalStorageCombo.SelectedIndex) {
 				case 0:
 					Configuration.LocalTranscode = false;
-					Configuration.LocalTransfer = false;
 					break;
 				case 1:
-					Configuration.LocalTranscode = false;
-					Configuration.LocalTransfer = true;
-					break;
-				case 2:
 					Configuration.LocalTranscode = true;
-					Configuration.LocalTransfer = false;
 					break;
 			}
 		}

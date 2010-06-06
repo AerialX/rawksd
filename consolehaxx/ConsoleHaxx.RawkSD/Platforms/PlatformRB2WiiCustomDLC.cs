@@ -87,13 +87,14 @@ namespace ConsoleHaxx.RawkSD
 				song.ID = song.ID.TrimStart('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
 				DlcBin content = new DlcBin(contentbin.Data);
 				U8 u8 = new U8(content.Data);
-				//DirectoryNode songdir = u8.Root.Navigate("/content/songs/", false, true) as DirectoryNode;
 
 				data.Session["songdir"] = u8.Root;
 				AddSong(data, song, progress); // TODO: Add dta bin to songdir for album art
 				data.Session.Remove("songdir");
 				contentbin.Data.Close();
 			}
+
+			RefreshUnusedContent(data);
 
 			return data;
 		}
@@ -134,6 +135,8 @@ namespace ConsoleHaxx.RawkSD
 
 				progress.Progress(6);
 
+				ChartFormat chartformat = (formatdata.GetFormat(FormatType.Chart) as IChartFormat).DecodeChart(formatdata, progress);
+
 				Stream album = null;
 				Stream chart = formatdata.GetStream(ChartFormatRB.Instance, ChartFormatRB.ChartFile);
 				Stream pan = formatdata.GetStream(ChartFormatRB.Instance, ChartFormatRB.PanFile);
@@ -146,8 +149,6 @@ namespace ConsoleHaxx.RawkSD
 					formatdata.CloseStream(chart);
 					chart = null;
 				}
-
-				ChartFormat chartformat = (formatdata.GetFormat(FormatType.Chart) as IChartFormat).DecodeChart(formatdata, progress);
 
 				if (chart == null) {
 					chart = new TemporaryStream();
@@ -222,8 +223,6 @@ namespace ConsoleHaxx.RawkSD
 				Stream memorySong = new TemporaryStream();
 				cache.AddStream(memorySong);
 				appsong.Save(memorySong);
-
-				data.Mutex.WaitOne();
 
 				formatdata.CloseStream(audio);
 				formatdata.CloseStream(preview);
@@ -345,9 +344,13 @@ namespace ConsoleHaxx.RawkSD
 				bin = new DlcBin(stream);
 				appsong = new U8(bin.Data);
 
+				data.Mutex.WaitOne();
+
 				data.Session["songdir"] = appsong.Root;
 				AddSong(data, song, progress);
 				stream.Close();
+
+				SaveDTBCache(data);
 
 				data.Mutex.ReleaseMutex();
 
@@ -562,26 +565,20 @@ namespace ConsoleHaxx.RawkSD
 			return 0;
 		}
 
+		public static string UnusedTitle = "cRBA";
 		private static bool FindUnusedContent(PlatformData data, SongData song, out string title, out ushort index)
 		{
 			data.Mutex.WaitOne();
 
-			for (title = "cRBA"; (byte)title[3] <= (byte)'Z'; title = title.Substring(0, 3) + (char)(((byte)title[3]) + 1)) {
-				for (index = 1; index < 510; index += 2) {
-					bool flag = false;
-					foreach (FormatData formatdata in data.Songs) {
-						SongsDTA dta = HarmonixMetadata.GetSongsDTA(formatdata.Song);
-						if (String.Compare(title, dta.Song.Name.Substring(4, 4), true) == 0 && index == ushort.Parse(dta.Song.Name.Substring(9, 3))) {
-							if (song.ID == formatdata.Song.ID) {
-								data.Mutex.ReleaseMutex();
-								return true;
-							}
-							flag = true;
-							break;
-						}
-					}
+			Dictionary<string, List<ushort>> contents = data.Session["contents"] as Dictionary<string, List<ushort>>;
 
-					if (!flag) {
+			for (title = UnusedTitle; (byte)title[3] <= (byte)'Z'; title = title.Substring(0, 3) + (char)(((byte)title[3]) + 1)) {
+				if (!contents.ContainsKey(title))
+					contents[title] = new List<ushort>();
+				var list = contents[title];
+				for (index = 1; index < 510; index += 2) {
+					if (!list.Contains(index)) {
+						list.Add(index);
 						data.Mutex.ReleaseMutex();
 						return true;
 					}
@@ -593,6 +590,46 @@ namespace ConsoleHaxx.RawkSD
 			title = null;
 			index = 0;
 			return false;
+		}
+
+		private static void RefreshUnusedContent(PlatformData data)
+		{
+			data.Mutex.WaitOne();
+
+			Dictionary<string, List<ushort>> contents = new Dictionary<string,List<ushort>>();
+
+			foreach (FormatData formatdata in data.Songs) {
+				SongsDTA dta = HarmonixMetadata.GetSongsDTA(formatdata.Song);
+				string title = dta.Song.Name.Substring(4, 4);
+				ushort index = ushort.Parse(dta.Song.Name.Substring(9, 3));
+				if (!contents.ContainsKey(title))
+					contents[title] = new List<ushort>();
+				contents[title].Add(index);
+			}
+
+			data.Session["contents"] = contents;
+
+			data.Mutex.ReleaseMutex();
+		}
+
+		private void SaveDTBCache(PlatformData data)
+		{
+			data.Mutex.WaitOne();
+
+			string path = Path.Combine(Path.Combine(Path.Combine(Path.Combine(data.Session["maindirpath"] as string, "rawk"), "rb2"), "customs"), "data");
+
+			DTB.NodeTree tree = new DTB.NodeTree();
+
+			foreach (FormatData formatdata in data.Songs) {
+				SongsDTA dta = HarmonixMetadata.GetSongsDTA(formatdata.Song);
+				tree.Nodes.Add(dta.ToDTB());
+			}
+
+			FileStream file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+			tree.Save(new EndianReader(file, Endianness.LittleEndian));
+			file.Close();
+
+			data.Mutex.ReleaseMutex();
 		}
 
 		private static IList<SongsDTA> GetInstalledCustoms(string path, string sdpath)

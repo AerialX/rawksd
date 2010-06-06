@@ -12,6 +12,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 	{
 		private static MainForm Form;
 
+		public static string InstallTitle { get { return PlatformRB2WiiCustomDLC.UnusedTitle; } set { PlatformRB2WiiCustomDLC.UnusedTitle = value; } }
 		public static string LocalPath { get; set; }
 		public static string TemporaryPath { get; set; }
 		public static int MaxConcurrentTasks { get; set; }
@@ -34,6 +35,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			DefaultAction = DefaultActionType.InstallSD;
 			LocalPath = "customs";
 			TemporaryPath = "temp";
+			InstallTitle = "cRBA";
 			ExpertPlusGH5 = false;
 		}
 
@@ -55,6 +57,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			NamePrefix = (ImportMap.NamePrefix)data.GetValue<int>("NamePrefix");
 			LocalPath = data.GetValue<string>("LocalPath");
 			TemporaryPath = data.GetValue<string>("TemporaryPath");
+			InstallTitle = data.GetValue<string>("InstallTitle");
 			ExpertPlusGH5 = data.GetValue<bool>("ExpertPlusGH5");
 		}
 
@@ -72,6 +75,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			data.SetValue("NamePrefix", (int)NamePrefix);
 			data.SetValue("LocalPath", LocalPath);
 			data.SetValue("TemporaryPath", TemporaryPath);
+			data.SetValue("InstallTitle", InstallTitle);
 			data.SetValue("ExpertPlusGH5", ExpertPlusGH5);
 			data.Save(stream);
 			stream.Close();

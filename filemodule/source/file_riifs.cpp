@@ -5,6 +5,17 @@
 
 #define CONNECT_SLEEP_INTERVAL 100000 // 0.1 seconds
 
+#ifdef RIIFS_LOCAL_SEEKING
+#define DIRTY_SEEK(info) { \
+	if (info->SeekDirty) { \
+		RiiSeek(info, info->Position, SEEK_SET); \
+		info->SeekDirty = false; \
+	} \
+}
+#else
+#define DIRTY_SEEK(info)
+#endif
+
 namespace ProxiIOS { namespace Filesystem {
 	int RiiHandler::Mount(const void* options, int length)
 	{
@@ -247,6 +258,9 @@ namespace ProxiIOS { namespace Filesystem {
 	int RiiHandler::Read(FileInfo* file, u8* buffer, int length)
 	{
 		RiiFileInfo* info = (RiiFileInfo*)file;
+		
+		DIRTY_SEEK(info);
+
 		SendCommand(RII_OPTION_FILE, &info->File, 4);
 		SendCommand(RII_OPTION_LENGTH, &length, 4);
 		int ret = ReceiveCommand(RII_FILE_READ, buffer, length);
@@ -260,6 +274,8 @@ namespace ProxiIOS { namespace Filesystem {
 	int RiiHandler::Write(FileInfo* file, const u8* buffer, int length)
 	{
 		RiiFileInfo* info = (RiiFileInfo*)file;
+
+		DIRTY_SEEK(info);
 
 		SendCommand(RII_OPTION_FILE, &info->File, 4);
 		SendCommand(RII_OPTION_DATA, buffer, length);
@@ -277,26 +293,36 @@ namespace ProxiIOS { namespace Filesystem {
 		// It shouldn't allow seeking beyond end of file either
 		RiiFileInfo* info = (RiiFileInfo*)file;
 #ifdef RIIFS_LOCAL_SEEKING
-		if ((whence == SEEK_SET && (u32)where == info->Position) ||
-			(whence == SEEK_CUR && where == 0))
-			return info->Position; // Ignore excessive seeking
-#endif
-		SendCommand(RII_OPTION_FILE, &info->File, 4);
-		SendCommand(RII_OPTION_SEEK_WHERE, &where, 4);
-		SendCommand(RII_OPTION_SEEK_WHENCE, &whence, 4);
-		int ret = ReceiveCommand(RII_FILE_SEEK);
-#ifdef RIIFS_LOCAL_SEEKING
-		if (!ret) {
-			if (whence == SEEK_CUR)
-				info->Position += where;
-			else if (whence == SEEK_SET)
-				info->Position = where;
-			else // SEEK_END
+		if (whence == SEEK_END) {
+			int ret = RiiSeek(info, where, whence);
+			if (!ret)
 				info->Position = ReceiveCommand(RII_FILE_TELL);
 			return info->Position;
 		}
+		if ((whence == SEEK_SET && (u32)where == info->Position) ||
+			(whence == SEEK_CUR && where == 0))
+			return info->Position; // Ignore excessive seeking
+
+		info->SeekDirty = true;
+#else
+		return RiiSeek(info, where, whence);
 #endif
-		return ret;
+
+#ifdef RIIFS_LOCAL_SEEKING
+		if (whence == SEEK_CUR)
+			info->Position += where;
+		else // SEEK_SET
+			info->Position = where;
+		return info->Position;
+#endif
+	}
+
+	int RiiHandler::RiiSeek(RiiFileInfo* info, int where, int whence)
+	{
+		SendCommand(RII_OPTION_FILE, &info->File, 4);
+		SendCommand(RII_OPTION_SEEK_WHENCE, &whence, 4);
+		SendCommand(RII_OPTION_SEEK_WHERE, &where, 4);
+		return ReceiveCommand(RII_FILE_SEEK);
 	}
 
 	int RiiHandler::Tell(FileInfo* file)
@@ -459,6 +485,8 @@ namespace ProxiIOS { namespace Filesystem {
 	{
 		if (ServerVersion >= 0x04)
 		{
+			if (LogSize > 0x2000) // At this point, just flush the damn thing
+				IdleTick();
 			u8 *NewBuffer = (u8*)Realloc(LogBuffer, length+LogSize, LogSize);
 			if (NewBuffer) { // if Realloc failed LogBuffer should be left untouched
 				LogBuffer = NewBuffer;

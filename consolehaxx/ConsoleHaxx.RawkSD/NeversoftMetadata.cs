@@ -209,14 +209,22 @@ namespace ConsoleHaxx.RawkSD
 
 		public static bool IsGuitarHero4(Game game)
 		{
-			if (game == Game.Unknown)
-				return false;
-
 			switch (game) {
 				case Game.GuitarHeroWorldTour:
 				case Game.GuitarHeroMetallica:
 				case Game.GuitarHeroSmashHits:
 				case Game.GuitarHeroVanHalen:
+					return true;
+			}
+
+			return false;
+		}
+
+		public static bool IsGuitarHero5(Game game)
+		{
+			switch (game) {
+				case Game.GuitarHero5:
+				case Game.BandHero:
 					return true;
 			}
 
@@ -251,6 +259,9 @@ namespace ConsoleHaxx.RawkSD
 
 			// GH4 engine games that came out after GHWT use a different drum audio scheme; the GH5 engine uses the same as GHWT
 			bool gh4v2 = NeversoftMetadata.IsGuitarHero4(song.Game) && song.Game != Game.GuitarHeroWorldTour;
+			// GHVH is the only BIK-based GH game with stereo bass
+			bool ghvh = song.Game == Game.GuitarHeroVanHalen;
+
 			if (gh4v2) {
 				// Kick
 				audioformat.Mappings.Add(new AudioFormat.Mapping(drumvolume, -1, Instrument.Drums));
@@ -271,7 +282,9 @@ namespace ConsoleHaxx.RawkSD
 			audioformat.Mappings.Add(new AudioFormat.Mapping(guitarvolume, -1, Instrument.Guitar));
 			audioformat.Mappings.Add(new AudioFormat.Mapping(guitarvolume, 1, Instrument.Guitar));
 			// Bass
-			audioformat.Mappings.Add(new AudioFormat.Mapping(bassvolume, 0, Instrument.Bass));
+			audioformat.Mappings.Add(new AudioFormat.Mapping(bassvolume, ghvh ? -1 : 0, Instrument.Bass));
+			if (ghvh)
+				audioformat.Mappings.Add(new AudioFormat.Mapping(bassvolume, 1, Instrument.Bass));
 			// Else / Vocals
 			audioformat.Mappings.Add(new AudioFormat.Mapping(bandvolume, -1, Instrument.Ambient));
 			audioformat.Mappings.Add(new AudioFormat.Mapping(bandvolume, 1, Instrument.Ambient));

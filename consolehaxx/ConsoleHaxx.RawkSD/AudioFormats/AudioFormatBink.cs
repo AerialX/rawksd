@@ -63,6 +63,10 @@ namespace ConsoleHaxx.RawkSD
 
 			format.SetDisposeStreams(data, new Stream[] { audio, preview });
 
+			Game game = data.Song.Game;
+			if (NeversoftMetadata.IsGuitarHero4(game) || NeversoftMetadata.IsGuitarHero5(game))
+				format.Decoder = new AmplifyDecoder(format.Decoder, 1.30f);
+
 			return format;
 		}
 

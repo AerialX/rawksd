@@ -10,7 +10,7 @@ namespace ConsoleHaxx.Harmonix
 	{
 		public Stream Base;
 		//private EndianReader Reader;
-		private Aes Crypt;
+		private SymmetricAlgorithm Crypt;
 		ICryptoTransform Decryptor;
 		private long Offset;
 		private byte[] ReadBuffer;
@@ -32,8 +32,8 @@ namespace ConsoleHaxx.Harmonix
 			ReadBuffer = new byte[Util.AesKeySize];
 			KeyBuffer = new byte[Util.AesKeySize];
 			Buffer = new byte[Util.AesKeySize];
-
-			Crypt = Aes.Create();
+			
+			Crypt = Rijndael.Create();
 			Crypt.Padding = PaddingMode.None;
 			Crypt.Mode = CipherMode.ECB;
 			// MOGG Key:

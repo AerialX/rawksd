@@ -31,6 +31,7 @@ namespace ProxiIOS { namespace DIP {
 	int DiProvider::HandleIoctl(ipcmessage* message)
 	{
 		Message = message;
+		u32* buffer = (u32*)Message->ioctl.buffer_in;
 		
 		switch (Message->ioctl.command) {
 			case Ioctl::Inquiry:
@@ -38,7 +39,7 @@ namespace ProxiIOS { namespace DIP {
 			case Ioctl::ReadDiscID:
 				return ReadDiscID(Message->ioctl.buffer_io);
 			case Ioctl::Read:
-				return Read(Message->ioctl.buffer_io, Message->ioctl.buffer_in[1], Message->ioctl.buffer_in[2]);
+				return Read(Message->ioctl.buffer_io, buffer[1], buffer[2]);
 			case Ioctl::WaitCoverClose:
 				return WaitCoverClose();
 			case Ioctl::CoverRegister:
@@ -50,13 +51,13 @@ namespace ProxiIOS { namespace DIP {
 			case Ioctl::GetCover:
 				return GetCover();
 			case Ioctl::Reset:
-				return Reset(Message->ioctl.buffer_in[1]);
+				return Reset(buffer[1]);
 			case Ioctl::ClosePartition:
 				return ClosePartition();
 			case Ioctl::UnencryptedRead:
-				return UnencryptedRead(Message->ioctl.buffer_io, Message->ioctl.buffer_in[1], Message->ioctl.buffer_in[2]);
+				return UnencryptedRead(Message->ioctl.buffer_io, buffer[1], buffer[2]);
 			case Ioctl::EnableDVD:
-				return EnableDVD(Message->ioctl.buffer_in[1]);
+				return EnableDVD(buffer[1]);
 			case Ioctl::StatusRegister:
 				return StatusRegister();
 			case Ioctl::ReportKey:
@@ -64,23 +65,23 @@ namespace ProxiIOS { namespace DIP {
 			case Ioctl::Seek:
 				return Seek();
 			case Ioctl::ReadDVD:
-				return ReadDVD(Message->ioctl.buffer_in[1], Message->ioctl.buffer_in[2], Message->ioctl.buffer_in[3], Message->ioctl.buffer_in[4]);
+				return ReadDVD(buffer[1], buffer[2], buffer[3], buffer[4]);
 			case Ioctl::StopLaser:
 				return StopLaser();
 			case Ioctl::Offset:
-				return Offset(Message->ioctl.buffer_in[1], Message->ioctl.buffer_in[2]);
+				return Offset(buffer[1], buffer[2]);
 			case Ioctl::ReadBCA:
 				return ReadBCA(Message->ioctl.buffer_io, Message->ioctl.length_io);
 			case Ioctl::VerifyCover:
 				return VerifyCover(Message->ioctl.buffer_io);
 			case Ioctl::SetMaximumRotation:
-				return SetMaximumRotation(Message->ioctl.buffer_in[1]);
+				return SetMaximumRotation(buffer[1]);
 			case Ioctl::RequestError:
 				return RequestError(Message->ioctl.buffer_io);
 			case Ioctl::StopMotor:
-				return StopMotor(Message->ioctl.buffer_in[1], Message->ioctl.buffer_in[2]);
+				return StopMotor(buffer[1], buffer[2]);
 			case Ioctl::EnableAudio:
-				return EnableAudio(Message->ioctl.buffer_in[0]);
+				return EnableAudio(buffer[0]);
 		}
 		
 		return ForwardIoctl();

@@ -6,6 +6,24 @@
 		<difficulty instrument="guitar" rank="1" />
 		<difficulty instrument="bass" rank="1" />
 	</global>
+	<deletesong id="synctest" />
+	<deletesong id="synctestplaytoaudio" />
+	<deletesong id="synctestaudioandvisual" />
+	<deletesong id="tutorial_1b" />
+	<deletesong id="tutorial_1c" />
+	<deletesong id="tutorial_1d" />
+	<deletesong id="tutorial_1e" />
+	<deletesong id="tutorial_2a" />
+	<deletesong id="tutorial_2b" />
+	<deletesong id="tutorial_2c" />
+	<deletesong id="tutorial_3a" />
+	<deletesong id="tutorial_3b" />
+	<deletesong id="tutorial_3c" />
+	<deletesong id="tutorial_3d" />
+	<deletesong id="tutorial_4c" />
+	<deletesong id="tutorial_4e" />
+	<deletesong id="TimRappTest" />
+	<deletesong id="KingsAndQueensCredits" />
 	<song id="alwaysontherun">
 		<album>Mama Said</album>
 		<genre>Rock</genre>
@@ -23,6 +41,16 @@
 		<difficulty instrument="drum" rank="500" />
 	</song>
 	<song id="BeyondBeautiful">
+		<album>Just Push Play</album>
+		<genre>Rock</genre>
+		<year>2001</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="550" />
+		<difficulty instrument="guitar" rank="550" />
+		<difficulty instrument="bass" rank="0" />
+		<difficulty instrument="drum" rank="550" />
+	</song>
+	<song id="BeyondBeautiful_coop">
 		<album>Just Push Play</album>
 		<genre>Rock</genre>
 		<year>2001</year>
@@ -113,6 +141,16 @@
 		<difficulty instrument="drum" rank="200" />
 	</song>
 	<song id="joeperryguitarbattle">
+		<album>Joe Perry Guitar Battle</album>
+		<genre>Rock</genre>
+		<year>2007</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="600" />
+		<difficulty instrument="guitar" rank="600" />
+		<difficulty instrument="bass" rank="0" />
+		<difficulty instrument="drum" rank="600" />
+	</song>
+	<song id="joeperryguitarbattle_coop">
 		<album>Joe Perry Guitar Battle</album>
 		<genre>Rock</genre>
 		<year>2007</year>
@@ -229,6 +267,16 @@
 		<track>1</track>
 		<difficulty instrument="band" rank="250" />
 		<difficulty instrument="guitar" rank="250" />
+		<difficulty instrument="bass" rank="0" />
+		<difficulty instrument="drum" rank="250" />
+	</song>
+	<song id="nosurprize_coop">
+		<album>Night in the Ruts</album>
+		<genre>Rock</genre>
+		<year>1979</year>
+		<track>1</track>
+		<difficulty instrument="band" rank="250" />
+		<difficulty instrument="guitar" rank="250" />
 		<difficulty instrument="bass" rank="250" />
 		<difficulty instrument="drum" rank="250" />
 	</song>
@@ -263,6 +311,16 @@
 		<difficulty instrument="drum" rank="350" />
 	</song>
 	<song id="ratsinthecellar">
+		<album>Rocks</album>
+		<genre>Rock</genre>
+		<year>1976</year>
+		<track>3</track>
+		<difficulty instrument="band" rank="450" />
+		<difficulty instrument="guitar" rank="450" />
+		<difficulty instrument="bass" rank="0" />
+		<difficulty instrument="drum" rank="450" />
+	</song>
+	<song id="ratsinthecellar_coop">
 		<album>Rocks</album>
 		<genre>Rock</genre>
 		<year>1976</year>
@@ -313,6 +371,16 @@
 		<difficulty instrument="drum" rank="250" />
 	</song>
 	<song id="talktalking">
+		<album>Joe Perry</album>
+		<genre>Rock</genre>
+		<year>2005</year>
+		<track>7</track>
+		<difficulty instrument="band" rank="250" />
+		<difficulty instrument="guitar" rank="250" />
+		<difficulty instrument="bass" rank="0" />
+		<difficulty instrument="drum" rank="250" />
+	</song>
+	<song id="talktalking_coop">
 		<album>Joe Perry</album>
 		<genre>Rock</genre>
 		<year>2005</year>

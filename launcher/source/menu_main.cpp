@@ -3,6 +3,7 @@
 #include "haxx.h"
 #include "riivolution_config.h"
 #include "installer.h"
+#include "init.h"
 
 #include <unistd.h>
 #include <files.h>

@@ -115,7 +115,10 @@ int File_SetLogFS(int fs)
 
 int File_GetLogFS()
 {
-	return os_ioctl(file_fd, IOCTL_GetLogFS, NULL, 0, NULL, 0);
+	if (file_fd >= 0)
+		return os_ioctl(file_fd, IOCTL_GetLogFS, NULL, 0, NULL, 0);
+	else
+		return -1;
 }
 
 int File_GetMountPoint(int fs, char* mountpoint, int length)

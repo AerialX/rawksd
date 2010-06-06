@@ -1,0 +1,11 @@
+<wiidisc version="1">
+	<id game="SZA">
+		<region type="E" />
+	</id>
+	<options>
+		<section name="RB2 Haxx">
+			<option name="Kamek Haxx" default="1">
+				<choice name="Enabled"><patch id="kamek_ntsc" /></choice>
+			</option>
+		</section>
+	</options>

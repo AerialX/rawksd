@@ -168,19 +168,17 @@ namespace ConsoleHaxx.Wii
 		{
 			EndianReader nodewriter = new EndianReader(nodes, Endianness.BigEndian);
 
+			position++;
 			uint nameoffset = (uint)strings.Position;
 			strings.Write(Util.Encoding.GetBytes(node.Name), 0, node.Name.Length);
 			strings.WriteByte(0);
-
 			if (node is DirectoryNode) {
 				nodewriter.Write((ushort)0x0100); // Type
 				nodewriter.Write((ushort)nameoffset); // Name offset
 				nodewriter.Write((uint)Math.Max(recursion, 0)); // Data Offset // TODO: Not really recursion but parent number index
 				nodewriter.Write((uint)SaveCountNodes(node as DirectoryNode) + position);
-				foreach (Node subnode in (node as DirectoryNode).Children) {
-					position++;
+				foreach (Node subnode in (node as DirectoryNode).Children)
 					dataoffset = SaveNodes(subnode, nodes, strings, dataoffset, recursion + 1, ref position);
-				}
 			} else if (node is FileNode) {
 				nodewriter.Write((ushort)0); // Type
 				nodewriter.Write((ushort)nameoffset); // Name offset
@@ -189,8 +187,6 @@ namespace ConsoleHaxx.Wii
 
 				dataoffset += (uint)(node as FileNode).Size;
 				dataoffset = (uint)Util.RoundUp(dataoffset, 0x20);
-
-				position++;
 			}
 
 
@@ -199,7 +195,7 @@ namespace ConsoleHaxx.Wii
 
 		private uint SaveCountNodes(DirectoryNode DirectoryNode)
 		{
-			return SaveCountNodes(DirectoryNode, 1);
+			return SaveCountNodes(DirectoryNode, 0);
 		}
 
 		private uint SaveCountNodes(DirectoryNode DirectoryNode, uint dirs)

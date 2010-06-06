@@ -9,6 +9,10 @@
 
 */
 
+#include "diprovider.h"
+
+#ifdef YARR
+
 #include <stdio.h>
 #include <string.h>
 
@@ -395,4 +399,6 @@ void aes_encrypt(u8 *iv, u8 *inbuf, u8 *outbuf, unsigned long long len) {
     //    hexdump(outbuf + blockno*sizeof(block), 16);
   }
 }
-      
+
+#endif
+

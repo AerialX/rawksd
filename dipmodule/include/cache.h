@@ -4,6 +4,10 @@
 #include <limits.h>
 #include <mem.h>
 
+#include "diprovider.h"
+
+#ifdef YARR
+
 #define CACHE_FREE UINT_MAX
 typedef u32 sec_t;
 
@@ -69,3 +73,5 @@ public:
 
 	void Clear();
 };
+#endif
+

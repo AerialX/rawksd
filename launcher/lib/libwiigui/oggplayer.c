@@ -192,7 +192,7 @@ static long f_tell(int *f)
 
 	return (long) k;
 }
-/*
+
 int mem_open(char * ogg, int size)
 {
 	static int one = 1;
@@ -228,7 +228,7 @@ int mem_close(int fd)
 	else
 		return f_close(&fd);
 }
-*/
+
 static ov_callbacks callbacks = {
 	(size_t (*)(void *, size_t, size_t, void *))  f_read,
 	(int (*)(void *, ogg_int64_t, int))           f_seek,

@@ -29,7 +29,6 @@
 		{
 			this.Tab = new System.Windows.Forms.TabControl();
 			this.tabPage1 = new System.Windows.Forms.TabPage();
-			this.tabPage2 = new System.Windows.Forms.TabPage();
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
 			this.LabelCustoms = new System.Windows.Forms.Label();
 			this.LabelTemporary = new System.Windows.Forms.Label();
@@ -39,11 +38,12 @@
 			this.TemporaryText = new System.Windows.Forms.TextBox();
 			this.PerformanceCombo = new System.Windows.Forms.ComboBox();
 			this.DefaultActionCombo = new System.Windows.Forms.ComboBox();
+			this.LabelTasks = new System.Windows.Forms.Label();
+			this.TasksNumeric = new System.Windows.Forms.NumericUpDown();
+			this.tabPage2 = new System.Windows.Forms.TabPage();
 			this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
 			this.LabelStorage = new System.Windows.Forms.Label();
 			this.LocalStorageCombo = new System.Windows.Forms.ComboBox();
-			this.LabelTasks = new System.Windows.Forms.Label();
-			this.TasksNumeric = new System.Windows.Forms.NumericUpDown();
 			this.LabelTags = new System.Windows.Forms.Label();
 			this.GH5ExpertPlusCheckbox = new System.Windows.Forms.CheckBox();
 			this.NamePrefixCombo = new System.Windows.Forms.ComboBox();
@@ -51,10 +51,10 @@
 			this.CloseButton = new System.Windows.Forms.Button();
 			this.Tab.SuspendLayout();
 			this.tabPage1.SuspendLayout();
-			this.tabPage2.SuspendLayout();
 			this.tableLayoutPanel1.SuspendLayout();
-			this.tableLayoutPanel2.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.TasksNumeric)).BeginInit();
+			this.tabPage2.SuspendLayout();
+			this.tableLayoutPanel2.SuspendLayout();
 			this.ButtonLayout.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -79,17 +79,6 @@
 			this.tabPage1.TabIndex = 0;
 			this.tabPage1.Text = "Options";
 			this.tabPage1.UseVisualStyleBackColor = true;
-			// 
-			// tabPage2
-			// 
-			this.tabPage2.Controls.Add(this.tableLayoutPanel2);
-			this.tabPage2.Location = new System.Drawing.Point(4, 22);
-			this.tabPage2.Name = "tabPage2";
-			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage2.Size = new System.Drawing.Size(302, 140);
-			this.tabPage2.TabIndex = 1;
-			this.tabPage2.Text = "Imports";
-			this.tabPage2.UseVisualStyleBackColor = true;
 			// 
 			// tableLayoutPanel1
 			// 
@@ -207,6 +196,46 @@
 			this.DefaultActionCombo.TabIndex = 3;
 			this.DefaultActionCombo.SelectedIndexChanged += new System.EventHandler(this.DefaultActionCombo_SelectedIndexChanged);
 			// 
+			// LabelTasks
+			// 
+			this.LabelTasks.AutoSize = true;
+			this.LabelTasks.Location = new System.Drawing.Point(3, 52);
+			this.LabelTasks.Name = "LabelTasks";
+			this.LabelTasks.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
+			this.LabelTasks.Size = new System.Drawing.Size(94, 17);
+			this.LabelTasks.TabIndex = 1;
+			this.LabelTasks.Text = "Concurrent Tasks:";
+			// 
+			// TasksNumeric
+			// 
+			this.TasksNumeric.Dock = System.Windows.Forms.DockStyle.Top;
+			this.TasksNumeric.Location = new System.Drawing.Point(103, 55);
+			this.TasksNumeric.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+			this.TasksNumeric.Name = "TasksNumeric";
+			this.TasksNumeric.Size = new System.Drawing.Size(190, 20);
+			this.TasksNumeric.TabIndex = 4;
+			this.TasksNumeric.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+			this.TasksNumeric.ValueChanged += new System.EventHandler(this.TasksNumeric_ValueChanged);
+			// 
+			// tabPage2
+			// 
+			this.tabPage2.Controls.Add(this.tableLayoutPanel2);
+			this.tabPage2.Location = new System.Drawing.Point(4, 22);
+			this.tabPage2.Name = "tabPage2";
+			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+			this.tabPage2.Size = new System.Drawing.Size(302, 140);
+			this.tabPage2.TabIndex = 1;
+			this.tabPage2.Text = "Imports";
+			this.tabPage2.UseVisualStyleBackColor = true;
+			// 
 			// tableLayoutPanel2
 			// 
 			this.tableLayoutPanel2.ColumnCount = 2;
@@ -245,7 +274,6 @@
 			this.LocalStorageCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.LocalStorageCombo.FormattingEnabled = true;
 			this.LocalStorageCombo.Items.AddRange(new object[] {
-            "None",
             "Store Original Format Locally",
             "Store Rock Band 2 Format Locally"});
 			this.LocalStorageCombo.Location = new System.Drawing.Point(106, 3);
@@ -253,35 +281,6 @@
 			this.LocalStorageCombo.Size = new System.Drawing.Size(187, 21);
 			this.LocalStorageCombo.TabIndex = 5;
 			this.LocalStorageCombo.SelectedIndexChanged += new System.EventHandler(this.LocalStorageCombo_SelectedIndexChanged);
-			// 
-			// LabelTasks
-			// 
-			this.LabelTasks.AutoSize = true;
-			this.LabelTasks.Location = new System.Drawing.Point(3, 52);
-			this.LabelTasks.Name = "LabelTasks";
-			this.LabelTasks.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
-			this.LabelTasks.Size = new System.Drawing.Size(94, 17);
-			this.LabelTasks.TabIndex = 1;
-			this.LabelTasks.Text = "Concurrent Tasks:";
-			// 
-			// TasksNumeric
-			// 
-			this.TasksNumeric.Dock = System.Windows.Forms.DockStyle.Top;
-			this.TasksNumeric.Location = new System.Drawing.Point(103, 55);
-			this.TasksNumeric.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-			this.TasksNumeric.Name = "TasksNumeric";
-			this.TasksNumeric.Size = new System.Drawing.Size(190, 20);
-			this.TasksNumeric.TabIndex = 4;
-			this.TasksNumeric.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-			this.TasksNumeric.ValueChanged += new System.EventHandler(this.TasksNumeric_ValueChanged);
 			// 
 			// LabelTags
 			// 
@@ -356,12 +355,12 @@
 			this.Load += new System.EventHandler(this.SettingsForm_Load);
 			this.Tab.ResumeLayout(false);
 			this.tabPage1.ResumeLayout(false);
-			this.tabPage2.ResumeLayout(false);
 			this.tableLayoutPanel1.ResumeLayout(false);
 			this.tableLayoutPanel1.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.TasksNumeric)).EndInit();
+			this.tabPage2.ResumeLayout(false);
 			this.tableLayoutPanel2.ResumeLayout(false);
 			this.tableLayoutPanel2.PerformLayout();
-			((System.ComponentModel.ISupportInitialize)(this.TasksNumeric)).EndInit();
 			this.ButtonLayout.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();

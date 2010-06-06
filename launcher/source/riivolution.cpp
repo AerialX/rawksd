@@ -29,6 +29,7 @@ namespace Ioctl { enum Enum {
 	SetClusters		= 0xC4,
 	Allocate		= 0xC5,
 	AddEmu			= 0xC6,
+	SetFileProvider	= 0xC7,
 	SetShiftBase	= 0xC8,
 	BanTitle		= 0xC9,
 	DLC				= 0xCA
@@ -97,6 +98,11 @@ void RVL_SetFST(void* address, u32 size)
 u32 RVL_GetFSTSize()
 {
 	return fstsize;
+}
+
+int RVL_SetFileProvider(const char* filename)
+{
+	return IOS_Ioctl(fd, Ioctl::SetFileProvider, (void*)filename, strlen(filename + 1), NULL, 0);
 }
 
 int RVL_SetClusters(bool clusters)
@@ -404,6 +410,9 @@ static void RVL_Patch(RiiFilePatch* file, string commonfs, bool stat=false, u64 
 	string external = file->External;
 	if (commonfs.size() && !external.compare(0, commonfs.size(), commonfs, 0, commonfs.size()))
 		external = external.substr(commonfs.size());
+
+	if (!file->Resize)
+		file->Length = node->Size;
 
 	if (!stat && file->Length == 0) {
 		Stats st;
