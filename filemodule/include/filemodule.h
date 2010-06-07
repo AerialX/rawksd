@@ -64,6 +64,8 @@ namespace ProxiIOS { namespace Filesystem {
 			Log				= IOCTL_Log,
 			// Set RTC epoch
 			Epoch			= IOCTL_Epoch,
+			// Hacky context dumper
+			Context         = IOCTL_Context
 		};
 	}
 
@@ -145,6 +147,8 @@ namespace ProxiIOS { namespace Filesystem {
 
 	class Filesystem : public ProxiIOS::Module
 	{
+	private:
+		void PrintLog(const char* fmt, ...);
 	public:
 		DISC_INTERFACE* Disk[FILE_MAX_DISKS];
 		FilesystemHandler* Mounted[FILE_MAX_MOUNTED];

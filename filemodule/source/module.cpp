@@ -6,6 +6,8 @@
 #include "file_riifs.h"
 #include "file_isfs.h"
 
+#include "print.h"
+
 #define FILE_IOCTL_FD 0x123
 #define FSIDLE_MSG 0x500
 #define FSRTC_MSG  0x501
@@ -228,9 +230,49 @@ namespace ProxiIOS { namespace Filesystem {
 				if (LogFS >= 0 && Mounted[LogFS] && message->ioctl.length_in)
 					return Mounted[LogFS]->Log(message->ioctl.buffer_in, message->ioctl.length_in);
 				return Errors::Success; }
+			case Ioctl::Context: {
+#if 1
+				static const char *exception_name[15] = {
+						"System Reset", "Machine Check", "DSI", "ISI",
+						"Interrupt", "Alignment", "Program", "Floating Point",
+						"Decrementer", "System Call", "Trace", "Performance",
+						"IABR", "Reserved", "Thermal"};
+				int i;
+				if (buffer_in[36]<15)
+					PrintLog("%s Exception!\n", exception_name[buffer_in[36]]);
+				else
+					PrintLog("Unrecoverable Exception!\n");
+				PrintLog("-------------- Exception 0x%08x Context 0x%08x ---------------\n", buffer_in[36], (u32)buffer_in|0x80000000);
+				for (i=0; i < 16; i++)
+					PrintLog("r%2d  = 0x%08x (%14d)  r%2d  = 0x%08x (%14d)\n", i, buffer_in[i], buffer_in[i], i+16, buffer_in[i+16], buffer_in[i+16]);
+				PrintLog("LR   = 0x%08x                   CR   = 0x%08x\n", buffer_in[33], buffer_in[32]);
+				PrintLog("SRR0 = 0x%08x                   SRR1 = 0x%08x\n", buffer_in[102], buffer_in[103]);
+				PrintLog("DSISR= 0x%08x                   DAR  = 0x%08x\n", buffer_in[34], buffer_in[35]);
+				PrintLog("Address:      Back Chain    LR Save\n");
+				u32* stack = (u32*)(buffer_in[1]&0x3FFFFFFF); // r1 = sp
+				for (i=0; i<16 && stack && ((s32)((u32)stack|0x80000000)+0x10000)!=-1; i++, stack = (u32*)(stack[0]&0x3FFFFFFF)) {
+					os_sync_before_read(stack, 8);
+					PrintLog("0x%08x:   0x%08x    0x%08x\n", (u32)stack|0x80000000, stack[0], stack[1]);
+				}
+#endif
+				return Errors::Success; }
 			default:
 				return -1;
 		}
+	}
+
+	void Filesystem::PrintLog(const char* fmt, ...)
+	{
+		static char buf[200] ATTRIBUTE_ALIGN(32);
+		if (LogFS<0 || !Mounted[LogFS])
+			return;
+
+		va_list arg;
+		va_start(arg, fmt);
+		int len = _vsprintf(buf, fmt, arg);
+		va_end(arg);
+
+		Mounted[LogFS]->Log(buf, len);
 	}
 
 	int Filesystem::HandleIoctlv(ipcmessage* message)
