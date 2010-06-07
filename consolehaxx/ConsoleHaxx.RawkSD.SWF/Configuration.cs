@@ -17,7 +17,6 @@ namespace ConsoleHaxx.RawkSD.SWF
 		public static string TemporaryPath { get; set; }
 		public static int MaxConcurrentTasks { get; set; }
 		public static bool LocalTranscode { get; set; }
-		public static bool LocalTransfer { get; set; }
 		public static bool MemorySongData { get { return FormatData.LocalSongCache; } set { FormatData.LocalSongCache = value; } }
 		public static DefaultActionType DefaultAction { get; set; }
 
@@ -29,7 +28,6 @@ namespace ConsoleHaxx.RawkSD.SWF
 		{
 			MaxConcurrentTasks = Environment.ProcessorCount;
 			LocalTranscode = false;
-			LocalTransfer = false;
 			MemorySongData = false;
 			NamePrefix = ImportMap.NamePrefix.None;
 			DefaultAction = DefaultActionType.InstallSD;
@@ -51,7 +49,6 @@ namespace ConsoleHaxx.RawkSD.SWF
 			DataArray data = new DataArray(tree);
 			MaxConcurrentTasks = data.GetValue<int>("MaxConcurrentTasks");
 			LocalTranscode = data.GetValue<bool>("LocalTranscode");
-			LocalTransfer = data.GetValue<bool>("LocalTransfer");
 			MemorySongData = data.GetValue<bool>("MemorySongData");
 			DefaultAction = (DefaultActionType)data.GetValue<int>("DefaultAction");
 			NamePrefix = (ImportMap.NamePrefix)data.GetValue<int>("NamePrefix");
@@ -69,7 +66,6 @@ namespace ConsoleHaxx.RawkSD.SWF
 			DataArray data = new DataArray();
 			data.SetValue("MaxConcurrentTasks", MaxConcurrentTasks);
 			data.SetValue("LocalTranscode", LocalTranscode);
-			data.SetValue("LocalTransfer", LocalTransfer);
 			data.SetValue("MemorySongData", MemorySongData);
 			data.SetValue("DefaultAction", (int)DefaultAction);
 			data.SetValue("NamePrefix", (int)NamePrefix);

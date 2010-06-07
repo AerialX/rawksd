@@ -263,7 +263,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 					TaskMutex.ReleaseMutex();
 
 					audio = true;
-					Platform.Transcode(FormatType.Audio, data, new IFormat[] { AudioFormatRB2Mogg.Instance }, destination, progress);
+					Platform.Transcode(FormatType.Audio, olddata, new IFormat[] { AudioFormatRB2Mogg.Instance }, destination, progress);
 					olddata.Dispose();
 				}
 
@@ -300,16 +300,10 @@ namespace ConsoleHaxx.RawkSD.SWF
 				TaskMutex.WaitOne();
 				bool local = data.PlatformData.Platform == PlatformLocalStorage.Instance;
 				bool ownformat = false;
-				if (!local) {
-					if (Configuration.LocalTransfer) {
-						source = PlatformLocalStorage.Instance.CreateSong(Storage, data.Song);
-						data.SaveTo(source);
-						local = true;
-					} else if (Configuration.MaxConcurrentTasks > 1) {
-						source = new TemporaryFormatData(data.Song, data.PlatformData);
-						data.SaveTo(source);
-						ownformat = true;
-					}
+				if (!local && Configuration.MaxConcurrentTasks > 1) {
+					source = new TemporaryFormatData(data.Song, data.PlatformData);
+					data.SaveTo(source);
+					ownformat = true;
 				}
 				TaskMutex.ReleaseMutex();
 
@@ -319,9 +313,9 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 				progress.SetNextWeight(10);
 
-				if (!data.Formats.Contains(AudioFormatRB2Mogg.Instance) && !data.Formats.Contains(AudioFormatRB2Bink.Instance)) {
-					if ((!Configuration.LocalTranscode && local) || (!local && data == source)) {
-						dest = new TemporaryFormatData(data.Song, data.PlatformData);
+				if (!source.Formats.Contains(AudioFormatRB2Mogg.Instance) && !source.Formats.Contains(AudioFormatRB2Bink.Instance)) {
+					if (local && !ownformat) {
+						dest = new TemporaryFormatData(source.Song, source.PlatformData);
 						source.SaveTo(dest, FormatType.Chart);
 						ownformat = true;
 					}

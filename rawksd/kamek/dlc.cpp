@@ -153,6 +153,7 @@ static void RefreshCustomsList()
 				const char* id = GetSongID(song);
 				if (id && !strncmp(id, "rwk", 3))
 					AddDTB(song);
+				song->TryDestruct();
 			}
 		}
 		File_CloseDir(fd);

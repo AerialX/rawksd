@@ -12,12 +12,11 @@ static char* ToHttpString(const char* str, int length = 0)
 	for (int i = 0; i < length; i++) {
 		char chr = str[i];
 		char temp[0x08];
-		if (strchr(" <>#%{}|\\^~[]`;/?:@=&$+", chr)) {
-			sprintf(temp, "%%%02X", (int)chr);
-		} else {
+		if ((chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z') || (chr >= '0' && chr <= '9')) {
 			temp[0] = chr;
 			temp[1] = '\0';
-		}
+		} else
+			sprintf(temp, "%%%02X", (int)chr);
 		strcat(dest, temp);	
 	}
 

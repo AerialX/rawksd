@@ -51,12 +51,12 @@ namespace ConsoleHaxx.RawkSD.SWF
 				FormatData source = data;
 
 				Program.Form.TaskMutex.WaitOne();
-				if ((data.PlatformData.Platform != PlatformLocalStorage.Instance || Configuration.LocalTranscode) && Configuration.LocalTransfer) {
-					source = PlatformLocalStorage.Instance.CreateSong(Program.Form.Storage, data.Song);
-					data.SaveTo(source);
-				} else if (data.PlatformData.Platform != PlatformLocalStorage.Instance && Configuration.MaxConcurrentTasks > 1) {
+				bool local = data.PlatformData.Platform == PlatformLocalStorage.Instance;
+				bool ownformat = false;
+				if (!local && Configuration.MaxConcurrentTasks > 1) {
 					source = new TemporaryFormatData(data.Song, data.PlatformData);
 					data.SaveTo(source);
+					ownformat = true;
 				}
 				Program.Form.TaskMutex.ReleaseMutex();
 
@@ -66,7 +66,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 				PlatformFretsOnFire.Instance.SaveSong(platformdata, data, progress);
 				progress.Progress();
 
-				if (source != data)
+				if (ownformat)
 					source.Dispose();
 
 				progress.EndTask();
@@ -82,12 +82,12 @@ namespace ConsoleHaxx.RawkSD.SWF
 				FormatData data = original;
 
 				Program.Form.TaskMutex.WaitOne();
-				if ((data.PlatformData.Platform != PlatformLocalStorage.Instance || Configuration.LocalTranscode) && Configuration.LocalTransfer) {
-					data = PlatformLocalStorage.Instance.CreateSong(Program.Form.Storage, data.Song);
-					original.SaveTo(data);
-				} else if (data.PlatformData.Platform != PlatformLocalStorage.Instance && Configuration.MaxConcurrentTasks > 1) {
+				bool local = data.PlatformData.Platform == PlatformLocalStorage.Instance;
+				bool ownformat = false;
+				if (!local && Configuration.MaxConcurrentTasks > 1) {
 					data = new TemporaryFormatData(data.Song, data.PlatformData);
 					original.SaveTo(data);
+					ownformat = true;
 				}
 				Program.Form.TaskMutex.ReleaseMutex();
 
@@ -193,7 +193,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 					rba.Save(ostream);
 					ostream.Close();
 
-					if (data != original)
+					if (ownformat)
 						data.Dispose();
 
 					progress.Progress();
@@ -281,12 +281,12 @@ namespace ConsoleHaxx.RawkSD.SWF
 				FormatData data = original;
 
 				Program.Form.TaskMutex.WaitOne();
-				if ((data.PlatformData.Platform != PlatformLocalStorage.Instance || Configuration.LocalTranscode) && Configuration.LocalTransfer) {
-					data = PlatformLocalStorage.Instance.CreateSong(Program.Form.Storage, data.Song);
-					original.SaveTo(data);
-				} else if (data.PlatformData.Platform != PlatformLocalStorage.Instance && Configuration.MaxConcurrentTasks > 1) {
+				bool local = data.PlatformData.Platform == PlatformLocalStorage.Instance;
+				bool ownformat = false;
+				if (!local && Configuration.MaxConcurrentTasks > 1) {
 					data = new TemporaryFormatData(data.Song, data.PlatformData);
 					original.SaveTo(data);
+					ownformat = true;
 				}
 				Program.Form.TaskMutex.ReleaseMutex();
 
@@ -409,7 +409,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 					stfs.Save(ostream);
 					ostream.Close();
 
-					if (data != original)
+					if (ownformat)
 						data.Dispose();
 
 					progress.Progress();
