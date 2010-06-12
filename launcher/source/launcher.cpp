@@ -449,7 +449,7 @@ static inline void ApplyBinaryPatches(s32 app_section_size)
 
 	// return to HBC
 	if (*(u32*)0x80001808 == 0x48415858) // "HAXX"
-		PatchReturnToMenu(app_section_size, 0x000100014A4F4449llu);
+		PatchReturnToMenu(app_section_size, 0x000100014A4F4449llu); // "JODI"
 
 	RVL_PatchMemory(&Disc, app_address, app_section_size);
 }

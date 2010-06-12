@@ -230,8 +230,8 @@ namespace ProxiIOS { namespace Filesystem {
 				if (LogFS >= 0 && Mounted[LogFS] && message->ioctl.length_in)
 					return Mounted[LogFS]->Log(message->ioctl.buffer_in, message->ioctl.length_in);
 				return Errors::Success; }
+#if 1 // testing only
 			case Ioctl::Context: {
-#if 1
 				static const char *exception_name[15] = {
 						"System Reset", "Machine Check", "DSI", "ISI",
 						"Interrupt", "Alignment", "Program", "Floating Point",
@@ -254,8 +254,8 @@ namespace ProxiIOS { namespace Filesystem {
 					os_sync_before_read(stack, 8);
 					PrintLog("0x%08x:   0x%08x    0x%08x\n", (u32)stack|0x80000000, stack[0], stack[1]);
 				}
-#endif
 				return Errors::Success; }
+#endif
 			default:
 				return -1;
 		}

@@ -9,6 +9,7 @@
 
 #include <files.h>
 
+#include <math.h>
 #include <unistd.h>
 #include <vector>
 using std::vector;
@@ -61,9 +62,14 @@ Menus::Enum MenuMain()
 	cache.Data.push_back(new GuiImageData(menu_save_sel_png));
 	cache.Data.push_back(new GuiImageData(menu_exit_png));
 	cache.Data.push_back(new GuiImageData(menu_exit_sel_png));
-
+/*	FX work in progress
+	float shine_pos = 0;
+	GuiImageData x(*cache.Data[1]);
+	GuiImage y(&x);
+*/
 	HaltGui();
 	ButtonList buttons(Window, 5);
+	//buttons.SetButton(0, cache.Data[0], &x);
 	buttons.SetButton(0, cache.Data[0], cache.Data[1]);
 	buttons.SetButton(1, cache.Data[2], cache.Data[3]);
 	buttons.SetButton(2, cache.Data[4], cache.Data[5]);
@@ -93,7 +99,16 @@ Menus::Enum MenuMain()
 				return Menus::Exit;
 		}
 		CheckShutdown();
-
+/*
+		HaltGui();
+		memcpy(x.GetImage(), cache.Data[1]->GetImage(), x.GetWidth()*x.GetHeight()*4);
+		DCFlushRange(x.GetImage(), x.GetWidth()*x.GetHeight()*4);
+		y.SetShine(180, (sin(shine_pos)+1)*120+15, 40);
+		shine_pos += 0.01;
+		if (shine_pos >= 2*M_PI)
+			shine_pos = 0;
+		ResumeGui();
+*/
 		CheckDisks();
 	}
 }
@@ -140,10 +155,43 @@ Menus::Enum MenuLaunch()
 	return Menus::Exit;
 }
 
+#define DEFAULT() if (!hasdefault) { ret = File_SetDefault(ret); if (ret >= 0) hasdefault = true; }
+void RawkSD_Mount(vector<int>* mounted)
+{
+	int fd = File_Init();
+	if (fd < 0)
+		return;
+
+	bool hasdefault = false;
+	int ret;
+
+	ret = File_Fat_Mount(SD_DISK, "sd");
+	if (ret >= 0) {
+		mounted->push_back(ret);
+		DEFAULT();
+	}
+
+	ret = File_Fat_Mount(USB_DISK, "usb");
+	if (ret >= 0) {
+		mounted->push_back(ret);
+		DEFAULT();
+	}
+
+	ret = File_RiiFS_Mount("", 5256);
+	if (ret >= 0) {
+		mounted->push_back(ret);
+		if (!hasdefault) {
+			ToMount.push_back(ret);
+			File_SetLogFS(ret);
+		}
+		DEFAULT();
+	}
+}
+
 bool CheckDisks()
 {
 	if (!Mounted.size())
-		Haxx_Mount(&Mounted);
+		RawkSD_Mount(&Mounted);
 
 	static bool disc = false;
 

@@ -35,7 +35,7 @@ namespace ProxiIOS { namespace Filesystem {
 		memset(&address, 0, sizeof(address));
 		address.sin_family = PF_INET;
 
-		if (Port==0 && !strcmp(Host, "")) {
+		if (!strcmp(Host, "")) {
 			// broadcast a ping to try and find a server
 			int found = 0;
 			sock_opt = 1;
@@ -57,7 +57,7 @@ namespace ProxiIOS { namespace Filesystem {
 			ret = net_setsockopt(locate_socket, SOL_SOCKET, SO_BROADCAST, (char*)&sock_opt, 4);
 			if (ret!=-E2BIG) {
 				int data = RII_OPTION_PING;
-				address.sin_port = htons(1137);
+				address.sin_port = htons(Port ? Port : 1137);
 				address.sin_addr.s_addr = htonl(INADDR_BROADCAST);
 				ret = net_sendto(locate_socket, &data, sizeof(data), 0, (struct sockaddr*)&address, 8);
 				if (ret>=4) {
@@ -258,7 +258,7 @@ namespace ProxiIOS { namespace Filesystem {
 	int RiiHandler::Read(FileInfo* file, u8* buffer, int length)
 	{
 		RiiFileInfo* info = (RiiFileInfo*)file;
-		
+
 		DIRTY_SEEK(info);
 
 		SendCommand(RII_OPTION_FILE, &info->File, 4);
@@ -304,16 +304,13 @@ namespace ProxiIOS { namespace Filesystem {
 			return info->Position; // Ignore excessive seeking
 
 		info->SeekDirty = true;
-#else
-		return RiiSeek(info, where, whence);
-#endif
-
-#ifdef RIIFS_LOCAL_SEEKING
 		if (whence == SEEK_CUR)
 			info->Position += where;
 		else // SEEK_SET
 			info->Position = where;
 		return info->Position;
+#else
+		return RiiSeek(info, where, whence);
 #endif
 	}
 

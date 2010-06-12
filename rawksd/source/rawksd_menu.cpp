@@ -191,10 +191,8 @@ ButtonList::ButtonList(GuiWindow* window, int items)
 
 void ButtonList::SetButton(int index, GuiImageData* image, GuiImageData* selected)
 {
-	if (Images[index])
-		delete Images[index];
-	if (ImagesOver[index])
-		delete ImagesOver[index];
+	delete Images[index];
+	delete ImagesOver[index];
 
 	if (image) {
 		Images[index] = new GuiImage(image);
@@ -234,10 +232,8 @@ ButtonList::~ButtonList()
 	for (int i = 0; i < Count; i++) {
 		Window->Remove(Buttons[i]);
 		delete Buttons[i];
-		if (Images[i])
-			delete Images[i];
-		if (ImagesOver[i])
-			delete ImagesOver[i];
+		delete Images[i];
+		delete ImagesOver[i];
 	}
 	delete[] Buttons;
 	delete[] Images;

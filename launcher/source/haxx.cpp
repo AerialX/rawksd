@@ -79,6 +79,7 @@ int Haxx_Init()
 	return 0;
 }
 
+// this function probably shouldn't be here
 #define DEFAULT() if (!hasdefault) { ret = File_SetDefault(ret); if (ret >= 0) hasdefault = true; }
 void Haxx_Mount(vector<int>* mounted)
 {

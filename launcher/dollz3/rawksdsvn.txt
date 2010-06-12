@@ -1,0 +1,1 @@
+Put the dollz3 binary for your platform in this directory to build the compressed .dol.
