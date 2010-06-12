@@ -471,7 +471,7 @@ bool Connection::WaitForAction()
 			Option::Enum option = (Option::Enum)GetBE32();
 			int length = GetBE32();
 			vector<unsigned char> data;
-			if (length > 0)
+			if (length >= 0)
 				data = GetData(length);
 
 			Options[option] = data;
@@ -517,7 +517,9 @@ bool Connection::WaitForAction()
 					DebugPrint(dprint.str());
 
 					int fd = -1;
-					ios_base::openmode fmode = ios_base::binary|ios_base::in; // no more ios_base::nocreate, so O_CREAT is ignored here
+					ios_base::openmode fmode = ios_base::binary;
+					if (!(mode & ARM_O_CREAT))
+						fmode |= ios_base::in;
 					if (mode&O_RDWR || mode&O_WRONLY)
 						fmode |= ios_base::out;
 
@@ -544,8 +546,11 @@ bool Connection::WaitForAction()
 					int length = be32(Options[Option::Length]);
 					dprint << "File_Read(" << fd << ", " << length << ");";
 					DebugPrint(dprint.str());
-					if (OpenFiles.count(fd))
+					if (OpenFiles.count(fd)) {
+						// pointless seek in case last op was a write
+						OpenFiles[fd]->seekg(OpenFiles[fd]->tellg(), ios::beg);
 						ret = Client->Write((ifstream*)OpenFiles[fd], length);
+					}
 					if (ret < length)
 						Client->Pad(length - ret);
 					Return(ret);
@@ -556,13 +561,17 @@ bool Connection::WaitForAction()
 					int length = Options[Option::Data].size()-1;
 					dprint << "File_Write(" << fd << ", " << length << ");";
 					DebugPrint(dprint.str());
-					if (!OpenFiles.count(fd))
+					if (length<=0 || !OpenFiles.count(fd))
 						Return(0);
 					else
 					{
+						// pointless seek in case last op was a read
+						OpenFiles[fd]->seekg(OpenFiles[fd]->tellg(), ios::beg);
 						OpenFiles[fd]->write((char*)&Options[Option::Data][0], length);
-						if (OpenFiles[fd]->bad())
+						if (OpenFiles[fd]->bad()) {
 							Return(0);
+							OpenFiles[fd]->clear();
+						}
 						else
 							Return(length);
 					}
@@ -589,11 +598,12 @@ bool Connection::WaitForAction()
 						Return(-1);
 					else
 					{
-						// seekp for writing position
-						OpenFiles[fd]->seekg(where, whence);
-						if ((int)OpenFiles[fd]->tellp() != -1)
+						// set the read pointer, it might fail if file is write only
+						// in that case set the write pointer
+						if (OpenFiles[fd]->seekg(where, whence).bad())
 							OpenFiles[fd]->seekp(where, whence);
-						Return(0);
+						Return(OpenFiles[fd]->good() ? 0 : -1);
+						OpenFiles[fd]->clear();
 					}
 					break;
 				}

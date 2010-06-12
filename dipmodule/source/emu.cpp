@@ -6,6 +6,7 @@
 #include <files.h>
 #include <mem.h>
 
+#define EMU_PRIORITY 0x48
 #define TITLEFILE_MEMORY
 
 //#define LOG_IPC // this is commented out because it's too noisy
@@ -299,18 +300,15 @@ namespace ProxiIOS { namespace EMU {
 		return ret;
 	}
 
-	EMU::EMU() : Module(EMU_MODULE_NAME), DLCPath(NULL)
+	EMU::EMU(u8 *stack, const int stacksize) : Module(EMU_MODULE_NAME), DLCPath(NULL)
 	{
 #ifdef CH341
 		ch341_open();
 #endif
 		memset(open_files, 0, sizeof(open_files));
 
-		const int stacksize = 0x2000;
-		u8* stack = (u8*)Memalign(32, stacksize);
-
 		stack += stacksize;
-		loop_thread = os_thread_create(emu_thread, this, stack, stacksize, 0x48, 0);
+		loop_thread = os_thread_create(emu_thread, this, stack, stacksize, EMU_PRIORITY, 0);
 
 		TicketDir* tickets = new TicketDir();
 		if (tickets)
@@ -744,6 +742,66 @@ namespace ProxiIOS { namespace EMU {
 			File_Close(file);
 	}
 
+	VFFFile::VFFFile(const char *name, s32 mode) :
+	RiivFile(name, mode),
+	buf_size(0x4000)
+	{
+
+		LogPrintf("New VFFFile, %s\n", name);
+		if ((mode & O_WRONLY) || (mode & O_RDWR))
+			write_buffer = (u8*)Memalign(32, buf_size);
+		else
+			write_buffer = NULL;
+		write_pos = 0;
+	}
+
+	void VFFFile::Flush()
+	{
+		if (write_pos) {
+			LogPrintf("Flushing %d bytes to VFF file\n", write_pos);
+			RiivFile::Write(write_buffer, write_pos);
+			write_pos = 0;
+		}
+	}
+
+	VFFFile::~VFFFile()
+	{
+		Flush();
+		Dealloc(write_buffer);
+	}
+
+	s32 VFFFile::Read(void *dest, s32 length)
+	{
+		Flush();
+		return RiivFile::Read(dest, length);
+	}
+
+	s32 VFFFile::Seek(s32 where, s32 whence)
+	{
+		Flush();
+		return RiivFile::Seek(where, whence);
+	}
+
+	s32 VFFFile::Write(const void *_src, s32 length)
+	{
+		const u8* src = (const u8*)_src;
+		s32 written = 0;
+		if (write_buffer==NULL)
+			return RiivFile::Write(src, length);
+
+		while (length>0) {
+			s32 to_write = MIN(buf_size-write_pos, length);
+			memcpy(write_buffer+write_pos, src+written, to_write);
+			write_pos += to_write;
+			written += to_write;
+			length -= to_write;
+			if (write_pos >= buf_size) // write_pos > buf_size should not happen
+				Flush();
+		}
+
+		return written;
+	}
+
 	s32 AppFile::Open()
 	{
 		if (binfile==NULL) {
@@ -828,6 +886,11 @@ namespace ProxiIOS { namespace EMU {
 		mode = mode&3;
 		if (mode)
 			mode--;
+
+		int path_len = strlen(path);
+		if (path_len > 4 && !strcmp(path+path_len-4, ".vff"))
+			return new VFFFile(path, mode);
+
 		return new RiivFile(path, mode);
 	}
 

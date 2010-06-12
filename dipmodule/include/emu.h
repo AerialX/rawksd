@@ -81,6 +81,23 @@ namespace ProxiIOS { namespace EMU {
 		virtual ~RiivFile();
 	};
 
+	// special class for .vff files to combine writes,
+	// since they get written in 512 byte chunks
+	class VFFFile : public RiivFile
+	{
+	private:
+		const int buf_size;
+		u8 *write_buffer;
+		s32 write_pos;
+		void Flush();
+	public:
+		virtual s32 Read(void *dest, s32 length);
+		virtual s32 Write(const void *_src, s32 length);
+		virtual s32 Seek(s32 where, s32 whence);
+		VFFFile(const char *name, s32 mode);
+		virtual ~VFFFile();
+	};
+
 	class AppFile : public RiivFile
 	{
 	private:
@@ -190,7 +207,7 @@ namespace ProxiIOS { namespace EMU {
 		int TryOpen(const char *name, u32 mode, RiivFile **x);
 		void CheckForDLCTitle(const char* path);
 	public:
-		EMU();
+		EMU(u8 *stack, const int stack_size);
 
 		int Start();
 

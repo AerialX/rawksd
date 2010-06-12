@@ -84,8 +84,9 @@ typedef struct sockaddr SOCKADDR;
 #endif
 #define be64(a)			(((u64)be32(a)<<32)|be32((a)+4))
 
-#define ARM_O_TRUNC	0x0400
 #define ARM_O_APPEND	0x0008
+#define ARM_O_CREAT		0x0200
+#define ARM_O_TRUNC		0x0400
 
 using namespace std;
 
