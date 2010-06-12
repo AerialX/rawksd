@@ -129,8 +129,8 @@ extern "C" void udelay(int us);
 #define OTP_DATA			((volatile u32*)0xCD8001F0)
 
 // the filename used to load modules
-static const char LOAD_MODULE_PATH[] = "/tmp/patch.bin";
-static const char LOAD_KERNEL_PATH[] = "/tmp/boot.bin";
+static const char LOAD_MODULE_PATH[] ATTRIBUTE_ALIGN(32) = "/tmp/patch.bin";
+static const char LOAD_KERNEL_PATH[] ATTRIBUTE_ALIGN(32) = "/tmp/boot.bin";
 
 u8 sys_certs[SYS_CERTS_SIZE] ATTRIBUTE_ALIGN(32);
 
