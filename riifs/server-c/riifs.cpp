@@ -223,8 +223,10 @@ TcpListener::TcpListener(int _port) : port(_port)
 
 	listen_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	bind(listen_socket, (SOCKADDR*)&saddr, sizeof(saddr));
-	if (getsockname(listen_socket, (SOCKADDR*)&saddr, &host_len)==0 && host_len>0)
+	if (getsockname(listen_socket, (SOCKADDR*)&saddr, &host_len)==0 && host_len>0) {
+		port = ntohs(saddr.sin_port);
 		LocalEndPoint = ip_to_string(ntohl(saddr.sin_addr.s_addr), port);
+	}
 }
 
 int TcpListener::Start()
@@ -420,12 +422,16 @@ string Connection::GetPath(vector<unsigned char> data)
 unsigned int Connection::GetBE32()
 {
 	vector<unsigned char> data = GetData(4);
-	return be32(data);
+	if (data.size()>=4)
+		return be32(data);
+	return 0;
 }
 
-unsigned int Connection::GetFD()
+int Connection::GetFD()
 {
-	return be32(Options[Option::File]);
+	if (Options[Option::File].size()>=4)
+		return (int)be32(Options[Option::File]);
+	return -1;
 }
 
 void Connection::DebugPrint(string text)
@@ -511,7 +517,9 @@ bool Connection::WaitForAction()
 				}
 				case Command::FileOpen: {
 					string path = GetPath();
-					int mode = be32(Options[Option::Mode]);
+					int mode = 0;
+					if (Options[Option::Mode].size()>=4)
+						mode = be32(Options[Option::Mode]);
 
 					dprint << "File_Open(\"" << path << "\", " << showbase << hex << mode << dec << noshowbase << ");";
 					DebugPrint(dprint.str());
@@ -543,7 +551,9 @@ bool Connection::WaitForAction()
 				case Command::FileRead: {
 					int ret = 0;
 					int fd = GetFD();
-					int length = be32(Options[Option::Length]);
+					int length=0;
+					if (Options[Option::Length].size()>=4)
+						length = be32(Options[Option::Length]);
 					dprint << "File_Read(" << fd << ", " << length << ");";
 					DebugPrint(dprint.str());
 					if (OpenFiles.count(fd)) {
@@ -579,18 +589,23 @@ bool Connection::WaitForAction()
 				}
 				case Command::FileSeek: {
 					int fd = GetFD();
-					int where = be32(Options[Option::SeekWhere]);
-					ios_base::seekdir whence;
-					switch(be32(Options[Option::SeekWhence])) {
-						case 0:
-							whence = ios_base::beg;
-							break;
-						case 2:
-							whence = ios_base::end;
-							break;
-						//case 1:
-						default:
-							whence = ios_base::cur;
+					int where=0;
+					ios_base::seekdir whence = ios_base::cur;
+					if (Options[Option::SeekWhere].size()<4 || Options[Option::SeekWhence].size()<4)
+						fd = -1;
+					else {
+						where = be32(Options[Option::SeekWhere]);
+						switch(be32(Options[Option::SeekWhence])) {
+							case 0:
+								whence = ios_base::beg;
+								break;
+							case 2:
+								whence = ios_base::end;
+								break;
+							//case 1:
+							default:
+								whence = ios_base::cur;
+						}
 					}
 					dprint << "File_Seek(" << fd << ", " << where << ", " << whence << ");";
 					DebugPrint(dprint.str());

@@ -260,7 +260,7 @@ public:
 	string GetPath();
 	string GetPath(vector<unsigned char>);
 	unsigned int GetBE32();
-	unsigned int GetFD();
+	int GetFD();
 	void DebugPrint(string);
 	void Close();
 	void Return(int);
