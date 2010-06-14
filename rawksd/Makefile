@@ -27,7 +27,7 @@ INCLUDES	:=	include ../launcher/include ../launcher/lib/libwiigui ../launcher/li
 SOURCEDIRS	:=	../launcher/source
 SOURCEFILES	:=	init.cpp haxx.cpp installer.cpp \
 				rijndael.c http.cpp sha1.cpp wdvd.cpp \
-				riivolution.cpp riivolution_config.cpp launcher.cpp fwrite.cpp
+				riivolution.cpp riivolution_config.cpp launcher.cpp fwrite.cpp debugprint.cpp
 
 #---------------------------------------------------------------------------------
 # options for code generation

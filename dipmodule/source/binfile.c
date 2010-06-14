@@ -22,22 +22,22 @@ void LogPrintf(const char *fmt, ...);
 #define BIN_READ  1
 #define BIN_WRITE 2
 
-#define VERIFY_ERROR_SIZE		0x00000001
-#define VERIFY_ERROR_MAGIC		0x00000002
-#define VERIFY_ERROR_VERSION	0x00000004
-#define VERIFY_ERROR_WII_ID		0x00000008
-#define VERIFY_ERROR_ZEROES		0x00000010
-#define VERIFY_ERROR_TITLE1		0x00000020
-#define VERIFY_ERROR_TITLE2     0x00000040
-#define VERIFY_ERROR_TITLE2_CRB 0x00000080
-#define VERIFY_ERROR_PADDING    0x00000100
+#define VERIFY_ERROR_SIZE		   0x00000001
+#define VERIFY_ERROR_MAGIC		   0x00000002
+#define VERIFY_ERROR_VERSION	   0x00000004
+#define VERIFY_ERROR_WII_ID		   0x00000008
+#define VERIFY_ERROR_ZEROES		   0x00000010
+#define VERIFY_ERROR_TITLE1		   0x00000020
+#define VERIFY_ERROR_TITLE2        0x00000040
+#define VERIFY_ERROR_TITLE2_REGION 0x00000080
+#define VERIFY_ERROR_PADDING       0x00000100
 
 #define FSERR_EINVAL	-103
 
 void dlc_aes_decrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len);
 void dlc_aes_encrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len);
 
-unsigned int verify_bk(BK_Header *bk)
+inline unsigned int verify_bk(BK_Header *bk)
 {
 	unsigned int failed=0;
 	u32 wii_id = 0;
@@ -80,8 +80,8 @@ unsigned int verify_bk(BK_Header *bk)
 	}
 	if ((u8)bk->title_id_2 != *(u8*)3)
 	{
-		debug_printf("bk_header.title_id_2 tail incorrect %02X %02X\n", (u8)bk->title_id_2, *(u8*)3);
-		failed |= VERIFY_ERROR_TITLE2_CRB;
+		debug_printf("bk_header.title_id_2 region incorrect %02X %02X\n", (u8)bk->title_id_2, *(u8*)3);
+		failed |= VERIFY_ERROR_TITLE2_REGION;
 	}
 	if (bk->padding[0] || bk->padding[1] || bk->padding[2])
 	{
@@ -117,16 +117,19 @@ int FileSeek(BinFile* file, s32 where)
 	if (file->pos==where)
 		return 0;
 	if (File_Seek(file->handle, where, SEEK_SET)!=where)
-		return 0;
+		return 1;
 	file->pos = where;
 	return 0;
 }
 
 BinFile* OpenBinRead(s32 file)
 {
-	u32 i, found=0;;
-    BK_Header bk_header;
-    tmd tmd_header;
+	u32 i, found=0;
+	struct {
+    	BK_Header bk_header;
+    	sig_rsa2048 sig;
+    	tmd tmd_header;
+	} bin_header;
     tmd_content content_rec;
     BinFile* binfile = (BinFile*)Memalign(32, sizeof(BinFile));
 
@@ -137,37 +140,44 @@ BinFile* OpenBinRead(s32 file)
     binfile->handle = file;
     binfile->mode = BIN_READ;
 
-    if (FileSeek(binfile, 0) ||
-		FileRead(binfile, &bk_header, sizeof(bk_header)) ||
-    	FileSeek(binfile, 0x1C0) ||
-    	FileRead(binfile, &tmd_header, sizeof(tmd)))
-    	{
-			debug_printf("DLC Open failed reading bk_header or tmd_header\n");
-    		goto open_error;
+    if (FileSeek(binfile, 0) || FileRead(binfile, &bin_header, sizeof(bin_header)))
+	{
+		debug_printf("DLC Open failed reading bk_header or tmd_header\n");
+		goto open_error;
+	}
+
+	i = verify_bk(&bin_header.bk_header);
+	if (i) {
+		u32 disc_title = (*(u32*)0)>>8;
+		switch (disc_title) {
+			case 0x00523336: // GDRB can use RB2 DLC (region must match)
+				if (i & ~VERIFY_ERROR_TITLE2 || (bin_header.bk_header.title_id_2>>8) != 0x00535A41)
+					goto open_error;
+				break;
+			case 0x00535A41: // RB2 customs
+				if (i & ~(VERIFY_ERROR_TITLE2_REGION|VERIFY_ERROR_WII_ID) || (((u32)bin_header.tmd_header.title_id)>>8)!=0x00635242)
+					goto open_error;
+				break;
+			default:
+				goto open_error;
 		}
+	}
 
-	i = verify_bk(&bk_header);
-	if (((u32)tmd_header.title_id & 0xFFFFFF00) != 0x63524200 && i)
-		goto open_error;
-	else if (i & ~(VERIFY_ERROR_TITLE2_CRB|VERIFY_ERROR_WII_ID))
-		goto open_error;
+    binfile->header_size = ROUND_UP(bin_header.bk_header.tmd_size+sizeof(BK_Header), 64);
+    binfile->data_size = bin_header.bk_header.contents_size;
 
-    binfile->header_size = ROUND_UP(bk_header.tmd_size+sizeof(bk_header), 64);
-    binfile->data_size = bk_header.contents_size;
-
-    for(i = 0; i < tmd_header.num_contents; i++)
+    for(i = 0; i < bin_header.tmd_header.num_contents; i++)
     {
-        if(checkAccessMask(bk_header.content_mask, i))
+        if(checkAccessMask(bin_header.bk_header.content_mask, i))
         {
-			if (FileSeek(binfile, 0x1C0+sizeof(tmd)+sizeof(tmd_content)*i) || FileRead(binfile, &content_rec, sizeof(tmd_content)))
+			if (FileSeek(binfile, sizeof(bin_header)+sizeof(tmd_content)*i) || FileRead(binfile, &content_rec, sizeof(tmd_content)))
 				goto open_error;
 			binfile->index = content_rec.index;
 			binfile->iv[0] = content_rec.index>>8;
 			binfile->iv[1] = (u8)content_rec.index;
-			if (bk_header.contents_size != ROUND_UP(content_rec.size, 64) ||
-				content_rec.type != 0x4001)
+			if (bin_header.bk_header.contents_size != ROUND_UP(content_rec.size, 64) ||	content_rec.type != 0x4001)
 			{
-				debug_printf("DLC Open size mismatch (%d vs. %d) or contents not DLC (%04X)\n", bk_header.contents_size, ROUND_UP(content_rec.size, 64), content_rec.type);
+				debug_printf("DLC Open size mismatch (%d vs. %d) or contents not DLC (%04X)\n", bin_header.bk_header.contents_size, ROUND_UP(content_rec.size, 64), content_rec.type);
 				goto open_error;
 			}
 			found = 1;

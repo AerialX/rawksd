@@ -14,6 +14,8 @@
 #include "installer.h"
 #include "wdvd.h"
 
+extern "C" void Init_DebugConsole();
+
 bool PressA()
 {
 	printf("\tPress A to continue or press Home to exit.\n");
