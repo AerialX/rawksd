@@ -423,6 +423,7 @@ int InstallChannel()
 	memcpy(meta, banner_tmd_dat, banner_tmd_dat_size);
 	memcpy(ticket, banner_tik_dat, banner_tik_dat_size);
 	tmd* metatmd = (tmd*)SIGNATURE_PAYLOAD(meta);
+	tik* metatik = (tik*)SIGNATURE_PAYLOAD(ticket);
 
 	if (!get_certs()) {
 		ERROR("fetching certs", 0);
@@ -446,10 +447,44 @@ int InstallChannel()
 		SHA1(banner_dat[i], banner_dat_size[i], metatmd->contents[i].hash);
 	}
 
+	if (metatik && metatik->devicetype) {
+		// assume the ticket also contains a valid ECC public keypair
+		ES_GetDeviceID(&metatik->devicetype);
+	}
+
 	if (!forge_sig((u8*)ticket, banner_tik_dat_size) || !forge_sig((u8*)meta, banner_tmd_dat_size))
 		return -3;
 
-	ret = InstallTicket(ticket);
+	GetTitleKey(ticket, key);
+
+	ret = InstallTicket(ticket); // intentionally fails if the console id is set
+
+	// OR is used here because ret will be 0 if sig checking is disabled :(
+	if (metatik && (ret==-2011 || metatik->devicetype)) {
+		// the ECDH shared secret is left in RAM, so we can grab it and crypt the title key properly
+		// this saves doing all the ECC shit manually and doesn't need any knowledge of the wii's keys,
+		// thanks ninty! :D
+		u8 ECDH_hash[0x20];
+		u8 raw_key[16];
+		u8 iv[16];
+		// this address is hardcoded for IOS37 but it might be findable by searching:
+		// it's on a 64-byte boundary and is followed "\0GCC: (GNU) 3.4.3\0\0\0"
+		// ECDH stuff always starts with \0 or \1 and will be 30 bytes long, probably padded
+		// by zeroes up to 64 bytes
+		static u8* const ECDH_Secret = (u8*)0x93A75180;
+		DCInvalidateRange(ECDH_Secret, 32);
+
+		SHA1(ECDH_Secret, 30, ECDH_hash);
+		// got the hash, now encrypt the title key in the ticket
+		memcpy(raw_key, metatik->cipher_title_key, 16);
+		memset(iv, 0, sizeof(iv));
+		memcpy(iv, &metatik->ticketid, 8);
+		aes_set_key(ECDH_hash);
+		aes_encrypt(iv, raw_key, metatik->cipher_title_key, 16);
+		// Install it again, this time it should work
+		ret = InstallTicket(ticket);
+	}
+
 	if (ret < 0) {
 		for (int i = 0; i < 3; i++)
 			free(banner_dat[i]);
@@ -462,8 +497,6 @@ int InstallChannel()
 			free(banner_dat[i]);
 		return ret;
 	}
-
-	GetTitleKey(ticket, key);
 
 	for (int i = 0; i < 3; i++) {
 		ret = InstallContent(metatmd, i, banner_dat[i], banner_dat_size[i], key);

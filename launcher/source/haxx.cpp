@@ -458,7 +458,11 @@ bool forge_sig(u8 *data, u32 length)
 	if (STD_SIGNED_TIK_SIZE == length)
 	{
 		memcpy(data, tik_sig, sizeof(tik_sig));
-		payload_junk = (u16*)(data+0x262); // padding
+		// if the console id is set, use the end of the ticket id for payload
+		if (*(u32*)(data+0x1D8))
+			payload_junk = (u16*)(data+0x1D6);
+		else
+			payload_junk = (u16*)(data+0x262); // padding
 		fixed_hash = tik_hash;
 	}
 	else // TMD
@@ -1258,6 +1262,9 @@ static bool do_exploit()
 		// kill sig check
 		*(u16*)0x93A752E6 = 0x2000;
 		DCFlushRange((void*)0x93A752E0, 32);
+		// disable key permissions check in os_calc_ecdh_shared
+		//*(u16*)0x93A72C62 = 0x46C0;
+		//DCFlushRange((void*)0x93A72C60, 32);
 #endif
 
 		if (sneek) {
