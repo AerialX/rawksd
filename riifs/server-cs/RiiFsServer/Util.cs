@@ -3,40 +3,41 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
+#if NET_2_0 // For pre-.NET 3.x targets that want to use C# 3.0 extension methods
+namespace System.Runtime.CompilerServices
+{
+	[AttributeUsage(AttributeTargets.Method)]
+	public sealed class ExtensionAttribute : Attribute
+	{
+		public ExtensionAttribute() { }
+	}
+}
+#endif
+
 namespace ConsoleHaxx.Common
 {
 	public static class Util
 	{
 		public static readonly Encoding Encoding = Encoding.GetEncoding(28591);
 
-		public static long RoundUp(long p, int round)
+		public static long RoundUp(long p, long round)
 		{
-			unchecked {
-				return (p + round - 1) & ~(round - 1);
-			}
+			return RoundDown(p + round - 1, round);
 		}
 
-		public static ulong RoundUp(ulong p, int round)
+		public static ulong RoundUp(ulong p, ulong round)
 		{
-			unchecked {
-				return ((ulong)p + (uint)round - 1) & (ulong)~(round - 1);
-			}
+			return RoundDown(p + round - 1, round);
 		}
 
-		public static long RoundDown(long p, int round)
+		public static long RoundDown(long p, long round)
 		{
-			long ret = RoundUp(p, round);
-			if (p - ret == 0)
-				return ret;
-			return ret - round;
+			return p / round * round;
 		}
 
-		public static ulong RoundDown(ulong p, int round)
+		public static ulong RoundDown(ulong p, ulong round)
 		{
-			ulong ret = RoundUp(p, round);
-			if (p - ret == 0)
-				return ret;
-			return ret - (ulong)round;
+			return p / round * round;
 		}
 
 		public static long StreamCopy(Stream destination, Stream source)
@@ -76,31 +77,17 @@ namespace ConsoleHaxx.Common
 			return (long)read;
 		}
 
-		public static string Pad(string str, int num, char ch)
-		{
-			for (int i = str.Length; i < num; i++) {
-				str = ch + str;
-			}
-
-			return str;
-		}
-
-		public static string Pad(string str, int num)
-		{
-			return Pad(str, num, '0');
-		}
-
 		public static string ReadCString(byte[] data, int startoffset)
 		{
 			return ReadCString(new MemoryStream(data, startoffset, data.Length - startoffset, false, true));
 		}
 
-		public static string ReadCString(Stream stream)
+		public static string ReadCString(this Stream stream)
 		{
 			return ReadCString(stream, 0);
 		}
 
-		public static string ReadCString(Stream stream, int max)
+		public static string ReadCString(this Stream stream, int max)
 		{
 			StringBuilder ret = new StringBuilder();
 			while (true) {
@@ -118,28 +105,13 @@ namespace ConsoleHaxx.Common
 
 			return ret.ToString();
 		}
-
+		
 		public static T[] Reverse<T>(this T[] array)
 		{
 			T[] newarray = new T[array.Length];
 			Array.Copy(array, newarray, array.Length);
 			Array.Reverse(newarray);
 			return newarray;
-		}
-	}
-}
-
-namespace ConsoleHaxx.Common
-{
-	public class Pair<TKey, TValue>
-	{
-		public TKey Key;
-		public TValue Value;
-
-		public Pair(TKey key, TValue value)
-		{
-			Key = key;
-			Value = value;
 		}
 	}
 }
