@@ -14,7 +14,7 @@
 #include "installer.h"
 #include "wdvd.h"
 
-extern "C" void Init_DebugConsole();
+extern "C" void Init_DebugConsole(int use_net);
 
 bool PressA()
 {
@@ -82,19 +82,19 @@ void Initialise()
 		int approach = 0;
 		WPAD_Init();
 		printf("\n\n");
-		if (IOS_GetVersion() != 37) {
-			printf("\tIOS37 does not seem to be installed on your system.\n\tIt's perfectly safe to install it; do you want to do so now?\n");
+		if (IOS_GetVersion() != (u32)HAXX_IOS) {
+			printf("\tIOS%d does not seem to be installed on your system.\n\tIt's perfectly safe to install it; do you want to do so now?\n", (u32)HAXX_IOS);
 			if (!PressA())
 				exit(0);
 			approach = INSTALL_APPROACH_UPDATE;
-		} else if (IOS_GetRevision() < 3869) {
+		} else if (IOS_GetRevision() < HAXX_IOS_MINIMUM) {
 			printf("\tIOS37 must be updated to continue.\n\tIt's perfectly safe to update it; do you want to do so now?\n");
 			if (!PressA())
 				exit(0);
 			approach = INSTALL_APPROACH_UPDATE;
-		} else if (IOS_GetRevision() > 3869) {
+		} else if (IOS_GetRevision() > HAXX_IOS_MAXIMUM) {
 			// Either cIOScrap (which will make the downgrade exploit fail) or a future update
-			printf("\tIOS37 must be downgraded to continue. Do you want to do this now?\n");
+			printf("\tIOS37 must be downgraded to continue. Do you want to attempt this now?\n");
 			if (!PressA())
 				exit(0);
 			approach = INSTALL_APPROACH_DOWNGRADE;
@@ -110,10 +110,10 @@ void Initialise()
 		Installer_Initialize();
 		switch (approach) {
 			case INSTALL_APPROACH_UPDATE:
-				ret = Install(HAXX_IOS, HAXX_IOS_REVISION, false);
+				ret = Install(HAXX_IOS, HAXX_IOS_MAXIMUM, false);
 				break;
 			case INSTALL_APPROACH_DOWNGRADE:
-				ret = Install(HAXX_IOS, HAXX_IOS_REVISION, true);
+				ret = Install(HAXX_IOS, HAXX_IOS_MAXIMUM, true);
 				break;
 			default:
 				exit(0);
@@ -132,7 +132,8 @@ void Initialise()
 	}
 
 	// uncomment to redirect stdout/stderr over wifi
-	//Init_DebugConsole();
+	//Init_DebugConsole(1);
+	Init_DebugConsole(0);
 
 	SetupPads();
 	InitAudio();

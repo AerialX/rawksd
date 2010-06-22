@@ -47,7 +47,7 @@
 //#define RIIFS_LOCAL_DIRNEXT
 #define RIIFS_LOCAL_DIRNEXT_SIZE 0x1000
 
-#define RII_VERSION 		"1.02"
+#define RII_VERSION 		"1.03"
 
 #define RII_VERSION_RET		0x03
 

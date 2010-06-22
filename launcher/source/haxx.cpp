@@ -10,8 +10,11 @@
 #include <string.h>
 #include <files.h>
 #include <malloc.h>
+#include <stdlib.h>
 
 using std::vector;
+
+//#define BABELFISH
 
 #define printf(...)
 
@@ -22,17 +25,18 @@ extern "C" {
 	extern u8 dipmodule_dat[];
 	extern u32 dipmodule_dat_size;
 
+#ifdef BABELFISH
+	extern u8 babelfish_dat[];
+	extern u32 babelfish_dat_size;
+#endif
+
 	extern const u8 root_dat[];
 }
 
 extern vector<int> ToMount;
 
-// our haxxed ios, IOS37v3870
-#ifndef YARR
-#define HAXX_IOS_VERSION     0x00250F1E
-#else
+#ifdef YARR
 #undef HAXX_IOS
-#define HAXX_IOS_VERSION     0x00890F1E
 #define HAXX_IOS 0x0000000100000089ULL
 #endif
 
@@ -50,9 +54,13 @@ int Haxx_Init()
 	if (load_module_code(filemodule_dat, filemodule_dat_size) < 0)
 		return -1;
 
+	printf("Riiv filemodule loaded\n");
+
 	usleep(4000);
 	if (load_module_code(dipmodule_dat, dipmodule_dat_size) < 0)
 		return -1;
+
+	printf("Riiv dipmodule loaded\n");
 
 	usleep(4000);
 
@@ -108,15 +116,13 @@ void Haxx_Mount(vector<int>* mounted)
 		ToMount.push_back(ret);
 		if (!hasdefault)
 			File_SetLogFS(ret);
-		
+
 		DEFAULT();
 	}
 }
 
 extern "C" void udelay(int us);
 
-#define HASH_CHECK_ADDRESS  (void*)0x93A752C0
-#define ES_IOS_BOOT         (void*)0x939F02C8
 #define ES_STACK_EXPLOIT    (void*)0x2011142C
 #define ES_MODULE_START     ((u32*)0x939F0000)
 #define ES_MODULE_SIZE      0x20000
@@ -195,32 +201,6 @@ const u8 tmd_hash[20] = {
     0x00, 0xBE, 0x9B, 0x52, 0x7E, 0xB4, 0x28, 0x88, 0xAC, 0xFC,
     0xE4, 0x77, 0x58, 0x16, 0x50, 0x5E, 0xCC, 0xCD, 0x3B, 0x16
 };
-
-static const u8 old_hashcmp[] = {0x24, 0x01, 0x78, 0x3A, 0x37, 0x01, 0x78, 0x2B, 0x35, 0x01,
-                    0x06, 0x1b, 0x06, 0x12, 0x42, 0x9a, 0xd1, 0x01, 0x40, 0x20, 0xe0, 0x00,
-                    0x20, 0x00, 0x31, 0x01, 0x29, 0x13, 0xd9, 0xf1, 0x28, 0x00, 0xd0, 0x01};
-static const u8 new_hashcmp[] = {
-                0x24, 0x00, // movs r4, #0
-/* 13A752C2 */  0x78, 0x3A, // ldrb r2, [r7]
-                0x37, 0x01, // adds r7, #1
-                0x78, 0x2B, // ldrb r3, [r5]
-                0x35, 0x01, // adds r5, #1
-                0x42, 0x9A, // cmp r2, r3
-                0xd1, 0x00, // bne loc_13A752D0
-                0x34, 0x01, // adds r4, #1
-/* 13A752d0 */  0x31, 0x01, // adds r1, #1
-                0x29, 0x13, // cmp r1, #0x13
-                0xd9, 0xf5, // bls loc_13A752C2
-/* 13A752D6 */  0x28, 0x00, // cmp r0, #0
-/* 13A752D8 */  0xd0, 0x05, // beq loc_13A752E6
-                0x2C, 0x01, // cmp r4, #1
-                0xd9, 0x03, // bls loc_13A752E6
-                0x46, 0xC0, // nop
-                0x46, 0xC0, // nop
-
-
-/* 13A752E6 */
-            };
 
 // 1st word = value to search, 2nd word = mask of bits to disregard
 static const s16 old_dev_fs_main[] = {
@@ -325,7 +305,6 @@ otp_t otp ATTRIBUTE_ALIGN(4);
 // simple 2 byte patches
 enum {
     MEM2_INDEX,
-    DI_VERIFY_INDEX,
     NAND_PERMS_INDEX,
     DVD_SWITCH_INDEX
 };
@@ -336,7 +315,6 @@ static const struct {
     u16 new_value;
 } patches[] = {
     {MEM_PROT, 1, 2},
-    {(u16*)0x939F0D4A, 0xD123, 0x46C0},
     {(u16*)0x93A112F2, 0xD001, 0xE001},
     {(u16*)0x939B0528, 0x4651, 0x2100}
 };
@@ -350,8 +328,10 @@ typedef struct _cmap_entry
 static int do_patch(int i)
 {
 	u16 *patch;
-	if (i<0 || i > (int)(sizeof(patches)/sizeof(patches[0])))
+	if (i<0 || i > (int)(sizeof(patches)/sizeof(patches[0]))) {
+		printf("do_patch %d failed, bad patch\n", i);
 		return 0;
+	}
 
 	patch = patches[i].address;
 
@@ -362,6 +342,7 @@ static int do_patch(int i)
 			DCFlushRange((void*)((u32)patch&~0x1F), 32);
 		return 1;
 	}
+	printf("do_patch %d failed, location is %04X instead of %04X\n", i, *patch, patches[i].old_value);
 	return 0;
 }
 
@@ -402,48 +383,6 @@ int get_certs()
 
 	return (readed==SYS_CERTS_SIZE);
 }
-
-static const u16 ios_boot[] =
-{
-	0x4804, // ldr r0, =kernel_name
-	0x2100, // movs r1, #0
-	0x4A01, // ldr r2, =0x00250F1E
-	0x4B02, // ldr r3, os_ios_boot
-	0x4798, // blx r3
-	0x46C0,
-
-	(u16)(HAXX_IOS_VERSION>>16),
-	(u16)HAXX_IOS_VERSION,
-	0x0000, // es_syscall_ios_boot
-	0x0000,
-	0x0000, // kernel_name
-	0x0000
-};
-
-static const u16 load_module[] =
-{
-	0x68CE, // ldr r6, [r1, #0x0c]	// ipcmessage.vec
-	0x6830, // ldr r0, [r6]			// vec[0].data (filename of module)
-	0x4B01, // ldr r3, =0x2010A898+1 (es_syscall_load_module)
-	0x4798, // blx r3
-	0x4B01, // ldr r3, =0x20101060+1 (end of handle_es_ioctlv)
-	0x4798, // blx r3
-
-	0x2010, // es_syscall_load_module
-	0xA898+1,
-	0x2010, // finish_handle_es_ioctlv
-	0x1060+1,
-};
-
-static const u32 ios_ret[] =
-{
-	0xE3A00001, // mov r0, #1
-	0xE6000A90, // syscall_54 (give ppc full hw access)
-	0xE3A00065, // mov r0, #101 (so we know it worked)
-	0xE59F2000, // ldr r2, return address in es
-	0xE12FFF12, // bx r2
-	0x20107084+1, // ret_address
-};
 
 bool forge_sig(u8 *data, u32 length)
 {
@@ -567,6 +506,18 @@ int check_for_sneek(s32 fd)
 
 int disable_mem2_protection(s32 fd)
 {
+	const u32 ios_ret[] =
+	{
+		0xE3A00001, // mov r0, #1
+		0xE6000A90, // syscall_54 (give ppc full hw access)
+		0xE3A00065, // mov r0, #101 (so we know it worked)
+		0xE59F2000, // ldr r2, return address in ES
+		0xE12FFF12, // bx r2
+		//0x20107084+1, // ret_address IOS37v3869
+		//0x2010710C+1, // ret_address IOS37v5662
+	};
+
+
 	// FIXME: find which one of these needs manual aligning
 	static u64 title ATTRIBUTE_ALIGN(32) = HAXX_IOS;
 	static ioctlv vec[3] ATTRIBUTE_ALIGN(32);
@@ -655,19 +606,36 @@ int disable_mem2_protection(s32 fd)
 	memcpy(lowmem_save, MEM1_BASE, sizeof(lowmem_save));
 	memcpy(MEM1_BASE_UNCACHED, ios_ret, sizeof(ios_ret));
 
+	switch (IOS_GetRevision()) {
+		case 3869:
+			MEM1_BASE_UNCACHED[5] = 0x20107084+1;
+			break;
+		case 5662:
+			MEM1_BASE_UNCACHED[5] = 0x2010710C+1;
+			break;
+		default:
+			memcpy(MEM1_BASE, lowmem_save, sizeof(lowmem_save));
+			return 0;
+	}
+
 	vec[2].data = ES_STACK_EXPLOIT;
-	vec[2].len = 0x0;
+	vec[2].len = 0;
 	cnt = 0x20000000; // 0x20000000 * 0xD8 = 0x1B00000000 = 0
+	//cnt = 1;
+	printf("Playing soothing music...");
 	ret = IOS_Ioctlv(fd, 0x13, 2, 1, vec); // ES_GetTicketViews
 
 	// restore lowmem values
-	memcpy(MEM1_BASE, lowmem_save, sizeof(lowmem_save));
+	memcpy(MEM1_BASE_UNCACHED, lowmem_save, sizeof(lowmem_save));
+	DCInvalidateRange(MEM1_BASE, 32);
 
 	if (ret != 101) // exploit failed
 	{
-		printf("Possible incorrect ES version, failed (%d)\n", ret);
+		printf(" failed (%d)\n", ret);
 		return 0;
 	}
+
+	printf(" IOS subdued.\n");
 
 	if (!do_patch(MEM2_INDEX))
 	{
@@ -730,6 +698,7 @@ static int patch_mem2(void* buf, s32 size)
 		{
 			kernel[i+5] = 0;
 			i += sizeof(old_table);
+			printf("mem2_prot patched\n");
 			count++;
 		}
 	}
@@ -739,7 +708,7 @@ static int patch_mem2(void* buf, s32 size)
 
 static int patch_ios37_sd_load(void* buf, s32 size)
 {
-	u32 i, count = 0;
+	u32 i;
 	u8 *kernel = (u8*)buf;
 	const u8 sd_old[] = {0x22, 0xf4, 0x00, 0x52, 0x18, 0x81, 0x27, 0xf0, 0x00, 0x7f, 0x19, 0xf3, 0x88, 0x0a, 0x88, 0x1b, 0x42, 0x9a};
 
@@ -750,11 +719,12 @@ static int patch_ios37_sd_load(void* buf, s32 size)
 			kernel[i+16] = 0x2A;
 			kernel[i+17] = 0x04;
 			i += sizeof(sd_old);
-			count++;
+			printf("sd_load patched\n");
+			return 1;
 		}
 	}
 
-	return count;
+	return 0;
 }
 
 static int patch_gpio_stm(void* buf, s32 size)
@@ -769,6 +739,7 @@ static int patch_gpio_stm(void* buf, s32 size)
 		{
 			kernel[i]   = 0x46;
 			kernel[i+1] = 0xC0;
+			printf("gpio_stm patched\n");
 			return 1;
 		}
 	}
@@ -937,6 +908,28 @@ static int prepare_new_kernel(u64 title)
 		return 0;
 	}
 
+#ifdef BABELFISH
+	u32 *babel_hdr = (u32*)babelfish_dat;
+	u32 *ios_hdr = (u32*)kernel_blob;
+	u32 babel_size = babel_hdr[0] + babel_hdr[1] + ios_hdr[2];
+	u8 *babelfish_blob = (u8*)memalign(32, babel_size+32);
+	if (babelfish_blob) {
+		memset(babelfish_blob, 0, babel_size);
+		// copy 16 byte header and babelfish payload (ios loader)
+		memcpy(babelfish_blob, babelfish_dat, babelfish_dat_size);
+		// copy IOS ELF
+		memcpy(babelfish_blob+babel_hdr[0]+babel_hdr[1], (u8*)kernel_blob+ios_hdr[0]+ios_hdr[1], ios_hdr[2]);
+		// copy IOS ELF size into header
+		memcpy(babelfish_blob+8, ios_hdr+2, 4);
+
+		free(kernel_blob);
+		kernel_blob = babelfish_blob;
+		size = babel_size;
+		printf("Babelfish insertion done\n");
+	}
+#endif
+
+
 	if (!patch_mem2(kernel_blob, size) || !patch_ios37_sd_load(kernel_blob, size) ||
 		!patch_gpio_stm(kernel_blob, size) || !patch_fs_redirect(kernel_blob, size))
 	{
@@ -973,12 +966,28 @@ static void shutdown_for_reload()
 	ISFS_Deinitialize();
 	WPAD_Shutdown();
 	__IOS_ShutdownSubsystems();
-	// change ios version in lowmem so we know when the new one has loaded
-	*MEM1_IOSVERSION = 0x00020000;
 }
 
 static void load_patched_ios(s32 fd, const char* filename)
 {
+	const u16 ios_boot[] =
+	{
+		0x4804, // ldr r0, =kernel_name
+		0x2100, // movs r1, #0
+		0x4A01, // ldr r2, =HAX_IOS_VERSION
+		0x4B02, // ldr r3, os_ios_boot
+		0x4798, // blx r3
+		0x46C0,
+/*
+		0x0000, // HAXX_IOS_VERSION
+		0x0000,
+		0x0000, // es_syscall_ios_boot
+		0x0000,
+		0x0000, // kernel_name
+		0x0000
+*/
+	};
+
 	ioctlv vec;
 	u32* addr;
 	for (addr=(u32*)ES_MODULE_START;addr < (u32*)(ES_MODULE_START+ES_MODULE_SIZE);addr++)
@@ -986,10 +995,11 @@ static void load_patched_ios(s32 fd, const char* filename)
 		if (*addr == SYSCALL_DEVICE_OPEN)
 		{
 			u32 junk;
-			//printf("Found ES_SYSCALL_DEVICE_OPEN at %p\n", addr);
+			printf("Found ES_SYSCALL_DEVICE_OPEN at %p\n", addr);
 			memcpy(MEM1_BASE_UNCACHED, ios_boot, sizeof(ios_boot));
-			MEM1_BASE_UNCACHED[4] = (u32)addr + 0x130 - 0x939F0000 + 0x20100000;
-			MEM1_BASE_UNCACHED[5] = (u32)filename & 0x7FFFFFFF;
+			MEM1_BASE_UNCACHED[3] = MEM1_IOSVERSION[0]+1; // ios_version
+			MEM1_BASE_UNCACHED[4] = (u32)addr + 0x130 - 0x939F0000 + 0x20100000; // es_syscall_ios_boot
+			MEM1_BASE_UNCACHED[5] = (u32)filename & 0x7FFFFFFF; // kernel path name
 			DCFlushRange((void*)filename, strlen(filename+1));
 			//printf("%08X %08X\n", MEM1_BASE_UNCACHED[4], MEM1_BASE_UNCACHED[5]);
 
@@ -998,7 +1008,9 @@ static void load_patched_ios(s32 fd, const char* filename)
 			DCFlushRange(addr, 8);
 			vec.data = &junk;
 			vec.len = sizeof(junk);
-			//printf("Taking the plunge...\n");
+			// change ios version in lowmem so we know when the new one has loaded
+			*MEM1_IOSVERSION = 0x00020000;
+			printf("Taking the plunge...\n");
 			//printf("IOS returned %d\n", IOS_Ioctlv(fd, 0x0c, 0, 1, &vec));
 			//printf("Owned titles: %d\n", junk);
 			IOS_IoctlvRebootBackground(fd, 0x0C, 0, 1, &vec);
@@ -1009,24 +1021,44 @@ static void load_patched_ios(s32 fd, const char* filename)
 
 static int load_module_file(s32 fd, const char *filename)
 {
-	s32 ret;
+	const u8 old_es_code[24] = {
+		0x68, 0x4B, 0x2B, 0x06, 0xD1, 0x0C, 0x68, 0x8B, 0x2B, 0x00,
+		0xD1, 0x09, 0x68, 0xC8, 0x68, 0x42, 0x23, 0xA9, 0x00, 0x9B,
+		0x42, 0x9A, 0xD1, 0x03};
+
+	const u16 load_module[12] =
+	{
+		0x68CE, // ldr r6, [r1, #0x0c]	; ipcmessage.vec
+		0x6830, // ldr r0, [r6]			; vec[0].data (filename of module)
+		0x4778, // thumb->arm (BX PC)
+		0x46C0, // nop (for alignment, assumes this block starts 4-byte aligned)
+		0xE600,	0x0B50, // syscall_5a (load_ios_module)
+		0xE28D,	0xD020, // ADD SP, SP, #0x20
+		0xE8BD,	0x4070, // LDMFD SP!,{R4-R6,LR}
+		0xE12F,	0xFF1E, // BX LR
+	};
+
+	u8 *addr;
+	s32 ret=1;
 	ioctlv vec;
-	u8 old_es_code[20];
 
-	// store the old code that will be overwritten
-	memcpy(old_es_code, ES_IOS_BOOT, sizeof(old_es_code));
-	memcpy(ES_IOS_BOOT, load_module, sizeof(load_module));
-	DCFlushRange((void*)((u32)ES_IOS_BOOT&~0x1F), 32);
-	vec.data = (void*)filename;
-	vec.len = strlen(filename)+1;
-	ret = IOS_Ioctlv(fd, 0x1F, 1, 0, &vec);
+	for (addr=(u8*)ES_MODULE_START;addr < (((u8*)ES_MODULE_START)+ES_MODULE_SIZE-sizeof(old_es_code));addr++) {
+		if (!memcmp(addr, old_es_code, sizeof(old_es_code))) {
+			memcpy(addr, load_module, sizeof(load_module));
+			DCFlushRange((void*)((u32)addr&~0x1F), 32);
+			vec.data = (void*)filename;
+			vec.len = strlen(filename)+1;
+			ret = IOS_Ioctlv(fd, 0x1F, 1, 0, &vec);
 
-	// restore the old code and flush
-	memcpy(ES_IOS_BOOT, old_es_code, sizeof(old_es_code));
-	DCFlushRange((void*)((u32)ES_IOS_BOOT&~0x1F), 32);
+			// restore the old code and flush
+			memcpy(addr, old_es_code, sizeof(old_es_code));
+			DCFlushRange((void*)((u32)addr&~0x1F), 32);
+			break;
+		}
+	}
+
 	return !ret;
 }
-
 
 static void recover_from_reload(s32 version)
 {
@@ -1156,13 +1188,47 @@ static int load_sdhc_module(u64 title_ios)
 
 static int do_sig_check_patch()
 {
-	if (memcmp(HASH_CHECK_ADDRESS, old_hashcmp, sizeof(old_hashcmp)) && memcmp(HASH_CHECK_ADDRESS, new_hashcmp, sizeof(new_hashcmp)))
-		return 0;
+	u32 i, size = 0x8000;
+	u8 *kernel = (u8*)0x93A70000;
 
-	memcpy(HASH_CHECK_ADDRESS, new_hashcmp, sizeof(new_hashcmp));
-	DCFlushRange(HASH_CHECK_ADDRESS, 64);
+	const u8 old_hashcmp[34] = {0x24, 0x01, 0x78, 0x3A, 0x37, 0x01, 0x78, 0x2B, 0x35, 0x01,
+                  0x06, 0x1b, 0x06, 0x12, 0x42, 0x9a, 0xd1, 0x01, 0x40, 0x20, 0xe0, 0x00,
+                  0x20, 0x00, 0x31, 0x01, 0x29, 0x13, 0xd9, 0xf1, 0x28, 0x00, 0xd0, 0x01};
+	const u8 new_hashcmp[34] = {
+                0x24, 0x00, // movs r4, #0
+/* 13A752C2 */  0x78, 0x3A, // ldrb r2, [r7]
+                0x37, 0x01, // adds r7, #1
+                0x78, 0x2B, // ldrb r3, [r5]
+                0x35, 0x01, // adds r5, #1
+                0x42, 0x9A, // cmp r2, r3
+                0xd1, 0x00, // bne loc_13A752D0
+                0x34, 0x01, // adds r4, #1
+/* 13A752d0 */  0x31, 0x01, // adds r1, #1
+                0x29, 0x13, // cmp r1, #0x13
+                0xd9, 0xf5, // bls loc_13A752C2
+/* 13A752D6 */  0x28, 0x00, // cmp r0, #0
+/* 13A752D8 */  0xd0, 0x05, // beq loc_13A752E6
+                0x2C, 0x01, // cmp r4, #1
+                0xd9, 0x03, // bls loc_13A752E6
+                0x46, 0xC0, // nop
+                0x46, 0xC0, // nop
 
-	return 1;
+
+/* 13A752E6 */
+            };
+
+	for (i=0; i < size - sizeof(old_hashcmp); i++)
+	{
+		if (!memcmp(kernel+i, old_hashcmp, sizeof(old_hashcmp)))
+		{
+			memcpy(kernel+i, new_hashcmp, sizeof(new_hashcmp));
+			DCFlushRange(kernel+i, 64);
+			printf("hash check patched\n");
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 static void read_otp()
@@ -1180,10 +1246,11 @@ static bool do_exploit()
 	s32 es_fd = -1;
 	int patch_failed = 0;
 	u32 sneek=0;
+	u16 ios_rev = IOS_GetRevision();
 
 	printf("Grabbin' HAXX\n");
 
-	if (IOS_GetVersion() != (u32)HAXX_IOS || IOS_GetRevision() != HAXX_IOS_REVISION)
+	if (IOS_GetVersion() != (u32)HAXX_IOS || (ios_rev != 5662 && ios_rev != 3869))
 	{
 		printf("Wrong IOS version. Update IOS%d to the latest version.\n", (u32)HAXX_IOS);
 		return false;
@@ -1203,10 +1270,6 @@ static bool do_exploit()
 
 		if (!check_for_sneek(es_fd))
 		{
-			// make sure signature check isn't patched
-			*(u16*)0x93A752E6 = 0x2007;
-			DCFlushRange((void*)0x93A752E0, 32);
-
 			if (!do_patch(NAND_PERMS_INDEX))
 			{
 				patch_failed = 1;
@@ -1232,9 +1295,12 @@ static bool do_exploit()
 			shutdown_for_reload();
 			load_patched_ios(es_fd, LOAD_KERNEL_PATH);
 			es_fd = 0;
-			recover_from_reload(HAXX_IOS_VERSION>>16);
-			if (IOS_GetVersion() != (HAXX_IOS_VERSION>>16) || IOS_GetRevision() != (HAXX_IOS_VERSION&0xFFFF))
+			recover_from_reload((u32)HAXX_IOS);
+			if (IOS_GetVersion() != (u32)HAXX_IOS || IOS_GetRevision() != ios_rev+1) {
+				printf("New IOS Version is incorrect, %08X\n", IOS_GetVersion());
 				patch_failed = 1;
+			} else
+				printf("Loaded patched IOS\n");
 		}
 
 		if (!patch_failed)
@@ -1250,7 +1316,10 @@ static bool do_exploit()
 			{
 				printf("SDHC module couldn't be loaded, trying IOS37 standard SD.\n");
 				patch_failed = !load_sdhc_module(0x0000000100000025llu);
-			}
+				if (patch_failed)
+					printf("IOS37 SD module also failed to load.\n");
+			} else
+				printf("SDHC loaded\n");
 		}
 
 #ifndef YARR
@@ -1260,11 +1329,10 @@ static bool do_exploit()
 			patch_failed = !do_patch(DVD_SWITCH_INDEX);
 #else
 		// kill sig check
-		*(u16*)0x93A752E6 = 0x2000;
-		DCFlushRange((void*)0x93A752E0, 32);
-		// disable key permissions check in os_calc_ecdh_shared
-		//*(u16*)0x93A72C62 = 0x46C0;
-		//DCFlushRange((void*)0x93A72C60, 32);
+		if (*(u16*)0x93A752E6 == 0x2007) {
+			*(u16*)0x93A752E6 = 0x2000;
+			DCFlushRange((void*)0x93A752E0, 32);
+		}
 #endif
 
 		if (sneek) {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using ConsoleHaxx.Common;
@@ -252,10 +252,12 @@ namespace ConsoleHaxx.RiiFS
 							string clientversion = Util.Encoding.GetString(Options[Option.Handshake]);
 							DebugPrint("Handshake: Client Version \"" + clientversion + "\"");
 
-							if (clientversion != "1.02")
-								Return(-1);
-							else
+							if (clientversion == "1.03")
 								Return(ServerVersion);
+							else if (clientversion == "1.02")
+								Return(3);
+							else
+								Return(-1);
 							break; }
 						case Command.Goodbye:
 							DebugPrint("Goodbye");

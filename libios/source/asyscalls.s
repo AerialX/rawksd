@@ -232,11 +232,41 @@ os_syscall_50:
 	.global os_poke_gpios
 os_poke_gpios:
 	syscall 0x56
+	
+	.code 32
+	.global os_create_key
+os_create_key:
+	syscall 0x5B
+	
+	.code 32
+	.global os_destroy_key
+os_destroy_key:
+	syscall 0x5C
+	
+	.code 32
+	.global os_bind_ecc_public_keypair
+os_bind_ecc_public_keypair:
+	syscall 0x5F
+	
+	.code 32
+	.global os_calc_ecdh_shared
+os_calc_ecdh_shared:
+	syscall 0x61
 
 	.code 32
 	.global os_get_key
 os_get_key:
 	syscall 0x63
+	
+	.code 32
+	.global os_aes_encrypt
+os_aes_encrypt:
+	syscall 0x69
+	
+	.code 32
+	.global os_aes_decrypt
+os_aes_decrypt:
+	syscall 0x6B
 
 	.code 32
 	.global os_puts

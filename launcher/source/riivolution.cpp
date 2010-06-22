@@ -20,7 +20,7 @@ static DiscNode* fst = NULL;
 static bool shiftfiles = false;
 static u64 shift = 0;
 static u32 fstsize;
-static map<int, bool> UsedFilesystems;
+map<int, bool> UsedFilesystems;
 
 namespace Ioctl { enum Enum {
 	AddFile			= 0xC1,

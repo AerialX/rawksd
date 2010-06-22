@@ -72,13 +72,14 @@ static const devoptab_t dotab_netout = {
 };
 
 
-void Init_DebugConsole()
+void Init_DebugConsole(int use_net)
 {
 	unsigned int level;
 
 	_CPU_ISR_Disable(level);
 
-	InitializeNetwork(DEBUG_IPADDRESS, DEBUG_PORT);
+	if (use_net)
+		InitializeNetwork(DEBUG_IPADDRESS, DEBUG_PORT);
 
 	devoptab_list[STD_OUT] = &dotab_netout;
 	devoptab_list[STD_ERR] = &dotab_netout;

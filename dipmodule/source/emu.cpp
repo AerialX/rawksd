@@ -9,11 +9,11 @@
 #define EMU_PRIORITY 0x48
 #define TITLEFILE_MEMORY
 
-//#define LOG_IPC // this is commented out because it's too noisy
-
 #if 0
 #include <ch341.h>
 #include <print.h>
+
+#define LOG_IPC // this is commented out because it's too noisy
 
 //#define CH341
 
@@ -47,12 +47,29 @@ extern "C" void LogPrintf(const char *fmt, ...)
 
 void LogMessage(ipcmessage* message)
 {
+	const char *IoctlNames[] = {
+		"Format",
+		"GetStats",
+		"CreateDir",
+		"ReadDir",
+		"SetAttrib",
+		"GetAttrib",
+		"Delete",
+		"Move",
+		"CreateFile",
+		"SetFileVerCtrl",
+		"GetFileStats",
+		"GetUsage",
+		"Shutdown"
+	};
+
+	char *buf = str+512;
 	switch (message->command) {
 		case IOS_OPEN:
-			if (!strncmp(message->open.device, "/dev/fs", 7) || strncmp(message->open.device, "/dev", 4)) {
+//			if (!strncmp(message->open.device, "/dev/fs", 7) || strncmp(message->open.device, "/dev", 4))
 //				if (strncmp(message->open.device, "/title/00010005/735a", 20))
+			if (strncmp(message->open.device, "/dev/net/ip/top", strlen("/dev/net/ip/top")))
 					LogPrintf("IOS_Open: \"%s\" - %d - %d - %04X (%08X)\n", message->open.device, message->open.mode, message->open.uid, message->open.gid, message->result);
-			}
 			break;
 		case IOS_CLOSE:
 			LogPrintf("IOS_Close: 0x%X\n", message->fd);
@@ -67,10 +84,37 @@ void LogMessage(ipcmessage* message)
 			LogPrintf("IOS_Seek: %p 0x%X - 0x%X\n", message->fd, message->seek.offset, message->seek.origin);
 			break;
 		case IOS_IOCTL:
-			LogPrintf("IOS_Ioctl: %d - 0x%X\n", message->ioctl.command, message->fd);
-			break;
 		case IOS_IOCTLV:
-			LogPrintf("IOS_Ioctlv: fd=0x%X, command=0x%X\n", message->fd, message->ioctlv.command);
+			if (message->command==IOS_IOCTL)
+				_sprintf(buf, "IOS_Ioctl: %p - ", message->fd);
+			else
+				_sprintf(buf, "IOS_Ioctlv: %p - ", message->fd);
+			if (message->ioctl.command && message->ioctl.command < 14) {
+				strcat(buf, IoctlNames[message->ioctl.command-1]);
+				LogPrintf("%s\n", buf);
+			}
+			else
+				LogPrintf("%s0x%X\n", buf, message->ioctl.command);
+
+			switch (message->ioctl.command) {
+				case ProxiIOS::EMU::Ioctl::CreateDir:
+				case ProxiIOS::EMU::Ioctl::SetAttrib:
+				case ProxiIOS::EMU::Ioctl::CreateFile:
+					LogPrintf("%s\n", ((ProxiIOS::ISFS::FSattr*)(message->ioctl.buffer_in))->path);
+					break;
+				case ProxiIOS::EMU::Ioctl::GetAttrib:
+				case ProxiIOS::EMU::Ioctl::Delete:
+					LogPrintf("%s\n", (const char*)message->ioctl.buffer_in);
+					break;
+				case ProxiIOS::EMU::Ioctl::ReadDir:
+				case ProxiIOS::EMU::Ioctl::GetUsage:
+					LogPrintf("%s\n", (const char*)message->ioctlv.vector[0].data);
+					break;
+				case ProxiIOS::EMU::Ioctl::Move:
+					LogPrintf("%s -> %s\n", (const char*)message->ioctl.buffer_in, (const char*)message->ioctl.buffer_in+ISFS_MAXPATH_LEN);
+					break;
+			}
+
 			break;
 		default:
 			LogPrintf("Dunno what ipc msg this is: %d (fd=0x%X)\n", message->command, message->fd);
@@ -313,6 +357,7 @@ namespace ProxiIOS { namespace EMU {
 		TicketDir* tickets = new TicketDir();
 		if (tickets)
 			DataDirs.push_back(tickets);
+		DLCPathCreated = 0;
 	}
 
 	u32 EMU::emu_thread(void* _p) {
@@ -448,11 +493,13 @@ namespace ProxiIOS { namespace EMU {
 			for (i=0; i<3; i++)
 				ext_path[19+i] = chartoHex(path+18+(i<<1));
 
-			if (DataDirs.size()<3) // save and ticket directory might be redirected
+			if (!DLCPathCreated)
 			{
-				ext_path[0]=0;
-				File_CreateDir(DLCPath); // DLC root
-				ext_path[0]='/';
+				if (ext_path != DLCPath) {
+					ext_path[0]=0;
+					File_CreateDir(DLCPath); // DLC root
+					ext_path[0]='/';
+				}
 				ext_path[8]=0;
 				File_CreateDir(DLCPath); // root/private
 				ext_path[8]='/';
@@ -462,6 +509,7 @@ namespace ProxiIOS { namespace EMU {
 				ext_path[17]=0;
 				File_CreateDir(DLCPath); // root/private/wii/data
 				ext_path[17]='/';
+				DLCPathCreated = 1;
 			}
 
 			d = new AppDir(nand_path, DLCPath);
@@ -497,6 +545,24 @@ namespace ProxiIOS { namespace EMU {
 					*result = FSErrors::FileNotFound;
 				}
 				return 1;
+			}
+
+			if (!strcmp(message->open.device, "/tmp/disc.sys") && message->open.mode==ISFS_OPEN_WRITE) {
+				f = new ShadowFile(message->open.device, "/title/00010001/52494956/data/disc.sys");
+				if (f) {
+					open_files[i] = f;
+					*result = (u32)f;
+					return 1;
+				}
+			}
+
+			if (!strcmp(message->open.device, "/tmp/launch.sys") && message->open.mode==ISFS_OPEN_WRITE) {
+				f = new ShadowFile(message->open.device, "/title/00010001/52494956/data/launch.sys");
+				if (f) {
+					open_files[i] = f;
+					*result = (u32)f;
+					return 1;
+				}
 			}
 
 			return 0;
@@ -725,6 +791,12 @@ namespace ProxiIOS { namespace EMU {
 		return File_Seek(file, where, whence);
 	}
 
+	RiivFile::RiivFile()
+	{
+		file_name = NULL;
+		file = -1;
+	}
+
 	RiivFile::RiivFile(const char *name, s32 mode)
 	{
 		file_name = (char*)Alloc(strlen(name)+1);
@@ -740,6 +812,39 @@ namespace ProxiIOS { namespace EMU {
 
 		if (file >= 0)
 			File_Close(file);
+	}
+
+	ShadowFile::ShadowFile(const char *nand_name, const char *ext_name) :
+	RiivFile()
+	{
+		char *path = (char*)Memalign(32, ISFS_MAXPATH_LEN);
+		true_fd = FS_Open(nand_name, ISFS_OPEN_WRITE);
+		if (path) {
+			memset(path, 0, ISFS_MAXPATH_LEN);
+			strcpy(path, ext_name);
+			ISFS_Delete(path);
+			ISFS_CreateFile(path, 0, 3, 3, 3);
+			copy_fd = FS_Open(path, ISFS_OPEN_WRITE);
+			Dealloc(path);
+		} else
+			copy_fd = -1;
+	}
+
+	ShadowFile::~ShadowFile()
+	{
+		if (true_fd>=0)
+			FS_Close(true_fd);
+		if (copy_fd>=0)
+			FS_Close(copy_fd);
+	}
+
+	s32 ShadowFile::Write(const void *src, s32 length)
+	{
+		if (copy_fd>=0)
+			FS_Write(copy_fd, src, length);
+		if (true_fd>=0)
+			return FS_Write(true_fd, src, length);
+		return FSErrors::InvalidArgument;
 	}
 
 	VFFFile::VFFFile(const char *name, s32 mode) :
@@ -1132,6 +1237,7 @@ namespace ProxiIOS { namespace EMU {
 					if (x>=0) {
 						Stats st;
 						while (File_NextDir(x, tmd_path, &st)>=0) {
+							LogPrintf("Found file %s\n", tmd_path);
 							if (strlen(tmd_path)!=strlen("000.bin") || strcasecmp(tmd_path+3, ".bin"))
 								continue;
 
@@ -1659,6 +1765,7 @@ namespace ProxiIOS { namespace EMU {
 
 	int TicketDir::Ban(u32 title)
 	{
+		LogPrintf("Title %08X Locked\n", title);
 		Banned.push_back(title);
 		return 1;
 	}

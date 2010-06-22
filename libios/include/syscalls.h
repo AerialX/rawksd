@@ -130,13 +130,13 @@
 /* 58    os_set_debug_gpios */
 /* 59    os_load_PPC */
 /* 5A    os_load_module(const char* path) */
-/* 5B    os_create_key(void *object, u32 valueA, u32 valueB) */
-/* 5C    os_destroy_key(u32 key_id) */
-/* 5D    os_syscall_5D */
+/* 5B */ int       os_create_key(int *keyid_out, u32 usage, u32 type); // type 4 = ECC?
+/* 5C */ int       os_destroy_key(int key_id);
+/* 5D    os_decrypt_key(int *keyid_out, u32 zero, u32 common_key_index, u32 one, u32 zero, void *iv, void *cipher_title_key) */
 /* 5E    os_syscall_5E */
-/* 5F    os_syscall_5F */
+/* 5F */ int       os_bind_ecc_public_keypair(const u8 *data, int *some_keyid_out, int keyid); // data should be 0x3C bytes long
 /* 60    os_syscall_60 */
-/* 61    os_syscall_61 */
+/* 61 */ int       os_calc_ecdh_shared(int wii_key_index, int sender_public_key_index, int dest_shared_key_index);
 /* 62    os_syscall_62 */
 /* 63 */ int       os_get_key(int keyid, void* buffer);
 /* 64    os_syscall_64 */
@@ -144,19 +144,19 @@
 /* 66    os_syscall_66 */
 /* 67    os_sha1(void *SHACarry, void *data, u32 len, u32 SHAMode, void *hash) */
 /* 68    os_syscall_68 */
-/* 69    os_aes_encrypt(int keyid, void *iv, void *in, int len, void *out) */
+/* 69 */ int       os_aes_encrypt(int keyid, void *iv, void *in, int len, void *out);
 /* 6A    os_syscall_6A */
-/* 6B    os_aes_decrypt(int keyid, void *iv, void *in, int len, void *out) */
+/* 6B */ int       os_aes_decrypt(int keyid, void *iv, void *in, int len, void *out);
 /* 6C    os_syscall_6C */
 /* 6D    os_syscall_6D */
 /* 6E    os_syscall_6E */
 /* 6F    os_syscall_6F */
-/* 70    os_get_device_cert */
+/* 70    os_get_device_cert(void *cert) 0x180 bytes */
 /* 71    os_syscall_71 */
-/* 72    os_syscall_72 */
+/* 72    int os_get_key_permissions(int keyid, u32 *mask_out) */
 /* 73    os_syscall_73 */
 /* 74    os_syscall_74 */
-/* 75    os_syscall_75 */
+/* 75    os_make_sig(void *SHAhash, u32 length, int keyid, void *sig) (sig is 0x3C bytes, ecc public keypair?) */
 /* 76    os_syscall_76 */
 /* 77    os_syscall_77 */
 

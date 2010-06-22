@@ -78,7 +78,21 @@ namespace ProxiIOS { namespace EMU {
 		virtual s32 Write(const void *src, s32 length);
 		virtual s32 Seek(s32 where, s32 whence);
 		RiivFile(const char *name, s32 mode);
+		RiivFile();
 		virtual ~RiivFile();
+	};
+
+	// this class is used when we want to write the data
+	// into 2 files at once
+	class ShadowFile : public RiivFile
+	{
+	private:
+		s32 true_fd;
+		s32 copy_fd;
+	public:
+		virtual s32 Write(const void *src, s32 length);
+		ShadowFile(const char *nand_name, const char *ext_name);
+		virtual ~ShadowFile();
 	};
 
 	// special class for .vff files to combine writes,
@@ -200,6 +214,7 @@ namespace ProxiIOS { namespace EMU {
 	{
 	private:
 		char *DLCPath;
+		int DLCPathCreated;
 		int loop_thread;
 		std::vector<RiivDir*> DataDirs;
 

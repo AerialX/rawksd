@@ -398,32 +398,25 @@ static void PatchReturnToMenu(s32 app_section_size, u64 titleID)
 		found[19] = 0x389B0000; // addi r4, r27, 0
 		found[26] = 0x387A0000;
 		found[25] = 0x389B0000;
-		if (titleID != 0x0001000152494956llu)
-		{
-			u16* code = (u16*)found;
-			code[1] = titleID >> 48;
-			code[3] = (titleID >> 32) & 0xFFFF;
-			code[5] = (titleID >> 16) & 0xFFFF;
-			code[7] = titleID & 0xFFFF;
-		}
-		return;
 	}
-
-	if ((found = (u32*)FindInBuffer(app_address, app_section_size, __OSLaunchMenuCodeOld, sizeof(__OSLaunchMenuCodeOld))))
+	else if ((found = (u32*)FindInBuffer(app_address, app_section_size, __OSLaunchMenuCodeOld, sizeof(__OSLaunchMenuCodeOld))))
 	{
 		memcpy(found, __OSLaunchRiiv, sizeof(__OSLaunchRiiv));
 		found[15] = 0x38BA0000; // addi r5, r26, 0
 		found[14] = 0x38DB0000; // addi r6, r27, 0
 		found[22] = 0x38BA0000;
 		found[21] = 0x38DB0000;
-		if (titleID != 0x0001000152494956llu)
-		{
-			u16* code = (u16*)found;
-			code[1] = titleID >> 48;
-			code[3] = (titleID >> 32) & 0xFFFF;
-			code[5] = (titleID >> 16) & 0xFFFF;
-			code[7] = titleID & 0xFFFF;
-		}
+	}
+	else
+		return;
+
+	if (titleID != 0x0001000152494956llu)
+	{
+		u16* code = (u16*)found;
+		code[1] = titleID >> 48;
+		code[3] = (titleID >> 32) & 0xFFFF;
+		code[5] = (titleID >> 16) & 0xFFFF;
+		code[7] = titleID & 0xFFFF;
 	}
 }
 
@@ -447,9 +440,10 @@ static inline void ApplyBinaryPatches(s32 app_section_size)
 	// Apply fwrite patch
 	Fwrite_FindPatchLocation((char*)app_address, app_section_size);
 
-	// return to HBC
-	if (*(u32*)0x80001808 == 0x48415858) // "HAXX"
-		PatchReturnToMenu(app_section_size, 0x000100014A4F4449llu); // "JODI"
+	// HBC id will change soon, and Return to Riiv is not working properly yet
+	//if (*(u32*)0x80001808 == 0x48415858) // "HAXX"
+	//	PatchReturnToMenu(app_section_size, 0x000100014A4F4449llu); // "JODI"
+	//	PatchReturnToMenu(app_section_size, 0x0001000152494956llu); // "RIIV"
 
 	RVL_PatchMemory(&Disc, app_address, app_section_size);
 }
@@ -537,7 +531,9 @@ LauncherStatus::Enum Launcher_RunApploader()
 		app_disc_offset = 0;
 	}
 
-	Fwrite_Patch();
+	// Fwrite patch needs to be fixed for SMG+SMG2
+	if (memcmp(MEM_BASE, "RMG", 3) && memcmp(MEM_BASE, "SB4", 3))
+		Fwrite_Patch();
 
 	// copy the IOS version over the expected IOS version
 	memcpy(MEM_IOSEXPECTED, MEM_IOSVERSION, 4);

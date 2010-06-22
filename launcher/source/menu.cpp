@@ -184,9 +184,6 @@ void MainMenu(Menus::Enum menu)
 
 	ShutoffRumble();
 
-	if (*(vu32*)0x80001804 != 0x53545542) // "STUB" - Check for whether the HBC (or other loader) reload stub is in place or not
-		SYS_ResetSystem(SYS_RETURNTOMENU, 0, 0);
-
 	ResumeGui();
 	RequestExit();
 	while (true)
