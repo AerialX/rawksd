@@ -570,8 +570,8 @@ void RVL_Patch(RiiDisc* disc)
 
 			for (vector<RiiChoice::Patch>::iterator patch = choice->Patches.begin(); patch != choice->Patches.end(); patch++) {
 				map<string, RiiPatch>::iterator currentpatch = disc->Patches.find(patch->ID);
-				if (currentpatch->second.Files.size() || currentpatch->second.Folders.size() || \
-						currentpatch->second.Savegame.External.size() || currentpatch->second.DLC.External.size()) {
+				if (currentpatch->second.Files.size() || currentpatch->second.Folders.size() || 
+					currentpatch->second.Savegame.External.size() || currentpatch->second.DLC.External.size()) {
 					// Only keep the filesystem mounted if a patch that needs to be running during the game is using it
 					UsedFilesystems[choice->Filesystem] = true;
 					break;
@@ -621,7 +621,8 @@ void RVL_Patch(RiiDisc* disc)
 void RVL_Unmount()
 {
 	static u32 tik_data[STD_SIGNED_TIK_SIZE/4] ATTRIBUTE_ALIGN(32);
-	char _tik_path[MAXPATHLEN] = "00/mnt/isfs/ticket/00010005/";
+	char _tik_path[MAXPATHLEN];
+	strcpy(_tik_path + 2, "/mnt/isfs/ticket/00010005/");
 	char *tik_path = _tik_path+2;
 	s32 tik_dir = File_OpenDir(tik_path);
 	if (tik_dir>=0) {
@@ -649,8 +650,15 @@ void RVL_Unmount()
 			}
 		}
 
-		if (!found && File_GetLogFS() != *mount)
+		if (!found && File_GetLogFS() != *mount) {
 			File_Unmount(*mount);
+			for (vector<int>::iterator tomount = ToMount.begin(); tomount != ToMount.end(); tomount++) {
+				if (*tomount == *mount) {
+					ToMount.erase(tomount);
+					break;
+				}
+			}
+		}
 	}
 
 	if (!ToMount.size()) { // Deinit all network if we're not using it.

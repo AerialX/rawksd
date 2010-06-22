@@ -105,10 +105,10 @@ void Haxx_Mount(vector<int>* mounted)
 	ret = File_RiiFS_Mount("", 0);
 	if (ret >= 0) {
 		mounted->push_back(ret);
-		if (!hasdefault) {
-			ToMount.push_back(ret);
+		ToMount.push_back(ret);
+		if (!hasdefault)
 			File_SetLogFS(ret);
-		}
+		
 		DEFAULT();
 	}
 }
