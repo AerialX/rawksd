@@ -1,5 +1,5 @@
 Riivolution v1.02
-Monday March 28th, 2010
+June 22nd, 2010
 by Aaron, tueidj and Tempus
 riivolution@japaneatahand.com
 
@@ -18,8 +18,8 @@ Q: Does Riivolution work with my PAL/NTSC/JAP Wii/game?
 A: Yes.
 
 Q: What IOS does it need installed?
-A: Riivolution requires an updated IOS37; if you're on System Menu 4.2 you should be good.
-   If it's not installed or the proper version, it will be installed the first time Riivolution is run.
+A: Riivolution requires an updated IOS37; if you're on System Menu 4.2 or 4.3 you don't need to do anything.
+   If it's not installed or the proper version it will be installed the first time Riivolution is run.
    Alternatively, you can also use NUSD or DOP-IOS to install it - with all patches disabled.
 
 Q: Does Riivolution work with Game X?
@@ -32,9 +32,6 @@ A: It will install a Riivolution channel onto your System Menu for easy access. 
 Q: Can I use Ocarina / Gecko codes with it?
 A: Normally, Riivolution just supports direct memory patches. However, Riivolution supports a patching method that can be used with the Gecko OS code handler.
    Read more about that here: http://rvlution.net/riiv/Ocarina_Codes
-
-Q: Can I add new files to a disc with Riivolution?
-A: Not yet.
 
 Q: Uhh, how do I use this?
 A: As a user, you need to either download patch packages made by someone else or make your own.
@@ -52,6 +49,18 @@ Special thanks to everyone that contributed! Treeki, Omega, Pop006, TobiasAmaran
 
 
 Changelog
+
+v1.03
+June 22nd, 2010
+ - System Menu 4.3 compatibility
+ - Wii slot light filesystem indicator
+ - Stability fixes for all filesystems
+ - Files close after a few seconds to allow them to be replaced over RiiFS
+ - Improved channel install
+    - No longer requires SD/USB
+ - RiiFS improvements
+    - Native C++ Server
+    - Connects automatically on a LAN without needing SD/USB
 
 v1.02
 March 28th, 2010

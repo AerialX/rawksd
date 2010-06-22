@@ -361,13 +361,53 @@ int Install(u64 titleid, int version, bool comexploit)
 	return 0;
 }
 
+static u8* ReadChannelDol(const char* filename, u32* size)
+{
+	Stats st;
+	if (File_Stat(filename, &st))
+		return NULL;
+	if (st.Mode & S_IFDIR || st.Size < 0x14)
+		return NULL;
+
+	int fd = File_Open(filename, O_RDONLY);
+	if (fd < 0)
+		return NULL;
+
+	*size = (u32)st.Size;
+	u8* ret = (u8*)memalign(0x20, ROUND_UP(*size, 0x20));
+	if (!ret) {
+		File_Close(fd);
+		return NULL;
+	}
+	
+	if (File_Read(fd, ret, *size) != (int)*size) {
+		File_Close(fd);
+		free(ret);
+		return NULL;
+	}
+	File_Close(fd);
+
+	u8 filehash[0x14];
+	u8 hash[0x14];
+	u8* hasharea = ret + *size - sizeof(hash);
+	memcpy(filehash, hasharea, sizeof(hash));
+	memcpy(hasharea, "Viva la Riivolution!", sizeof(hash));
+
+	SHA1(ret, *size, hash);
+	if (memcmp(hash, filehash, sizeof(hash))) { // We didn't get the expected hash
+		free(ret);
+		return NULL;
+	}
+
+	*size -= sizeof(hash);
+
+	return ret;
+}
+
 static u8* ReadChannelData(int index, u32* size)
 {
 	u8 *ret;
-	char filename[MAXPATHLEN];
-	if (index == 2)
-		strcpy(filename, "/apps/riivolution/boot.dol");
-	else {
+	if (index < 2) {
 		*size = banner_datas[index].size;
 		ret = (u8*)memalign(0x20, ROUND_UP(*size, 0x20));
 		if (ret)
@@ -375,21 +415,9 @@ static u8* ReadChannelData(int index, u32* size)
 		return ret;
 	}
 
-	Stats st;
-	if (File_Stat(filename, &st))
-		return NULL;
-	int fd = File_Open(filename, O_RDONLY);
-	if (fd < 0)
-		return NULL;
-
-	*size = (u32)st.Size;
-	ret = (u8*)memalign(0x20, ROUND_UP(*size, 0x20));
-	if (File_Read(fd, ret, *size) != (int)*size) {
-		free(ret);
-		return NULL;
-	}
-	File_Close(fd);
-
+	ret = ReadChannelDol("/apps/riivolution/boot.dol", size);
+	if (!ret)
+		ret = ReadChannelDol("/boot.dol", size);
 	return ret;
 }
 

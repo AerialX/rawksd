@@ -108,14 +108,11 @@ clean:
 
 #---------------------------------------------------------------------------------
 run: $(BUILD)
-	wiiload $(OUTPUT).dol
+	@wiiload $(OUTPUT).dol
 
 z: $(BUILD)
-	./dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol
-
-#---------------------------------------------------------------------------------
-reload:
-	wiiload -r $(OUTPUT).dol
+	@./dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol
+	@./hash $(OUTPUT).z.dol
 
 #---------------------------------------------------------------------------------
 else
