@@ -304,7 +304,7 @@ otp_t otp ATTRIBUTE_ALIGN(4);
 
 // simple 2 byte patches
 enum {
-    MEM2_INDEX,
+    MEM2_INDEX=0,
     NAND_PERMS_INDEX,
     DVD_SWITCH_INDEX
 };
@@ -316,7 +316,7 @@ static const struct {
 } patches[] = {
     {MEM_PROT, 1, 2},
     {(u16*)0x93A112F2, 0xD001, 0xE001},
-    {(u16*)0x939B0528, 0x4651, 0x2100}
+    {(u16*)0x939B052C, 0xD140, 0x46C0}
 };
 
 typedef struct _cmap_entry
