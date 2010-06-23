@@ -132,22 +132,23 @@ namespace ProxiIOS { namespace Filesystem {
 
 		Host[0x30] = '\0';
 
-		// _sprintf(MountPoint, "/mnt/net/%s%d", Host, Port);
-
 		strcpy(MountPoint, "/mnt/net/");
-		strcat(MountPoint, Host);
-		// find first non-zero digit (assume 100000>Port>0)
-		for (ret=10000; (Port/ret)==0; ret /= 10);
+		static int connection = 0;
+		int id = ++connection;
 
-		while (Port) {
-			char digit[2] = {0,0};
-			int value = Port / ret;
+		// find first non-zero digit (assume 100000>id>0)
+		for (ret = 10000; (id / ret) == 0; ret /= 10)
+			;
+
+		while (id) {
+			char digit[2] = { 0, 0 };
+			int value = id / ret;
 			digit[0] = '0' + value;
 			strcat(MountPoint, digit);
-			Port -= value * ret;
+			id -= value * ret;
 			ret /= 10;
 		}
-
+		
 		return Errors::Success;
 	}
 

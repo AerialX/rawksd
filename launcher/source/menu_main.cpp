@@ -375,8 +375,8 @@ Menus::Enum MenuMount()
 
 	do {
 		if (RVL_Initialize() < 0 || (status = Launcher_Init()) == LauncherStatus::IosError) {
-				HaltGui(); Subtitle->SetText("IOS Error!"); ResumeGui();
-				status = LauncherStatus::IosError;
+			HaltGui(); Subtitle->SetText("IOS Error!"); ResumeGui();
+			status = LauncherStatus::IosError;
 		}
 
 		MENUINIT_CHECKBUTTONS();
@@ -423,7 +423,17 @@ Menus::Enum MenuInit()
 	for (vector<int>::iterator mount = Mounted.begin(); mount != Mounted.end(); mount++) {
 		ParseXMLs(*mount, &discs);
 	}
-	Mounted.insert(Mounted.end(), ToMount.begin(), ToMount.end());
+	for (vector<int>::iterator tomount = ToMount.begin(); tomount != ToMount.end(); tomount++) {
+		bool found = false;
+		for (vector<int>::iterator mount = Mounted.begin(); mount != Mounted.end(); mount++) {
+			if (*tomount == *mount) {
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			Mounted.push_back(*tomount);
+	}
 	Disc = CombineDiscs(&discs);
 	ParseConfigXMLs(&Disc);
 

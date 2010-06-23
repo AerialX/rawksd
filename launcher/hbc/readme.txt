@@ -1,6 +1,6 @@
 Riivolution v1.02
 June 22nd, 2010
-by Aaron, tueidj and Tempus
+by Aaron, tueidj, Tempus, and megazig
 riivolution@japaneatahand.com
 
 Homepage: http://rvlution.net/riivolution
@@ -45,7 +45,7 @@ A: Read more about all of Riivolution's network features here: http://rvlution.n
 Q: Can I see it in action?
 A: Sure. http://rvlution.net/riiv/Media
 
-Special thanks to everyone that contributed! Treeki, Omega, Pop006, TobiasAmaranth, megazig, Mooseknuckle2000, Skawo, and everyone else who helped out!
+Special thanks to everyone that contributed: Treeki, Omega, Pop006, TobiasAmaranth, Mooseknuckle2000, Skawo, and everyone else who helped out!
 
 
 Changelog

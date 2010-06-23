@@ -240,6 +240,8 @@ versionisvalid:
 				}
 				if (ParseXMLs(mnt, discs) || log)
 					ToMount.push_back(mnt);
+				else
+					File_Unmount(mnt);
 			}
 		}
 
