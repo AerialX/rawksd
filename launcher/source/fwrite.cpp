@@ -85,6 +85,22 @@ static void* FindFwrite(char* buffer, u32 length)
 	return FindFunction(buffer, length, findme, findme_length);
 }
 
+static void* FindFwriteShort(char* buffer, u32 length)
+{
+	static const u32 findme[] = {
+		0x7fdbc9d7,0x4182001c,0x881c000a,0x2c000000,0x40820010,0x801c0004,0x00000000,0x4082000c,
+		0x38600000,0x00000008,0x28000002,0x40820008
+	};
+	u32 findme_length = 12;
+
+	void * check = NULL;
+	
+	check= FindFunction(buffer, length, findme, findme_length);
+	if(check)
+		check = (void*)( (u32)check - 0x40 );
+	return  check;
+}
+
 // Can call this on every chunk write when loading main.dol into memory
 int Fwrite_FindPatchLocation(char* buffer, u32 length)
 {
@@ -95,6 +111,8 @@ int Fwrite_FindPatchLocation(char* buffer, u32 length)
 		iosioctl_location = FindIosIoctl(buffer, length);
 	if (!fwrite_location)
 		fwrite_location = FindFwrite(buffer, length);
+	if (!fwrite_location)
+		fwrite_location = FindFwriteShort(buffer, length);
 	return 0;
 }
 
