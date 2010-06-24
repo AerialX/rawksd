@@ -23,7 +23,7 @@
 	.global os_thread_create
 os_thread_create:
 	syscall 0x0
-
+	
  	.code 32
 	.global os_get_thread_id
 os_get_thread_id:
@@ -43,6 +43,11 @@ os_thread_continue:
 	.global os_thread_stop
 os_thread_stop:
 	syscall 0x6
+	
+	.code 32
+	.global os_thread_yield
+os_thread_yield:
+	syscall 0x7
 
 	.code 32
 	.global os_thread_get_priority

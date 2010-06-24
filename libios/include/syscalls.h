@@ -39,16 +39,16 @@
    extern "C" {
 #endif /* __cplusplus */
 
-/*  0 */ int       os_thread_create( u32 (*entry)(void* _arg), void* arg, void* stack_top, u32 stacksize, u32 priority, s32 autostart);
-/*  1    os_thread_join */
+/*  0 */ int       os_thread_create( u32 (*entry)(void* _arg), void* arg, void* stack_top, u32 stacksize, u32 priority, s32 cleanup);
+/*  1    int       os_thread_join(int thread_id, int *return_code);  srsly, don't use this. */
 /*  2    os_thread_cancel */
 /*  3 */ int       os_get_thread_id(void);
 /*  4 */ int       os_get_process_id(void);
 /*  5 */ int       os_thread_continue(int id);
 /*  6 */ int       os_thread_stop(int id);
-/*  7    os_thread_yield */
-/*  8 */ int       os_thread_get_priority(void);
-/*  9 */ void      os_thread_set_priority(int zero, u32 priority);
+/*  7 */ void      os_thread_yield();
+/*  8 */ int       os_thread_get_priority(int thread);
+/*  9 */ int       os_thread_set_priority(int thread, u32 priority);
 /*  A */ osqueue_t os_message_queue_create(void* ptr, u32 n_msgs);
 /*  B */ s32       os_message_queue_destroy(osqueue_t queue);
 /*  C */ s32       os_message_queue_send(osqueue_t queue, u32 message, u32 flags);

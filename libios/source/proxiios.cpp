@@ -9,7 +9,7 @@ namespace ProxiIOS {
 		Device[0x20 - 1] = '\0';
 		Fd = -1;
 
-		os_thread_set_priority(os_get_thread_id(), 1);
+		os_thread_set_priority(0, 10);
 
 		queuehandle = os_message_queue_create(queue, 8);
 
