@@ -46,12 +46,18 @@ void ReleaseLock(OSLock lock)
 
 void *Thread_Create(void* start, void* arg)
 {
-	return (void*) _beginthreadex(NULL, 0, (unsigned int(__stdcall*)(void*))start, arg, CREATE_SUSPENDED, NULL);
+	// start might not return an unsigned int, but no matter
+	return (void*)_beginthreadex(NULL, 0, (unsigned int(__stdcall*)(void*))start, arg, CREATE_SUSPENDED, NULL);
 }
 
-void Thread_Start(void* thread_handle)
+void Thread_Start(void* _thread)
 {
-	ResumeThread((HANDLE)thread_handle);
+	HANDLE thread = (HANDLE)_thread;
+	ResumeThread(thread);
+	/* _beginthreadex doesn't store the thread handle in the CRT thread struct, so neither
+	*  _endthread nor _endthreadex will close it. So we close it here.
+	*/
+	CloseHandle(thread);
 }
 
 class Win32DirectoryInfo : public DirectoryInfo

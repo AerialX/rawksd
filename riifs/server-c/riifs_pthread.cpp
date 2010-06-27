@@ -68,7 +68,8 @@ void *Thread_Create(void *func, void *arg) {
 		pthread_mutex_lock(&new_thread->thread_start);
 		new_thread->saved_arg = arg;
 		new_thread->thread_func = (void(*)(void*))func;
-		pthread_create(&tid, NULL, thread_stub, (void*)new_thread);
+		if (pthread_create(&tid, NULL, thread_stub, (void*)new_thread)==0)
+			pthread_detach(tid);
 	}
 	return (void*)new_thread;
 }

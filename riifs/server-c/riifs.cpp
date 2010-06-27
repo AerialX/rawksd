@@ -30,8 +30,17 @@ const string Connection::FileIdPath = "/mnt/identifier";
 
 static void AcceptClient(string Root, TcpClient *client)
 {
+	void *new_thread = NULL;
 	Connection *connection = new Connection(Root, client);
-	void *new_thread = Thread_Create((void*)connection->Run, connection);
+	if (connection)
+		new_thread = Thread_Create((void*)connection->Run, connection);
+	
+	if (new_thread==NULL)
+	{
+		connection->DebugPrint("Couldn't create thread, closing connection");
+		delete connection;
+		return;
+	}
 	connection->DebugPrint("Connection Established");
 	GetLock(ConnectionsLock);
 	Connections.push_back(connection);
@@ -72,8 +81,8 @@ int main(int argc, char* argv[])
 	else
 	{
 		char work_dir[1024];
-		getcwd(work_dir, sizeof(work_dir));
-		Root = work_dir;
+		if (getcwd(work_dir, sizeof(work_dir))!=NULL)
+			Root = work_dir;
 	}
 
 	Root += "/";
