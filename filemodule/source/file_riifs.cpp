@@ -35,7 +35,7 @@ namespace ProxiIOS { namespace Filesystem {
 		memset(&address, 0, sizeof(address));
 		address.sin_family = PF_INET;
 
-		if (!strcmp(Host, "")) {
+		if (!Host[0]) {
 			// broadcast a ping to try and find a server
 			int found = 0;
 			sock_opt = 1;
@@ -44,36 +44,29 @@ namespace ProxiIOS { namespace Filesystem {
 			if (locate_socket<0)
 				return Errors::DiskNotMounted;
 
-			// set to non-blocking (must be done before setting broadcast option)
-			if (net_ioctl(locate_socket, FIONBIO, &sock_opt) < 0) {
+			// set to non-blocking
+			ret = net_ioctl(locate_socket, FIONBIO, &sock_opt);
+			if (ret < 0) {
 				net_close(locate_socket);
 				return Errors::DiskNotMounted;
 			}
 
-			/* Games do this in a different way, which I call wtf_setbroadcast:
-					net_setsockopt(locate_socket, 1, 0x29A, (char*)&sock_opt, 4);
-			   It still returns -ENOPROTOOPT, but the code I've seen assumes it succeeds
-			   unless it returns -1 (which translates to -E2BIG?) so we do the same. */
-			ret = net_setsockopt(locate_socket, SOL_SOCKET, SO_BROADCAST, (char*)&sock_opt, 4);
-			if (ret!=-E2BIG) {
-				int data = RII_OPTION_PING;
-				address.sin_port = htons(Port ? Port : 1137);
-				address.sin_addr.s_addr = htonl(INADDR_BROADCAST);
-				ret = net_sendto(locate_socket, &data, sizeof(data), 0, (struct sockaddr*)&address, 8);
-				if (ret>=4) {
-					// wait for up to half a second (5 * CONNECT_SLEEP_INTERVAL)
-					for (int i=0; i < 5; i++) {
-						sock_opt = 8;
-						if (net_recvfrom(locate_socket, &data, sizeof(data), 0, (struct sockaddr*)&address, &sock_opt)==4 && sock_opt>=8) {
-							Port = ntohs(data);
-							strcpy(Host, inet_ntoa(address.sin_addr));
-							found = 1;
-							break;
-						}
-						usleep(CONNECT_SLEEP_INTERVAL);
+			ret = RII_OPTION_PING;
+			address.sin_port = htons(Port ? Port : 1137);
+			address.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+			ret = net_sendto(locate_socket, &ret, sizeof(ret), 0, (struct sockaddr*)&address, 8);
+			if (ret>=4) {
+				// wait for up to half a second (5 * CONNECT_SLEEP_INTERVAL)
+				for (int i=0; i < 5; i++) {
+					sock_opt = 8;
+					if (net_recvfrom(locate_socket, &ret, sizeof(ret), 0, (struct sockaddr*)&address, &sock_opt)==4 && sock_opt>=8) {
+						Port = ntohs(ret);
+						strcpy(Host, inet_ntoa(address.sin_addr));
+						found = 1;
+						break;
 					}
+					usleep(CONNECT_SLEEP_INTERVAL);
 				}
-
 			}
 
 			net_close(locate_socket);
@@ -148,7 +141,7 @@ namespace ProxiIOS { namespace Filesystem {
 			id -= value * ret;
 			ret /= 10;
 		}
-		
+
 		return Errors::Success;
 	}
 

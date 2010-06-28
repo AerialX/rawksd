@@ -646,11 +646,6 @@ struct hostent* net_getnbhostbyname_async(const char *addrString, u32 timeout)
 		return NULL;
 	}
 
-	if (net_setsockopt(udpsock, SOL_SOCKET, SO_BROADCAST, (char*)&sock_opt, 4)==-E2BIG) {
-		net_close(udpsock);
-		return NULL;
-	}
-
 	sockaddr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
 	sockaddr.sin_port = htons(137); // NetBios name port
 	sockaddr.sin_family = AF_INET;
@@ -714,8 +709,10 @@ s32 net_socket(u32 domain, u32 type, u32 protocol)
 	ret = _net_convert_error(os_ioctl(net_ip_top_fd, IOCTL_SO_SOCKET, params, 12, NULL, 0));
 	if(ret>=0 && type==SOCK_STREAM) // set tcp window size to 32kb
 	{
-		int window_size = 32768;
+		int window_size = 32768; // max recv_buf
 		net_setsockopt(ret, SOL_SOCKET, SO_RCVBUF, (char *) &window_size, sizeof(window_size));
+		window_size = 8192; // max snd_buf
+		net_setsockopt(ret, SOL_SOCKET, SO_SNDBUF, (char *) &window_size, sizeof(window_size));
 		window_size = 1;
 		net_setsockopt(ret, IPPROTO_TCP, /*TCP_NODELAY*/0x2001, &window_size, sizeof(window_size));
 	}

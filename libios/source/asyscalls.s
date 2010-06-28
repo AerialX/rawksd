@@ -272,6 +272,11 @@ os_aes_encrypt:
 	.global os_aes_decrypt
 os_aes_decrypt:
 	syscall 0x6B
+	
+	.code 32
+	.global os_crash
+os_crash:
+	syscall 0x77
 
 	.code 32
 	.global os_puts

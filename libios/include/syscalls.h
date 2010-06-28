@@ -4,8 +4,6 @@
 #include "ipc.h"
 
 /* misc IOS info that has nowhere else to live
- * see IOS debug dump @ http://pastie.org/private/b60fjlyvl3ewgcktmd54yq
- * for more info
  *
  * maximum number of threads: 61
  * maximum number of queues: 256
@@ -39,7 +37,7 @@
    extern "C" {
 #endif /* __cplusplus */
 
-/*  0 */ int       os_thread_create( u32 (*entry)(void* _arg), void* arg, void* stack_top, u32 stacksize, u32 priority, s32 cleanup);
+/*  0 */ int       os_thread_create( u32 (*entry)(void* _arg), void* arg, void* stack_top, u32 stacksize, u32 priority, u32 detached);
 /*  1    int       os_thread_join(int thread_id, int *return_code);  srsly, don't use this. */
 /*  2    os_thread_cancel */
 /*  3 */ int       os_get_thread_id(void);
@@ -158,7 +156,7 @@
 /* 74    os_syscall_74 */
 /* 75    os_make_sig(void *SHAhash, u32 length, int keyid, void *sig) (sig is 0x3C bytes, ecc public keypair?) */
 /* 76    os_syscall_76 */
-/* 77    os_syscall_77 */
+/* 77 */ void os_crash(void); //syscall 0x77 doesn't exist
 
 void os_puts(const char *str); // IOS log
 
