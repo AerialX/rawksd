@@ -24,7 +24,7 @@ static DataArray* LoadDTB(const char* filename)
 
 		if (read > 0)
 			mem->Write(buffer, read);
-	} while (read > 0);
+	} while (read == 0x8000);
 	free(buffer);
 	File_Close(fd);
 
@@ -88,7 +88,7 @@ static const char* GetSongTitle(DataArray* song)
 
 static DataArray* titlearray = NULL;
 static DataArray* customs = NULL;
-static void AddDTB(DataArray* song)
+static void AddToTitleArray(DataArray* song)
 {
 	const char* title = GetSongTitle(song);
 	if (title[0]=='s' && title[1]=='Z')
@@ -104,7 +104,11 @@ static void AddDTB(DataArray* song)
 		DataNode node(title);
 		titlearray->Insert(0, node);
 	}
+}
 
+static void AddDTB(DataArray* song)
+{
+	AddToTitleArray(song);
 	DataNode songnode(song, 0x10);
 	customs->Insert(0, songnode);
 }
@@ -131,9 +135,12 @@ static void RefreshCustomsList()
 	if (songs) {
 		while (songs->size) {
 			if (songs->nodes->type == 0x10) {
-				const char* id = GetSongID(songs->nodes->LiteralArray(songs));
-				if (id && !strncmp(id, "rwk", 3))
+				DataArray* song = songs->nodes->LiteralArray(songs);
+				const char* id = GetSongID(song);
+				if (id && !strncmp(id, "rwk", 3)) {
+					AddToTitleArray(song);
 					customs->Insert(0, songs->nodes[0]);
+				}
 			}
 			songs->Remove(0);
 		}

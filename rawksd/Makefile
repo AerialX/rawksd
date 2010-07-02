@@ -115,18 +115,14 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
+	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol $(OUTPUT).z.dol
 
 #---------------------------------------------------------------------------------
 run: $(BUILD)
-	wiiload $(OUTPUT).dol
+	@wiiload $(OUTPUT).dol
 
 z: $(BUILD)
-	../launcher/dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol
-
-#---------------------------------------------------------------------------------
-reload:
-	wiiload -r $(OUTPUT).dol
+	@../launcher/dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol
 
 #---------------------------------------------------------------------------------
 else
