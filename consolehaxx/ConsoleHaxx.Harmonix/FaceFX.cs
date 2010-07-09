@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -46,14 +46,34 @@ namespace ConsoleHaxx.Harmonix
 
 			for (int i = 0; i < 2; i++)
 				Strings2.Add(ReadString(reader));
+				
+			if (reader.ReadInt32() == 0x16)
+			{
+				reader.ReadInt32(); // 2
+				ReadString(reader);
+			}
+			// else it should be 0x14
 
-			for (int i = 0; i < 86; i++)
+			int viewports = reader.ReadInt32(); // normally 7
+			Ints2.Add(viewports);
+			// viewports are 12 ints each, read the following int as well here
+			for (int i = viewports*12; i >= 0; i--)
 				Ints2.Add(reader.ReadInt32());
 
+			// this is hacky, there are strings/objects in here but they're always zero/NULL
 			Bytes1 = reader.ReadBytes(5);
+			if (!Bytes1[0])
+			{
+				reader.ReadBytes(21);
+				Bytes1[0] = 1;
+			}
+			else reader.ReadBytes(24);
 
-			for (int i = 0; i < 7; i++)
-				Ints3.Add(reader.ReadInt32());
+			for (int i = 0; i < 3; i++)
+				Ints3.Add(0);
+			Ints3.Add(2);
+			for (int i = 0; i < 2; i++)
+				Ints3.Add(0);
 
 			if (reader.ReadByte() != 0x00)
 				throw new FormatException();
@@ -61,6 +81,7 @@ namespace ConsoleHaxx.Harmonix
 			if (magic[0] != 0xAD || magic[1] != 0xDE || magic[2] != 0xAD || magic[3] != 0xDE)
 				throw new FormatException();
 
+			// there's strings in here too (Ints4/Ints5)
 			for (int i = 0; i < 2; i++)
 				Ints4.Add(reader.ReadInt32());
 
@@ -74,6 +95,7 @@ namespace ConsoleHaxx.Harmonix
 			for (int i = 0; i < strings; i++) // ?
 				Strings3.Add(ReadString(reader));
 
+			// first int here might be a delay? second is the amount of data left - 4 (DEAD tag)
 			for (int i = 0; i < 2; i++)
 				Ints6.Add(reader.ReadInt32());
 
@@ -92,6 +114,8 @@ namespace ConsoleHaxx.Harmonix
 
 			foreach (string str in Strings2)
 				WriteString(str, writer);
+				
+			writer.Write((byte)0x14);
 
 			foreach (int i in Ints2)
 				writer.Write(i);
