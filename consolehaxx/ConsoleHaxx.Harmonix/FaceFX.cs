@@ -115,7 +115,7 @@ namespace ConsoleHaxx.Harmonix
 			foreach (string str in Strings2)
 				WriteString(str, writer);
 				
-			writer.Write((byte)0x14);
+			writer.Write((int)0x14);
 
 			foreach (int i in Ints2)
 				writer.Write(i);
