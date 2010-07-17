@@ -83,7 +83,7 @@ GuiImage::GuiImage(int w, int h, GXColor c)
  */
 GuiImage::~GuiImage()
 {
-	if(imgType == IMAGE_COLOR && image)
+	if(imgType == IMAGE_COLOR)
 		free(image);
 }
 
@@ -126,10 +126,10 @@ void GuiImage::SetTile(int t)
 
 GXColor GuiImage::GetPixel(int x, int y)
 {
-	if(!image || this->GetWidth() <= 0 || x < 0 || y < 0)
+	if(!image || GetWidth() <= 0 || x < 0 || y < 0 || x > GetWidth() || y > GetHeight())
 		return (GXColor){0, 0, 0, 0};
 
-	u32 offset = (((y >> 2)<<4)*this->GetWidth()) + ((x >> 2)<<6) + (((y%4 << 2) + x%4 ) << 1);
+	u32 offset = (((y >> 2)<<4)*GetWidth()) + ((x >> 2)<<6) + (((y%4 << 2) + x%4 ) << 1);
 	GXColor color;
 	color.a = *(image+offset);
 	color.r = *(image+offset+1);
@@ -140,10 +140,10 @@ GXColor GuiImage::GetPixel(int x, int y)
 
 void GuiImage::SetPixel(int x, int y, GXColor color)
 {
-	if(!image || this->GetWidth() <= 0 || x < 0 || y < 0)
+	if(!image || GetWidth() <= 0 || x < 0 || y < 0 || x > GetWidth() || y > GetHeight())
 		return;
 
-	u32 offset = (((y >> 2)<<4)*this->GetWidth()) + ((x >> 2)<<6) + (((y%4 << 2) + x%4 ) << 1);
+	u32 offset = (((y >> 2)<<4)*GetWidth()) + ((x >> 2)<<6) + (((y%4 << 2) + x%4 ) << 1);
 	*(image+offset) = color.a;
 	*(image+offset+1) = color.r;
 	*(image+offset+32) = color.g;
