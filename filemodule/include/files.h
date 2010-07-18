@@ -57,7 +57,8 @@ typedef enum {
 	IOCTL_CloseDir =	0x53,
 	IOCTL_Shorten = 	0x60,
 	IOCTL_Log =         0x61,
-	IOCTL_Context =     0x62
+	IOCTL_Context =     0x62,
+	IOCTL_CheckPhys =   0x63,
 } file_ioctl;
 
 typedef enum {
@@ -82,6 +83,7 @@ int File_SetDefaultPath(const char* mountpoint);
 int File_GetMountPoint(int fs, char* mountpoint, int length);
 int File_SetLogFS(int fs);
 int File_GetLogFS();
+int File_CheckPhysical(int fs);
 
 int File_Stat(const char* path, Stats* st);
 int File_CreateFile(const char* path);

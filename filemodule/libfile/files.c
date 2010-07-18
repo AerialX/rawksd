@@ -217,7 +217,8 @@ int File_NextDir(int dir, char* path, Stats* st)
 	ret = os_ioctlv(file_fd, IOCTL_NextDir, 1, 2, ioctlvbuffer);
 	os_sync_before_read(path, MAXPATHLEN);
 	os_sync_before_read(_st, sizeof(Stats));
-	memcpy(st, _st, sizeof(Stats));
+	if (st)
+		memcpy(st, _st, sizeof(Stats));
 
 	return ret;
 }
@@ -293,6 +294,13 @@ int File_Log(const void* buffer, int length)
 		return os_ioctl(file_fd, IOCTL_Log, (void*)buffer, length, NULL, 0);
 	}
 	return 0;
+}
+
+int File_CheckPhysical(int fs)
+{
+	ioctlbuffer[0] = fs;
+	os_sync_after_write(ioctlbuffer, 0x04);
+	return os_ioctl(file_fd, IOCTL_CheckPhys, ioctlbuffer, sizeof(ioctlbuffer), NULL, 0);
 }
 
 static const char HEX_CHARS[] = "0123456789abcdef";

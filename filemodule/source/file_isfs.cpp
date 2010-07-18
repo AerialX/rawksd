@@ -19,6 +19,11 @@ namespace ProxiIOS { namespace Filesystem {
 		return 0;
 	}
 
+	int IsfsHandler::CheckPhysical()
+	{
+		return filefd;
+	}
+
 	FileInfo* IsfsHandler::Open(const char* path, int mode)
 	{
 		int ret = -1;

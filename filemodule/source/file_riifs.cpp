@@ -145,6 +145,12 @@ namespace ProxiIOS { namespace Filesystem {
 		return Errors::Success;
 	}
 
+	int RiiHandler::CheckPhysical()
+	{
+		// this isn't accurate unless you call it several times in a row
+		return IdleTick();
+	}
+
 	bool RiiHandler::SendCommand(int type, const void* data, int size)
 	{
 #ifdef RIIFS_LOCAL_OPTIONS
@@ -464,17 +470,17 @@ namespace ProxiIOS { namespace Filesystem {
 			LogSize = 0;
 		}
 
-		if (ServerVersion < 0x03 || IdleCount < 0)
+		if (ServerVersion < 3 || IdleCount < 0)
 			return -1;
 
 		if (IdleCount++ > (RII_IDLE_TIME/FSIDLE_TICK))
-			return SendCommand(RII_OPTION_PING);
+			return (SendCommand(RII_OPTION_PING)) ? 1 : -1;
 		return 0;
 	}
 
 	int RiiHandler::Log(const void* buffer, int length)
 	{
-		if (ServerVersion >= 0x04)
+		if (ServerVersion >= 4)
 		{
 			if (LogSize > 0x2000) // At this point, just flush the damn thing
 				IdleTick();

@@ -19,16 +19,19 @@ class FatHandler : public FilesystemHandler
 {
 protected:
 	int IdleCount;
+	int phys;
 
 public:
 	char Name[0x20];
 
 	FatHandler(Filesystem* fs) : FilesystemHandler(fs) {
 		IdleCount = -1;
+		phys = -1;
 	}
 
 	int Mount(const void* options, int length);
 	int Unmount();
+	int CheckPhysical();
 
 	FileInfo* Open(const char* path, int mode);
 	int Read(FileInfo* file, u8* buffer, int length);

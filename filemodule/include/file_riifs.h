@@ -113,6 +113,7 @@ namespace ProxiIOS { namespace Filesystem {
 
 			int Mount(const void* options, int length);
 			int Unmount();
+			int CheckPhysical();
 
 			FileInfo* Open(const char* path, int mode);
 			int Read(FileInfo* file, u8* buffer, int length);

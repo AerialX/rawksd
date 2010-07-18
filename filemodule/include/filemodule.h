@@ -65,7 +65,9 @@ namespace ProxiIOS { namespace Filesystem {
 			// Set RTC epoch
 			Epoch			= IOCTL_Epoch,
 			// Hacky context dumper
-			Context         = IOCTL_Context
+			Context         = IOCTL_Context,
+			// Check the physical medium for a filesystem
+			CheckPhysical   = IOCTL_CheckPhys,
 		};
 	}
 
@@ -124,6 +126,7 @@ namespace ProxiIOS { namespace Filesystem {
 
 			virtual int Mount(const void* options, int length) { return -1; };
 			virtual int Unmount() { return -1; };
+			virtual int CheckPhysical() { return -1; };
 			virtual FileInfo* Open(const char* path, int mode) { return null; };
 
 			virtual int Read(FileInfo* file, u8* buffer, int length) { return -1; };

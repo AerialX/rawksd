@@ -131,8 +131,17 @@ namespace ProxiIOS { namespace Filesystem {
 					Mounted[index] = null;
 					if (index == LogFS)
 						LogFS = -1;
+					if (index == Default)
+						Default = 0;
 				}
 				return ret; }
+			case Ioctl::CheckPhysical: {
+				int index = buffer_in[0];
+				FilesystemHandler* system = Mounted[index];
+				if (!system)
+					return Errors::NotMounted;
+
+				return system->CheckPhysical(); }
 			case Ioctl::GetMountPoint: {
 				int index = buffer_in[0];
 				FilesystemHandler* system = Mounted[index];
@@ -230,7 +239,7 @@ namespace ProxiIOS { namespace Filesystem {
 				if (LogFS >= 0 && Mounted[LogFS] && message->ioctl.length_in)
 					return Mounted[LogFS]->Log(message->ioctl.buffer_in, message->ioctl.length_in);
 				return Errors::Success; }
-#if 1 // testing only
+#if 0 // testing only
 			case Ioctl::Context: {
 				static const char *exception_name[15] = {
 						"System Reset", "Machine Check", "DSI", "ISI",

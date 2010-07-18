@@ -44,15 +44,14 @@ int FatHandler::Mount(const void* options, int length)
 	if (length < 4)
 		return Errors::Unrecognized;
 
-	int disk;
-	memcpy(&disk, options, sizeof(int));
+	memcpy(&phys, options, sizeof(int));
 
 	if (length > 4) { // optional forced fs name
 		strcpy(Name, (const char*)options + 4);
 	} else
 		strcpy(Name, __fatName);
 
-	if (fatMount(Name, Module->Disk[disk], 0, 5, 8) < 0)
+	if (fatMount(Name, Module->Disk[phys], 0, 5, 8) < 0)
 		return Errors::DiskNotMounted;
 
 	strcpy(MountPoint, "/mnt/");
@@ -70,6 +69,13 @@ int FatHandler::Unmount()
 	Name[strlen(Name) - 1] = '\0'; // Get rid of the '/'
 	fatUnmount(Name);
 	IdleCount = -1;
+	return 0;
+}
+
+int FatHandler::CheckPhysical()
+{
+	if (phys<0 || !Module->Disk[phys]->isInserted())
+		return -1;
 	return 0;
 }
 
