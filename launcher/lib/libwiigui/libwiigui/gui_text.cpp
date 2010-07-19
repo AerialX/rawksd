@@ -42,7 +42,7 @@ GuiText::GuiText(const char * t, int s, GXColor c)
 	alignmentHor = ALIGN_CENTRE;
 	alignmentVert = ALIGN_MIDDLE;
 
-	if(t)
+	if(t && t[0])
 		origText = charToWideChar(t);
 }
 
@@ -64,7 +64,7 @@ GuiText::GuiText(const s16 * t, int s, GXColor c)
 	alignmentHor = ALIGN_CENTRE;
 	alignmentVert = ALIGN_MIDDLE;
 
-	if(t)
+	if(t && t[0])
 		origText = shortToWideChar(t);
 }
 
@@ -89,7 +89,7 @@ GuiText::GuiText(const char * t)
 	alignmentHor = presetAlignmentHor;
 	alignmentVert = presetAlignmentVert;
 
-	if(t)
+	if(t && t[0])
 		origText = charToWideChar(t);
 }
 
@@ -111,7 +111,7 @@ GuiText::GuiText(const s16 * t)
 	alignmentHor = presetAlignmentHor;
 	alignmentVert = presetAlignmentVert;
 
-	if(t)
+	if(t && t[0])
 		origText = shortToWideChar(t);
 }
 
@@ -244,13 +244,13 @@ void GuiText::Draw()
 	if(!origText)
 		return;
 
-	if(!this->IsVisible())
+	if(!IsVisible())
 		return;
 
 	GXColor c = color;
 	c.a = this->GetAlpha();
 
-	int newSize = size*this->GetScale();
+	int newSize = size*GetScale();
 
 	if(newSize > MAX_FONT_SIZE)
 		newSize = MAX_FONT_SIZE;
@@ -328,6 +328,14 @@ void GuiText::Draw()
 				if(i == 0)
 					textrow[linenum] = new wchar_t[txtlen + 1];
 
+				if (origText[ch] == L'\n') {
+					textrow[linenum][i] = L'\0';
+					i = 0;
+					linenum++;
+					ch++;
+					continue;
+				}
+
 				textrow[linenum][i] = origText[ch];
 				textrow[linenum][i+1] = L'\0';
 
@@ -366,19 +374,19 @@ void GuiText::Draw()
 
 			for(i=0; i < linenum; i++)
 			{
-				fontSystem[currentSize]->drawText(this->GetLeft(), this->GetTop()+voffset+i*lineheight, textrow[i], c, style);
+				fontSystem[currentSize]->drawText(GetLeft(), GetTop()+voffset+i*lineheight, textrow[i], c, style);
 				delete[] textrow[i];
 			}
 		}
 		else
 		{
-			fontSystem[currentSize]->drawText(this->GetLeft(), this->GetTop(), textDyn, c, style);
+			fontSystem[currentSize]->drawText(GetLeft(), GetTop(), textDyn, c, style);
 		}
 		free(tmpText);
 	}
 	else
 	{
-		fontSystem[currentSize]->drawText(this->GetLeft(), this->GetTop(), origText, c, style);
+		fontSystem[currentSize]->drawText(GetLeft(), GetTop(), origText, c, style);
 	}
-	this->UpdateEffects();
+	UpdateEffects();
 }
