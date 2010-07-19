@@ -103,7 +103,7 @@ namespace ProxiIOS { namespace Filesystem {
 		st->Identifier = 0;
 		st->Device = 0;
 
-		return 1;
+		return 0;
 	}
 
 	int IsfsHandler::CreateFile(const char* path)
