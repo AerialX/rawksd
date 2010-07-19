@@ -400,7 +400,6 @@ void UpdateDevice(s32 *mount, GuiImage *image, disk_phys disk, const char *dev)
 			image->SetVisible(true);
 			if (default_mount<0) {
 				File_SetDefault(*mount);
-				File_SetLogFS(*mount);
 				default_mount = *mount;
 			}
 		}
@@ -426,8 +425,16 @@ void UpdateDevice(s32 *mount, GuiImage *image, disk_phys disk, const char *dev)
 	}
 }
 
+void wifi_check(syswd_t alarm, void *_check_now)
+{
+	u8 *check_now = (u8*)_check_now;
+	*check_now = 1;
+}
+
 void MainMenu()
 {
+	syswd_t riifs_timer;
+	u8 wifi_check_now = 0;
 	int i;
 	// TODO: Confirm this actually scrubs the playlog
 	Launcher_ScrubPlaytimeEntry();
@@ -441,6 +448,11 @@ void MainMenu()
 		ES_DeleteTitle(titleid);
 		sprintf(path, "/mnt/isfs/ticket/00010005/635242%02X.tik", i);
 		File_Delete(path);
+	}
+
+	if (!SYS_CreateAlarm(&riifs_timer)) {
+		struct timespec tm = {2, 0};
+		SYS_SetPeriodicAlarm(riifs_timer, &tm, &tm, wifi_check, &wifi_check_now);
 	}
 
 	RawkMenu *menu;
@@ -501,7 +513,10 @@ void MainMenu()
 		} else {
 			UpdateDevice(&sd_mounted, &SDsticker, SD_DISK, "sd");
 			UpdateDevice(&usb_mounted, &USBsticker, USB_DISK, "usb");
-			UpdateDevice(&wifi_mounted, &WIFIsticker, DISK_NONE, NULL);
+			if (wifi_check_now) {
+				UpdateDevice(&wifi_mounted, &WIFIsticker, DISK_NONE, NULL);
+				wifi_check_now = 0;
+			}
 			if (!net_initted) {
 				s32 i = net_init();
 				if (i >= 0)
