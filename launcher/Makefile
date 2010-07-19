@@ -28,7 +28,7 @@ INCLUDES	:=	include lib/libwiigui lib \
 
 CFLAGS		=	-g -O2 -Wall $(MACHDEP) $(INCLUDE)
 CXXFLAGS	=	-save-temps -Xassembler -aln=$@.lst $(CFLAGS)
-LDFLAGS		=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map,--section-start,.init=0x80a00000 -T ../lib/rvl.ld
+LDFLAGS		=	$(MACHDEP) -Wl,-Map,$(notdir $@).map,--section-start,.init=0x80a00000 -T ../lib/rvl.ld
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
@@ -113,6 +113,9 @@ run: $(BUILD)
 z: $(BUILD)
 	@./dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol
 	@./hash $(OUTPUT).z.dol
+	@cp $(OUTPUT).z.dol hbc/apps/riivolution/boot.dol
+	@cd hbc/apps; zip -D riiv.zip riivolution/*
+	@mv hbc/apps/riiv.zip .
 
 #---------------------------------------------------------------------------------
 else

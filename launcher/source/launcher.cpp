@@ -440,9 +440,9 @@ static inline void ApplyBinaryPatches(s32 app_section_size)
 	// Apply fwrite patch
 	Fwrite_FindPatchLocation((char*)app_address, app_section_size);
 
-	// HBC id will change soon, and Return to Riiv is not working properly yet
+	// Return to Riiv is not working properly yet
 	//if (*(u32*)0x80001808 == 0x48415858) // "HAXX"
-	//	PatchReturnToMenu(app_section_size, 0x000100014A4F4449llu); // "JODI"
+	//	PatchReturnToMenu(app_section_size, 0x00010001af1bf516llu);
 	//	PatchReturnToMenu(app_section_size, 0x0001000152494956llu); // "RIIV"
 
 	RVL_PatchMemory(&Disc, app_address, app_section_size);
@@ -538,7 +538,7 @@ LauncherStatus::Enum Launcher_RunApploader()
 	// copy the IOS version over the expected IOS version
 	memcpy(MEM_IOSEXPECTED, MEM_IOSVERSION, 4);
 
-	*(u32*)0xCD006C00 = 0x00000000;	// deinit audio due to libogc fail
+	*(u32*)0xCD006C00 = 0;	// deinit audio due to libogc fail
 
 	app_address = app_exit();
 

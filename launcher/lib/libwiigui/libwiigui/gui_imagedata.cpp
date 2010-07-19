@@ -61,11 +61,7 @@ GuiImageData::GuiImageData(const u8 * img)
  */
 GuiImageData::~GuiImageData()
 {
-	if(data)
-	{
-		free(data);
-		data = NULL;
-	}
+	free(data);
 }
 
 u8 * GuiImageData::GetImage()

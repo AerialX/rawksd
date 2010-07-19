@@ -570,7 +570,7 @@ void RVL_Patch(RiiDisc* disc)
 
 			for (vector<RiiChoice::Patch>::iterator patch = choice->Patches.begin(); patch != choice->Patches.end(); patch++) {
 				map<string, RiiPatch>::iterator currentpatch = disc->Patches.find(patch->ID);
-				if (currentpatch->second.Files.size() || currentpatch->second.Folders.size() || 
+				if (currentpatch->second.Files.size() || currentpatch->second.Folders.size() ||
 					currentpatch->second.Savegame.External.size() || currentpatch->second.DLC.External.size()) {
 					// Only keep the filesystem mounted if a patch that needs to be running during the game is using it
 					UsedFilesystems[choice->Filesystem] = true;
@@ -632,8 +632,10 @@ void RVL_Unmount()
 				continue;
 			s32 tik_file = File_Open(tik_path, O_RDONLY);
 			if (tik_file>=0) {
+				u32 game_id;
+				memcpy(&game_id, MEM_BASE, 4);
 				File_Read(tik_file, tik_data, STD_SIGNED_TIK_SIZE);
-				if ((tik_data[0x78]>>8)!=0x00635242 && check_cert_chain((u8*)tik_data, STD_SIGNED_TIK_SIZE))
+				if ((tik_data[0x76] && tik_data[0x76] != otp.ng_id) || (tik_data[0x7A]==(game_id&~tik_data[0x7B]) && check_cert_chain((u8*)tik_data, STD_SIGNED_TIK_SIZE)))
 					RVL_BanDLC(tik_data[0x78]);
 				File_Close(tik_file);
 			}

@@ -127,6 +127,7 @@ void Initialise()
 		} else {
 			printf("\tThe installation was completed successfully!\n");
 			WPAD_Shutdown();
+			// TODO: Exit if this fails again
 			Haxx_Init();
 		}
 	}

@@ -16,7 +16,9 @@ using std::vector;
 
 //#define BABELFISH
 
+#ifndef BABELFISH
 #define printf(...)
+#endif
 
 extern "C" {
 	extern u8 filemodule_dat[];
@@ -64,7 +66,8 @@ int Haxx_Init()
 
 	usleep(4000);
 
-#if 0
+#ifdef BABELFISH
+
 	WPAD_Init();
 	printf("Press home to exit\n");
 	while(1) {
@@ -746,6 +749,25 @@ static int patch_gpio_stm(void* buf, s32 size)
 	return 0;
 }
 
+static int patch_prng_perms(void* buf, s32 size)
+{
+	u32 i;
+	u16 *kernel = (u16*)buf;
+	const u16 prng_perms[14] = {0x2005, 0x2103, 0x47A0, 0x2800, 0xD1D3, 0x2006, 0x2103, 0x47A0,
+								0x2800, 0xD1CE, 0x200B, 0x2103, 0x47A0, 0x2800};
+
+	for (i=0; i < (size-sizeof(prng_perms))/2; i++)
+	{
+		if (!memcmp(kernel+i, prng_perms, sizeof(prng_perms)))
+		{
+			kernel[i+1] |= 0x40; // give EHCI pid access to PRNG key
+			printf("prng_perms patched\n");
+			return 1;
+		}
+	}
+	return 0;
+}
+
 static int patch_fs_redirect(void* buf, s32 size)
 {
 	u32 i, j;
@@ -765,7 +787,7 @@ static int patch_fs_redirect(void* buf, s32 size)
 		//printf("Found /dev/fs main() %08X\n", i*2);
 
 		open_dev_flash = kernel+i+4+kernel[i+3]-0x16;
-		printf("open_dev_flash offset %04X%04X\n", open_dev_flash[0], open_dev_flash[1]);
+		printf("open_dev_flash offset %04X%04X\n", (u16)open_dev_flash[0], (u16)open_dev_flash[1]);
 		for (j=0; j < sizeof(old_dev_fs_open_flash)/4; j++) {
 			s16 match_needed = old_dev_fs_open_flash[j*2] | old_dev_fs_open_flash[j*2+1];
 			s16 match_masked = open_dev_flash[j]          | old_dev_fs_open_flash[j*2+1];
@@ -931,7 +953,8 @@ static int prepare_new_kernel(u64 title)
 
 
 	if (!patch_mem2(kernel_blob, size) || !patch_ios37_sd_load(kernel_blob, size) ||
-		!patch_gpio_stm(kernel_blob, size) || !patch_fs_redirect(kernel_blob, size))
+		!patch_gpio_stm(kernel_blob, size) || !patch_fs_redirect(kernel_blob, size) ||
+		!patch_prng_perms(kernel_blob, size))
 	{
 		printf("Couldn't patch kernel\n");
 		free(kernel_blob);
@@ -995,7 +1018,7 @@ static void load_patched_ios(s32 fd, const char* filename)
 		if (*addr == SYSCALL_DEVICE_OPEN)
 		{
 			u32 junk;
-			printf("Found ES_SYSCALL_DEVICE_OPEN at %p\n", addr);
+			printf("Found ES_SYSCALL_DEVICE_OPEN at 0x%08X\n", (u32)addr);
 			memcpy(MEM1_BASE_UNCACHED, ios_boot, sizeof(ios_boot));
 			MEM1_BASE_UNCACHED[3] = MEM1_IOSVERSION[0]+1; // ios_version
 			MEM1_BASE_UNCACHED[4] = (u32)addr + 0x130 - 0x939F0000 + 0x20100000; // es_syscall_ios_boot
@@ -1122,7 +1145,7 @@ static int load_module_code(void *module_code, s32 module_size)
 	written = IOS_Write(fd, module_code, module_size);
 	IOS_Close(fd);
 	fd = 0;
-	if (written == module_size)
+	if (written >= module_size)
 		fd = load_module_file(es_fd, LOAD_MODULE_PATH);
 
 	IOS_Close(es_fd);
@@ -1203,7 +1226,7 @@ static int do_sig_check_patch()
                 0x42, 0x9A, // cmp r2, r3
                 0xd1, 0x00, // bne loc_13A752D0
                 0x34, 0x01, // adds r4, #1
-/* 13A752d0 */  0x31, 0x01, // adds r1, #1
+/* 13A752D0 */  0x31, 0x01, // adds r1, #1
                 0x29, 0x13, // cmp r1, #0x13
                 0xd9, 0xf5, // bls loc_13A752C2
 /* 13A752D6 */  0x28, 0x00, // cmp r0, #0
@@ -1310,14 +1333,15 @@ static bool do_exploit()
 
 		if (!patch_failed)
 		{
+			usleep(4000);
 			patch_failed = !(load_sdhc_module(0x0000000100000038llu) || load_sdhc_module(0x000000010000003Cllu) || \
 				load_sdhc_module(0x000000010000003Dllu) || load_sdhc_module(0x0000000100000046llu));
 			if (patch_failed)
 			{
-				printf("SDHC module couldn't be loaded, trying IOS37 standard SD.\n");
-				patch_failed = !load_sdhc_module(0x0000000100000025llu);
+				printf("SDHC module couldn't be loaded, trying IOS%d SD.\n", (u32)HAXX_IOS);
+				patch_failed = !load_sdhc_module(HAXX_IOS);
 				if (patch_failed)
-					printf("IOS37 SD module also failed to load.\n");
+					printf("IOS%d module also failed to load.\n", (u32)HAXX_IOS);
 			} else
 				printf("SDHC loaded\n");
 		}
@@ -1332,6 +1356,13 @@ static bool do_exploit()
 		if (*(u16*)0x93A752E6 == 0x2007) {
 			*(u16*)0x93A752E6 = 0x2000;
 			DCFlushRange((void*)0x93A752E0, 32);
+		}
+		// use original IOS version
+		if (IOS_GetVersion() > 100) {
+			u32 ios = *MEM_IOSVERSION;
+			ios = ((ios&0xFFFF0000)-(100<<16))|(ios&0xFFFF);
+			*MEM_IOSVERSION = ios;
+			DCFlushRange(MEM_IOSVERSION, 32);
 		}
 #endif
 

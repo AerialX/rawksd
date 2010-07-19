@@ -379,7 +379,7 @@ static u8* ReadChannelDol(const char* filename, u32* size)
 		File_Close(fd);
 		return NULL;
 	}
-	
+
 	if (File_Read(fd, ret, *size) != (int)*size) {
 		File_Close(fd);
 		free(ret);
@@ -499,13 +499,13 @@ int InstallChannel()
 		// it's on a 64-byte boundary and is followed "\0GCC: (GNU) 3.4.3\0\0\0"
 		// ECDH stuff always starts with \0 or \1 and will be 30 bytes long, probably padded
 		// by zeroes up to 64 bytes
-		static u8* const ECDH_Secret = (u8*)0x93A75180;
+		u8* const ECDH_Secret = (u8*)0x93A75180;
 		DCInvalidateRange(ECDH_Secret, 32);
 
 		SHA1(ECDH_Secret, 30, ECDH_hash);
 		// got the hash, now encrypt the title key in the ticket
 		memcpy(raw_key, metatik->cipher_title_key, 16);
-		memset(iv, 0, sizeof(iv));
+		memset(iv+8, 0, sizeof(iv)-8);
 		memcpy(iv, &metatik->ticketid, 8);
 		aes_set_key(ECDH_hash);
 		aes_encrypt(iv, raw_key, metatik->cipher_title_key, 16);
