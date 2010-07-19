@@ -7,8 +7,26 @@
 			<option name="Kamek Haxx" default="1">
 				<choice name="Enabled"><patch id="kamek_pal" /></choice>
 			</option>
+			<option name="splash">
+				<choice name="sd"><patch id="pal_sd" /></choice>
+				<choice name="usb"><patch id="pal_usb" /></choice>
+				<choice name="wifi"><patch id="pal_wifi" /></choice>
+			</option>
 		</section>
 	</options>
+<patch id="pal_sd">
+	<file disc="/StrapUsage/drummer_eng.tpl" external="/mnt/isfs/tmp/pal_sd.tpl" />
+	<dlc external="/mnt/sd" />
+</patch>
+<patch id="pal_usb">
+	<file disc="/StrapUsage/drummer_eng.tpl" external="/mnt/isfs/tmp/pal_usb.tpl" />
+	<dlc external="/mnt/usb" />
+</patch>
+<patch id="pal_wifi">
+	<file disc="/StrapUsage/drummer_eng.tpl" external="/mnt/isfs/tmp/pal_wifi.tpl" />
+	<dlc external="/mnt/net/1" />
+</patch>
+
 <patch id="kamek_pal">
 <memory offset="0x8013DC98" value="4bec4089" />
 <memory offset="0x8013E8B4" value="4bec3425" />

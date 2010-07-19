@@ -22,6 +22,7 @@ SOURCES		:=	data source ../launcher/lib/libwiigui ../launcher/lib/libwiigui/libw
 				../launcher/data ../launcher/data/images ../launcher/data/sounds
 INCLUDES	:=	include ../launcher/include ../launcher/lib/libwiigui ../launcher/lib \
 				../filemodule/include ../launcher/lib/libxml2/include ../launcher/lib/libxml++ ../launcher/lib/libxml++/libxml++
+TEXTURES	:=	textures				
 
 # Shared source files from launcher
 SOURCEDIRS	:=	../launcher/source
@@ -56,7 +57,8 @@ ifneq ($(BUILD),$(notdir $(CURDIR)))
 
 export OUTPUT	:=	$(CURDIR)/$(TARGETDIR)/$(TARGET)
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-					$(foreach dir,$(SOURCEDIRS),$(CURDIR)/$(dir))
+					$(foreach dir,$(SOURCEDIRS),$(CURDIR)/$(dir)) \
+					$(foreach dir,$(TEXTURES),$(CURDIR)/$(dir))
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
 #---------------------------------------------------------------------------------
@@ -74,6 +76,8 @@ OGGFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.ogg)))
 PCMFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.pcm)))
 DATFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.dat)))
 XMLFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.xml)))
+SCFFILES	:=	$(foreach dir,$(TEXTURES),$(notdir $(wildcard $(dir)/*.scf)))
+TPLFILES	:=	$(SCFFILES:.scf=.tpl)
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -85,6 +89,7 @@ else
 endif
 
 export OFILES	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) \
+					$(addsuffix .o,$(TPLFILES)) \
 					$(sFILES:.s=.o) $(SFILES:.S=.o) \
 					$(TTFFILES:.ttf=.ttf.o) $(PNGFILES:.png=.png.o) \
 					$(OGGFILES:.ogg=.ogg.o) $(PCMFILES:.pcm=.pcm.o) \
@@ -159,6 +164,10 @@ $(OUTPUT).elf: $(OFILES)
 	$(bin2o)
 
 %.xml.o : %.xml
+	@echo $(notdir $>)
+	$(bin2o)
+	
+%.tpl.o : %.tpl
 	@echo $(notdir $>)
 	$(bin2o)
 

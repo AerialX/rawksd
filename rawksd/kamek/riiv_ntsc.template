@@ -7,5 +7,22 @@
 			<option name="Kamek Haxx" default="1">
 				<choice name="Enabled"><patch id="kamek_ntsc" /></choice>
 			</option>
+			<option name="splash">
+				<choice name="sd"><patch id="ntsc_sd" /></choice>
+				<choice name="usb"><patch id="ntsc_usb" /></choice>
+				<choice name="wifi"><patch id="ntsc_wifi" /></choice>
+			</option>
 		</section>
 	</options>
+<patch id="ntsc_sd">
+	<file disc="/StrapUsage/loading.tpl" external="/mnt/isfs/tmp/ntsc_sd.tpl" />
+	<dlc external="/mnt/sd" />
+</patch>
+<patch id="ntsc_usb">
+	<file disc="/StrapUsage/loading.tpl" external="/mnt/isfs/tmp/ntsc_usb.tpl" />
+	<dlc external="/mnt/usb" />
+</patch>
+<patch id="ntsc_wifi">
+	<file disc="/StrapUsage/loading.tpl" external="/mnt/isfs/tmp/ntsc_wifi.tpl" />
+	<dlc external="/mnt/net/1" />
+</patch>
