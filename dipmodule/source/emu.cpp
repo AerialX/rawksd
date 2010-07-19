@@ -13,7 +13,7 @@
 #include <ch341.h>
 #include <print.h>
 
-#define LOG_IPC // this is commented out because it's too noisy
+//#define LOG_IPC // this is commented out because it's too noisy
 
 //#define CH341
 
@@ -132,7 +132,7 @@ u32 FS_ret;
 
 static s32 emu_fd = -1;
 static osqueue_t fs_internal_queue = -1;
-static u32 fs_internal_msgs[8];
+static u32 fs_internal_msgs[4];
 static ipcmessage ProxyMessage;
 static ipcmessage CBMessage;
 typedef s32 (*NANDFS_Func)(const ipcmessage*);
@@ -413,6 +413,7 @@ namespace ProxiIOS { namespace EMU {
 
 	int EMU::HandleIoctlv(ipcmessage* message)
 	{
+		LogMessage(message);
 		if (message->ioctlv.command == Ioctl::RedirectDir && message->ioctlv.num_in>=2) {
 			LogPrintf("New EMU dir, %s -> %s\n", message->ioctlv.vector[0].data, message->ioctlv.vector[1].data);
 			RiivDir *d = new RiivDir((const char*)message->ioctlv.vector[0].data, (const char*)message->ioctlv.vector[1].data);
@@ -1219,56 +1220,60 @@ namespace ProxiIOS { namespace EMU {
 
 		LogPrintf("Initializing %s\n", nand_dir);
 		int i;
-		char *tmd_path = (char*)Memalign(32, 1024);
-		u32 *tmd_buf = (u32*)Memalign(32, MAX_SIGNED_TMD_SIZE);
-		if (tmd_path && tmd_buf) {
-			strcpy(tmd_path, nand_dir);
-			strcat(tmd_path, "/title.tmd");
-			s32 fd = FS_Open(tmd_path, ISFS_OPEN_READ);
-			if (fd>=0) {
-				tmd *title_tmd = NULL;
-				s32 x = FS_Read(fd, tmd_buf, MAX_SIGNED_TMD_SIZE);
-				FS_Close(fd);
-				if (x>(s32)(sizeof(sig_rsa2048)+sizeof(tmd)) && x>=(s32)SIGNED_TMD_SIZE(tmd_buf))
-					title_tmd = (tmd*)SIGNATURE_PAYLOAD(tmd_buf);
-				if (title_tmd && title_tmd->num_contents <= 512) {
-					LogPrintf("Found %d contents in TMD %s\n", title_tmd->num_contents, tmd_path);
-					x = File_OpenDir(ext_dir);
-					if (x>=0) {
-						Stats st;
-						while (File_NextDir(x, tmd_path, &st)>=0) {
-							LogPrintf("Found file %s\n", tmd_path);
-							if (strlen(tmd_path)!=strlen("000.bin") || strcasecmp(tmd_path+3, ".bin"))
-								continue;
-
-							s32 index=0;
-							for (i=0; i<3; i++) {
-								if (tmd_path[i] < '0' || tmd_path[i] > '9')
-									i=5;
-								else
-									index = index*10 + tmd_path[i]-'0';
-							}
-							if (i>3)
-								continue;
-
-							if (index < title_tmd->num_contents && title_tmd->contents[index].type&0x4000) {
-								LogPrintf("Found .bin file: %s, index %d\n", tmd_path, index);
-								content_map[index] = (s16)title_tmd->contents[index].cid;
-							}
-						}
-						File_CloseDir(x);
-					}
-				}
-			} else if (!strncmp(tmd_path, "/title/00010005/635242", 22)) {
-				for (i = 0; i < 512; i++)
-					content_map[i] = i;
-			} else
-				LogPrintf("Couldn't open TMD: %s\n", tmd_path);
-			LogPrintf("AppDir for %s initialized\n", nand_dir);
+		if (!strncmp(nand_dir, "/title/00010005/635242", 22)) {
+			for (i=0; i < 512; i++)
+				content_map[i] = i;
+			LogPrintf("Initialized customs AppDir %s\n", nand_dir);
 			initialized = 1;
 		}
-		Dealloc(tmd_path);
-		Dealloc(tmd_buf);
+		else {
+			char *tmd_path = (char*)Memalign(32, 1024);
+			u32 *tmd_buf = (u32*)Memalign(32, MAX_SIGNED_TMD_SIZE);
+			if (tmd_path && tmd_buf) {
+				strcpy(tmd_path, nand_dir);
+				strcat(tmd_path, "/title.tmd");
+				if ((i = FS_Open(tmd_path, ISFS_OPEN_READ))>=0) {
+					tmd *title_tmd = NULL;
+					s32 x = FS_Read(i, tmd_buf, MAX_SIGNED_TMD_SIZE);
+					FS_Close(i);
+					if (x>(s32)(sizeof(sig_rsa2048)+sizeof(tmd)) && x>=(s32)SIGNED_TMD_SIZE(tmd_buf))
+						title_tmd = (tmd*)SIGNATURE_PAYLOAD(tmd_buf);
+					if (title_tmd && title_tmd->num_contents <= 512) {
+						LogPrintf("Found %d contents in TMD %s\n", title_tmd->num_contents, tmd_path);
+						x = File_OpenDir(ext_dir);
+						if (x>=0) {
+							Stats st;
+							while (File_NextDir(x, tmd_path, &st)>=0) {
+								LogPrintf("Found file %s\n", tmd_path);
+								if (strlen(tmd_path)!=strlen("000.bin") || strcasecmp(tmd_path+3, ".bin"))
+									continue;
+
+								s32 index=0;
+								for (i=0; i<3; i++) {
+									if (tmd_path[i] < '0' || tmd_path[i] > '9')
+										i=5; // jump to next file, bin files have decimal names
+									else
+										index = index*10 + tmd_path[i]-'0';
+								}
+								if (i>3)
+									continue;
+
+								if (index < title_tmd->num_contents && title_tmd->contents[index].type&0x4000) {
+									LogPrintf("Found .bin file: %s, index %d\n", tmd_path, index);
+									content_map[index] = (s16)title_tmd->contents[index].cid;
+								}
+							}
+							File_CloseDir(x);
+						}
+					}
+				} else
+					LogPrintf("Couldn't open TMD: %s\n", tmd_path);
+				LogPrintf("AppDir for %s initialized\n", nand_dir);
+				initialized = 1;
+			}
+			Dealloc(tmd_path);
+			Dealloc(tmd_buf);
+		}
 
 		return initialized;
 	}
@@ -1458,6 +1463,8 @@ namespace ProxiIOS { namespace EMU {
 							int readed;
 							while ((readed=FS_Read(app_in, buf, 0x18000))>0)
 								bin_out.Write(buf, readed);
+							if (readed<0)
+								LogPrintf("Read error: %d\n", readed);
 
 							FS_Close(app_in);
 							LogPrintf("Moved %s to %s\n", nand_file, ext_file);
@@ -1677,7 +1684,7 @@ namespace ProxiIOS { namespace EMU {
 		strcpy(TIK->issuer, "Root-CA00000001-XS00000003");
 		strcpy((char*)TIK->cipher_title_key, "japaneatahand.com");
 		memcpy(&TIK->ticketid, "[RawkSD]", 8);
-		os_get_key(ES_KEY_CONSOLE, &TIK->devicetype);
+		os_get_4byte_key(ES_KEY_CONSOLE, &TIK->devicetype);
 		TIK->titleid = GetTitleID(path, Tik);
 		TIK->access_mask = 0xFFFF;
 		TIK->reserved[1] = 0xFF;

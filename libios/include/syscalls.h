@@ -128,35 +128,36 @@
 /* 58    os_set_debug_gpios */
 /* 59    os_load_PPC */
 /* 5A    os_load_module(const char* path) */
-/* 5B */ int       os_create_key(int *keyid_out, u32 usage, u32 type); // type 4 = ECC?
+ // enum usage {crypto, sig, ecc_pair, info}, enum type {aes, hmac, cert_2048, cert_4096, ecc, console_id, seeprom_counter}
+/* 5B */ int       os_create_key(int *keyid_out, u32 usage, u32 type);
 /* 5C */ int       os_destroy_key(int key_id);
-/* 5D    os_decrypt_key(int *keyid_out, u32 zero, u32 common_key_index, u32 one, u32 zero, void *iv, void *cipher_title_key) */
+/* 5D    os_decrypt_key(int *keyid_out, u32 zero, u32 decrypt_key_id, u32 one, u32 zero, void *iv, void *cipher_title_key) */
 /* 5E    os_syscall_5E */
-/* 5F */ int       os_bind_ecc_public_keypair(const u8 *data, int *some_keyid_out, int keyid); // data should be 0x3C bytes long
-/* 60    os_syscall_60 */
-/* 61 */ int       os_calc_ecdh_shared(int wii_key_index, int sender_public_key_index, int dest_shared_key_index);
-/* 62    os_syscall_62 */
-/* 63 */ int       os_get_key(int keyid, void* buffer);
-/* 64    os_syscall_64 */
-/* 65    os_syscall_65 */
-/* 66    os_syscall_66 */
+/* 5F */ int       os_set_sig_info(const u8 *data, /*optional*/const int *tag_data, int keyid); // data length should match key type
+/* 60 */ int       os_get_sig_info(u8 *data, /*optional*/int *tag_data, int keyid);
+/* 61 */ int       os_calc_ecdh_shared(int self_key_id, int sender_public_key_id, int dest_shared_key_id);
+/* 62 */ int       os_set_4byte_key(int keyid, const u32 *data);
+/* 63 */ int       os_get_4byte_key(int keyid, u32* buffer);
+/* 64 */ int       os_get_key_size(int keyid, int *size);
+/* 65 */ int       os_get_key_userdata_size(int keyid, int *size);
+/* 66    os_sha1_async */
 /* 67    os_sha1(void *SHACarry, void *data, u32 len, u32 SHAMode, void *hash) */
-/* 68    os_syscall_68 */
-/* 69 */ int       os_aes_encrypt(int keyid, void *iv, void *in, int len, void *out);
-/* 6A    os_syscall_6A */
-/* 6B */ int       os_aes_decrypt(int keyid, void *iv, void *in, int len, void *out);
-/* 6C    os_syscall_6C */
-/* 6D    os_syscall_6D */
-/* 6E    os_syscall_6E */
-/* 6F    os_syscall_6F */
+/* 68    os_aes_encrypt_async */
+/* 69 */ int       os_aes_encrypt(int keyid, void *iv, const void *in, int len, void *out);
+/* 6A    os_aes_decrypt_async */
+/* 6B */ int       os_aes_decrypt(int keyid, void *iv, const void *in, int len, void *out);
+/* 6C    os_check_sig(const void *hash, int hash_length, int keyid, const void *sig) */
+/* 6D    os_hmac(void *out_96bytes, const void* in, int size_in, (optional)void* in_4?bytes, , int keyid, , void *out_20bytes) */
+/* 6E    os_hmac_async(,,,,,,,,,) */
+/* 6F    os_validate_cert(void *cert, int sig_keyid_a, int sig_keyid_dest) */
 /* 70    os_get_device_cert(void *cert) 0x180 bytes */
-/* 71    os_syscall_71 */
+/* 71    int os_set_key_permissions(int keyid, u32 mask_in) */
 /* 72    int os_get_key_permissions(int keyid, u32 *mask_out) */
-/* 73    os_syscall_73 */
-/* 74    os_syscall_74 */
-/* 75    os_make_sig(void *SHAhash, u32 length, int keyid, void *sig) (sig is 0x3C bytes, ecc public keypair?) */
-/* 76    os_syscall_76 */
-/* 77 */ void os_crash(void); //syscall 0x77 doesn't exist
+/* 73    os_generate_random_data(void *data, int data_size) */
+/* 74    int os_generate_random_key(int dest_key_id) */
+/* 75    os_make_ecc_sig(void *SHAhash, u32 hash_length, int keyid, void *ecc_sig) */
+/* 76    os_syscall_76(int ecc_keyid, void *in_64bytes, void *out_180bytes) */
+/* 77 */ void os_crash(void); // syscall 0x77 doesn't exist but tries to execute anyway
 
 void os_puts(const char *str); // IOS log
 

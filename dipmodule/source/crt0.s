@@ -35,7 +35,7 @@
  *
  */
 
-	.EQU	ios_thread_arg, 18
+	.EQU	ios_thread_arg, 6
 	.EQU	ios_thread_priority,	0x48
 	.EQU	ios_thread_stacksize, 0x2000
 	

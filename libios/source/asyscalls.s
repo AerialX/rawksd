@@ -249,8 +249,8 @@ os_destroy_key:
 	syscall 0x5C
 	
 	.code 32
-	.global os_bind_ecc_public_keypair
-os_bind_ecc_public_keypair:
+	.global os_set_sig_info
+os_set_sig_info:
 	syscall 0x5F
 	
 	.code 32
@@ -259,8 +259,8 @@ os_calc_ecdh_shared:
 	syscall 0x61
 
 	.code 32
-	.global os_get_key
-os_get_key:
+	.global os_get_4byte_key
+os_get_4byte_key:
 	syscall 0x63
 	
 	.code 32

@@ -3,7 +3,7 @@ OUTPUT_ARCH(arm)
 ENTRY(_start)
  
 MEMORY {
-	ios_info_table	: ORIGIN = 0x0, LENGTH = 0x4000
+	ios_info_table	: ORIGIN = 0x0, LENGTH = 0xD4
 	exe(rwx)	: ORIGIN = 0x13740000, LENGTH = 0x8000
 	ram(rw)		: ORIGIN = 0x13748000, LENGTH = 0x41000
 }

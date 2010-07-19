@@ -41,7 +41,7 @@ inline unsigned int verify_bk(BK_Header *bk)
 {
 	unsigned int failed=0;
 	u32 wii_id = 0;
-	os_get_key(ES_KEY_CONSOLE, &wii_id);
+	os_get_4byte_key(ES_KEY_CONSOLE, &wii_id);
 
 	if (bk->size != 0x70)
 	{
@@ -380,7 +380,7 @@ BinFile* CreateBinFile(u16 index, u32* tmd_buf, u32 tmd_size, s32 file)
     bk_header.size = 0x70;
     bk_header.magic = 0x426B /*'Bk'*/;
     bk_header.version = 1;
-	os_get_key(ES_KEY_CONSOLE, &bk_header.NG_id);
+	os_get_4byte_key(ES_KEY_CONSOLE, &bk_header.NG_id);
     bk_header.tmd_size = tmd_size;
     bk_header.title_id_1 = 0x00010000;
     bk_header.title_id_2 = *(u32*)0;

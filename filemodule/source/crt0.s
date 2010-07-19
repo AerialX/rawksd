@@ -35,11 +35,7 @@
  *
  */
 
-	// DIP values
-	//.EQU	ios_thread_arg, 3
-	//.EQU	ios_thread_priority,	0x54
-	// OH0 values
-	.EQU	ios_thread_arg, 6 // use an unused process ID, in this case EHCI
+	.EQU	ios_thread_arg, 18 // use an unused process ID, in this case P2P
 	.EQU	ios_thread_priority,	0x48
 	.EQU	ios_thread_stacksize, 0x2000
 	

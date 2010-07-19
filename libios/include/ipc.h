@@ -55,52 +55,52 @@ typedef struct ipcmessage
 	{
 		struct
 		{
-			const char* device;	// 12
-			u32 mode;		// 16
-			u32 uid;	// 20
-			u16 gid;
+			const char* device;			// 0xC
+			u32 mode;					// 0x10
+			u32 uid;					// 0x14
+			u16 gid;					// 0x18
 		} open;
 
 		struct
 		{
-			void* data;
-			u32 length;
+			void* data;					// 0xC
+			u32 length;					// 0x10
 		} read;
 
 		struct
 		{
-			const void* data;
-			u32 length;
+			const void* data;			// 0xC
+			u32 length;					// 0x10
 		} write;
 
 		struct
 		{
-			s32 offset;
-			s32 origin;
+			s32 offset;					// 0xC
+			s32 origin;					// 0x10
 		} seek;
 
 		struct
 		{
-			u32 command;
+			u32 command;				// 0xC
 
-			const void* buffer_in;
-			u32 length_in;
-			void* buffer_io;
-			u32 length_io;
+			const void* buffer_in;		// 0x10
+			u32 length_in;				// 0x14
+			void* buffer_io;			// 0x18
+			u32 length_io;				// 0x1C
 		} ioctl;
 
 		struct
 		{
-			u32 command;
+			u32 command;				// 0xC
 
-			u32 num_in;
-			u32 num_io;
-			ioctlv* vector;
+			u32 num_in;					// 0x10
+			u32 num_io;					// 0x14
+			ioctlv* vector;				// 0x18
 		} ioctlv;
 
-		void *cb_data;
+		void *cb_data;					// 0xC
 	};
-} __attribute__((packed)) ipcmessage;
+} __attribute__((packed)) ipcmessage; // length 0x20
 
 #ifdef __cplusplus
 	}

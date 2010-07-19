@@ -26,6 +26,7 @@ namespace ProxiIOS { namespace DIP {
 		PartitionHeader Partition;
 		u8 PartitionKey[0x10];
 		Cache Kash; // Don't ask
+		u32 local_error;
 	public:
 		static bool ReadSectors(void* userdata, sec_t sector, sec_t numSectors, void* buffer);
 
@@ -41,6 +42,9 @@ namespace ProxiIOS { namespace DIP {
 		virtual int UnencryptedRead(void* buffer, u32 size, u32 offset);
 		virtual int ReadBCA(void* buffer, u32 length);
 		virtual int OpenPartition(u32 offset, void* ticket, void* certificate, u32 certificateLength, void* tmd, void* errors);
+		virtual int EnableDVD(bool enable) {return 1;}
+		virtual int RequestError(void *errorcode);
+		virtual int ReportKey();
 	};
 } }
 
