@@ -1,7 +1,7 @@
 #include "http.h"
+#include "rawksd_menu.h"
 
 #include <network.h>
-#include <malloc.h>
 #include <string.h>
 
 #define MOTD_URL "http://rvlution.net/rb2/static/motd.txt"
@@ -14,7 +14,7 @@ const char* GetMotd()
 	if (Motd)
 		return MotdMessage;
 
-	if (net_init() < 0 || !http_request(MOTD_URL, 0x0FFFFFFF))
+	if (net_initted <= 0 || !http_request(MOTD_URL, 0x0FFFFFFF))
 		return "";
 
 	u8* content;

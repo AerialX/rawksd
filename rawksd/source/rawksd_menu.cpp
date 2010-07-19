@@ -1,32 +1,47 @@
 #include <gccore.h>
 #include <ogcsys.h>
-#include <stdio.h>
+#include <network.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <string.h>
-#include <wiiuse/wpad.h>
+#include <math.h>
+#include <errno.h>
 
 #include "rawksd_menu.h"
-#include "input.h"
-#include "filelist.h"
-#include "filebrowser.h"
+
+#include "files.h"
 #include "launcher.h"
-#include "motd.h"
+#include "riivolution.h"
 
-GuiTrigger Trigger[Triggers::Down + 1];
+#define SD_X 19
+#define SD_Y 381
+#define USB_X 24
+#define USB_Y 401
+#define WIFI_X 37
+#define WIFI_Y 401
 
-GuiImage* Background;
-GuiImageData* BackgroundImage;
-GuiSound* Music;
+GuiTrigger Trigger[Triggers::Count];
 GuiWindow* Window;
-GuiText* Title;
-GuiText* Subtitle;
 
-extern "C" u8 bg_png[];
+s32 sd_mounted = -1;
+s32 usb_mounted = -1;
+s32 wifi_mounted = -1;
+s32 default_mount = -1;
+
+s8 net_initted = 0;
+
+extern "C"  {
+	extern const u8 bg_png[];
+	extern const u8 sd_sticker_png[];
+	extern const u8 usb_sticker_png[];
+	extern const u8 wifi_sticker_png[];
+	extern const u8 Rawk1_png[];
+}
+
 
 static lwp_t guithread = LWP_THREAD_NULL;
 static volatile bool guiHalt = true;
 static volatile int exitRequested = 0;
+float MenuImage::shine_pos = 0;
 
 void ExitApp()
 {
@@ -47,17 +62,13 @@ void HaltGui()
 	while(!LWP_ThreadIsSuspended(guithread))
 		usleep(THREAD_SLEEP);
 }
-static void* UpdateGUI(void* arg);
-void InitGUIThreads()
-{
-	LWP_CreateThread(&guithread, UpdateGUI, NULL, NULL, 0, 70);
-}
+
 void RequestExit()
 {
 	exitRequested = 1;
 }
 
-static void* UpdateGUI(void* arg)
+static void* UpdateGUI(void*)
 {
 	int i;
 
@@ -87,24 +98,385 @@ static void* UpdateGUI(void* arg)
 	return NULL;
 }
 
-void MainMenu(Menus::Enum menu)
+void InitGUIThreads()
 {
-	BackgroundImage = new GuiImageData(bg_png);
+	LWP_CreateThread(&guithread, UpdateGUI, NULL, NULL, 0, 70);
+}
+
+MenuImage::MenuImage(GuiImageData *imgData) :
+GuiImage(imgData),
+original(imgData)
+{
+	image = (u8*)memalign(32, width*height*4);
+}
+
+MenuImage::~MenuImage()
+{
+	free(image);
+	image = NULL;
+}
+
+void MenuImage::Draw()
+{
+	int x, y;
+	GXColor color;
+	int value;
+	int shift = 180; // intensity add
+	int b = 20; // light radius
+	int a = (sin(shine_pos)+1)*120+15; // range: {15,235} sweeper
+	int len = width*height*4;
+	// this relies on only one MenuImage being displayed at once
+	shine_pos += 0.01;
+	if (shine_pos >= 2*M_PI)
+		shine_pos = 0;
+	
+	// copy original image over the last shown
+	memcpy(image, original->GetImage(), len);
+
+	for (y=0; y < height; y++)
+	{
+		int halfheight = height/2;
+		int shift2 = shift << 14;
+		if (y <= halfheight)
+			shift2 = (shift2*(y+b-halfheight))/b;
+		else
+			shift2 = (shift2*(halfheight-y+b))/b;
+
+		for (x=0; x < b*2; x++)
+		{
+			value = shift2;
+			if (x <= b)
+				value = (value*x)/b;
+			else
+				value = (value*(b*2-x))/b;
+			value >>= 14;
+
+			color = GetPixel(x+a-b, y);
+
+			// increase red and green 4x more than blue
+			if (color.r < 255-value*2)
+				color.r += value*2;
+			else
+				color.r = 255;
+			if (color.g < 255-value*2)
+				color.g += value*2;
+			else
+				color.g = 255;
+			if (color.b < 255-value/2)
+				color.b += value/2;
+			else
+				color.b = 255;
+	
+			SetPixel(x+a-b, y, color);
+		}
+	}
+
+	len = (len+31)&~31;
+	DCFlushRange(image, len);
+	GuiImage::Draw();
+}
+
+MenuButton::MenuButton(GuiWindow *_Parent, int x, int y, const u8 *normal_png, const u8 *select_png, const u8 *disabled_png, Triggers::Enum trigger, int _id) :
+Parent(_Parent),
+lbl_normal(NULL),
+lbl_selected(NULL),
+id(_id)
+{
+	imgdata_normal = new GuiImageData(normal_png);
+	img_normal = new GuiImage(imgdata_normal);
+	imgdata_selected = new GuiImageData(select_png);
+	img_selected = new MenuImage(imgdata_selected);
+	if (disabled_png) {
+		imgdata_disabled = new GuiImageData(disabled_png);
+		img_disabled = new GuiImage(imgdata_disabled);
+	} else {
+		imgdata_disabled = NULL;
+		img_disabled = NULL;
+	}
+	button = new GuiButton(0,0);
+	button->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
+	button->SetTrigger(&Trigger[trigger]);
+	button->SetPosition(x, y);
+
+	img_normal->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
+	img_normal->SetPosition(0,0);
+	button->SetImage(img_normal);
+	img_selected->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
+	img_selected->SetPosition(0,0);
+	button->SetImageOver(img_selected);
+	if (img_disabled) {
+		img_disabled->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
+		img_disabled->SetPosition(0,0);
+	}
+	
+	Parent->Append(button);
+}
+
+MenuButton::MenuButton(GuiWindow *_Parent, int x, int y, const char *label, Triggers::Enum trigger, int _id) :
+Parent(_Parent),
+img_normal(NULL),
+img_selected(NULL),
+img_disabled(NULL),
+imgdata_normal(NULL),
+imgdata_selected(NULL),
+imgdata_disabled(NULL),
+id(_id)
+{
+	button = new GuiButton(0,0);
+	button->SetAlignment(ALIGN_CENTRE, ALIGN_BOTTOM);
+	button->SetTrigger(&Trigger[trigger]);
+	button->SetPosition(x, y);
+
+	lbl_normal = new GuiText(label, 24, (GXColor){200,200,200,255});
+	lbl_selected = new GuiText(label, 24, (GXColor){255,255,0,255}); // yellow
+	button->SetLabel(lbl_normal);
+	button->SetLabelOver(lbl_selected);
+
+	Parent->Append(button);
+}
+
+MenuButton::~MenuButton() {
+	Parent->Remove(button);
+	delete button;
+	delete img_normal;
+	delete img_selected;
+	delete img_disabled;
+	delete imgdata_normal;
+	delete imgdata_selected;
+	delete imgdata_disabled;
+	delete lbl_normal;
+	delete lbl_selected;
+}
+
+void MenuButton::Select() {
+	button->SetState(STATE_SELECTED, 0);
+}
+
+void MenuButton::Disable() {
+	button->SetState(STATE_DISABLED);
+	if (img_disabled)
+		button->SetImage(img_disabled);
+}
+
+void MenuButton::Enable() {
+	if (button->GetState() == STATE_CLICKED)
+		button->SetState(STATE_SELECTED, 0);
+	else {
+		if (img_normal)
+			button->SetImage(img_normal);
+		button->ResetState();
+	}
+}
+
+int MenuButton::IsClicked() {
+	if (button->GetState() == STATE_CLICKED)
+		return id;
+	return -1;
+}
+
+RawkMenu::RawkMenu(GuiWindow *_Parent, const u8 **option_images, int x, int y) :
+is_popup(0),
+Parent(_Parent)
+{
+	int i=0;
+	if (option_images) {
+		while (option_images[0]) {
+			MenuButton* x_button = new MenuButton(Parent, x, y+27*i, option_images[0], option_images[1], option_images[2], Triggers::Select, i);
+			Buttons.push_back(x_button);
+			i++;
+			option_images += 3;
+		}
+	}
+	if (i)
+		Buttons[0]->Select();
+}
+
+RawkMenu::RawkMenu(const char **option_strings, const char *info_string, const char *title_string) :
+is_popup(1)
+{
+	int i=0;
+	Parent = new GuiWindow(640, 308);
+	Parent->SetAlignment(ALIGN_LEFT, ALIGN_BOTTOM);
+	Parent->SetPosition(0, 0);
+	popup_imagedata = new GuiImageData(Rawk1_png);
+	popup_image = new GuiImage(popup_imagedata);
+	Parent->Append(popup_image);
+
+	if (option_strings) {
+		while (option_strings[0]) {
+			MenuButton *x_button = new MenuButton(Parent, 0, -45-i*26, option_strings[0], Triggers::Select, i);
+			Buttons.push_back(x_button);
+			i++;
+			option_strings++;
+		}
+	}
+
+	if (title_string)
+	{
+		popup_text[0] = new GuiText(title_string, 28, (GXColor){220, 220, 220, 255});
+		popup_text[0]->SetAlignment(ALIGN_CENTRE, ALIGN_TOP);
+		popup_text[0]->SetPosition(0, 28);
+		Parent->Append(popup_text[0]);
+	}
+	else popup_text[0] = NULL;
+
+	if (info_string)
+	{
+		popup_text[1] = new GuiText(info_string, 18, (GXColor){220, 220, 220, 255});
+		popup_text[1]->SetAlignment(ALIGN_CENTRE, ALIGN_TOP);
+		popup_text[1]->SetPosition(0, 64);
+		popup_text[1]->SetWrap(true, 520);
+		Parent->Append(popup_text[1]);
+	}
+	else popup_text[1] = NULL;
+
+	Parent->SetEffect(EFFECT_SLIDE_BOTTOM | EFFECT_SLIDE_IN, 20);
+	//Window->SetState(STATE_DISABLED);
+	Window->Append(Parent);
+	Window->ChangeFocus(Parent);
+	if (i!=1) { // don't slide error windows in before the previous window has slid out
+		ResumeGui();
+		while (Parent->GetEffect() > 0) usleep(THREAD_SLEEP);
+		HaltGui();
+	}
+}
+
+RawkMenu::~RawkMenu()
+{
+	if (is_popup) {
+		// put ourselves back on top for this
+		Window->Append(Parent);
+		ResumeGui();
+		Parent->SetEffect(EFFECT_SLIDE_BOTTOM | EFFECT_SLIDE_OUT, 20);
+		while (Parent->GetEffect() > 0) usleep(THREAD_SLEEP);
+		HaltGui();
+	}
+
+	std::vector<MenuButton*>::iterator iter = Buttons.begin();
+	for(;iter!=Buttons.end();iter++)
+		delete *iter;
+
+	if (is_popup) {
+		if (popup_text[0]) {
+			Parent->Remove(popup_text[0]);
+			delete popup_text[0];
+		}
+		if (popup_text[1]) {
+			Parent->Remove(popup_text[1]);
+			delete popup_text[1];
+		}
+		Parent->Remove(popup_image);
+		delete popup_image;
+		delete popup_imagedata;
+		Window->Remove(Parent);
+		delete Parent;
+	}
+}
+
+int RawkMenu::GetClicked()
+{
+	int ret = -1;
+	std::vector<MenuButton*>::iterator iter = Buttons.begin();
+	for(;iter!=Buttons.end();iter++) {
+		ret = (*iter)->IsClicked();
+		if (ret>=0)
+			break;
+	}
+	return ret;
+}
+
+void UpdateDevice(s32 *mount, GuiImage *image, disk_phys disk, const char *dev)
+{
+	if (*mount<0) {
+		// ugh
+		if (disk == DISK_NONE)
+			if (net_initted>0)
+				*mount = File_RiiFS_Mount("", 5256);
+			else
+				return;
+		else
+			*mount = File_Fat_Mount(disk, dev);
+		if (*mount>=0) {
+			image->SetVisible(true);
+			if (default_mount<0) {
+				File_SetDefault(*mount);
+				File_SetLogFS(*mount);
+				default_mount = *mount;
+			}
+		}
+		return;
+	}
+	if (File_CheckPhysical(*mount)<0) {
+		int old_mount = *mount;
+		if (*mount == wifi_mounted)
+			ToMount.clear();
+		File_Unmount(*mount);
+		*mount = -1;
+		image->SetVisible(false);
+		if (default_mount == old_mount) {
+			if (sd_mounted>=0)
+				default_mount = sd_mounted;
+			else if (usb_mounted>=0)
+				default_mount = usb_mounted;
+			else if (wifi_mounted>=0)
+				default_mount = wifi_mounted;
+			else
+				default_mount = -1;
+		}
+	}
+}
+
+void MainMenu()
+{
+	int i;
+	// TODO: Confirm this actually scrubs the playlog
+	Launcher_ScrubPlaytimeEntry();
+	RVL_Initialize();
+	Launcher_Init();
+
+	// clear out old rawksd custom titles if they exist
+	for(i='A'; i <= 'Z'; i++) {
+		char path[50];
+		u64 titleid = 0x0001000563524200llu | i;
+		ES_DeleteTitle(titleid);
+		sprintf(path, "/mnt/isfs/ticket/00010005/635242%02X.tik", i);
+		File_Delete(path);
+	}
+
+	RawkMenu *menu;
+	GuiImageData BackgroundImage(bg_png);
+	GuiImageData SDstickerImage(sd_sticker_png);
+	GuiImageData USBstickerImage(usb_sticker_png);
+	GuiImageData WIFIstickerImage(wifi_sticker_png);
 
 	Window = new GuiWindow(screenwidth, screenheight);
 	Window->SetPosition(0, 0);
 	Window->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 
-	Background = new GuiImage(BackgroundImage);
-	Background->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-	Background->SetPosition(0, 0);
-	Window->SetFocus(true);
-	Window->Append(Background);
+	GuiImage Background(&BackgroundImage);
+	Background.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
+	Background.SetPosition(0, 0);
+	Window->Append(&Background);
 
-	Subtitle = new GuiText(GetMotd(), 18, (GXColor){255, 255, 255, 255});
-	Subtitle->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-	Subtitle->SetPosition(264, 338);
-	Window->Append(Subtitle);
+	GuiImage SDsticker(&SDstickerImage);
+	SDsticker.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
+	SDsticker.SetPosition(SD_X, SD_Y);
+	SDsticker.SetVisible(false);
+	Window->Append(&SDsticker);
+
+	GuiImage USBsticker(&USBstickerImage);
+	USBsticker.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
+	USBsticker.SetPosition(USB_X, USB_Y);
+	USBsticker.SetVisible(false);
+	Window->Append(&USBsticker);
+
+	GuiImage WIFIsticker(&WIFIstickerImage);
+	WIFIsticker.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
+	WIFIsticker.SetPosition(WIFI_X, WIFI_Y);
+	WIFIsticker.SetVisible(false);
+	Window->Append(&WIFIsticker);
+
+	Window->SetFocus(true);
 
 	Trigger[Triggers::Select].SetSimpleTrigger(-1, WPAD_BUTTON_A | WPAD_CLASSIC_BUTTON_A, PAD_BUTTON_A);
 	Trigger[Triggers::Back].SetButtonOnlyTrigger(-1, WPAD_BUTTON_B | WPAD_CLASSIC_BUTTON_B, PAD_BUTTON_B);
@@ -112,138 +484,39 @@ void MainMenu(Menus::Enum menu)
 	Trigger[Triggers::PageLeft].SetButtonOnlyTrigger(-1, WPAD_BUTTON_MINUS | WPAD_CLASSIC_BUTTON_FULL_L | WPAD_CLASSIC_BUTTON_MINUS, PAD_TRIGGER_L);
 	Trigger[Triggers::PageRight].SetButtonOnlyTrigger(-1, WPAD_BUTTON_PLUS | WPAD_CLASSIC_BUTTON_FULL_R | WPAD_CLASSIC_BUTTON_PLUS, PAD_TRIGGER_R);
 
-	ResumeGui();
 	/*
 	Music = new GuiSound(bg_music_ogg, bg_music_ogg_size, SOUND_OGG);
 	Music->SetVolume(50);
 	Music->Play();
 	*/
-	while (menu != Menus::Exit) {
-		switch (menu) {
-			case Menus::Mount:
-				menu = MenuMount();
-				break;
-			case Menus::Init:
-				menu = MenuInit();
-				break;
-			case Menus::Main:
-				menu = MenuMain();
-				break;
-			case Menus::Settings:
-				menu = MenuSettings();
-				break;
-			case Menus::Connect:
-				menu = MenuConnect();
-				break;
-			case Menus::Launch:
-				menu = MenuLaunch();
-				break;
-			case Menus::Install:
-				menu = MenuInstall();
-				break;
-			case Menus::Uninstall:
-				menu = MenuUninstall();
-				break;
-			default:
-				break;
+
+	menu = new MenuMain(Window);
+
+	do {
+		ResumeGui();
+		RawkMenu *next = menu->Process();
+		if (next != menu) {
+			delete menu;
+			menu = next;
+		} else {
+			UpdateDevice(&sd_mounted, &SDsticker, SD_DISK, "sd");
+			UpdateDevice(&usb_mounted, &USBsticker, USB_DISK, "usb");
+			UpdateDevice(&wifi_mounted, &WIFIsticker, DISK_NONE, NULL);
+			if (!net_initted) {
+				s32 i = net_init();
+				if (i >= 0)
+					net_initted = 1;
+				else if (i != -EAGAIN)
+					net_initted = -1;
+			}
+			usleep(THREAD_SLEEP);
 		}
-	}
+	} while (menu);
 
 	ShutoffRumble();
-
-	if (*(vu32*)0x80001804 != 0x53545542) // "STUB" - Check for whether the HBC (or other loader) reload stub is in place or not
-		SYS_ResetSystem(SYS_RETURNTOMENU, 0, 0);
-
-	ResumeGui();
 	RequestExit();
+	ResumeGui();
+
 	while (true)
 		usleep(THREAD_SLEEP);
-
-	HaltGui();
-
-//	Music->Stop();
-//	delete Music;
-	delete Background;
-	delete Window;
 }
-
-ButtonList::ButtonList(GuiWindow* window, int items)
-{
-	Window = window;
-	Count = items;
-
-	Images = new GuiImage*[Count];
-	ImagesOver = new GuiImage*[Count];
-	Buttons = new GuiButton*[Count];
-
-	for (int i = 0; i < Count; i++) {
-		Buttons[i] = new GuiButton(295, 21);
-		Buttons[i]->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-		Buttons[i]->SetTrigger(&Trigger[Triggers::Select]);
-		Buttons[i]->SetRumble(true);
-		Buttons[i]->SetPosition(238, 188 + (21 + 6) * i);
-		Window->Append(Buttons[i]);
-
-		Images[i] = NULL;
-		ImagesOver[i] = NULL;
-	}
-}
-
-void ButtonList::SetButton(int index, GuiImageData* image, GuiImageData* selected)
-{
-	delete Images[index];
-	delete ImagesOver[index];
-
-	if (image) {
-		Images[index] = new GuiImage(image);
-		Images[index]->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-		Images[index]->SetPosition(0, 0);
-		Buttons[index]->SetImage(Images[index]);
-	} else
-		Images[index] = NULL;
-	if (selected) {
-		ImagesOver[index] = new GuiImage(selected);
-		ImagesOver[index]->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-		ImagesOver[index]->SetPosition(0, 0);
-		Buttons[index]->SetImageOver(ImagesOver[index]);
-	} else
-		ImagesOver[index] = NULL;
-}
-
-int ButtonList::Pressed()
-{
-	for (int i = 0; i < Count; i++) {
-		if (Buttons[i]->GetState() == STATE_CLICKED) {
-			Buttons[i]->ResetState();
-			return i;
-		}
-	}
-
-	return -1;
-}
-
-GuiButton* ButtonList::GetButton(int index)
-{
-	return Buttons[index];
-}
-
-ButtonList::~ButtonList()
-{
-	for (int i = 0; i < Count; i++) {
-		Window->Remove(Buttons[i]);
-		delete Buttons[i];
-		delete Images[i];
-		delete ImagesOver[i];
-	}
-	delete[] Buttons;
-	delete[] Images;
-	delete[] ImagesOver;
-}
-
-Menus::Enum MenuInstall() { return Menus::Main; }
-Menus::Enum MenuUninstall() { return Menus::Main; }
-Menus::Enum MenuSettings() { return Menus::Main; }
-Menus::Enum MenuConnect() { return Menus::Main; }
-Menus::Enum MenuMount() { return Menus::Main; }
-Menus::Enum MenuInit() { return Menus::Main; }
-

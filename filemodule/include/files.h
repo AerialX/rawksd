@@ -23,7 +23,8 @@ typedef struct _stats
 typedef enum {
 	SD_DISK,
 	USB_DISK,
-	USB2_DISK
+	USB2_DISK,
+	DISK_NONE
 } disk_phys;
 
 typedef enum {

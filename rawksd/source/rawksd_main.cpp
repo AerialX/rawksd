@@ -5,6 +5,9 @@
 #include <ogcsys.h>
 #include <unistd.h>
 #include <wiiuse/wpad.h>
+#include <vector>
+
+#include <files.h>
 
 #include "FreeTypeGX.h"
 #include "video.h"
@@ -17,14 +20,12 @@
 #include "riivolution_config.h"
 #include "installer.h"
 
-#include "rawksd_menu.h"
-
-#include <vector>
-using std::vector;
-
 RiiDisc Disc;
-vector<int> Mounted;
-vector<int> ToMount;
+std::vector<int> Mounted;
+std::vector<int> ToMount;
+
+void InitGUIThreads();
+void MainMenu();
 
 int main(int argc, char *argv[])
 {
@@ -34,9 +35,9 @@ int main(int argc, char *argv[])
 	InitFreeType((u8*)font_ttf, font_ttf_size);
 	InitGUIThreads();
 
-	MainMenu(Menus::Mount);
+	File_Init();
+
+	MainMenu();
 
 	return 0;
 }
-
-
