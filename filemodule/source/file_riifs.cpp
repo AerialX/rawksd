@@ -147,8 +147,7 @@ namespace ProxiIOS { namespace Filesystem {
 
 	int RiiHandler::CheckPhysical()
 	{
-		// this isn't accurate unless you call it several times in a row
-		return IdleTick();
+		return (SendCommand(RII_OPTION_PING)) ? 1 : -1;
 	}
 
 	bool RiiHandler::SendCommand(int type, const void* data, int size)
