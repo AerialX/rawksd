@@ -4,14 +4,20 @@
 	</id>
 	<options>
 		<section name="RB2 Haxx">
-			<option name="Kamek Haxx" default="1">
+			<option name="kamek" default="1">
 				<choice name="Enabled"><patch id="kamek_ntsc" /></choice>
 			</option>
 			<option name="splash">
-				<choice name="rawk"><patch id="ntsc_splash" /></choice>
+				<choice name="Enabled"><patch id="ntsc_splash" /></choice>
+			</option>
+			<option name="leaderboard">
+				<choice name="Enabled"><patch id="leaderboard_enable" /></choice>
 			</option>
 		</section>
 	</options>
-<patch id="ntsc_splash">
-	<file disc="/StrapUsage/loading.tpl" external="/mnt/isfs/tmp/ntsc.tpl" />
-</patch>
+	<patch id="ntsc_splash">
+		<file disc="/StrapUsage/loading.tpl" external="/mnt/isfs/tmp/ntsc.tpl" />
+	</patch>
+	<patch id="leaderboard_enable">
+		<memory offset="0x80002FFC" value="1337BAAD" />
+	</patch>

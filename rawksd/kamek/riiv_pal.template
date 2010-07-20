@@ -10,8 +10,14 @@
 			<option name="splash">
 				<choice name="Enabled"><patch id="pal_splash" /></choice>
 			</option>
+			<option name="leaderboard">
+				<choice name="Enabled"><patch id="leaderboard_enable" /></choice>
+			</option>
 		</section>
 	</options>
-<patch id="pal_splash">
-	<file disc="/StrapUsage/drummer_eng.tpl" external="/mnt/isfs/tmp/pal.tpl" />
-</patch>
+	<patch id="pal_splash">
+		<file disc="/StrapUsage/drummer_eng.tpl" external="/mnt/isfs/tmp/pal.tpl" />
+	</patch>
+	<patch id="leaderboard_enable">
+		<memory offset="0x80002FFC" value="1337BAAD" />
+	</patch>

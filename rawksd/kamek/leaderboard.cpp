@@ -3,6 +3,9 @@
 #include <ogc/es.h>
 #include <network.h>
 
+#define LEADERBOARD_ENABLED() \
+	(*(u32*)0x80002FFC == 0x1337BAAD)
+
 static char* ToHttpString(const char* str, int length = 0)
 {
 	if (!length)
@@ -25,6 +28,9 @@ static char* ToHttpString(const char* str, int length = 0)
 
 static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficulty, int score)
 {
+	if (!LEADERBOARD_ENABLED())
+		return false;
+
 	const char* hostname = "rvlution.net";
 	char* username;
 	char* songname;
