@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <time.h>
 
 #include <ogcsys.h>
 #include "libwiigui/gui.h"
@@ -33,6 +34,14 @@ extern s32 default_mount;
 
 extern s8 net_initted;
 
+extern const char *basic_popup_options[];
+
+typedef struct {
+	u32 version;
+	time_t timestamp;
+	u8 leaderboards;
+} config_t;
+
 class MenuImage : public GuiImage
 {
 private:
@@ -47,6 +56,8 @@ public:
 class MenuButton
 {
 friend class MenuMain;
+friend class MenuSettings;
+friend class MenuDevices;
 private:
 	GuiButton *button;
 	GuiWindow *Parent;
@@ -89,12 +100,25 @@ public:
 class MenuMain : public RawkMenu
 {
 private:
-	enum {OPTION_PLAY, OPTION_RIP, OPTION_LEADERBOARDS, OPTION_SAVES, OPTION_EXIT, OPTION_COUNT};
-	static const u8 *raw_images[OPTION_COUNT*3+1];
+	enum {OPTION_PLAY, OPTION_RIP, OPTION_SETTINGS, OPTION_SAVES, OPTION_EXIT, OPTION_MAIN_COUNT};
+	static const u8 *main_images[OPTION_MAIN_COUNT*3+1];
 	GuiText *Subtitle;
 public:
 	MenuMain(GuiWindow *Parent);
 	virtual ~MenuMain();
+	RawkMenu* Process();
+};
+
+class MenuSettings : public RawkMenu
+{
+private:
+	enum {OPTION_DEVICES, OPTION_LEADERBOARDS, OPTION_SETTINGS_COUNT};
+	static const u8 *settings_images[OPTION_SETTINGS_COUNT*3+1];
+	GuiText Subtitle;
+	int sel;
+public:
+	MenuSettings(GuiWindow *Parent);
+	virtual ~MenuSettings();
 	RawkMenu* Process();
 };
 

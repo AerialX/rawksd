@@ -117,6 +117,7 @@ RawkMenu *MenuPlay::Process()
 	Disc = CombineDiscs(&discs);
 
 	if (default_mount>=0) {
+		File_SetDefault(default_mount);
 		if (!File_GetMountPoint(default_mount, mountpoint, sizeof(mountpoint))) {
 			int out_fd;
 			int index = 0;

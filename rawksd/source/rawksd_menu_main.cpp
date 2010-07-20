@@ -17,23 +17,23 @@ extern "C" {
 	extern const u8 menu_play_sel_png[];
 	extern const u8 menu_rip_png[];
 	extern const u8 menu_rip_sel_png[];
-	extern const u8 menu_scores_png[];
-	extern const u8 menu_scores_sel_png[];
+	extern const u8 menu_settings_png[];
+	extern const u8 menu_settings_sel_png[];
 	extern const u8 menu_save_png[];
 	extern const u8 menu_save_sel_png[];
 	extern const u8 menu_exit_png[];
 	extern const u8 menu_exit_sel_png[];
 }
 
-const u8* MenuMain::raw_images[OPTION_COUNT*3+1] = {
+const u8* MenuMain::main_images[OPTION_MAIN_COUNT*3+1] = {
 		menu_play_png,
 		menu_play_sel_png,
 		NULL,
 		menu_rip_png,
 		menu_rip_sel_png,
 		NULL,
-		menu_scores_png,
-		menu_scores_sel_png,
+		menu_settings_png,
+		menu_settings_sel_png,
 		NULL,
 		menu_save_png,
 		menu_save_sel_png,
@@ -44,7 +44,7 @@ const u8* MenuMain::raw_images[OPTION_COUNT*3+1] = {
 		NULL
 };
 
-MenuMain::MenuMain(GuiWindow *Parent) : RawkMenu(Parent, raw_images, 238, 188),
+MenuMain::MenuMain(GuiWindow *Parent) : RawkMenu(Parent, main_images, 238, 188),
 Subtitle(NULL)
 {
 	Buttons[OPTION_EXIT]->button->SetTrigger(1, &Trigger[Triggers::Home]);
@@ -79,6 +79,9 @@ RawkMenu* MenuMain::Process()
 		switch(clicked) {
 			case OPTION_EXIT:
 				next = NULL;
+				break;
+			case OPTION_SETTINGS:
+				next = new MenuSettings(Parent);
 				break;
 			case OPTION_PLAY:
 				next = new MenuPlay(Parent);

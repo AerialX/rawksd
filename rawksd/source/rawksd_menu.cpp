@@ -29,6 +29,8 @@ s32 default_mount = -1;
 
 s8 net_initted = 0;
 
+const char *basic_popup_options[] = { "NO", "YES", NULL};
+
 extern "C"  {
 	extern const u8 bg_png[];
 	extern const u8 sd_sticker_png[];
@@ -264,7 +266,7 @@ void MenuButton::Enable() {
 	else {
 		if (img_normal)
 			button->SetImage(img_normal);
-		button->ResetState();
+		button->SetState(STATE_DEFAULT, 0);
 	}
 }
 
@@ -398,17 +400,13 @@ void UpdateDevice(s32 *mount, GuiImage *image, disk_phys disk, const char *dev)
 			*mount = File_Fat_Mount(disk, dev);
 		if (*mount>=0) {
 			image->SetVisible(true);
-			if (default_mount<0) {
-				File_SetDefault(*mount);
+			if (default_mount<0)
 				default_mount = *mount;
-			}
 		}
 		return;
 	}
 	if (File_CheckPhysical(*mount)<0) {
 		int old_mount = *mount;
-		if (*mount == wifi_mounted)
-			ToMount.clear();
 		File_Unmount(*mount);
 		*mount = -1;
 		image->SetVisible(false);
