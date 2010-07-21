@@ -69,7 +69,7 @@ class ServerThread(QtCore.QThread):
 			print "Error on setSocketDescriptor"
 			return
 
-		print "Initial Socket state:", self.tcpSocket.state()
+		#print "Initial Socket state:", self.tcpSocket.state()
 		while self.tcpSocket.state() == 3:
 			if self.WaitForAction() == 0:
 				break
@@ -175,18 +175,18 @@ class ServerThread(QtCore.QThread):
 					sys.stdout.write(".")
 				self.written += 1
 			elif command == 6:		# OPEN #
-				sys.stdout.write("Opened....")
+				sys.stdout.write("Open(")
 				fd = open("dump.bin.%d" % self.opened, 'wb')
 				self.Files[self.opened] = fd
 				self.Respond(self.opened)
-				sys.stdout.write("%d\n" % self.opened)
+				print "%d);\n" % self.opened
 				self.opened += 1
 				self.written = 0
 			elif command == 7:		# CLOSE #
-				sys.stdout.write("Closed....")
+				sys.stdout.write("Close(")
 				fd = self.Files[self.GetFD()]
 				fd.close()
-				print "%d" % self.GetFD()
+				print "%d);" % self.GetFD()
 				self.Respond(1)
 				self.written = 0
 			else:
@@ -293,11 +293,19 @@ class ServerGUI(QtGui.QWidget):
 		self.vLayout=QtGui.QVBoxLayout()
 		self.setLayout(self.vLayout)
 
+		self.ipLayout=QtGui.QHBoxLayout()
+		self.labelIP=QtGui.QLabel("IP Address",self)
+		self.ipLayout.addWidget(self.labelIP)
 		self.specAddr=QtGui.QLineEdit('192.168.0.146')
-		self.vLayout.addWidget(self.specAddr)
+		self.ipLayout.addWidget(self.specAddr)
+		self.vLayout.addLayout(self.ipLayout)
 
+		self.portLayout=QtGui.QHBoxLayout()
+		self.labelPort=QtGui.QLabel("Port",self)
+		self.portLayout.addWidget(self.labelPort)
 		self.specPort=QtGui.QLineEdit('20002')
-		self.vLayout.addWidget(self.specPort)
+		self.portLayout.addWidget(self.specPort)
+		self.vLayout.addLayout(self.portLayout)
 
 		self.serverCtrl=QtGui.QPushButton('Start Server')
 		self.serverCtrl.clicked.connect(self.ctrlServer)
@@ -307,37 +315,51 @@ class ServerGUI(QtGui.QWidget):
 		self.clientList.setEnabled(False)
 		self.vLayout.addWidget(self.clientList)
 
+		'''
 		self.serverTrace=QtGui.QTextEdit()
 		self.vLayout.addWidget(self.serverTrace)
+		'''
 
+		self.peekLayout=QtGui.QHBoxLayout()
 		self.addressPeek=QtGui.QLineEdit('0x8000191C')
-		self.vLayout.addWidget(self.addressPeek)
+		self.peekLayout.addWidget(self.addressPeek)
 		self.peekCtrl=QtGui.QPushButton('Peek')
 		self.peekCtrl.clicked.connect(self.peek)
-		self.vLayout.addWidget(self.peekCtrl)
+		self.peekLayout.addWidget(self.peekCtrl)
+		self.vLayout.addLayout(self.peekLayout)
 
+		self.pokeLayout=QtGui.QHBoxLayout()
+		self.pokeValLayout=QtGui.QVBoxLayout()
 		self.addressPoke=QtGui.QLineEdit('0x8000191C')
-		self.vLayout.addWidget(self.addressPoke)
+		self.pokeValLayout.addWidget(self.addressPoke)
 		self.valuePoke=QtGui.QLineEdit('0x00000000')
-		self.vLayout.addWidget(self.valuePoke)
+		self.pokeValLayout.addWidget(self.valuePoke)
+		self.pokeLayout.addLayout(self.pokeValLayout)
 		self.pokeCtrl=QtGui.QPushButton('Poke')
 		self.pokeCtrl.clicked.connect(self.poke)
-		self.vLayout.addWidget(self.pokeCtrl)
+		self.pokeLayout.addWidget(self.pokeCtrl)
+		self.vLayout.addLayout(self.pokeLayout)
 
+		self.frozenLayout=QtGui.QHBoxLayout()
 		self.freezeCtrl=QtGui.QPushButton('Freeze')
 		self.freezeCtrl.clicked.connect(self.freeze)
-		self.vLayout.addWidget(self.freezeCtrl)
+		self.frozenLayout.addWidget(self.freezeCtrl)
 		self.unfreezeCtrl=QtGui.QPushButton('UnFreeze')
 		self.unfreezeCtrl.clicked.connect(self.unfreeze)
-		self.vLayout.addWidget(self.unfreezeCtrl)
+		self.frozenLayout.addWidget(self.unfreezeCtrl)
+		self.vLayout.addLayout(self.frozenLayout)
 
+		self.dumpLayout=QtGui.QHBoxLayout()
+		self.dumpValLayout=QtGui.QVBoxLayout()
 		self.addressDump=QtGui.QLineEdit('0x90000000')
-		self.vLayout.addWidget(self.addressDump)
+		self.dumpValLayout.addWidget(self.addressDump)
 		self.rangeDump=QtGui.QLineEdit('0x02000000')
-		self.vLayout.addWidget(self.rangeDump)
+		self.dumpValLayout.addWidget(self.rangeDump)
+		self.dumpLayout.addLayout(self.dumpValLayout)
 		self.dumpCtrl=QtGui.QPushButton('Dump')
 		self.dumpCtrl.clicked.connect(self.dump)
-		self.vLayout.addWidget(self.dumpCtrl)
+		self.dumpLayout.addWidget(self.dumpCtrl)
+		self.vLayout.addLayout(self.dumpLayout)
 
 	def freeze(self):
 		command_list.append((0x80000006, 0, 0, 0))

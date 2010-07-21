@@ -392,7 +392,7 @@ namespace ProxiIOS { namespace Debugger {
 			start += 0x20;
 		}
 #if 1
-#define DLTA 0x400			// 0x400 is stable
+#define DLTA 0x500			// 0x400 is stable
 		if(length > DLTA) {
 			for(u32 ii=start; ii<length-DLTA; ii+=DLTA) {
 				u32 addy = address+ii;
