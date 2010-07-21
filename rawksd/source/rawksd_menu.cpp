@@ -28,14 +28,18 @@ s32 wifi_mounted = -1;
 s32 default_mount = -1;
 
 s8 net_initted = 0;
+config_t global_config ATTRIBUTE_ALIGN(32);
 
 const char *basic_popup_options[] = { "NO", "YES", NULL};
 
 extern "C"  {
 	extern const u8 bg_png[];
 	extern const u8 sd_sticker_png[];
+	extern const u8 sd_sticker_def_png[];
 	extern const u8 usb_sticker_png[];
+	extern const u8 usb_sticker_def_png[];
 	extern const u8 wifi_sticker_png[];
+	extern const u8 wifi_sticker_def_png[];
 	extern const u8 Rawk1_png[];
 }
 
@@ -387,40 +391,75 @@ int RawkMenu::GetClicked()
 	return ret;
 }
 
-void UpdateDevice(s32 *mount, GuiImage *image, disk_phys disk, const char *dev)
+static u8 wifi_check_now = 0;
+
+void UpdateDevice(s32 *mount, GuiImage *image, GuiImageData *regular_image, GuiImageData *default_image, disk_phys disk, const char *dev)
 {
 	if (*mount<0) {
 		// ugh
 		if (disk == DISK_NONE)
-			if (net_initted>0)
+			if (net_initted>0 && wifi_check_now) {
 				*mount = File_RiiFS_Mount("", 5256);
+				wifi_check_now = 0;
+			}
 			else
 				return;
 		else
 			*mount = File_Fat_Mount(disk, dev);
 		if (*mount>=0) {
+			STACK_ALIGN(config_t,new_config,1,32);
+			char filepath[MAXPATHLEN];
 			image->SetVisible(true);
-			if (default_mount<0)
+			new_config->version = 0;
+			new_config->leaderboards = 1;
+			new_config->timestamp = 0;
+			filepath[0] = '\0';
+			File_GetMountPoint(*mount, filepath, sizeof(filepath));
+			strcat(filepath, "/rawk/rb2/config");
+			s32 in_fd = File_Open(filepath, O_RDONLY);
+			if (in_fd>=0) {
+				if (File_Read(in_fd, new_config, sizeof(*new_config))==sizeof(*new_config)) {
+					if (new_config->version > global_config.version || \
+						(new_config->version == global_config.version && new_config->timestamp > global_config.timestamp))
+							default_mount = -1;
+				}
+				File_Close(in_fd);
+			}
+			if (default_mount<0) {
+				memcpy(&global_config, new_config, sizeof(global_config));
 				default_mount = *mount;
-		}
-		return;
+			}
+		} else
+			return;
 	}
-	if (File_CheckPhysical(*mount)<0) {
+	if ((disk!=DISK_NONE || wifi_check_now) && File_CheckPhysical(*mount)<0) {
 		int old_mount = *mount;
 		File_Unmount(*mount);
 		*mount = -1;
 		image->SetVisible(false);
+		if (disk==DISK_NONE)
+			wifi_check_now = 0;
 		if (default_mount == old_mount) {
+			global_config.timestamp = 0;
+			global_config.version = 0;
 			if (sd_mounted>=0)
 				default_mount = sd_mounted;
 			else if (usb_mounted>=0)
 				default_mount = usb_mounted;
 			else if (wifi_mounted>=0)
 				default_mount = wifi_mounted;
-			else
+			else {
 				default_mount = -1;
+				return;
+			}
 		}
 	}
+	HaltGui();
+	if (default_mount == *mount)
+		image->SetImage(default_image);
+	else
+		image->SetImage(regular_image);
+	ResumeGui();
 }
 
 void wifi_check(syswd_t alarm, void *_check_now)
@@ -432,12 +471,18 @@ void wifi_check(syswd_t alarm, void *_check_now)
 void MainMenu()
 {
 	syswd_t riifs_timer;
-	u8 wifi_check_now = 0;
 	int i;
+
+	*(u32*)0xCD006C00 = 0; // magic audio fix
+
 	// TODO: Confirm this actually scrubs the playlog
 	Launcher_ScrubPlaytimeEntry();
 	RVL_Initialize();
 	Launcher_Init();
+
+	global_config.version = 0;
+	global_config.leaderboards = 1;
+	global_config.timestamp = 0;
 
 	// clear out old rawksd custom titles if they exist
 	for(i='A'; i <= 'Z'; i++) {
@@ -448,16 +493,14 @@ void MainMenu()
 		File_Delete(path);
 	}
 
-	if (!SYS_CreateAlarm(&riifs_timer)) {
-		struct timespec tm = {2, 0};
-		SYS_SetPeriodicAlarm(riifs_timer, &tm, &tm, wifi_check, &wifi_check_now);
-	}
-
 	RawkMenu *menu;
 	GuiImageData BackgroundImage(bg_png);
 	GuiImageData SDstickerImage(sd_sticker_png);
 	GuiImageData USBstickerImage(usb_sticker_png);
 	GuiImageData WIFIstickerImage(wifi_sticker_png);
+	GuiImageData SDstickerDefaultImage(sd_sticker_def_png);
+	GuiImageData USBstickerDefaultImage(usb_sticker_def_png);
+	GuiImageData WIFIstickerDefaultImage(wifi_sticker_def_png);
 
 	Window = new GuiWindow(screenwidth, screenheight);
 	Window->SetPosition(0, 0);
@@ -509,16 +552,18 @@ void MainMenu()
 			delete menu;
 			menu = next;
 		} else {
-			UpdateDevice(&sd_mounted, &SDsticker, SD_DISK, "sd");
-			UpdateDevice(&usb_mounted, &USBsticker, USB_DISK, "usb");
-			if (wifi_check_now) {
-				UpdateDevice(&wifi_mounted, &WIFIsticker, DISK_NONE, NULL);
-				wifi_check_now = 0;
-			}
+			UpdateDevice(&sd_mounted, &SDsticker, &SDstickerImage, &SDstickerDefaultImage, SD_DISK, "sd");
+			UpdateDevice(&usb_mounted, &USBsticker, &USBstickerImage, &USBstickerDefaultImage, USB_DISK, "usb");
+			UpdateDevice(&wifi_mounted, &WIFIsticker, &WIFIstickerImage, &WIFIstickerDefaultImage, DISK_NONE, NULL);
 			if (!net_initted) {
 				s32 i = net_init();
-				if (i >= 0)
+				if (i >= 0) {
 					net_initted = 1;
+					if (!SYS_CreateAlarm(&riifs_timer)) {
+						struct timespec tm = {2, 0};
+						SYS_SetPeriodicAlarm(riifs_timer, &tm, &tm, wifi_check, &wifi_check_now);
+					}
+				}
 				else if (i != -EAGAIN)
 					net_initted = -1;
 			}

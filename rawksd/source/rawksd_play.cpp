@@ -129,8 +129,6 @@ RawkMenu *MenuPlay::Process()
 			} else if (default_mount==usb_mounted)
 				index = 2;
 
-			Disc.Sections[0].Options[1].Default = 1;
-			
 			File_CreateFile("/mnt/isfs/tmp/ntsc.tpl");
 			out_fd = File_Open("/mnt/isfs/tmp/ntsc.tpl", O_WRONLY);
 			if (out_fd >=0) {
@@ -143,15 +141,35 @@ RawkMenu *MenuPlay::Process()
 				File_Write(out_fd, splash_tpls[index+1].data, splash_tpls[index+1].size);
 				File_Close(out_fd);
 			}
+			File_CreateDir("/rawk");
+			File_CreateDir("/rawk/rb2");
+			File_CreateFile("/rawk/rb2/config");
+			out_fd = File_Open("/rawk/rb2/config", O_WRONLY);
+			if (out_fd >=0) {
+				global_config.timestamp = time(NULL);
+				global_config.version = 1;
+				File_Write(out_fd, &global_config, sizeof(global_config));
+				File_Close(out_fd);
+			}
+			File_CreateFile("/rawk/rb2/id");
+			out_fd = File_Open("/rawk/rb2/id", O_WRONLY);
+			if (out_fd >=0) {
+				File_Write(out_fd, &otp.ng_id, sizeof(otp.ng_id));
+				File_Close(out_fd);
+			}
 		} else
 			default_mount = -1;
-	}
-	if (sd_mounted>=0 && sd_mounted!=default_mount)
-		File_Unmount(sd_mounted);
-	if (usb_mounted>=0 && usb_mounted!=default_mount)
-		File_Unmount(usb_mounted);
-	if (wifi_mounted>=0 && wifi_mounted!=default_mount)
-		File_Unmount(wifi_mounted);
+		if (sd_mounted>=0 && sd_mounted!=default_mount)
+			File_Unmount(sd_mounted);
+		if (usb_mounted>=0 && usb_mounted!=default_mount)
+			File_Unmount(usb_mounted);
+		if (wifi_mounted>=0 && wifi_mounted!=default_mount)
+			File_Unmount(wifi_mounted);
+	} else
+		Disc.Sections[0].Options[1].Default = 0;
+
+	if (!global_config.leaderboards) // disable magic leaderboard word if necessary
+		Disc.Sections[0].Options[2].Default = 2;
 
 	RVL_Patch(&Disc);
 

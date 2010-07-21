@@ -132,8 +132,7 @@ void Initialise()
 		}
 	}
 
-	// uncomment to redirect stdout/stderr over wifi
-	//Init_DebugConsole(1);
+	// change parameter to redirect stdout/stderr over wifi
 	Init_DebugConsole(0);
 
 	SetupPads();

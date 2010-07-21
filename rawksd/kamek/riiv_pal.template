@@ -7,17 +7,25 @@
 			<option name="Kamek Haxx" default="1">
 				<choice name="Enabled"><patch id="kamek_pal" /></choice>
 			</option>
-			<option name="splash">
+			<option name="splash" default="1">
 				<choice name="Enabled"><patch id="pal_splash" /></choice>
 			</option>
-			<option name="leaderboard">
-				<choice name="Enabled"><patch id="leaderboard_enable" /></choice>
+			<option name="leaderboard" default="1">
+				<choice name="On"><patch id="leaderboard_enable" /></choice>
+				<choice name="Off"><patch id="leaderboard_disable" /></choice>
 			</option>
 		</section>
 	</options>
 	<patch id="pal_splash">
+		<file disc="/StrapUsage/drummer_deu.tpl" external="/mnt/isfs/tmp/pal.tpl" />
 		<file disc="/StrapUsage/drummer_eng.tpl" external="/mnt/isfs/tmp/pal.tpl" />
+		<file disc="/StrapUsage/drummer_esl.tpl" external="/mnt/isfs/tmp/pal.tpl" />
+		<file disc="/StrapUsage/drummer_fre.tpl" external="/mnt/isfs/tmp/pal.tpl" />
+		<file disc="/StrapUsage/drummer_ita.tpl" external="/mnt/isfs/tmp/pal.tpl" />
 	</patch>
 	<patch id="leaderboard_enable">
 		<memory offset="0x80002FFC" value="1337BAAD" />
+	</patch>
+	<patch id="leaderboard_disable">
+		<memory offset="0x80002FFC" value="00000000" />
 	</patch>

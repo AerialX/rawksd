@@ -31,7 +31,7 @@ public:
 
 LeaderboardPopup::LeaderboardPopup(GuiWindow *_Main) :
 RawkMenu(basic_popup_options, "\nDo you want to have your high scores sent to the RawkSD Leaderboards?" \
-							  " Your wii's unique id will be used for identification.", "Link Code: "),
+							  " Your wii's unique id will be used for tracking purposes.", "Link Code: "),
 Main(_Main)
 {
 	char link[50];
@@ -41,8 +41,13 @@ Main(_Main)
 
 RawkMenu* LeaderboardPopup::Process()
 {
-	if (GetClicked()>=0) {
+	int clicked = GetClicked();
+	if (clicked>=0) {
 		HaltGui();
+		if (clicked==0) // NO
+			global_config.leaderboards = 0;
+		else // YES
+			global_config.leaderboards = 1;
 		return new MenuSettings(Main);
 	}
 	return this;
@@ -99,23 +104,29 @@ RawkMenu *MenuDevices::Process()
 		Buttons[1]->Enable();
 	if (wifi_mounted>=0 && Buttons[2]->button->GetState() == STATE_DISABLED)
 		Buttons[2]->Enable();
-	if (wifi_mounted<0 && Buttons[2]->button->GetState() == STATE_SELECTED) {
-		Buttons[2]->Disable();
-		Buttons[1]->Select();
-	}
-	if (usb_mounted<0 && Buttons[1]->button->GetState() == STATE_SELECTED) {
-		Buttons[1]->Disable();
-		Buttons[0]->Select();
-	}
-	if (sd_mounted<0 && Buttons[0]->button->GetState() == STATE_SELECTED) {
-		Buttons[0]->Disable();
-		if (Buttons[1]->button->GetState() == STATE_DISABLED)
-			Buttons[2]->Select();
-		else
+	if (wifi_mounted<0) {
+		if (Buttons[2]->button->GetState() == STATE_SELECTED)
 			Buttons[1]->Select();
+		Buttons[2]->Disable();
+	}
+	if (usb_mounted<0) {
+		if (Buttons[1]->button->GetState() == STATE_SELECTED)
+			Buttons[0]->Select();
+		Buttons[1]->Disable();
+	}
+	if (sd_mounted<0) {
+		if (Buttons[0]->button->GetState() == STATE_SELECTED) {
+			if (Buttons[1]->button->GetState() == STATE_DISABLED)
+				Buttons[2]->Select();
+			else
+				Buttons[1]->Select();
+		}
+		Buttons[0]->Disable();
 	}
 
 	int clicked = GetClicked();
+	if (clicked>=0)
+		global_config.timestamp = 0xFFFFFFFF; // don't override this device if a new device is inserted
 	if ((sd_mounted<0 && usb_mounted<0 && wifi_mounted<0) || clicked>=0) {
 		HaltGui();
 		switch(clicked) {
@@ -145,7 +156,7 @@ const u8 *MenuSettings::settings_images[OPTION_SETTINGS_COUNT*3+1] = {
 	NULL
 };
 
-static const char device_subtitle[] = "Configure the default device";
+static const char device_subtitle[] = "Configure the default storage device";
 static const char leaderboard_subtitle[] = "Opt-in/out of the RawkSD Leaderboards or see your Link Code";
 
 MenuSettings::MenuSettings(GuiWindow *Parent) : RawkMenu(Parent, settings_images, 238, 188),

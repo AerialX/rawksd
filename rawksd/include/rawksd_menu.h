@@ -36,11 +36,16 @@ extern s8 net_initted;
 
 extern const char *basic_popup_options[];
 
+#define STACK_ALIGN(type, name, cnt, alignment)		u8 _al__##name[((sizeof(type)*(cnt)) + (alignment) + (((sizeof(type)*(cnt))%(alignment)) > 0 ? ((alignment) - ((sizeof(type)*(cnt))%(alignment))) : 0))]; \
+													type *name = (type*)(((u32)(_al__##name)) + ((alignment) - (((u32)(_al__##name))&((alignment)-1))))
+
 typedef struct {
 	u32 version;
 	time_t timestamp;
 	u8 leaderboards;
 } config_t;
+
+extern config_t global_config;
 
 class MenuImage : public GuiImage
 {
