@@ -42,36 +42,6 @@ static const struct {const u8 *data; const u32 size;} splash_tpls[] = {
 	{ntsc_wifi_tpl, ntsc_wifi_tpl_size}, {pal_wifi_tpl, pal_wifi_tpl_size}
 };
 
-static const char *load_error[] = {
-	"CONTINUE",
-	NULL
-};
-
-class PlayError : public RawkMenu
-{
-private:
-	GuiWindow *Main;
-public:
-	PlayError(GuiWindow *_Main, const char *title, const char *text);
-	RawkMenu *Process();
-};
-
-PlayError::PlayError(GuiWindow *_Main, const char *title, const char *text) :
-RawkMenu(load_error, text, title),
-Main(_Main)
-{
-}
-
-RawkMenu* PlayError::Process()
-{
-	if (GetClicked()>=0) {
-		HaltGui();
-		Main->SetState(STATE_DEFAULT);
-		return new MenuMain(Main);
-	}
-	return this;
-}
-
 MenuPlay::MenuPlay(GuiWindow *_Main) :
 RawkMenu(NULL, "\nInitializing.....", "Launching RB2"),
 Main(_Main)
@@ -86,14 +56,14 @@ RawkMenu *MenuPlay::Process()
 	HaltGui();
 	switch (status) {
 		case LauncherStatus::NoDisc:
-			return new PlayError(Main, "No Disc Found", "\nPlease insert the RB2 disc and try again.");
+			return new MenuSaves(Main, "No Disc Found", "\nPlease insert the RB2 disc and try again.");
 		case LauncherStatus::IosError:
-			return new PlayError(Main, "IOS Error", "\nCouldn't reset the disc drive. Try restarting RawkSD before attempting to launch again.");
+			return new MenuSaves(Main, "IOS Error", "\nCouldn't reset the disc drive. Try restarting RawkSD before attempting to launch again.");
 		case LauncherStatus::ReadError:
-			return new PlayError(Main, "Read Error", "\nCouldn't read the disc, are you sure it is a proper Wii disc?");
+			return new MenuSaves(Main, "Read Error", "\nCouldn't read the disc, are you sure it is a proper Wii disc?");
 		default: // LauncherStatus::OK
 			if (memcmp(MEM_BASE, "SZA", 3))
-				return new PlayError(Main, Launcher_GetGameName(), "\nOnly Rock Band 2 can be launched. Insert the correct disc and try again.");
+				return new MenuSaves(Main, Launcher_GetGameName(), "\nOnly Rock Band 2 can be launched. Insert the correct disc and try again.");
 			popup_text[0]->SetText(Launcher_GetGameNameWide());
 			popup_text[1]->SetText("\nReading Disc.....");
 			ResumeGui();
@@ -103,9 +73,9 @@ RawkMenu *MenuPlay::Process()
 	HaltGui();
 	switch (status) {
 		case LauncherStatus::ReadError:
-			return new PlayError(Main, "Read Error", "\nCouldn't read the disc info for Riivolution.");
+			return new MenuSaves(Main, "Read Error", "\nCouldn't read the disc info for Riivolution.");
 		case LauncherStatus::OutOfMemory:
-			return new PlayError(Main, "Memory Error", "\nOut of Memory. Not sure how this happened, but it's bad.");
+			return new MenuSaves(Main, "Memory Error", "\nOut of Memory. Not sure how this happened, but it's bad.");
 		default: // LauncherStatus::OK
 			popup_text[1]->SetText("\nApplying Patches.....");
 			ResumeGui();
@@ -179,7 +149,7 @@ RawkMenu *MenuPlay::Process()
 	status = Launcher_RunApploader();
 	HaltGui();
 	if (status != LauncherStatus::OK)
-		return new PlayError(Main, "Read Error", "\nApploader Error, couldn't read the disc");
+		return new MenuSaves(Main, "Read Error", "\nApploader Error, couldn't read the disc");
 	popup_text[1]->SetText("\nAdding playtime entry and setting video mode.....");
 	ResumeGui();
 	Launcher_CommitRVL(false);
@@ -198,5 +168,5 @@ RawkMenu *MenuPlay::Process()
 	Launcher_Launch();
 
 	HaltGui();
-	return new PlayError(Main, "HALP", "\nCatastrophic error while launching the game.");
+	return new MenuSaves(Main, "HALP", "\nCatastrophic error while launching the game.");
 }

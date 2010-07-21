@@ -31,6 +31,7 @@ s8 net_initted = 0;
 config_t global_config ATTRIBUTE_ALIGN(32);
 
 const char *basic_popup_options[] = { "NO", "YES", NULL};
+const char *popup_error[] = {"CONTINUE", NULL};
 
 extern "C"  {
 	extern const u8 bg_png[];

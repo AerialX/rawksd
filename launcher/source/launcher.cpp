@@ -197,8 +197,10 @@ LauncherStatus::Enum Launcher_ReadDisc()
 
 	BannerName[0] = 0;
 
-	if (!Launcher_DiscInserted())
+	if (!Launcher_DiscInserted()) {
+		subsequent = true;
 		return LauncherStatus::NoDisc;
+	}
 
 	if (subsequent && !WDVD_Reset()) // In case of re-inserted discs, needs to be called again
 		return LauncherStatus::IosError;

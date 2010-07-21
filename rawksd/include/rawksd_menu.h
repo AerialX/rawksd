@@ -35,6 +35,7 @@ extern s32 default_mount;
 extern s8 net_initted;
 
 extern const char *basic_popup_options[];
+extern const char *popup_error[];
 
 #define STACK_ALIGN(type, name, cnt, alignment)		u8 _al__##name[((sizeof(type)*(cnt)) + (alignment) + (((sizeof(type)*(cnt))%(alignment)) > 0 ? ((alignment) - ((sizeof(type)*(cnt))%(alignment))) : 0))]; \
 													type *name = (type*)(((u32)(_al__##name)) + ((alignment) - (((u32)(_al__##name))&((alignment)-1))))
@@ -63,6 +64,7 @@ class MenuButton
 friend class MenuMain;
 friend class MenuSettings;
 friend class MenuDevices;
+friend class MenuSaves;
 private:
 	GuiButton *button;
 	GuiWindow *Parent;
@@ -124,6 +126,19 @@ private:
 public:
 	MenuSettings(GuiWindow *Parent);
 	virtual ~MenuSettings();
+	RawkMenu* Process();
+};
+
+class MenuSaves : public RawkMenu
+{
+private:
+	GuiWindow *Main;
+	enum {OPTION_BACKUP, OPTION_RESTORE, OPTION_SAVES_COUNT};
+	static const u8 *saves_images[OPTION_SAVES_COUNT*3+1];
+public:
+	MenuSaves(GuiWindow *Parent);
+	// this can be used as a generic error or pause dialog window
+	MenuSaves(GuiWindow *Parent, const char *title, const char *text, int cont=1);
 	RawkMenu* Process();
 };
 

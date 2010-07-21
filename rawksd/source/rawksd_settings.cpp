@@ -127,7 +127,7 @@ RawkMenu *MenuDevices::Process()
 	int clicked = GetClicked();
 	if (clicked>=0)
 		global_config.timestamp = 0xFFFFFFFF; // don't override this device if a new device is inserted
-	if ((sd_mounted<0 && usb_mounted<0 && wifi_mounted<0) || clicked>=0) {
+	if ((default_mount<0) || clicked>=0) {
 		HaltGui();
 		switch(clicked) {
 			case OPTION_SD:
@@ -156,7 +156,7 @@ const u8 *MenuSettings::settings_images[OPTION_SETTINGS_COUNT*3+1] = {
 	NULL
 };
 
-static const char device_subtitle[] = "Configure the default storage device";
+static const char device_subtitle[] = "Choose the default storage device";
 static const char leaderboard_subtitle[] = "Opt-in/out of the RawkSD Leaderboards or see your Link Code";
 
 MenuSettings::MenuSettings(GuiWindow *Parent) : RawkMenu(Parent, settings_images, 238, 188),
@@ -168,7 +168,7 @@ Subtitle(device_subtitle, 18, (GXColor){255, 255, 255, 255})
 	Subtitle.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 	Subtitle.SetPosition(264, 300);
 	Subtitle.SetWrap(true, 300);
-	if (sd_mounted<0 && usb_mounted<0 && wifi_mounted<0) {
+	if (default_mount<0) {
 		Subtitle.SetText(leaderboard_subtitle);
 		sel = 1;
 		Buttons[0]->Disable();
@@ -207,15 +207,14 @@ RawkMenu* MenuSettings::Process()
 		return new MenuMain(Parent);
 	}
 
-	if (sd_mounted<0 && usb_mounted<0 && wifi_mounted<0) {
+	if (default_mount<0) {
 		if (Buttons[0]->button->GetState() != STATE_DISABLED) {
 			Buttons[0]->Disable();
 			Buttons[1]->Select();
 			sel = 0; // make sure the right subtitle is shown
 		}
-	} else if (Buttons[0]->button->GetState() == STATE_DISABLED) {
+	} else if (Buttons[0]->button->GetState() == STATE_DISABLED)
 		Buttons[0]->Enable();
-	}
 
 	return this;
 }

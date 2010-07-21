@@ -86,6 +86,12 @@ RawkMenu* MenuMain::Process()
 			case OPTION_PLAY:
 				next = new MenuPlay(Parent);
 				break;
+			case OPTION_SAVES:
+				if (default_mount<0)
+					next = new MenuSaves(Parent, NULL, NULL);
+				else
+					next = new MenuSaves(Parent);
+				break;
 			default:
 				Buttons[clicked]->Enable();
 		}
