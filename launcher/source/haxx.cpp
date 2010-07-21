@@ -12,6 +12,10 @@
 #include <malloc.h>
 #include <stdlib.h>
 
+#ifdef DEBUGGER
+#include <mega.h>
+#endif
+
 using std::vector;
 
 //#define BABELFISH
@@ -26,6 +30,11 @@ extern "C" {
 
 	extern u8 dipmodule_dat[];
 	extern u32 dipmodule_dat_size;
+
+#ifdef DEBUGGER
+	extern u8 megamodule_dat[];
+	extern u32 megamodule_dat_size;
+#endif
 
 #ifdef BABELFISH
 	extern u8 babelfish_dat[];
@@ -65,6 +74,14 @@ int Haxx_Init()
 	printf("Riiv dipmodule loaded\n");
 
 	usleep(4000);
+
+#ifdef DEBUGGER
+	if (load_module_code(megamodule_dat, megamodule_dat_size) < 0)
+		return -1;
+
+	printf("Riiv megamodule loaded\n");
+	usleep(4000);
+#endif
 
 #ifdef BABELFISH
 
@@ -122,6 +139,12 @@ void Haxx_Mount(vector<int>* mounted)
 
 		DEFAULT();
 	}
+
+#ifdef DEBUGGER
+	int megafd = Mega_Init();
+	if (megafd <0)
+		return;
+#endif
 }
 
 extern "C" void udelay(int us);

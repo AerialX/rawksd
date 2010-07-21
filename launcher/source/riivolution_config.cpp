@@ -11,6 +11,10 @@ using std::map;
 #include <malloc.h>
 #include <files.h>
 
+#ifdef DEBUGGER
+#include <mega.h>
+#endif
+
 #include <libxml++/libxml++.h>
 #include <libxml++/parsers/textreader.h>
 using namespace xmlpp;
@@ -217,6 +221,9 @@ versionisvalid:
 		ELEMENT_START("network") {
 			string ip;
 			int port = 1137;
+#ifdef DEBUGGER
+			int freeze = 0;
+#endif
 			string protocol = "riifs";
 			bool log = false;
 			ELEMENT_ATTRIBUTE("protocol", true)
@@ -227,10 +234,25 @@ versionisvalid:
 				port = ELEMENT_INT(attribute);
 			ELEMENT_ATTRIBUTE("log", true)
 				log = ELEMENT_BOOL();
+#ifdef DEBUGGER
+			ELEMENT_ATTRIBUTE("freeze", true)
+				freeze = ELEMENT_INT(attribute);
+#endif
 
 			int mnt = -1;
 			if (protocol == "riifs")
 				mnt = File_RiiFS_Mount(ip.c_str(), port);
+#ifdef DEBUGGER
+			if (protocol == "mega") {
+				mnt = Mega_Debugger_Connect(ip.c_str(), port);
+				char buffer[100];
+				memset(buffer, 0, 100);
+				sprintf(buffer, "\nMegaConnect: %d\n", mnt);
+				File_Log(buffer, strlen(buffer));
+				mnt = Mega_SetFreezeLocation(*(u32*)&freeze);
+				mnt = -1;
+			}
+#endif
 			if (mnt >= 0) {
 				if (log) {
 					char buffer[100];

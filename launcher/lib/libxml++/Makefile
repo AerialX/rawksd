@@ -105,7 +105,10 @@ clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(TARGET).a
 #---------------------------------------------------------------------------------
-
+#install: include/usyncversion.h
+#	cp $(OUTPUT) $(DEVKITPRO)/libogc/lib/wii
+#	cp include/usync.h $(DEVKITPRO)/libogc/include
+#	cp include/usyncversion.h $(DEVKITPRO)/libogc/include
 #---------------------------------------------------------------------------------
 run:
 	wiiload $(TARGET).dol

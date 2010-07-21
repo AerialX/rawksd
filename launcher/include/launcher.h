@@ -3,6 +3,7 @@
 #include <gctypes.h>
 
 //#define YARR
+//#define DEBUGGER
 
 #define MEM_BASE			((u8*)0x80000000)
 #define MEM_BOOTCODE		((u32*)0x80000020)

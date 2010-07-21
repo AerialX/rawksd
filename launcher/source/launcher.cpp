@@ -10,6 +10,10 @@
 
 #include <malloc.h>
 
+#ifdef DEBUGGER
+#include <mega.h>
+#endif
+
 // DEFINES
 #define PART_OFFSET			0x00040000
 #define APP_INFO_OFFSET		0x2440
@@ -549,6 +553,9 @@ LauncherStatus::Enum Launcher_RunApploader()
 
 LauncherStatus::Enum Launcher_Launch()
 {
+#ifdef DEBUGGER
+	Mega_StartPolling();
+#endif
 	if (app_address) {
 		RVL_Close();
 		ISFS_Deinitialize();

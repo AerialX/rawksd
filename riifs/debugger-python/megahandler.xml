@@ -1,0 +1,48 @@
+<wiidisc version="1">
+	<network protocol="mega" address="192.168.0.146" port="20002" freeze="0x80001928" />
+	<options>
+		<section name="Mega">
+			<option name="Mega Handler">
+				<choice name="VI Hook"><patch id="megabase_vi" /></choice>
+				<choice name="KPAD Hook"><patch id="megabase_kpad" /></choice>
+				<choice name="Joypad Hook"><patch id="megabase_joypad" /></choice>
+				<choice name="GXDraw Hook"><patch id="megabase_gxdraw" /></choice>
+				<choice name="GXFlush Hook"><patch id="megabase_gxflush" /></choice>
+				<choice name="OSSleep Hook"><patch id="megabase_ossleep" /></choice>
+				<choice name="AxNextFrame Hook"><patch id="megabase_axnextframe" /></choice>
+			</option>
+			<option name="PPC Handler">
+				<choice name="Enabled">
+					<patch id="megabase" />
+				</choice>
+			</option>
+		</section>
+	</options>
+
+	<patch id="megabase_vi">
+		<memory ocarina="true" value="7CE33B783887003438A7003838C7004C" offset="0x80001900" />
+	</patch>
+	<patch id="megabase_kpad">
+		<memory ocarina="true" value="9A3F005E38AE0080389FFFFC7E0903A6" offset="0x80001900" />
+		<!-- kpadoldhooks -->
+		<memory ocarina="true" value="801D0060901E0060801D0064901E0064801D0068901E0068" offset="0x80001900" />
+	</patch>
+	<patch id="megabase_joypad">
+		<memory ocarina="true" value="3AB500013A73000C2C1500043B18000C" offset="0x80001900" />
+	</patch>
+	<patch id="megabase_gxdraw">
+		<memory ocarina="true" value="3CA0CC01380000613C80450098058000" offset="0x80001900" />
+	</patch>
+	<patch id="megabase_gxflush">
+		<memory ocarina="true" value="90010014800305FC2C00000041820008" offset="0x80001900" />
+	</patch>
+	<patch id="megabase_ossleep">
+		<memory ocarina="true" value="90A402E0806502E4908502E42C030000" offset="0x80001900" />
+	</patch>
+	<patch id="megabase_axnextframe">
+		<memory ocarina="true" value="3800000E7FE3FB78B005000038800080" offset="0x80001900" />
+	</patch>
+	<patch id="megabase">
+<memory offset="0x80001900" value="3c60800060631928380000047c0018ac7c0004ac7c001fac806300002c0300004082ffe04e80002000000000" />
+	</patch>
+</wiidisc>

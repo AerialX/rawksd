@@ -20,7 +20,7 @@ BUILD		:=	build
 SOURCES		:=	data source lib/libwiigui lib/libwiigui/libwiigui \
 				data/images data/fonts data/sounds
 INCLUDES	:=	include lib/libwiigui lib \
-				lib/libxml2/include lib/libxml++ lib/libxml++/libxml++ ../filemodule/include
+				lib/libxml2/include lib/libxml++ lib/libxml++/libxml++ ../filemodule/include ../megamodule/include
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -33,7 +33,7 @@ LDFLAGS		=	$(MACHDEP) -Wl,-Map,$(notdir $@).map,--section-start,.init=0x80a00000
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS :=	../lib/libxml++/libxml++.a ../lib/libxml2/libxml2.a -lpng -lz -lfat -lwiiuse -lbte -lasnd -logc -lvorbisidec -lfreetype ../../filemodule/libfile/libfile_wii.a
+LIBS :=	../lib/libxml++/libxml++.a ../lib/libxml2/libxml2.a -lpng -lz -lfat -lwiiuse -lbte -lasnd -logc -lvorbisidec -lfreetype ../../filemodule/libfile/libfile_wii.a ../../megamodule/libmega/libmega_wii.a
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
