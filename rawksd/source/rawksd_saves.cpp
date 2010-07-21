@@ -27,7 +27,7 @@ Main(NULL)
 	Buttons.push_back(back);
 }
 
-MenuSaves::MenuSaves(GuiWindow *Parent, const char *title, const char *text, int cont) : 
+MenuSaves::MenuSaves(GuiWindow *Parent, const char *title, const char *text, int cont) :
 RawkMenu(cont ? popup_error : NULL, text ? text : "\nSavegame management requires a storage device to be connected to your wii.", \
 		 title ? title : "No Storage Device Found"),
 Main(Parent)
@@ -61,7 +61,8 @@ RawkMenu* MenuSaves::Process()
 		s32 in_fd = File_Open("/mnt/isfs/title/00010000/535a4145/data/rockbnd2.dat", O_RDONLY);
 		if (in_fd>=0) {
 			s32 out_fd;
-			out_fd = File_Open("/rawk/rb2/data_ntsc", O_WRONLY|O_CREAT|O_TRUNC);
+			File_CreateDir("/rawk/rb2/ntsc");
+			out_fd = File_Open("/rawk/rb2/ntsc/rockbnd2.dat", O_WRONLY|O_CREAT|O_TRUNC);
 			if (out_fd<0)
 				succeeded = -1;
 			else {
@@ -84,7 +85,8 @@ RawkMenu* MenuSaves::Process()
 			if (in_fd>=0) {
 				succeeded += 2;
 				s32 out_fd;
-				out_fd = File_Open("/rawk/rb2/data_pal", O_WRONLY|O_CREAT|O_TRUNC);
+				File_CreateDir("/rawk/rb2/pal");
+				out_fd = File_Open("/rawk/rb2/pal/rockbnd2.dat", O_WRONLY|O_CREAT|O_TRUNC);
 				if (out_fd<0)
 					succeeded = -1;
 				else {
@@ -104,7 +106,7 @@ RawkMenu* MenuSaves::Process()
 	}
 	else { // OPTION_RESTORE
 		succeeded=1;
-		s32 in_fd = File_Open("/rawk/rb2/data_ntsc", O_RDONLY);
+		s32 in_fd = File_Open("/rawk/rb2/ntsc/rockbnd2.dat", O_RDONLY);
 		if (in_fd>=0) {
 			s32 out_fd;
 			out_fd = File_Open("/mnt/isfs/title/00010000/535a4145/data/rockbnd2.dat", O_WRONLY);
@@ -126,7 +128,7 @@ RawkMenu* MenuSaves::Process()
 			succeeded = -2;
 		// PAL
 		if (succeeded > -3) {
-			in_fd = File_Open("/rawk/rb2/data_pal", O_RDONLY);
+			in_fd = File_Open("/rawk/rb2/pal/rockbnd2.dat", O_RDONLY);
 			if (in_fd>=0) {
 				succeeded += 2;
 				s32 out_fd;

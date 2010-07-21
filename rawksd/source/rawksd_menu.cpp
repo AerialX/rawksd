@@ -136,7 +136,7 @@ void MenuImage::Draw()
 	shine_pos += 0.01;
 	if (shine_pos >= 2*M_PI)
 		shine_pos = 0;
-	
+
 	// copy original image over the last shown
 	memcpy(image, original->GetImage(), len);
 
@@ -173,7 +173,7 @@ void MenuImage::Draw()
 				color.b += value/2;
 			else
 				color.b = 255;
-	
+
 			SetPixel(x+a-b, y, color);
 		}
 	}
@@ -215,7 +215,7 @@ id(_id)
 		img_disabled->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 		img_disabled->SetPosition(0,0);
 	}
-	
+
 	Parent->Append(button);
 }
 
@@ -433,13 +433,17 @@ void UpdateDevice(s32 *mount, GuiImage *image, GuiImageData *regular_image, GuiI
 		} else
 			return;
 	}
-	if ((disk!=DISK_NONE || wifi_check_now) && File_CheckPhysical(*mount)<0) {
+
+	if (disk==DISK_NONE && wifi_check_now) {
+		wifi_check_now = 0;
+		disk = SD_DISK; // hack to trigger CheckPhysical
+	}
+
+	if (disk!=DISK_NONE && File_CheckPhysical(*mount)<0) {
 		int old_mount = *mount;
 		File_Unmount(*mount);
 		*mount = -1;
 		image->SetVisible(false);
-		if (disk==DISK_NONE)
-			wifi_check_now = 0;
 		if (default_mount == old_mount) {
 			global_config.timestamp = 0;
 			global_config.version = 0;
@@ -455,6 +459,7 @@ void UpdateDevice(s32 *mount, GuiImage *image, GuiImageData *regular_image, GuiI
 			}
 		}
 	}
+
 	HaltGui();
 	if (default_mount == *mount)
 		image->SetImage(default_image);
@@ -463,10 +468,25 @@ void UpdateDevice(s32 *mount, GuiImage *image, GuiImageData *regular_image, GuiI
 	ResumeGui();
 }
 
-void wifi_check(syswd_t alarm, void *_check_now)
+static void wifi_check(syswd_t alarm, void *_check_now)
 {
 	u8 *check_now = (u8*)_check_now;
 	*check_now = 1;
+}
+
+static s32 net_init_cb(s32 result, void *data)
+{
+	syswd_t *timer = (syswd_t*)data;
+
+	if (result>=0) {
+		net_initted = 1;
+		if (!SYS_CreateAlarm(timer)) {
+			struct timespec tm = {2, 0};
+			SYS_SetPeriodicAlarm(*timer, &tm, &tm, wifi_check, &wifi_check_now);
+		}
+	} else
+		net_initted = -1;
+	return 0;
 }
 
 void MainMenu()
@@ -493,6 +513,8 @@ void MainMenu()
 		sprintf(path, "/mnt/isfs/ticket/00010005/635242%02X.tik", i);
 		File_Delete(path);
 	}
+
+	net_init_async(net_init_cb, &riifs_timer);
 
 	RawkMenu *menu;
 	GuiImageData BackgroundImage(bg_png);
@@ -556,18 +578,6 @@ void MainMenu()
 			UpdateDevice(&sd_mounted, &SDsticker, &SDstickerImage, &SDstickerDefaultImage, SD_DISK, "sd");
 			UpdateDevice(&usb_mounted, &USBsticker, &USBstickerImage, &USBstickerDefaultImage, USB_DISK, "usb");
 			UpdateDevice(&wifi_mounted, &WIFIsticker, &WIFIstickerImage, &WIFIstickerDefaultImage, DISK_NONE, NULL);
-			if (!net_initted) {
-				s32 i = net_init();
-				if (i >= 0) {
-					net_initted = 1;
-					if (!SYS_CreateAlarm(&riifs_timer)) {
-						struct timespec tm = {2, 0};
-						SYS_SetPeriodicAlarm(riifs_timer, &tm, &tm, wifi_check, &wifi_check_now);
-					}
-				}
-				else if (i != -EAGAIN)
-					net_initted = -1;
-			}
 			usleep(THREAD_SLEEP);
 		}
 	} while (menu);

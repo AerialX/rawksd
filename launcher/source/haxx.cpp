@@ -160,6 +160,7 @@ extern "C" void udelay(int us);
 #define MEM1_IOSVERSION     ((u32*)0xC0003140)
 #define OTP_COMMAND			((volatile u32*)0xCD8001EC)
 #define OTP_DATA			((volatile u32*)0xCD8001F0)
+#define IPC_REG_1           ((volatile u32*)0xCD000004)
 
 // the filename used to load modules
 static const char LOAD_MODULE_PATH[] ATTRIBUTE_ALIGN(32) = "/tmp/patch.bin";
@@ -1128,7 +1129,7 @@ static void recover_from_reload(s32 version)
 	// Catch erroneous IPC signal
 	for (retries = 0; retries < 10; retries++)
 	{
-		if(IPC_ReadReg(1) & 2)
+		if(*IPC_REG_1 & 2)
 			break;
 		udelay(6000);
 	}

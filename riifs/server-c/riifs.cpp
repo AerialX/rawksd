@@ -600,12 +600,12 @@ bool Connection::WaitForAction()
 				}
 				case Command::FileSeek: {
 					int fd = GetFD();
-					int where=0;
+					fstream::off_type where=0;
 					ios_base::seekdir whence = ios_base::cur;
 					if (Options[Option::SeekWhere].size()<4 || Options[Option::SeekWhence].size()<4)
 						fd = -1;
 					else {
-						where = be32(Options[Option::SeekWhere]);
+						where = (int)be32(Options[Option::SeekWhere]);
 						switch(be32(Options[Option::SeekWhence])) {
 							case 0:
 								whence = ios_base::beg;

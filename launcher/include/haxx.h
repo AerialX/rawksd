@@ -4,7 +4,6 @@
 
 #include <gctypes.h>
 
-// taken from MINI
 typedef struct
 {
 	u8 boot1_hash[20];
@@ -45,10 +44,13 @@ typedef struct
 			u32 ng_key_id;
 			u8 ng_sig[60];
 			eep_ctr_t counters[2];
-			u8 fill[0x18];
+			u32 nand_generation;
+			u8 fill[0x14];
 			u8 korean_key[16];
+			// padding
+			// u16 prng_seed[2];
 		};
-		u8 data[256];
+		u16 data[128];
 	};
 } __attribute__((packed)) seeprom_t;
 

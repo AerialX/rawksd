@@ -548,6 +548,7 @@ namespace ProxiIOS { namespace EMU {
 				return 1;
 			}
 
+#if 0
 			if (!strcmp(message->open.device, "/tmp/disc.sys") && message->open.mode==ISFS_OPEN_WRITE) {
 				f = new ShadowFile(message->open.device, "/title/00010001/52494956/data/disc.sys");
 				if (f) {
@@ -565,7 +566,7 @@ namespace ProxiIOS { namespace EMU {
 					return 1;
 				}
 			}
-
+#endif
 			return 0;
 		}
 

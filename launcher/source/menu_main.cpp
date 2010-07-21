@@ -440,6 +440,25 @@ Menus::Enum MenuInit()
 	Launcher_RVL();
 	HaltGui(); Title->SetText(Launcher_GetGameNameWide()); ResumeGui();
 
+#if 0
+	// TODO: Put this somewhere sensible, make auto-launching happen without showing the GUI
+	int fd = File_Open("/mnt/isfs/title/00010001/52494956/data/disc.sys", O_RDONLY);
+	if (fd>=0) {
+		u64 old_disc=0;
+		u64 *old_disc_buf = (u64*)memalign(32, 32);
+		if (old_disc_buf) {
+			memset(old_disc_buf, 0, sizeof(u64));
+			File_Read(fd, old_disc_buf, sizeof(u64));
+			old_disc = *old_disc_buf;
+			free(old_disc_buf);
+		}
+		File_Close(fd);
+		File_Delete("/mnt/isfs/title/00010001/52494956/data/disc.sys");
+		if ((u32)old_disc == *(u32*)MEM_BASE)
+			return Menus::Launch;
+	}
+#endif
+
 	MENUINIT_CHECKBUTTONS();
 
 	return Menus::Main;
