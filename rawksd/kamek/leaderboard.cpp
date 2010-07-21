@@ -30,6 +30,8 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 {
 	if (!LEADERBOARD_ENABLED())
 		return false;
+	if (!ThePlatformMgr.IsConnected)
+		return false;
 
 	const char* hostname = "rvlution.net";
 	char* username;
