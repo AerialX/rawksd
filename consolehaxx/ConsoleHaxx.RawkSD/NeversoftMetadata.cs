@@ -236,6 +236,8 @@ namespace ConsoleHaxx.RawkSD
 			AudioFormat audioformat = new AudioFormat();
 
 			QbItemStruct item = GetSongItem(song);
+			if (item == null)
+				return null;
 			float bandvolume = 0;
 			float guitarvolume = 0;
 			float bassvolume = 0;

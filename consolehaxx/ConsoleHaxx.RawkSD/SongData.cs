@@ -32,7 +32,9 @@ namespace ConsoleHaxx.RawkSD
 
 		public Game Game { get { return (Game)Tree.GetValue<int>("GameID"); } set { Tree.SetValue("GameID", (int)value); RaisePropertyChangedEvent(); } }
 
-		public string ID { get { return Tree.GetValue<string>("SongID"); } set { Tree.SetValue("SongID", value); RaisePropertyChangedEvent(); } }
+		private string idcache = null;
+		//public string ID { get { return Tree.GetValue<string>("SongID"); } set { Tree.SetValue("SongID", value); RaisePropertyChangedEvent(); } }
+		public string ID { get { return idcache ?? Tree.GetValue<string>("SongID"); } set { Tree.SetValue("SongID", value); idcache = value; RaisePropertyChangedEvent(); } }
 
 		public string Name { get { return Tree.GetValue<string>("Name"); } set { Tree.SetValue("Name", value); if (ID == null) ID = SongNameToID(value); else RaisePropertyChangedEvent(); } }
 

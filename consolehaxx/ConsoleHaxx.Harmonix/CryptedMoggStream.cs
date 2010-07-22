@@ -99,10 +99,9 @@ namespace ConsoleHaxx.Harmonix
 						if (Length > HeaderSize)
 							Base.Read(ReadBuffer, 0, Util.AesKeySize);
 					}
-
-					Offset = value;
 				} else
 					Base.Position = HeaderSize + value;
+				Offset = value;
 			}
 		}
 

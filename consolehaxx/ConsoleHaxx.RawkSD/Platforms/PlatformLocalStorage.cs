@@ -33,11 +33,23 @@ namespace ConsoleHaxx.RawkSD
 			data.Session["rootpath"] = path;
 
 			DirectoryInfo[] dirs = new DirectoryInfo(path).GetDirectories();
+			progress.NewTask(dirs.Length);
 			foreach (DirectoryInfo dir in dirs) {
-				FormatData format = new FolderFormatData(data, dir.FullName);
+				progress.Progress();
 
-				data.AddSong(format);
+				if (!File.Exists(Path.Combine(dir.FullName, "songdata")))
+					continue;
+
+				try {
+					FormatData format = new FolderFormatData(data, dir.FullName);
+
+					if (format.Song != null)
+						data.AddSong(format);
+				} catch (Exception exception) {
+					Exceptions.Warning(exception, "Unable to open the custom at " + dir.FullName);
+				}
 			}
+			progress.EndTask();
 
 			return data;
 		}
@@ -54,14 +66,13 @@ namespace ConsoleHaxx.RawkSD
 			Directory.CreateDirectory(path);
 
 			FormatData format = new FolderFormatData(song, data, path);
-			data.AddSong(format);
 
 			return format;
 		}
 
 		public override void SaveSong(PlatformData data, FormatData formatdata, ProgressIndicator progress)
 		{
-			
+			data.AddSong(formatdata);
 		}
 
 		public override void DeleteSong(PlatformData data, FormatData formatdata, ProgressIndicator progress)

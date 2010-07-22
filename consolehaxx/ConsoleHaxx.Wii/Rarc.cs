@@ -73,10 +73,11 @@ namespace ConsoleHaxx.Wii
 				if (entry.ID == 0xFFFF) {
 					if (name == "." || name == "..")
 						continue;
-					DirectoryNode subdir = new DirectoryNode(name, dir);
+					DirectoryNode subdir = new DirectoryNode(name);
+					dir.AddChild(subdir);
 					ParseNodes(reader, strings, entryoffset, dataoffset, nodes[(int)entry.DataOffset], subdir, nodes);
 				} else {
-					new FileNode(name, dir, entry.Size, new Substream(reader, dataoffset + entry.DataOffset, entry.Size));
+					dir.AddChild(new FileNode(name, entry.Size, new Substream(reader, dataoffset + entry.DataOffset, entry.Size)));
 				}
 			}
 		}

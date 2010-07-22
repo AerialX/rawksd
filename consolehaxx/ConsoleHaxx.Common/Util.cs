@@ -173,7 +173,7 @@ namespace ConsoleHaxx.Common
 		public static void Extract(this DirectoryNode dir, string path)
 		{
 			Directory.CreateDirectory(path);
-			foreach (Node node in dir.Children) {
+			foreach (Node node in dir) {
 				string newpath = Path.Combine(path, node.Name);
 				if (node is DirectoryNode)
 					Extract(node as DirectoryNode, newpath);
@@ -350,6 +350,13 @@ namespace ConsoleHaxx.Common
 			}
 
 			return size.ToString(units == "B" ? "0" : "0.00") + " " + units;
+		}
+
+		public static void Delete(string path)
+		{
+			try {
+				File.Delete(path);
+			} catch { }
 		}
 	}
 }

@@ -117,6 +117,7 @@
 			this.CancelButton = this.ButtonCancel;
 			this.ClientSize = new System.Drawing.Size(292, 148);
 			this.Controls.Add(this.tableLayoutPanel1);
+			this.MaximizeBox = false;
 			this.Name = "DeleteForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Delete Songs";

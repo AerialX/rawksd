@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Threading;
 
 namespace ConsoleHaxx.RawkSD
 {
@@ -10,24 +11,42 @@ namespace ConsoleHaxx.RawkSD
 	{
 		public static Dictionary<FormatData, SongData> Cache = new Dictionary<FormatData, SongData>();
 
+		private static Mutex CacheMutex = new Mutex();
+
 		public static SongData Load(FormatData data)
 		{
 			if (FormatData.LocalSongCache && Cache.ContainsKey(data))
 				return Cache[data];
-			Stream stream = data.GetStream("songdata");
-			SongData song = SongData.Create(stream);
-			data.CloseStream(stream);
+			CacheMutex.WaitOne();
+			SongData song;
+			try {
+				Stream stream = data.GetStream("songdata");
+				song = SongData.Create(stream);
+				data.CloseStream(stream);
+			} catch (Exception ex) {
+				CacheMutex.ReleaseMutex();
+				throw ex;
+			}
+			CacheMutex.ReleaseMutex();
 			song.PropertyChanged += new Action<SongData>(data.Song_PropertyChanged);
-			Cache[data] = song;
+			if (FormatData.LocalSongCache)
+				Cache[data] = song;
 			return song;
 		}
 
 		public static void Save(FormatData data, SongData song)
 		{
 			if (!FormatData.LocalSongCache || (data.PlatformData != null && data.PlatformData.Platform == PlatformLocalStorage.Instance)) {
-				Stream stream = data.AddStream("songdata");
-				song.Save(stream);
-				data.CloseStream(stream);
+				CacheMutex.WaitOne();
+				try {
+					Stream stream = data.AddStream("songdata");
+					song.Save(stream);
+					data.CloseStream(stream);
+				} catch (Exception ex) {
+					CacheMutex.ReleaseMutex();
+					throw ex;
+				}
+				CacheMutex.ReleaseMutex();
 			}
 			SongData songdata = null;
 			if (Cache.ContainsKey(data))

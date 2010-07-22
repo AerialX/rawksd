@@ -12,6 +12,8 @@ using ConsoleHaxx.Harmonix;
 using System.Collections;
 using ConsoleHaxx.Wii;
 using System.Threading;
+using ConsoleHaxx.RiiFS;
+using System.Diagnostics;
 
 namespace ConsoleHaxx.RawkSD.SWF
 {
@@ -34,6 +36,10 @@ namespace ConsoleHaxx.RawkSD.SWF
 		public Mutex SongUpdateMutex;
 		public Mutex TaskMutex;
 
+		public Server RiiFS;
+
+		public StreamWriter LogStream;
+
 		public MainForm()
 		{
 			InitializeComponent();
@@ -43,14 +49,21 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 			Platforms = new List<PlatformData>();
 			ProgressList = new List<TaskScheduler>();
-			ProgressControls = new Dictionary<TaskScheduler, VisualTask>();
+			ProgressControls = new Dictionary<TaskScheduler, ProgressItem>();
 
 			RootPath = Environment.CurrentDirectory;
 			Configuration.Load(this);
 
-			ImportMap.RootPath = Path.Combine(RootPath, "importdata");
+			try { // It may be in use by another instance... So you get no logs, too bad.
+				LogStream = new StreamWriter(new FileStream(Path.Combine(RootPath, "rawksd.log"), FileMode.Append, FileAccess.Write, FileShare.Read));
+				LogStream.AutoFlush = true;
+				LogStream.WriteLine("RawkSD started at " + DateTime.Now.ToString());
+				Console.SetOut(LogStream);
+			} catch (Exception exception) {
+				Exceptions.Warning(exception, "Unable to use the log file; another RawkSD instance is probably still running.");
+			}
 
-			SdPath = Path.Combine(RootPath, "rawksd");
+			ImportMap.RootPath = Path.Combine(RootPath, "importdata");
 
 			if (!Path.IsPathRooted(Configuration.LocalPath))
 				StoragePath = Path.Combine(RootPath, Configuration.LocalPath);
@@ -60,9 +73,9 @@ namespace ConsoleHaxx.RawkSD.SWF
 				TemporaryPath = Path.Combine(RootPath, Configuration.TemporaryPath);
 			else
 				TemporaryPath = Configuration.TemporaryPath;
+			TemporaryPath = Path.Combine(TemporaryPath, Path.GetRandomFileName());
 
 			Directory.CreateDirectory(TemporaryPath);
-			DeleteTemporaryFiles();
 			TemporaryStream.BasePath = TemporaryPath;
 
 			for (int i = 0; i < Configuration.MaxConcurrentTasks; i++)
@@ -80,39 +93,101 @@ namespace ConsoleHaxx.RawkSD.SWF
 			AlbumImage = WiiImage.Create(new EndianReader(new MemoryStream(RawkSD.Properties.Resources.rawksd_albumart), Endianness.LittleEndian)).Bitmap;
 
 			SongList.DoubleBuffer();
+
+			SongList_SelectedIndexChanged(this, EventArgs.Empty);
+		}
+
+		private void OpenSdCard(string path)
+		{
+			SdPath = path;
+			if (SD != null)
+				SD.Dispose();
+
+			GetAsyncProgress().QueueTask(progress => {
+				progress.NewTask("Loading SD content");
+				if (SD != null) {
+					SongUpdateMutex.WaitOne();
+					Platforms.Add(SD);
+					SongUpdateMutex.ReleaseMutex();
+				}
+
+				SD = PlatformRB2WiiCustomDLC.Instance.Create(SdPath, Game.Unknown, progress);
+				progress.Progress();
+
+				if (RiiFS != null)
+					RiiFS.Stop();
+				StartRiiFS();
+				RefreshRiiFS();
+
+				UpdateSongList();
+				progress.EndTask();
+			});
+		}
+
+		private void StartRiiFS()
+		{
+			if (!SdPath.HasValue())
+				return;
+			try {
+				RiiFS = new Server(SdPath, 0);
+				RiiFS.ReadOnly = false;
+				RiiFS.StartBroadcastAsync(5256);
+				RiiFS.StartAsync();
+			} catch (Exception exception) {
+				Exceptions.Warning(exception, "Unable to start the RiiFS server.");
+				if (RiiFS != null)
+					RiiFS.Stop();
+				RiiFS = null;
+			}
+		}
+
+		private void ToggleRiiFS()
+		{
+			if (RiiFS != null) {
+				RiiFS.Stop();
+				RiiFS = null;
+			} else
+				StartRiiFS();
+			RefreshRiiFS();
+		}
+
+		private void RefreshRiiFS()
+		{
+			Invoke((Action)RefreshRiiFsBase);
+		}
+
+		private void RefreshRiiFsBase()
+		{
+			if (RiiFS == null)
+				StatusRiifsLabel.Text = "RiiFS Server Disabled";
+			else
+				StatusRiifsLabel.Text = "RiiFS Server Enabled on Port " + RiiFS.Port.ToString();
 		}
 
 		private void DeleteTemporaryFiles()
 		{
-			foreach (string file in Directory.GetFiles(TemporaryPath)) {
+			if (Directory.Exists(TemporaryPath)) {
 				try {
-					File.Delete(file);
+					Directory.Delete(TemporaryPath, true);
 				} catch { }
 			}
 		}
 
 		private void MainForm_Load(object sender, EventArgs e)
 		{
-			Progress.QueueTask(progress => {
+			GetAsyncProgress().QueueTask(progress => {
 				progress.NewTask("Loading local content");
 				Storage = PlatformLocalStorage.Instance.Create(StoragePath, Game.Unknown, progress);
 				progress.Progress();
+				UpdateSongList();
 				progress.EndTask();
-				RefreshSongList();
 			});
 
-			Progress.QueueTask(progress => {
-				progress.NewTask("Loading SD content");
-				SD = PlatformRB2WiiCustomDLC.Instance.Create(SdPath, Game.Unknown, progress);
-				progress.Progress();
-				progress.EndTask();
-				UpdateSongList();
-			});
+			OpenSdCard(Path.Combine(RootPath, "rawksd"));
 		}
 
 		private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
 		{
-			Configuration.Save();
 			foreach (TaskScheduler task in ProgressList)
 				task.Exit(true);
 			if (AsyncProgress != null)
@@ -121,7 +196,31 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
 		{
-			DeleteTemporaryFiles();
+			try {
+				foreach (PlatformData platform in Platforms)
+					platform.Dispose();
+			} catch { }
+			try {
+				if (Storage != null)
+					Storage.Dispose();
+			} catch { }
+			try {
+				if (SD != null)
+					SD.Dispose();
+			} catch { }
+			try {
+				if (RiiFS != null)
+					RiiFS.Stop();
+			} catch { }
+			try {
+				Console.SetOut(new StreamWriter(new MemoryStream()));
+				if (LogStream != null)
+					LogStream.Close();
+			} catch { }
+			try {
+				Configuration.Save();
+				DeleteTemporaryFiles();
+			} catch { }
 		}
 
 		private void Open(string path)
@@ -201,15 +300,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 			FolderDialog.Description = "Select the SD card drive.";
 			if (FolderDialog.ShowDialog(this) == DialogResult.Cancel)
 				return;
-			SdPath = FolderDialog.SelectedPath;
 
-			Progress.QueueTask(progress => {
-				progress.NewTask("Loading SD Content");
-				SD = PlatformRB2WiiCustomDLC.Instance.Create(SdPath, Game.Unknown, progress);
-				progress.Progress();
-				progress.EndTask();
-				RefreshSongList();
-			});
+			OpenSdCard(FolderDialog.SelectedPath);
 		}
 
 		private void MenuFileExit_Click(object sender, EventArgs e)
@@ -258,12 +350,16 @@ namespace ConsoleHaxx.RawkSD.SWF
 				bool audio = false;
 				if (Configuration.LocalTranscode && !data.Formats.Contains(AudioFormatRB2Mogg.Instance) && !data.Formats.Contains(AudioFormatRB2Bink.Instance)) {
 					TaskMutex.WaitOne();
-					TemporaryFormatData olddata = new TemporaryFormatData();
+					TemporaryFormatData olddata = new TemporaryFormatData(data.Song, data.PlatformData);
 					data.SaveTo(olddata, FormatType.Audio);
 					TaskMutex.ReleaseMutex();
 
 					audio = true;
-					Platform.Transcode(FormatType.Audio, olddata, new IFormat[] { AudioFormatRB2Mogg.Instance }, destination, progress);
+					try {
+						Platform.Transcode(FormatType.Audio, olddata, new IFormat[] { AudioFormatRB2Mogg.Instance }, destination, progress);
+					} catch (UnsupportedTranscodeException exception) {
+						Exceptions.Warning(exception, "Transcoding audio from " + data.Song.Name + " to Rock Band 2 format failed.");
+					}
 					olddata.Dispose();
 				}
 
@@ -278,9 +374,9 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 				progress.Progress();
 
-				progress.EndTask();
-
 				UpdateSongList();
+
+				progress.EndTask();
 			});
 		}
 
@@ -332,9 +428,9 @@ namespace ConsoleHaxx.RawkSD.SWF
 				if (ownformat)
 					dest.Dispose();
 
-				progress.EndTask();
-
 				UpdateSongList();
+
+				progress.EndTask();
 			});
 		}
 
@@ -426,7 +522,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 					data.PlatformData.Platform.DeleteSong(data.PlatformData, data, progress);
 					progress.Progress();
 				}
-				RefreshSongList();
+				UpdateSongList();
 				progress.EndTask();
 			});
 		}
@@ -487,8 +583,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 					PlatformLocalStorage.Instance.SaveSong(Storage, localdata, progress);
 					progress.Progress();
 
-					progress.EndTask();
 					UpdateSongList();
+					progress.EndTask();
 				});
 			} else
 				data.Dispose();
@@ -503,7 +599,167 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		private void MenuFilePreferences_Click(object sender, EventArgs e)
 		{
+			int tasks = Configuration.MaxConcurrentTasks;
 			SettingsForm.Show(this);
+			for (int i = tasks; i < Configuration.MaxConcurrentTasks; i++)
+				AddTaskScheduler();
+			for (int i = Configuration.MaxConcurrentTasks; i < tasks; i++)
+				RemoveTaskScheduler(ProgressList.OrderBy(p => p.Tasks.Count).LastOrDefault());
+		}
+
+		private void MenuSongsRefresh_Click(object sender, EventArgs e)
+		{
+			List<FormatData> list = new List<FormatData>();
+			foreach (var song in GetSelectedSongs())
+				list.AddRange(song.Data);
+			if (list.Count == 0) {
+				if (Storage != null)
+					list.AddRange(Storage.Songs);
+				foreach (PlatformData platform in Platforms)
+					list.AddRange(platform.Songs);
+			}
+			QueueRefresh(list);
+		}
+
+		private void QueueRefresh(List<FormatData> list)
+		{
+			Progress.QueueTask(progress => {
+				progress.NewTask("Refreshing Song Data", list.Count);
+				Dictionary<Game, ImportMap> Maps = new Dictionary<Game, ImportMap>();
+				foreach (FormatData data in list) {
+					data.PlatformData.Mutex.WaitOne();
+					Game game = data.Song.Game;
+					if (game != Game.Unknown) {
+						if (!Maps.ContainsKey(game))
+							Maps[game] = new ImportMap(data.Song.Game);
+						Maps[game].Populate(data.Song);
+					}
+					data.PlatformData.Mutex.ReleaseMutex();
+					progress.Progress();
+				}
+				UpdateSongList();
+				progress.EndTask();
+			});
+		}
+
+		private void MenuSongsTranscode_Click(object sender, EventArgs e)
+		{
+			foreach (FormatData data in GetSelectedSongData())
+				QueueTranscodeRB2(data);
+		}
+
+		private void QueueTranscodeRB2(FormatData data)
+		{
+			Progress.QueueTask(progress => {
+				progress.NewTask("Transcoding \"" + data.Song.Name + "\" to Rock Band 2 format", 1);
+
+				if (data.PlatformData != Storage)
+					Exceptions.Error("Cannot transcode " + data.Song.Name + " because it isn't stored locally.");
+
+				IList<IFormat> formats = data.Formats;
+				if (!formats.Contains(AudioFormatRB2Mogg.Instance) && !formats.Contains(AudioFormatRB2Bink.Instance)) {
+					Platform.Transcode(FormatType.Audio, data, new IFormat[] { AudioFormatRB2Mogg.Instance }, data, progress);
+
+					foreach (IFormat format in formats) {
+						if (format.Type == FormatType.Audio) {
+							foreach (string name in data.GetStreamNames(format))
+								data.DeleteStream(name);
+						}
+					}
+				}
+				progress.Progress();
+				
+				progress.EndTask();
+			});
+		}
+
+		private void StatusRiifsLabel_Click(object sender, EventArgs e)
+		{
+			ToggleRiiFS();
+		}
+
+		private void ContextMenuRefresh_Click(object sender, EventArgs e)
+		{
+			MenuSongsRefresh_Click(sender, e);
+		}
+
+		private void ToolbarOpenSD_Click(object sender, EventArgs e)
+		{
+			MenuFileOpenSD_Click(sender, e);
+		}
+
+		private void ToolbarOpen_Click(object sender, EventArgs e)
+		{
+			MenuFileOpen_Click(sender, e);
+		}
+
+		private void ToolbarOpenFolder_Click(object sender, EventArgs e)
+		{
+			MenuFileOpenFolder_Click(sender, e);
+		}
+
+		private void ToolbarNew_Click(object sender, EventArgs e)
+		{
+			MenuSongsCreate_Click(sender, e);
+		}
+
+		private void ToolbarEdit_Click(object sender, EventArgs e)
+		{
+			MenuSongsEdit_Click(sender, e);
+		}
+
+		private void ToolbarDelete_Click(object sender, EventArgs e)
+		{
+			MenuSongsDelete_Click(sender, e);
+		}
+
+		private void ToolbarInstallLocal_Click(object sender, EventArgs e)
+		{
+			MenuSongsInstallLocal_Click(sender, e);
+		}
+
+		private void ToolbarInstallSD_Click(object sender, EventArgs e)
+		{
+			MenuSongsInstallSD_Click(sender, e);
+		}
+
+		private void MenuHelpDonate_Click(object sender, EventArgs e)
+		{
+			new Process() { StartInfo = new ProcessStartInfo("http://japaneatahand.com/rawksd/donate.htm") }.Start();
+		}
+
+		private void StatusContactLabel_Click(object sender, EventArgs e)
+		{
+			new Process() { StartInfo = new ProcessStartInfo("mailto:rawksd@japaneatahand.com") }.Start();
+		}
+
+		private void MenuHelpGuide_Click(object sender, EventArgs e)
+		{
+			new Process() { StartInfo = new ProcessStartInfo("http://rawksd.japaneatahand.com/wiki/Installation") }.Start();
+		}
+
+		private void MenuHelpAbout_Click(object sender, EventArgs e)
+		{
+			MessageBox.Show(this, Text + "\n" +
+				"A Rock Band 2 Wii Customs tool developed by the RawkSD Team: " +
+				"tueidj, Aaron, and Mrkinator." +
+				"\nFor more information, visit http://rawksd.japaneatahand.com/" +
+				"\n\nQuestions, comments, concerns? Email us at rawksd@japaneatahand.com\nYou can also visit us on IRC: #RawkSD on irc.EFnet.org" +
+				"\n\nSpecial thanks goes out to the following people, who have also contributed to RawkSD:\n" +
+				" - nanook for his work on Queen Bee and general Guitar Hero hacking\n" +
+				" - GameZelda for his quick Guitar Hero hacking skills\n" +
+				" - Szalkow, BHK, SFenton, and tw3nz0r for their song tagging work\n" +
+				" - Everyone else on IRC for being such great testers, and for putting up with the recent lack of beta builds :)", "RawkSD", MessageBoxButtons.OK, MessageBoxIcon.Information);
+		}
+
+		private void StatusDonateLabel_Click(object sender, EventArgs e)
+		{
+			MenuHelpDonate_Click(sender, e);
+		}
+
+		private void ContextMenuTranscode_Click(object sender, EventArgs e)
+		{
+			MenuSongsTranscode_Click(sender, e);
 		}
 	}
 }

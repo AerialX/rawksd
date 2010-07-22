@@ -24,7 +24,7 @@ namespace ConsoleHaxx.RawkSD
 		public virtual FormatData CreateSong(PlatformData data, SongData song) { throw new NotImplementedException(); }
 		public virtual void SaveSong(PlatformData data, FormatData formatdata, ProgressIndicator progress) { throw new NotImplementedException(); }
 
-		public virtual void DeleteSong(PlatformData data, FormatData formatdata, ProgressIndicator progress) { formatdata.Dispose(); data.RemoveSong(formatdata); }
+		public virtual void DeleteSong(PlatformData data, FormatData formatdata, ProgressIndicator progress) { data.Mutex.WaitOne(); formatdata.Dispose(); data.RemoveSong(formatdata); data.Mutex.ReleaseMutex(); }
 
 		public override string ToString()
 		{
@@ -152,6 +152,9 @@ namespace ConsoleHaxx.RawkSD
 
 		protected List<FormatData> Data;
 
+		protected List<FormatData> ChangesetAdded;
+		protected List<FormatData> ChangesetRemoved;
+
 		public Mutex Mutex;
 
 		public PlatformData(Engine platform, Game game)
@@ -159,6 +162,8 @@ namespace ConsoleHaxx.RawkSD
 			Cache = new DelayedStreamCache();
 			Session = new Dictionary<string, object>();
 			Data = new List<FormatData>();
+						ChangesetAdded = new List<FormatData>();
+			ChangesetRemoved = new List<FormatData>();
 			Mutex = new Mutex();
 
 			Platform = platform;
@@ -172,6 +177,7 @@ namespace ConsoleHaxx.RawkSD
 			Mutex.WaitOne();
 
 			Data.Add(data);
+			ChangesetAdded.Add(data);
 
 			Mutex.ReleaseMutex();
 		}
@@ -181,22 +187,51 @@ namespace ConsoleHaxx.RawkSD
 			Mutex.WaitOne();
 
 			Data.Remove(data);
+			ChangesetRemoved.Add(data);
 
 			Mutex.ReleaseMutex();
 		}
 
+		public List<FormatData> GetChanges(bool removed = false)
+		{
+			List<FormatData> changeset = removed ? ChangesetRemoved : ChangesetAdded;
+			List<FormatData> changes = new List<FormatData>(changeset);
+			changeset.Clear();
+			return changes;
+		}
+
 		public void Dispose()
 		{
+			Mutex.WaitOne();
+
 			if (Cache != null) {
 				Cache.Dispose();
 				Cache = null;
 			}
+
+			foreach (FormatData data in Data) {
+				data.Dispose();
+				ChangesetRemoved.Add(data);
+			}
+
+			Data.Clear();
+
+			Mutex.ReleaseMutex();
 		}
 
 		~PlatformData()
 		{
 			Dispose();
 		}
+	}
+
+	[Serializable]
+	public class UnsupportedTranscodeException : Exception
+	{
+		public UnsupportedTranscodeException() { }
+		public UnsupportedTranscodeException(string message) : base(message) { }
+		public UnsupportedTranscodeException(string message, Exception inner) : base(message, inner) { }
+		protected UnsupportedTranscodeException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
 	}
 
 	public static class Platform
@@ -210,24 +245,24 @@ namespace ConsoleHaxx.RawkSD
 		{
 			Formats = new List<IFormat>();
 
-			PlatformDJHWiiDisc.Initialise();
+			//PlatformDJHWiiDisc.Initialise();
 			PlatformFretsOnFire.Initialise();
 			PlatformGH2PS2Disc.Initialise();
 			PlatformGH3WiiDisc.Initialise();
-			PlatformGH4WiiDLC.Initialise();
+			//PlatformGH4WiiDLC.Initialise();
 			PlatformGH5WiiDisc.Initialise();
-			PlatformGH5WiiDLC.Initialise();
+			//PlatformGH5WiiDLC.Initialise();
 			PlatformLocalStorage.Initialise();
 			PlatformRawkFile.Initialise();
-			PlatformRB2360Disc.Initialise();
-			PlatformRB2360DLC.Initialise();
+			//PlatformRB2360Disc.Initialise();
+			//PlatformRB2360DLC.Initialise();
 			PlatformRB2360RBN.Initialise();
 			PlatformRB2WiiCustomDLC.Initialise();
 			PlatformRB2WiiDisc.Initialise();
-			PlatformRB2WiiDLC.Initialise();
+			//PlatformRB2WiiDLC.Initialise();
 
-			ChartFormatChart.Initialise();
-			ChartFormatFsgMub.Initialise();
+			//ChartFormatChart.Initialise();
+			//ChartFormatFsgMub.Initialise();
 			ChartFormatGH1.Initialise();
 			ChartFormatGH2.Initialise();
 			ChartFormatGH3.Initialise();
@@ -240,7 +275,7 @@ namespace ConsoleHaxx.RawkSD
 			AudioFormatFFmpeg.Initialise();
 			AudioFormatGH3WiiFSB.Initialise();
 			AudioFormatMogg.Initialise();
-			AudioFormatMp3.Initialise();
+			//AudioFormatMp3.Initialise();
 			AudioFormatOgg.Initialise();
 			AudioFormatRB2Bink.Initialise();
 			AudioFormatRB2Mogg.Initialise();
@@ -327,7 +362,7 @@ namespace ConsoleHaxx.RawkSD
 			IList<IFormat> formats = FindTranscodePath(data.GetFormats(type), targets);
 
 			if (formats.Count == 0)
-				throw new NotSupportedException();
+				throw new UnsupportedTranscodeException("Could not find a supported transcode path.");
 
 			if (formats.Count == 1) {
 				if (formats[0].CanTransfer(data)) {
@@ -419,7 +454,9 @@ namespace ConsoleHaxx.RawkSD
 					platform.Session["iso"] = iso;
 					platform.Session["rootdirnode"] = iso.Root;
 					return iso.Root;
-				} catch (FormatException) { }
+				} catch (FormatException) { } catch (Exception exception) {
+					Exceptions.Warning(exception, "Trying to open as ISO: " + path);
+				}
 
 				try {
 					stream.Position = 0;
@@ -433,7 +470,9 @@ namespace ConsoleHaxx.RawkSD
 
 					platform.Session["rootdirnode"] = partition.Root.Root;
 					return partition.Root.Root;
-				} catch (FormatException) { }
+				} catch (FormatException) { } catch (Exception exception) {
+					Exceptions.Warning(exception, "Trying to open as Wiidisc: " + path);
+				}
 
 				try {
 					stream.Position = 0;
@@ -441,9 +480,12 @@ namespace ConsoleHaxx.RawkSD
 					platform.Session["u8"] = u8;
 					platform.Session["rootdirnode"] = u8.Root;
 					return u8.Root;
-				} catch (FormatException) { }
+				} catch (FormatException) { } catch (Exception exception) {
+					Exceptions.Warning(exception, "Trying to open as U8: " + path);
+				}
 			}
 
+			Exceptions.Error("Could not find a proper file type handler for " + path);
 			throw new NotSupportedException();
 		}
 
@@ -505,6 +547,9 @@ namespace ConsoleHaxx.RawkSD
 						break;
 					case "R9J":
 						game = Game.RockBandBeatles;
+						break;
+					case "R36":
+						game = Game.RockBandGreenDay;
 						break;
 					case "RGH":
 						game = Game.GuitarHero3;
@@ -582,6 +627,7 @@ namespace ConsoleHaxx.RawkSD
 					case "GH5":
 						return Game.GuitarHero5;
 					case "GH6":
+					case "GHWOR":
 						return Game.GuitarHero6;
 					case "BH":
 						return Game.BandHero;
@@ -617,7 +663,7 @@ namespace ConsoleHaxx.RawkSD
 				case Game.BandHero:
 					return "Band Hero";
 				case Game.GuitarHero6:
-					return "Guitar Hero 6";
+					return "Guitar Hero: Warriors of Rock";
 				case Game.DjHero:
 					return "DJ Hero";
 				case Game.RockBand:

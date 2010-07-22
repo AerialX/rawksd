@@ -217,12 +217,12 @@ namespace ConsoleHaxx.RawkSD
 				string lyric = item.Value;
 				if (lyric.StartsWith("=") && lastlyric != null) {
 					if (lastlyric.Value.EndsWith("-"))
-						lastlyric.Value = lastlyric.Value.Replace('-', '=');
+						lastlyric.Value = lastlyric.Value.Substring(0, lastlyric.Value.Length - 1) + '=';
 					else
 						lastlyric.Value += "-";
 					lyric = lyric.Substring(1);
-				} else
-					lyric = lyric.Replace('-', '=');
+				}
+
 				lastlyric = new Pair<NoteChart.Point, string>(
 					item.Key,
 					lyric
@@ -469,31 +469,29 @@ namespace ConsoleHaxx.RawkSD
 				if (track == NoteChart.TrackType.Drums)
 					numfrets += 2;
 
+				int[] transform;
+				if (notes == null)
+					transform = new int[] { 4, 1, 2, 3, 3, 0, -1 };
+				else
+					transform = new int[] { 4, 1, 2, 3, -1, 0, 4 }; // -1 -> 4?
+
 				for (int l = 0; l < numfrets; l++) {
 					if (((fret >> l) & 0x01) != 0) {
 						chordnum++;
 						chord = l;
-						int l2 = l;
 						if (track == NoteChart.TrackType.Drums) {
-							if (l == 0)
-								l2 = 4;
-							if (l == 5)
-								l2 = 0;
-							if (notes != null) {
-								if (l == 6)
-									l2 = 4;
-							} else {
-								if (l == 4)
-									l2 = 3;
-							}
-							if (l2 == 0 && ((fret & 0x2000) != 0) && !expertplus)
+							chord = transform[l];
+							
+							if (chord == 0 && ((fret & 0x2000) != 0) && !expertplus)
 								continue;
 						}
 
-						(instrument as NoteChart.IGems).Gems[difficulty][l2].Add(note);
+						if (chord >= 0) {
+							(instrument as NoteChart.IGems).Gems[difficulty][chord].Add(note);
 
-						if (instrument is NoteChart.Drums)
-							ExpandDrumRoll(chart, difficulty, note, l2);
+							if (instrument is NoteChart.Drums)
+								ExpandDrumRoll(chart, difficulty, note, chord);
+						}
 					}
 				}
 

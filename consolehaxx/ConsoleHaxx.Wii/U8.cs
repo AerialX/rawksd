@@ -61,10 +61,12 @@ namespace ConsoleHaxx.Wii
 
 				switch (type) {
 					case 0x00:
-						node = new FileNode(null, parent, filesize, new Substream(reader.Base, beginning + fileOffset, filesize));
+						node = new FileNode(null, filesize, new Substream(reader.Base, beginning + fileOffset, filesize));
+						parent.AddChild(node);
 						break;
 					case 0x01:
-						node = new DirectoryNode(null, parent);
+						node = new DirectoryNode(null);
+						parent.AddChild(node);
 						parent = node as DirectoryNode;
 						dirfiles.Push(filesize - 2);
 						break;
@@ -81,10 +83,10 @@ namespace ConsoleHaxx.Wii
 				}
 			}
 
-			NameNodes(stream, Root.Children, reader.Position);
+			NameNodes(stream, Root, reader.Position);
 		}
 
-		private static void NameNodes(Stream stream, List<Node> list, long strings)
+		private static void NameNodes(Stream stream, DirectoryNode list, long strings)
 		{
 			foreach (Node node in list) {
 				uint nameOffset = uint.Parse(node.Name);
@@ -93,7 +95,7 @@ namespace ConsoleHaxx.Wii
 				node.Name = Util.ReadCString(stream);
 
 				if (node is DirectoryNode)
-					NameNodes(stream, (node as DirectoryNode).Children, strings);
+					NameNodes(stream, (node as DirectoryNode), strings);
 			}
 		}
 
@@ -142,9 +144,9 @@ namespace ConsoleHaxx.Wii
 			SaveFiles(Root, stream);
 		}
 
-		private void SaveFiles(DirectoryNode DirectoryNode, Stream stream)
+		private void SaveFiles(DirectoryNode dirnode, Stream stream)
 		{
-			foreach (Node node in DirectoryNode.Children) {
+			foreach (Node node in dirnode) {
 				if (node is DirectoryNode)
 					SaveFiles(node as DirectoryNode, stream);
 				else {
@@ -177,7 +179,7 @@ namespace ConsoleHaxx.Wii
 				nodewriter.Write((ushort)nameoffset); // Name offset
 				nodewriter.Write((uint)Math.Max(recursion, 0)); // Data Offset // TODO: Not really recursion but parent number index
 				nodewriter.Write((uint)SaveCountNodes(node as DirectoryNode) + position);
-				foreach (Node subnode in (node as DirectoryNode).Children)
+				foreach (Node subnode in node as DirectoryNode)
 					dataoffset = SaveNodes(subnode, nodes, strings, dataoffset, recursion + 1, ref position);
 			} else if (node is FileNode) {
 				nodewriter.Write((ushort)0); // Type
@@ -193,14 +195,9 @@ namespace ConsoleHaxx.Wii
 			return dataoffset;
 		}
 
-		private uint SaveCountNodes(DirectoryNode DirectoryNode)
+		private uint SaveCountNodes(DirectoryNode dirnode, uint dirs = 0)
 		{
-			return SaveCountNodes(DirectoryNode, 0);
-		}
-
-		private uint SaveCountNodes(DirectoryNode DirectoryNode, uint dirs)
-		{
-			foreach (Node node in DirectoryNode.Children) {
+			foreach (Node node in dirnode) {
 				dirs++;
 				if (node is DirectoryNode)
 					dirs = SaveCountNodes(node as DirectoryNode, dirs);

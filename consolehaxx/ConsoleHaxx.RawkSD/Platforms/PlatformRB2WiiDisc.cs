@@ -98,7 +98,7 @@ namespace ConsoleHaxx.RawkSD
 				albumfile.Data.Close();
 			}
 
-			ChartFormatRB.Instance.Create(formatdata, chartfile == null ? null : chartfile.Data, panfile == null ? null : panfile.Data, weightsfile == null ? null : weightsfile.Data, milofile == null ? null : milofile.Data, false, false);
+			ChartFormatRB.Instance.Create(formatdata, chartfile == null ? null : chartfile.Data, panfile == null ? null : panfile.Data, weightsfile == null ? null : weightsfile.Data, milofile == null ? null : milofile.Data, false, false, data.Game);
 
 			data.AddSong(formatdata);
 
@@ -113,6 +113,9 @@ namespace ConsoleHaxx.RawkSD
 
 			data.Game = Platform.DetermineGame(data);
 
+			if (data.Game == Game.RockBand2 || data.Game == Game.RockBandBeatles)
+				Exceptions.Error("Unable to parse song list from Rock Band Wii disc.");
+
 			data.Session["songdir"] = ark.Root;
 
 			string[] songdirs = new string[] { "songs", "songs_regional/na", "songs_regional/eu" };
@@ -126,24 +129,37 @@ namespace ConsoleHaxx.RawkSD
 				if (songsdtbfile == null)
 					continue;
 
-				List<SongsDTA> dtas = new List<SongsDTA>();
-				DTB.NodeTree dtb = DTB.Create(new EndianReader(new CryptedDtbStream(new EndianReader(songsdtbfile.Data, Endianness.LittleEndian)), Endianness.LittleEndian));
-				progress.NewTask(dtb.Nodes.Count);
-				foreach (DTB.Node node in dtb.Nodes) {
-					progress.Progress();
-					DTB.NodeTree tree = node as DTB.NodeTree;
-					if (tree == null || tree.Nodes[0].Type != 0x00000005 || songdir.Find((tree.Nodes[0] as DTB.NodeString).Text) == null)
-						continue;
+				try {
+					List<SongsDTA> dtas = new List<SongsDTA>();
+					DTB.NodeTree dtb = DTB.Create(new EndianReader(new CryptedDtbStream(new EndianReader(songsdtbfile.Data, Endianness.LittleEndian)), Endianness.LittleEndian));
+					progress.NewTask(dtb.Nodes.Count);
+					foreach (DTB.Node node in dtb.Nodes) {
+						DTB.NodeTree tree = node as DTB.NodeTree;
+						if (tree == null || tree.Nodes[0].Type != 0x00000005 || songdir.Find((tree.Nodes[0] as DTB.NodeString).Text) == null) {
+							progress.Progress();
+							continue;
+						}
 
-					SongsDTA dta = SongsDTA.Create(tree);
-					if (dtas.Find(d => d.BaseName == dta.BaseName) != null)
-						continue; // Don't import songs twice
+						SongsDTA dta = SongsDTA.Create(tree);
+						if (dtas.Find(d => d.BaseName == dta.BaseName) != null) {
+							progress.Progress();
+							continue; // Don't import songs twice
+						}
 
-					dtas.Add(dta);
+						dtas.Add(dta);
 
-					SongData song = HarmonixMetadata.GetSongData(data, tree);
+						try {
+							SongData song = HarmonixMetadata.GetSongData(data, tree);
 
-					AddSong(data, song, progress);
+							AddSong(data, song, progress);
+						} catch (Exception exception) {
+							Exceptions.Warning(exception, "Could not import " + dta.Name + " from the Rock Band Wii disc.");
+						}
+
+						progress.Progress();
+					}
+				} catch (Exception exception) {
+					Exceptions.Warning(exception, "Unable to parse song list from Rock Band Wii disc: " + songdirname);
 				}
 				progress.EndTask();
 				progress.Progress();

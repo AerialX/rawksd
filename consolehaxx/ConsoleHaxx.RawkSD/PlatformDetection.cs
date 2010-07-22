@@ -48,7 +48,9 @@ namespace ConsoleHaxx.RawkSD
 				try {
 					Ark ark = HarmonixMetadata.GetHarmonixArk(dir);
 					DetectHarmonixArk(path, ark, platforms);
-				} catch (FormatException) { }
+				} catch (FormatException) { } catch (Exception exception) {
+					Exceptions.Warning(exception, "Trying to open as Ark: " + path);
+				}
 			}
 		}
 
@@ -64,7 +66,9 @@ namespace ConsoleHaxx.RawkSD
 				try {
 					U8 u8 = new U8(dlc.Data);
 					DetectDirectoryNode(path, u8.Root, platforms);
-				} catch (FormatException) { }
+				} catch (FormatException) { } catch (Exception exception) {
+					Exceptions.Warning(exception, "Trying to open as DLC U8: " + path);
+				}
 			}
 		}
 
@@ -93,7 +97,9 @@ namespace ConsoleHaxx.RawkSD
 					stream.Position = 0;
 					Disc disc = new Disc(stream);
 					DetectWiiDisc(path, disc, platforms);
-				} catch (FormatException) { }
+				} catch (FormatException) { } catch (Exception exception) {
+					Exceptions.Warning(exception, "Trying to open as Wiidisc: " + path);
+				}
 			}
 
 			if (DetectIso9660 != null) {
@@ -101,7 +107,9 @@ namespace ConsoleHaxx.RawkSD
 					stream.Position = 0;
 					Iso9660 disc = new Iso9660(stream);
 					DetectIso9660(path, disc, platforms);
-				} catch (FormatException) { }
+				} catch (FormatException) { } catch (Exception exception) {
+					Exceptions.Warning(exception, "Trying to open as ISO: " + path);
+				}
 			}
 
 			if (DetectXbox360Dlc != null) {
@@ -109,7 +117,9 @@ namespace ConsoleHaxx.RawkSD
 					stream.Position = 0;
 					StfsArchive stfs = new StfsArchive(stream);
 					DetectXbox360Dlc(path, stfs, platforms);
-				} catch (FormatException) { }
+				} catch (FormatException) { } catch (Exception exception) {
+					Exceptions.Warning(exception, "Trying to open as 360 DLC: " + path);
+				}
 			}
 
 			if (DetectWiiU8 != null) {
@@ -117,7 +127,9 @@ namespace ConsoleHaxx.RawkSD
 					stream.Position = 0;
 					U8 u8 = new U8(stream);
 					DetectWiiU8(path, u8, platforms);
-				} catch (FormatException) { }
+				} catch (FormatException) { } catch (Exception exception) {
+					Exceptions.Warning(exception, "Trying to open as U8: " + path);
+				}
 			}
 
 			if (DetectWiiDlcBin != null) {
@@ -125,7 +137,9 @@ namespace ConsoleHaxx.RawkSD
 					stream.Position = 0;
 					DlcBin dlc = new DlcBin(stream);
 					DetectWiiDlcBin(path, dlc, platforms);
-				} catch (FormatException) { }
+				} catch (FormatException) { } catch (Exception exception) {
+					Exceptions.Warning(exception, "Trying to open as Wii DLC: " + path);
+				}
 			}
 
 			if (DetectHarmonixArk != null) {

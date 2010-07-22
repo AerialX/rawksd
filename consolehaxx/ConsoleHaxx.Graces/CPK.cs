@@ -86,7 +86,7 @@ namespace ConsoleHaxx.Graces
 					});
 					Cache.AddStream(substream);
 				}
-				FileNode file = new FileNode(filename, dir, filesize, substream);
+				dir.AddChild(new FileNode(filename, filesize, substream));
 			}
 
 			// TODO: EToc: Groups

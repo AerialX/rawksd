@@ -129,8 +129,8 @@ namespace ConsoleHaxx.RawkSD
 						if (!startsection.HasValue())
 							continue;
 
-						NoteChart.Point start = new NoteChart.Point(chart.Events.Sections.Find(e => string.Compare(e.Value, startsection.Replace(' ', '_'), true) == 0).Key.Time);
-						int endindex = chart.Events.Sections.FindIndex(e => string.Compare(e.Value, endsection.Replace(' ', '_'), true) == 0);
+						NoteChart.Point start = new NoteChart.Point(chart.Events.Sections.Find(e => string.Compare(e.Value, startsection, true) == 0).Key.Time);
+						int endindex = chart.Events.Sections.FindIndex(e => string.Compare(e.Value, endsection, true) == 0);
 						NoteChart.Point end;
 						if (endindex + 1 < chart.Events.Sections.Count)
 							end = new NoteChart.Point(chart.Events.Sections[endindex + 1].Key.Time);
@@ -162,6 +162,7 @@ namespace ConsoleHaxx.RawkSD
 
 			string idprefix = string.Empty;
 			string nameprefix = string.Empty;
+			string songid = song.ID;
 
 			if (Root == null)
 				goto populateend;
@@ -174,12 +175,14 @@ namespace ConsoleHaxx.RawkSD
 				foreach (XmlElement element in node.GetElementsByTagName("nameprefix"))
 					nameprefix = element.InnerText;
 			}
+			if (songid.StartsWith(idprefix))
+				songid = songid.Substring(idprefix.Length);
 
 			foreach (XmlElement element in Root.GetElementsByTagName("song")) {
 				if (element.Attributes["game"] != null && int.Parse(element.Attributes["game"].Value) != (int)Game)
 					continue;
 
-				if (string.Compare(element.Attributes["id"].Value, song.ID, true) == 0) {
+				if (string.Compare(element.Attributes["id"].Value, songid, true) == 0) {
 					song.PopulateFromXML(element, RootPath);
 					ret = true;
 					goto populateend;
@@ -187,16 +190,18 @@ namespace ConsoleHaxx.RawkSD
 			}
 
 		populateend:
-			if (idprefix.Length > 0)
-				song.ID = idprefix + song.ID;
-			if (nameprefix.Length > 0) {
-				switch (ApplyNamePrefix) {
-					case NamePrefix.Prefix:
-						song.Name = nameprefix + " " + song.Name;
-						break;
-					case NamePrefix.Postfix:
-						song.Name = song.Name + " " + nameprefix;
-						break;
+			if (songid == song.ID) {
+				if (idprefix.Length > 0)
+					song.ID = idprefix + song.ID;
+				if (nameprefix.Length > 0) {
+					switch (ApplyNamePrefix) {
+						case NamePrefix.Prefix:
+							song.Name = nameprefix + " " + song.Name;
+							break;
+						case NamePrefix.Postfix:
+							song.Name = song.Name + " " + nameprefix;
+							break;
+					}
 				}
 			}
 			if (!song.Pack.HasValue() && song.Game != Game.Unknown)

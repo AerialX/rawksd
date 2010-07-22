@@ -40,7 +40,7 @@ namespace ConsoleHaxx.RawkSD
 		{
 			Stream stream = GetFormatStream(data);
 			if (stream == null)
-				return NeversoftMetadata.GetAudioFormat(data.Song);
+				return NeversoftMetadata.GetAudioFormat(data.Song) ?? HarmonixMetadata.GetAudioFormat(data.Song);
 			AudioFormat format = AudioFormat.Create(stream);
 			data.CloseStream(stream);
 			return format;
@@ -50,10 +50,18 @@ namespace ConsoleHaxx.RawkSD
 		{
 			AudioFormat format = DecodeFormat(data);
 			Stream audio = data.GetStream(this, AudioName);
+			uint magic = new EndianReader(audio, Endianness.BigEndian).ReadUInt32();
+			if (magic != 0x5241574b && (magic & 0xFFFFFF00) != 0x42494b00)
+				throw new FormatException(); // Must start with "RAWK" or "BIK", this is to prevent encrypted biks from being decoded
+			audio.Position = 0;
 			Stream preview = null;
 			format.Decoder = new RawkAudio.Decoder(audio, RawkAudio.Decoder.AudioFormat.BinkAudio);
 			if (data.HasStream(this, PreviewName)) {
 				preview = data.GetStream(this, PreviewName);
+				magic = new EndianReader(preview, Endianness.BigEndian).ReadUInt32();
+				preview.Position = 0;
+				if (magic != 0x5241574b && (magic & 0xFFFFFF00) != 0x42494b00)
+					throw new FormatException();
 				IDecoder decoder = new RawkAudio.Decoder(preview, RawkAudio.Decoder.AudioFormat.BinkAudio);
 				MultiDecoder multi = new MultiDecoder(RawkAudio.Decoder.BufferSize);
 				multi.AddDecoder(format.Decoder);

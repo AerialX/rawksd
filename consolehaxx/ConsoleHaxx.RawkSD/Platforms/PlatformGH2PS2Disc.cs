@@ -108,37 +108,47 @@ namespace ConsoleHaxx.RawkSD
 
 			DirectoryNode songdir = ark.Root.Find("songs", true) as DirectoryNode;
 			if (songdir == null)
-				throw new FormatException();
+				Exceptions.Error("This is not a Guitar Hero PS2 disc; the songs dir is missing from the ark.");
 
 			FileNode songsdtbfile = ark.Root.Navigate("config/gen/songs.dtb", false, true) as FileNode;
 			if (songsdtbfile == null)
-				throw new FormatException();
+				Exceptions.Error("Couldn't find songs.dtb; this is not a Guitar Hero PS2 disc.");
 
 			data.Session["songdir"] = songdir;
 
-			List<SongsDTA> dtas = new List<SongsDTA>();
-			Stream dtbstream = new MemoryStream((int)songsdtbfile.Size);
-			CryptedDtbStream.DecryptOld(dtbstream, new EndianReader(songsdtbfile.Data, Endianness.LittleEndian), (int)songsdtbfile.Size);
-			dtbstream.Position = 0;
-			DTB.NodeTree dtb = DTB.Create(new EndianReader(dtbstream, Endianness.LittleEndian));
-			progress.NewTask(dtb.Nodes.Count);
-			foreach (DTB.Node node in dtb.Nodes) {
-				progress.Progress();
-				DTB.NodeTree tree = node as DTB.NodeTree;
-				if (tree == null || tree.Nodes[0].Type != 0x00000005 || songdir.Find((tree.Nodes[0] as DTB.NodeString).Text) == null)
-					continue;
+			try {
+				List<SongsDTA> dtas = new List<SongsDTA>();
+				Stream dtbstream = new MemoryStream((int)songsdtbfile.Size);
+				CryptedDtbStream.DecryptOld(dtbstream, new EndianReader(songsdtbfile.Data, Endianness.LittleEndian), (int)songsdtbfile.Size);
+				dtbstream.Position = 0;
+				DTB.NodeTree dtb = DTB.Create(new EndianReader(dtbstream, Endianness.LittleEndian));
+				progress.NewTask(dtb.Nodes.Count);
+				foreach (DTB.Node node in dtb.Nodes) {
+					DTB.NodeTree tree = node as DTB.NodeTree;
+					if (tree == null || tree.Nodes[0].Type != 0x00000005 || songdir.Find((tree.Nodes[0] as DTB.NodeString).Text) == null) {
+						progress.Progress();
+						continue;
+					}
 
-				SongsDTA dta = SongsDTA.Create(tree);
-				if (dtas.FirstOrDefault(d => d.BaseName == dta.BaseName) != null)
-					continue; // Don't import songs twice
+					SongsDTA dta = SongsDTA.Create(tree);
+					if (dtas.FirstOrDefault(d => d.BaseName == dta.BaseName) != null) {
+						progress.Progress();
+						continue; // Don't import songs twice
+					}
+					dtas.Add(dta);
 
-				dtas.Add(dta);
-
-				SongData song = HarmonixMetadata.GetSongData(data, tree);
-
-				AddSong(data, song, progress);
+					SongData song = HarmonixMetadata.GetSongData(data, tree);
+					try {
+						AddSong(data, song, progress);
+					} catch (Exception exception) {
+						Exceptions.Warning(exception, "Unable to properly parse " + song.Name);
+					}
+					progress.Progress();
+				}
+				progress.EndTask();
+			} catch (Exception exception) {
+				Exceptions.Error(exception, "An error occurred while parsing the Guitar Hero PS2 disc.");
 			}
-			progress.EndTask();
 
 			return data;
 		}

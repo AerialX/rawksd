@@ -120,9 +120,6 @@
   <metadata name="MenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <metadata name="StatusBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>126, 17</value>
-  </metadata>
   <metadata name="FolderDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>325, 17</value>
   </metadata>
@@ -135,10 +132,32 @@
   <metadata name="SongListRowSizeHack.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>681, 17</value>
   </metadata>
+  <metadata name="StatusBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>146, 52</value>
+  </metadata>
   <metadata name="Toolbar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>592, 17</value>
   </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="ToolbarInstallLocal.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAhJJREFUOE+1k+9L
+        U2EUx/0LWtCrlBpCEkIoIb2LEEEoUopAJHMQVHerF+ILbdGICqaO5iomTMvw6jKYG9VKUeYPighvENGP
+        F8YKGrrfS8act7Z7n3v37bnXNkQuwV504HCeB+73ez7nPNyKChoMwyCVSkGpyr2sUETFkCSpfJNi52Qy
+        qYoTiYRaY7GYWqPR6L9NtxOUUP4eRFEEz/MlM83RlM47w+e+i2LG43EEAgFwHEc0DXYSKML1yEvk07PY
+        XHWqRi+ePYHRaNRecCQSKQHIsqwKvBMOTI0PwsPa4RmzwzvuwOTDATwe6Yd7uA8TLiuctqsnVKLtBIIg
+        qAbIvYG4sQQxuwCSfQ75pxuFmBOFH1bIX80QuXY4LIYtolAopBIorxEOh2nXQeD3azrCDE0PSGIE0qoN
+        5JsZwqfLyL3rxMcHe3GLadnaiUIQDAaJyWSC3+8nk6M2SrAIMT1FxY8grdmp+Dryn6+AXz6HzaVWLA9V
+        4qLhiPZSWTof+FmQJAspfA/k+w0IX7rwizMgs9iCzPRRzN+pwtmTtdoGo/dvAtmnKMRdkENWkJUe5N9f
+        AP/qNDIzx7Dhq4fv9j40H9ZrG7jsFiDNIvWhG2tvTViZ6wTnOYXAcCO8tgaMWQ6CvbYfdTWV2gbOATOG
+        +i+RXuYMOd/RQNqOV5OmQ1WkVq8jNTQP6HfRupvs0elyZf10/+3jP0RS1u9nOP4oAAAAAElFTkSuQmCC
+</value>
+  </data>
   <metadata name="SaveDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>982, 17</value>
+  </metadata>
+  <metadata name="SongListTimer.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>24, 52</value>
   </metadata>
 </root>

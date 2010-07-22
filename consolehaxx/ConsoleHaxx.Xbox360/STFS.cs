@@ -34,10 +34,11 @@ namespace ConsoleHaxx.Xbox360
 				StfsFile.FileDescriptor file = Stfs.Files[i];
 				DirectoryNode parent = Directories[file.Parent];
 				if ((file.Flags & 0x80) != 0) {
-					DirectoryNode directory = new DirectoryNode(file.Name, parent);
+					DirectoryNode directory = new DirectoryNode(file.Name);
+					parent.AddChild(directory);
 					Directories.Add(i, directory);
 				} else
-					new FileNode(file.Name, parent, file.Size, new Substream(Stfs.Stream, Stfs.Stream.GetBlockOffset(file.Block), file.Size));
+					parent.AddChild(new FileNode(file.Name, file.Size, new Substream(Stfs.Stream, Stfs.Stream.GetBlockOffset(file.Block), file.Size)));
 			}
 		}
 
@@ -51,7 +52,7 @@ namespace ConsoleHaxx.Xbox360
 
 		private void SaveFolder(DirectoryNode Root, ushort parent, ref uint block)
 		{
-			foreach (var node in Root.Children) {
+			foreach (var node in Root) {
 				StfsFile.FileDescriptor desc = new StfsFile.FileDescriptor();
 				if (node.Name.Length > 0x3F)
 					throw new FormatException();

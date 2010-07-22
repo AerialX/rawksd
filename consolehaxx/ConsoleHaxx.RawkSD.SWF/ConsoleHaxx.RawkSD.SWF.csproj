@@ -117,6 +117,9 @@
       <DependentUpon>PlatformForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="ProgressItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SettingsForm.cs">
       <SubType>Form</SubType>
@@ -190,6 +193,10 @@
       <Project>{EA64750E-6CC3-4930-9ACC-57AC5CD19B10}</Project>
       <Name>ConsoleHaxx.RawkSD</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ConsoleHaxx.RiiFS\ConsoleHaxx.RiiFS.csproj">
+      <Project>{F0BE456E-AC49-4070-A481-CCF6C26DCF4A}</Project>
+      <Name>ConsoleHaxx.RiiFS</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ConsoleHaxx.Wii\ConsoleHaxx.Wii.csproj">
       <Project>{E9230C21-6B3D-481B-AB69-0A6958E0B2E9}</Project>
       <Name>ConsoleHaxx.Wii</Name>
@@ -261,6 +268,36 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\TierFive.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconDelete.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconEdit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconMoveFolder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconNew.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconOpenFile.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconOpenFolder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconProperties.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconRefresh.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconPublish.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconMoveToFolder.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

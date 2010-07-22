@@ -71,7 +71,9 @@ namespace ConsoleHaxx.Common
 			long baseposition = (long)entry.Sector * SectorSize;
 
 			DirectoryEntry dir = DirectoryEntry.Create(reader, unicode);
-			DirectoryNode root = new DirectoryNode(entry.Name, parent);
+			DirectoryNode root = new DirectoryNode(entry.Name);
+			if (parent != null)
+				parent.AddChild(root);
 			
 			while (reader.Position < baseposition + dir.Size) {
 				DirectoryEntry file = DirectoryEntry.Create(reader, unicode);
@@ -85,7 +87,7 @@ namespace ConsoleHaxx.Common
 					Stat(reader, childentry, unicode, root);
 					reader.Position = position;
 				} else
-					new FileNode(file.Name, root, file.Size, new Substream(reader, file.Sector * SectorSize, file.Size));
+					root.AddChild(new FileNode(file.Name, file.Size, new Substream(reader, file.Sector * SectorSize, file.Size)));
 			}
 
 			return root;

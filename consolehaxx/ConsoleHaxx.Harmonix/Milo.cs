@@ -58,6 +58,7 @@ namespace ConsoleHaxx.Harmonix
 			int offset = DataOffset;
 
 			for (int i = 0; i < parts; i++) {
+				reader.Position = 0x10 + i * 0x04;
 				int size = reader.ReadInt32();
 				Stream data = new Substream(reader.Base, offset, size);
 				offset += size;
@@ -66,8 +67,6 @@ namespace ConsoleHaxx.Harmonix
 					data = new TemporaryStream();
 					InflateStream(old, data);
 					data.Position = 0;
-
-					//data = new ForwardStream(new DeflateStream(data, CompressionMode.Decompress, true), 0, parts == 1 ? uncompressedsize : -1);
 				}
 				Data.Add(data);
 			}
@@ -84,31 +83,27 @@ namespace ConsoleHaxx.Harmonix
 
 			writer.PadTo(DataOffset);
 
-			MemoryStream sizetable = new MemoryStream();
-			EndianReader sizewriter = new EndianReader(sizetable, writer.Endian);
+			List<int> sizetable = new List<int>();
 
 			int totalsize = 0;
 
 			foreach (Stream str in Data) {
 				str.Position = 0;
 				long beforepos = writer.Position;
-				//int size = (int)Util.StreamCopy(Compressed ? new DeflateStream(stream, CompressionMode.Compress, true) : stream, str);
 				int size = 0;
 				if (Compressed) {
 					size = DeflateStream(str, writer.Base);
-
-					//data = new ForwardStream(new DeflateStream(data, CompressionMode.Decompress, true), 0, parts == 1 ? uncompressedsize : -1);
 				} else {
 					size = (int)Util.StreamCopy(writer.Base, str);
 				}
-				sizewriter.Write((int)(writer.Position - beforepos));
+				sizetable.Add((int)(writer.Position - beforepos));
 				totalsize += size;
 			}
 
 			writer.Position = oldposition;
 			writer.Write(totalsize);
-			sizetable.Position = 0;
-			Util.StreamCopy(writer.Base, sizetable);
+			foreach (int size in sizetable)
+				writer.Write(size);
 		}
 	}
 }

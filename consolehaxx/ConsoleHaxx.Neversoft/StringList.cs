@@ -8,39 +8,39 @@ namespace ConsoleHaxx.Neversoft
 {
 	public class StringList
 	{
+		protected bool StripPrefix;
+
 		public List<KeyValuePair<QbKey, string>> Items;
 
-		public StringList()
+		public StringList(bool stripprefix = true)
 		{
 			Items = new List<KeyValuePair<QbKey, string>>();
+			
+			StripPrefix = stripprefix;
 		}
 
 		public string FindItem(QbKey key)
 		{
 			foreach (KeyValuePair<QbKey, string> k in Items) {
-				if (key.Crc == k.Key.Crc)
-					return k.Value;
+				if (key.Crc == k.Key.Crc) {
+					string value = k.Value;
+					if (StripPrefix) {
+						while (value.StartsWith(@"\L") || value.StartsWith(", "))
+							value = value.Substring(2);
+					}
+					return value;
+				}
 			}
 
 			return null;
 		}
 
-		public void ParseFromStream(Stream stream)
-		{
-			ParseFromStream(new StreamReader(stream, Util.Encoding));
-		}
-
-		public void ParseFromStream(Stream stream, bool stripprefix)
+		public void ParseFromStream(Stream stream, bool stripprefix = true)
 		{
 			ParseFromStream(new StreamReader(stream, Util.Encoding), stripprefix);
 		}
 
-		public void ParseFromStream(StreamReader reader)
-		{
-			ParseFromStream(reader, true);
-		}
-
-		public void ParseFromStream(StreamReader reader, bool stripprefix)
+		public void ParseFromStream(StreamReader reader, bool stripprefix = true)
 		{
 			while (!reader.EndOfStream) {
 				char[] chars = new char[8];
@@ -57,13 +57,6 @@ namespace ConsoleHaxx.Neversoft
 				while (c != '"') {
 					str += c;
 					c = (char)reader.Read();
-				}
-
-				if (stripprefix) {
-					if (str.StartsWith(@"\L, "))
-						str = str.Substring(4);
-					else if (str.StartsWith(@"\L"))
-						str = str.Substring(2);
 				}
 
 				Items.Add(new KeyValuePair<QbKey, string>(key, str));

@@ -88,7 +88,7 @@ namespace ConsoleHaxx.RawkSD
 						gems.Gems[difficulty][greennote].Add(fullnote);
 						hopo.ForceHammeron[difficulty].Add(note);
 						break;
-					case 0x0D: // ?? Note sure, Weird whammy thing on right blue maybe
+					case 0x0D: // ?? Not sure, Weird whammy thing on right blue maybe
 						gems.Gems[difficulty][bluenote].Add(fullnote);
 						hopo.ForceHammeron[difficulty].Add(note);
 						break;

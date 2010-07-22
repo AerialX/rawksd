@@ -47,8 +47,7 @@ namespace ConsoleHaxx.Harmonix
 			for (int i = 0; i < 2; i++)
 				Strings2.Add(ReadString(reader));
 				
-			if (reader.ReadInt32() == 0x16)
-			{
+			if (reader.ReadInt32() == 0x16) {
 				reader.ReadInt32(); // 2
 				ReadString(reader);
 			}
@@ -62,12 +61,11 @@ namespace ConsoleHaxx.Harmonix
 
 			// this is hacky, there are strings/objects in here but they're always zero/NULL
 			Bytes1 = reader.ReadBytes(5);
-			if (!Bytes1[0])
-			{
+			if (Bytes1[0] == 0) {
 				reader.ReadBytes(21);
 				Bytes1[0] = 1;
-			}
-			else reader.ReadBytes(24);
+			} else
+				reader.ReadBytes(24);
 
 			for (int i = 0; i < 3; i++)
 				Ints3.Add(0);

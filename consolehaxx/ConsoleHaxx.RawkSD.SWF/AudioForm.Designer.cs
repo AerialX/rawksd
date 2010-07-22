@@ -317,6 +317,7 @@
 			this.CancelButton = this.ButtonCancel;
 			this.ClientSize = new System.Drawing.Size(253, 280);
 			this.Controls.Add(this.MainLayout);
+			this.MaximizeBox = false;
 			this.Name = "AudioForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Audio Configuration";

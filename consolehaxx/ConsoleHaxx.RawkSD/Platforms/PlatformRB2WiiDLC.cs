@@ -47,7 +47,7 @@ namespace ConsoleHaxx.RawkSD
 					if (subdir == null)
 						continue;
 
-					foreach (FileNode file in subdir.Children.OfType<FileNode>()) {
+					foreach (FileNode file in subdir.Files) {
 						if (String.Compare(Path.GetExtension(file.Name), ".bin", true) != 0)
 							continue;
 

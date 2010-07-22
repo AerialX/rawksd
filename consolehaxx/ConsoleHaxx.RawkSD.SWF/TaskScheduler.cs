@@ -9,6 +9,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 {
 	public class TaskScheduler
 	{
+		public static ThreadPriority DefaultThreadPriority = ThreadPriority.BelowNormal;
 		public ProgressIndicator Progress;
 		public Queue<Action<ProgressIndicator>> Tasks;
 		public Thread Thread;
@@ -21,6 +22,10 @@ namespace ConsoleHaxx.RawkSD.SWF
 		protected int exitflag;
 		protected int taskflag;
 		protected int waitflag;
+
+		protected string lastrootstatus;
+		protected string laststatus;
+		protected double lastpercent;
 
 		public TaskScheduler(Control owner)
 		{
@@ -38,6 +43,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 			SetFlag(ref taskflag, false);
 			SetFlag(ref waitflag, false);
 			Thread = new Thread(ExecutionThread);
+			Thread.Priority = DefaultThreadPriority;
+			Thread.IsBackground = true;
 			Thread.Start();
 		}
 
@@ -47,8 +54,14 @@ namespace ConsoleHaxx.RawkSD.SWF
 				if (ReadFlag(ref taskflag)) {
 					try {
 						Tasks.Peek()(Progress);
-					} catch (ProgressException exception) {
-						Progress.ErrorHandler(exception);
+					} catch (ThreadAbortException) {
+					} catch (Exception exception) {
+						if (!(exception is ProgressException)) {
+							Exceptions.Warning(exception);
+							exception = new ProgressException(exception.Message, exception);
+						}
+						Progress.ErrorHandler(exception as ProgressException);
+						Progress.Unwind();
 					}
 				} else {
 					SetFlag(ref waitflag, true);
@@ -91,28 +104,31 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		void Progress_OnError(ProgressIndicator progress, ProgressException exception)
 		{
-			if (OnError != null) {
-				if (Thread.CurrentThread == Thread) {
-					Owner.Invoke((Action<ProgressIndicator>)Progress_OnUpdate, progress);
-					return;
-				}
-
+			if (OnError != null)
 				OnError(this, exception);
-			}
 		}
 
 		void Progress_OnUpdate(ProgressIndicator progress)
 		{
 			if (OnUpdate != null) {
-				if (Thread.CurrentThread == Thread) {
-					Owner.Invoke((Action<ProgressIndicator>)Progress_OnUpdate, progress);
+				if (Tasks.Count == 0) {
+					lastrootstatus = null;
+					laststatus = null;
+					lastpercent = 0;
+					OnUpdate(this, null, null, 0);
 					return;
 				}
+				string rootstatus = Progress.RootStatus;
+				string status = Progress.Status;
+				double percent = Progress.Percent;
+				if (lastrootstatus == rootstatus && laststatus == status && (Math.Abs(lastpercent - percent) < 0.0001))
+					return;
 
-				if (Tasks.Count == 0)
-					OnUpdate(this, null, null, 0);
-				else
-					OnUpdate(this, Progress.RootStatus, Progress.Status, Progress.Percent);
+				lastrootstatus = rootstatus;
+				laststatus = status;
+				lastpercent = percent;
+
+				OnUpdate(this, rootstatus, status, percent);
 			}
 		}
 

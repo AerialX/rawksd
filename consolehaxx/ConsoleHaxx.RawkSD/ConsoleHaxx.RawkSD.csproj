@@ -87,6 +87,7 @@
     <Compile Include="ChartFormats\ChartFormatGH5.cs" />
     <Compile Include="ChartFormats\ChartFormatRB.cs" />
     <Compile Include="DataArray.cs" />
+    <Compile Include="Exceptions.cs" />
     <Compile Include="FFmpegDecoder.cs" />
     <Compile Include="FormatData.cs" />
     <Compile Include="FreeStyleGamesMetadata.cs" />

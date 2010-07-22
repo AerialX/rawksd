@@ -40,6 +40,8 @@
 			this.DefaultActionCombo = new System.Windows.Forms.ComboBox();
 			this.LabelTasks = new System.Windows.Forms.Label();
 			this.TasksNumeric = new System.Windows.Forms.NumericUpDown();
+			this.LabelPriority = new System.Windows.Forms.Label();
+			this.PriorityCombo = new System.Windows.Forms.ComboBox();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
 			this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
 			this.LabelStorage = new System.Windows.Forms.Label();
@@ -66,7 +68,7 @@
 			this.Tab.Location = new System.Drawing.Point(0, 0);
 			this.Tab.Name = "Tab";
 			this.Tab.SelectedIndex = 0;
-			this.Tab.Size = new System.Drawing.Size(310, 166);
+			this.Tab.Size = new System.Drawing.Size(310, 192);
 			this.Tab.TabIndex = 0;
 			// 
 			// tabPage1
@@ -75,36 +77,40 @@
 			this.tabPage1.Location = new System.Drawing.Point(4, 22);
 			this.tabPage1.Name = "tabPage1";
 			this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage1.Size = new System.Drawing.Size(302, 140);
+			this.tabPage1.Size = new System.Drawing.Size(302, 166);
 			this.tabPage1.TabIndex = 0;
 			this.tabPage1.Text = "Options";
 			this.tabPage1.UseVisualStyleBackColor = true;
 			// 
 			// tableLayoutPanel1
 			// 
+			this.tableLayoutPanel1.AutoSize = true;
 			this.tableLayoutPanel1.ColumnCount = 2;
 			this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
 			this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
 			this.tableLayoutPanel1.Controls.Add(this.LabelCustoms, 0, 0);
 			this.tableLayoutPanel1.Controls.Add(this.LabelTemporary, 0, 1);
-			this.tableLayoutPanel1.Controls.Add(this.LabelPerformance, 0, 3);
-			this.tableLayoutPanel1.Controls.Add(this.LabelDefaultAction, 0, 4);
+			this.tableLayoutPanel1.Controls.Add(this.LabelPerformance, 0, 4);
+			this.tableLayoutPanel1.Controls.Add(this.LabelDefaultAction, 0, 5);
 			this.tableLayoutPanel1.Controls.Add(this.CustomsText, 1, 0);
 			this.tableLayoutPanel1.Controls.Add(this.TemporaryText, 1, 1);
-			this.tableLayoutPanel1.Controls.Add(this.PerformanceCombo, 1, 3);
-			this.tableLayoutPanel1.Controls.Add(this.DefaultActionCombo, 1, 4);
+			this.tableLayoutPanel1.Controls.Add(this.PerformanceCombo, 1, 4);
+			this.tableLayoutPanel1.Controls.Add(this.DefaultActionCombo, 1, 5);
 			this.tableLayoutPanel1.Controls.Add(this.LabelTasks, 0, 2);
 			this.tableLayoutPanel1.Controls.Add(this.TasksNumeric, 1, 2);
+			this.tableLayoutPanel1.Controls.Add(this.LabelPriority, 0, 3);
+			this.tableLayoutPanel1.Controls.Add(this.PriorityCombo, 1, 3);
 			this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 3);
 			this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-			this.tableLayoutPanel1.RowCount = 5;
+			this.tableLayoutPanel1.RowCount = 6;
 			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.tableLayoutPanel1.Size = new System.Drawing.Size(296, 134);
+			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+			this.tableLayoutPanel1.Size = new System.Drawing.Size(296, 160);
 			this.tableLayoutPanel1.TabIndex = 0;
 			// 
 			// LabelCustoms
@@ -130,7 +136,7 @@
 			// LabelPerformance
 			// 
 			this.LabelPerformance.AutoSize = true;
-			this.LabelPerformance.Location = new System.Drawing.Point(3, 78);
+			this.LabelPerformance.Location = new System.Drawing.Point(3, 105);
 			this.LabelPerformance.Name = "LabelPerformance";
 			this.LabelPerformance.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
 			this.LabelPerformance.Size = new System.Drawing.Size(70, 17);
@@ -140,7 +146,7 @@
 			// LabelDefaultAction
 			// 
 			this.LabelDefaultAction.AutoSize = true;
-			this.LabelDefaultAction.Location = new System.Drawing.Point(3, 105);
+			this.LabelDefaultAction.Location = new System.Drawing.Point(3, 132);
 			this.LabelDefaultAction.Name = "LabelDefaultAction";
 			this.LabelDefaultAction.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
 			this.LabelDefaultAction.Size = new System.Drawing.Size(77, 17);
@@ -173,7 +179,7 @@
 			this.PerformanceCombo.Items.AddRange(new object[] {
             "Optimize Performance",
             "Optimize Memory"});
-			this.PerformanceCombo.Location = new System.Drawing.Point(103, 81);
+			this.PerformanceCombo.Location = new System.Drawing.Point(103, 108);
 			this.PerformanceCombo.Name = "PerformanceCombo";
 			this.PerformanceCombo.Size = new System.Drawing.Size(190, 21);
 			this.PerformanceCombo.TabIndex = 3;
@@ -190,7 +196,7 @@
             "Export to .rwk",
             "Export to .rba",
             "Export to Frets on Fire"});
-			this.DefaultActionCombo.Location = new System.Drawing.Point(103, 108);
+			this.DefaultActionCombo.Location = new System.Drawing.Point(103, 135);
 			this.DefaultActionCombo.Name = "DefaultActionCombo";
 			this.DefaultActionCombo.Size = new System.Drawing.Size(190, 21);
 			this.DefaultActionCombo.TabIndex = 3;
@@ -225,13 +231,40 @@
             0});
 			this.TasksNumeric.ValueChanged += new System.EventHandler(this.TasksNumeric_ValueChanged);
 			// 
+			// LabelPriority
+			// 
+			this.LabelPriority.AutoSize = true;
+			this.LabelPriority.Location = new System.Drawing.Point(3, 78);
+			this.LabelPriority.Name = "LabelPriority";
+			this.LabelPriority.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
+			this.LabelPriority.Size = new System.Drawing.Size(68, 17);
+			this.LabelPriority.TabIndex = 1;
+			this.LabelPriority.Text = "Task Priority:";
+			// 
+			// PriorityCombo
+			// 
+			this.PriorityCombo.Dock = System.Windows.Forms.DockStyle.Top;
+			this.PriorityCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.PriorityCombo.FormattingEnabled = true;
+			this.PriorityCombo.Items.AddRange(new object[] {
+            "Lowest",
+            "Below Normal",
+            "Normal",
+            "Above Normal",
+            "Highest"});
+			this.PriorityCombo.Location = new System.Drawing.Point(103, 81);
+			this.PriorityCombo.Name = "PriorityCombo";
+			this.PriorityCombo.Size = new System.Drawing.Size(190, 21);
+			this.PriorityCombo.TabIndex = 5;
+			this.PriorityCombo.SelectedIndexChanged += new System.EventHandler(this.PriorityCombo_SelectedIndexChanged);
+			// 
 			// tabPage2
 			// 
 			this.tabPage2.Controls.Add(this.tableLayoutPanel2);
 			this.tabPage2.Location = new System.Drawing.Point(4, 22);
 			this.tabPage2.Name = "tabPage2";
 			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage2.Size = new System.Drawing.Size(302, 140);
+			this.tabPage2.Size = new System.Drawing.Size(302, 166);
 			this.tabPage2.TabIndex = 1;
 			this.tabPage2.Text = "Imports";
 			this.tabPage2.UseVisualStyleBackColor = true;
@@ -255,7 +288,7 @@
 			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
 			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
 			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-			this.tableLayoutPanel2.Size = new System.Drawing.Size(296, 134);
+			this.tableLayoutPanel2.Size = new System.Drawing.Size(296, 160);
 			this.tableLayoutPanel2.TabIndex = 0;
 			// 
 			// LabelStorage
@@ -324,7 +357,7 @@
 			this.ButtonLayout.Controls.Add(this.CloseButton);
 			this.ButtonLayout.Dock = System.Windows.Forms.DockStyle.Bottom;
 			this.ButtonLayout.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-			this.ButtonLayout.Location = new System.Drawing.Point(0, 166);
+			this.ButtonLayout.Location = new System.Drawing.Point(0, 192);
 			this.ButtonLayout.Name = "ButtonLayout";
 			this.ButtonLayout.Size = new System.Drawing.Size(310, 29);
 			this.ButtonLayout.TabIndex = 1;
@@ -346,15 +379,18 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.CloseButton;
-			this.ClientSize = new System.Drawing.Size(310, 195);
+			this.ClientSize = new System.Drawing.Size(310, 221);
 			this.Controls.Add(this.Tab);
 			this.Controls.Add(this.ButtonLayout);
+			this.MaximizeBox = false;
+			this.MinimumSize = new System.Drawing.Size(318, 248);
 			this.Name = "SettingsForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Preferences";
 			this.Load += new System.EventHandler(this.SettingsForm_Load);
 			this.Tab.ResumeLayout(false);
 			this.tabPage1.ResumeLayout(false);
+			this.tabPage1.PerformLayout();
 			this.tableLayoutPanel1.ResumeLayout(false);
 			this.tableLayoutPanel1.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.TasksNumeric)).EndInit();
@@ -391,6 +427,8 @@
 		private System.Windows.Forms.ComboBox NamePrefixCombo;
 		private System.Windows.Forms.FlowLayoutPanel ButtonLayout;
 		private System.Windows.Forms.Button CloseButton;
+		private System.Windows.Forms.Label LabelPriority;
+		private System.Windows.Forms.ComboBox PriorityCombo;
 
 	}
 }

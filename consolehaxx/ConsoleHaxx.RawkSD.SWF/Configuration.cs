@@ -5,6 +5,7 @@ using System.Text;
 using ConsoleHaxx.Harmonix;
 using System.IO;
 using ConsoleHaxx.Common;
+using System.Threading;
 
 namespace ConsoleHaxx.RawkSD.SWF
 {
@@ -19,6 +20,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 		public static bool LocalTranscode { get; set; }
 		public static bool MemorySongData { get { return FormatData.LocalSongCache; } set { FormatData.LocalSongCache = value; } }
 		public static DefaultActionType DefaultAction { get; set; }
+		public static ThreadPriority DefaultThreadPriority { get { return TaskScheduler.DefaultThreadPriority; } set { TaskScheduler.DefaultThreadPriority = value; } }
+		public static bool IterateBins { get { return PlatformRB2WiiCustomDLC.IterateBins; } set { PlatformRB2WiiCustomDLC.IterateBins = value; } }
 
 		public static bool ExpertPlusGH5 { get { return PlatformGH5WiiDisc.ImportExpertPlus; } set { PlatformGH5WiiDisc.ImportExpertPlus = value; } }
 
@@ -27,11 +30,13 @@ namespace ConsoleHaxx.RawkSD.SWF
 		static Configuration()
 		{
 			MaxConcurrentTasks = Environment.ProcessorCount;
-			LocalTranscode = false;
+			LocalTranscode = true;
 			MemorySongData = false;
 			NamePrefix = ImportMap.NamePrefix.None;
 			DefaultAction = DefaultActionType.InstallSD;
+			DefaultThreadPriority = ThreadPriority.BelowNormal;
 			LocalPath = "customs";
+			IterateBins = true;
 			TemporaryPath = "temp";
 			InstallTitle = "cRBA";
 			ExpertPlusGH5 = false;
@@ -51,8 +56,10 @@ namespace ConsoleHaxx.RawkSD.SWF
 			LocalTranscode = data.GetValue<bool>("LocalTranscode");
 			MemorySongData = data.GetValue<bool>("MemorySongData");
 			DefaultAction = (DefaultActionType)data.GetValue<int>("DefaultAction");
+			DefaultThreadPriority = (ThreadPriority)data.GetValue<int>("DefaultThreadPriority");
 			NamePrefix = (ImportMap.NamePrefix)data.GetValue<int>("NamePrefix");
 			LocalPath = data.GetValue<string>("LocalPath");
+			IterateBins = data.GetValue<bool>("IterateBins");
 			TemporaryPath = data.GetValue<string>("TemporaryPath");
 			InstallTitle = data.GetValue<string>("InstallTitle");
 			ExpertPlusGH5 = data.GetValue<bool>("ExpertPlusGH5");
@@ -68,8 +75,10 @@ namespace ConsoleHaxx.RawkSD.SWF
 			data.SetValue("LocalTranscode", LocalTranscode);
 			data.SetValue("MemorySongData", MemorySongData);
 			data.SetValue("DefaultAction", (int)DefaultAction);
+			data.SetValue("DefaultThreadPriority", (int)DefaultThreadPriority);
 			data.SetValue("NamePrefix", (int)NamePrefix);
 			data.SetValue("LocalPath", LocalPath);
+			data.SetValue("IterateBins", IterateBins);
 			data.SetValue("TemporaryPath", TemporaryPath);
 			data.SetValue("InstallTitle", InstallTitle);
 			data.SetValue("ExpertPlusGH5", ExpertPlusGH5);

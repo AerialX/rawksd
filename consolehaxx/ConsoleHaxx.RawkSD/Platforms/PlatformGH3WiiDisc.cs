@@ -120,32 +120,38 @@ namespace ConsoleHaxx.RawkSD
 
 			FileNode qbpak = dir.Navigate("pak/qb.pak.ngc") as FileNode;
 			if (qbpak == null)
-				throw new FormatException();
+				Exceptions.Error("Couldn't find qb.pak.ngc on Guitar Hero 3 Wii disc.");
 
-			Pak qb = new Pak(new EndianReader(qbpak.Data, Endianness.BigEndian));
-			FileNode songlistfile = qb.Root.Find("songlist.qb.ngc", SearchOption.AllDirectories) as FileNode;
-			FileNode albumfile = dir.Navigate("pak/album_covers/album_covers.pak.ngc", false, true) as FileNode;
-			QbFile songlist = new QbFile(songlistfile.Data, PakFormat);
-			QbItemBase list = songlist.FindItem(QbKey.Create(NeversoftMetadata.SonglistKeys[0]), true);
+			try {
+				Pak qb = new Pak(new EndianReader(qbpak.Data, Endianness.BigEndian));
+				FileNode songlistfile = qb.Root.Find("songlist.qb.ngc", SearchOption.AllDirectories) as FileNode;
+				FileNode albumfile = dir.Navigate("pak/album_covers/album_covers.pak.ngc", false, true) as FileNode;
+				QbFile songlist = new QbFile(songlistfile.Data, PakFormat);
+				QbItemStruct list = songlist.FindItem(QbKey.Create(NeversoftMetadata.SonglistKeys[0]), true) as QbItemStruct;
 
-			data.Session["rootdir"] = dir;
-			data.Session["rootqb"] = qb;
+				data.Session["rootdir"] = dir;
+				data.Session["rootqb"] = qb;
 
-			if (albumfile != null)
-				data.Session["albumpak"] = new Pak(new EndianReader(albumfile.Data, Endianness.BigEndian));
+				if (albumfile != null)
+					data.Session["albumpak"] = new Pak(new EndianReader(albumfile.Data, Endianness.BigEndian));
 
-			var items = (list as QbItemStruct).Items;
-			progress.NewTask(items.Count);
-			foreach (QbItemStruct item in items) {
-				// TODO: Coop
-				
-				SongData song = NeversoftMetadata.GetSongData(data, item);
+				var items = list.Items;
+				progress.NewTask(items.Count);
+				foreach (QbItemStruct item in items) {
+					SongData song = NeversoftMetadata.GetSongData(data, item);
 
-				AddSong(data, song, progress);
+					try {
+						AddSong(data, song, progress);
+					} catch (Exception exception) {
+						Exceptions.Warning(exception, "Unable to properly parse " + song.Name);
+					}
 
-				progress.Progress();
+					progress.Progress();
+				}
+				progress.EndTask();
+			} catch (Exception exception) {
+				Exceptions.Error(exception, "An error occurred while parsing the Guitar Hero 3 Wii disc.");
 			}
-			progress.EndTask();
 
 			return data;
 		}

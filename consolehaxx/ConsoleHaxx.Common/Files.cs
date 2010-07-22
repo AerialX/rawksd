@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Collections;
 
 namespace ConsoleHaxx.Common
 {
 	public class Node
 	{
-		public string Name;
-		public DirectoryNode Parent;
+		public string Name { get; set; }
+		public DirectoryNode Parent { get; internal set; }
 
 		public string Filename
 		{
@@ -28,13 +29,9 @@ namespace ConsoleHaxx.Common
 			Name = string.Empty;
 		}
 
-		public Node(string name, DirectoryNode parent)
+		public Node(string name)
 		{
 			Name = name;
-			Parent = parent;
-
-			if (Parent != null)
-				Parent.Children.Add(this);
 		}
 
 		public override string ToString()
@@ -43,26 +40,57 @@ namespace ConsoleHaxx.Common
 		}
 	}
 
-	public class DirectoryNode : Node
+	public class DirectoryNode : Node, IEnumerable<Node>
 	{
+		protected List<Node> Children;
+		public int ChildCount { get { return Children.Count; } }
+		public IEnumerable<FileNode> Files { get { return Children.OfType<FileNode>(); } }
+		public IEnumerable<DirectoryNode> Directories { get { return Children.OfType<DirectoryNode>(); } }
+		public Node this[int index] { get { return Children[index]; } }
+		public Node this[string name] { get { return Find(name); } }
+
 		public DirectoryNode() : base()
 		{
 			Children = new List<Node>();
 		}
 
-		public DirectoryNode(string name, DirectoryNode parent) : base(name, parent)
+		public DirectoryNode(string name) : base(name)
 		{
 			Children = new List<Node>();
 		}
 
-		public List<Node> Children;
-
-		public Node Find(string name)
+		public void AddChild(Node node)
 		{
-			return Find(name, true);
+			Children.Add(node);
+			node.Parent = this;
 		}
 
-		public Node Find(string name, bool ignorecase)
+		public void AddChildren(IEnumerable<Node> nodes)
+		{
+			Children.AddRange(nodes);
+		}
+
+		public void AddChildren(IEnumerable<FileNode> nodes)
+		{
+			AddChildren(nodes.Cast<Node>());
+		}
+
+		public void AddChildren(IEnumerable<DirectoryNode> nodes)
+		{
+			AddChildren(nodes.Cast<Node>());
+		}
+
+		public IEnumerator<Node> GetEnumerator()
+		{
+			return Children.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return Children.GetEnumerator();
+		}
+
+		public Node Find(string name, bool ignorecase = true)
 		{
 			return Find(name, SearchOption.TopDirectoryOnly, ignorecase);
 		}
@@ -88,19 +116,9 @@ namespace ConsoleHaxx.Common
 			return null;
 		}
 
-		public Node Navigate(string path)
+		public Node Navigate(string path, bool create = false, bool ignorecase = true)
 		{
-			return Navigate(path, false);
-		}
-
-		public Node Navigate(string path, bool create)
-		{
-			return Navigate(path, create, true);
-		}
-
-		public Node Navigate(string path, bool create, bool ignorecase)
-		{
-			string[] nodes = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+			string[] nodes = path.Split(new char[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
 			Node current = this;
 			foreach (string name in nodes) {
 				if (!(current is DirectoryNode))
@@ -115,9 +133,11 @@ namespace ConsoleHaxx.Common
 
 				Node node = (current as DirectoryNode).Find(name, ignorecase);
 
-				if (node == null && create)
-					current = new DirectoryNode(name, current as DirectoryNode);
-				else
+				if (node == null && create) {
+					DirectoryNode child = new DirectoryNode(name);
+					(current as DirectoryNode).AddChild(child);
+					current = child;
+				} else
 					current = node;
 			}
 
@@ -127,22 +147,24 @@ namespace ConsoleHaxx.Common
 		public static DirectoryNode FromPath(string path, DelayedStreamCache cache, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read)
 		{
 			DirectoryInfo dir = new DirectoryInfo(path);
-			DirectoryNode node = new DirectoryNode(dir.Name, null);
+			DirectoryNode node = new DirectoryNode(dir.Name);
 			FromPath(node, path, cache, access, share);
 			return node;
 		}
 
 		protected static void FromPath(DirectoryNode parent, string path, DelayedStreamCache cache, FileAccess access, FileShare share)
 		{
-			string[] paths = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly);
+			string[] paths = Directory.GetFiles(path);
 			foreach (string fpath in paths) {
 				FileInfo finfo = new FileInfo(fpath);
-				FileNode file = new FileNode(finfo.Name, parent, (ulong)finfo.Length, new DelayedStream(cache.GenerateFileStream(finfo.FullName, FileMode.Open, access, share)));
+				FileNode file = new FileNode(finfo.Name, (ulong)finfo.Length, new DelayedStream(cache.GenerateFileStream(finfo.FullName, FileMode.Open, access, share)));
+				parent.AddChild(file);
 			}
-			paths = Directory.GetDirectories(path, "*", SearchOption.TopDirectoryOnly);
+			paths = Directory.GetDirectories(path);
 			foreach (string dpath in paths) {
 				DirectoryInfo dinfo = new DirectoryInfo(dpath);
-				DirectoryNode dir = new DirectoryNode(dinfo.Name, parent);
+				DirectoryNode dir = new DirectoryNode(dinfo.Name);
+				parent.AddChild(dir);
 				FromPath(dir, dpath, cache, access, share);
 			}
 		}
@@ -150,15 +172,21 @@ namespace ConsoleHaxx.Common
 
 	public class FileNode : Node
 	{
-		public ulong Size;
-		public Stream Data;
+		public ulong Size { get; set; }
+		public Stream Data { get; set; }
 
 		public FileNode() : base() { }
 
-		public FileNode(string name, DirectoryNode parent, ulong size, Stream data) : base(name, parent)
+		public FileNode(string name, ulong size, Stream data) : base(name)
 		{
 			Size = size;
 			Data = data;
+		}
+
+		public FileNode(string name, Stream data) : base(name)
+		{
+			Data = data;
+			Size = (ulong)data.Length;
 		}
 	}
 }

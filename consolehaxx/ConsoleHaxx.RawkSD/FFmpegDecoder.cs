@@ -19,7 +19,7 @@ namespace ConsoleHaxx.RawkSD
 		public int SampleRate { get; protected set; }
 		public long Samples { get; protected set; }
 
-		protected string Filename;
+		protected TemporaryStream Stream;
 		protected bool Disposed;
 		
 		protected IntPtr FormatPointer;
@@ -46,12 +46,11 @@ namespace ConsoleHaxx.RawkSD
 			}
 
 			stream.Position = 0;
-			Filename = Path.GetTempFileName();
-			Stream filestream = new FileStream(Filename, FileMode.Create, FileAccess.Write);
-			Util.StreamCopy(filestream, stream, stream.Length);
-			filestream.Close();
+			Stream = new TemporaryStream();
+			Util.StreamCopy(Stream, stream, stream.Length);
+			Stream.ClosePersist();
 
-			FFmpeg.av_open_input_file(out FormatPointer, Filename, IntPtr.Zero, 0, IntPtr.Zero);
+			FFmpeg.av_open_input_file(out FormatPointer, Stream.Name, IntPtr.Zero, 0, IntPtr.Zero);
 			if (FFmpeg.av_find_stream_info(FormatPointer) < 0)
 				throw new FormatException();
 			Format = (FFmpeg.AVFormatContext)Marshal.PtrToStructure(FormatPointer, typeof(FFmpeg.AVFormatContext));
@@ -180,7 +179,7 @@ namespace ConsoleHaxx.RawkSD
 			FFmpeg.avcodec_close(AVStream.codec);
 			FFmpeg.av_close_input_file(FormatPointer);
 
-			File.Delete(Filename);
+			Stream.Close();
 
 			Disposed = true;
 		}

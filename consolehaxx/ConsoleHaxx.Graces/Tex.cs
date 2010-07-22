@@ -13,12 +13,12 @@ namespace ConsoleHaxx.Graces
 		{
 			FPS4 fps = new FPS4(stream);
 			if (fps.Type == "txmv") {
-				if (fps.Root.Children.Count != 2)
+				if (fps.Root.ChildCount != 2)
 					throw new FormatException();
 
-				return new Txm((fps.Root.Children[0] as FileNode).Data, (fps.Root.Children[1] as FileNode).Data);
+				return new Txm((fps.Root[0] as FileNode).Data, (fps.Root[1] as FileNode).Data);
 			} else if (fps.Type == "pktx") {
-				return Create((fps.Root.Children[0] as FileNode).Data);
+				return Create((fps.Root[0] as FileNode).Data);
 			}
 
 			throw new FormatException();

@@ -158,11 +158,6 @@ namespace ConsoleHaxx.RawkSD.SWF
 				ChartNameLabel.Text = chartformat.Name;
 				ChartSizeLabel.Text = CalculateFormatSize(chartformat);
 			}
-
-			var chart = (Data.GetFormat(FormatType.Chart) as IChartFormat).DecodeChart(Data, new ProgressIndicator());
-			FileStream temp = new FileStream(@"Z:\temp.mid", FileMode.Create);
-			chart.Save(temp);
-			temp.Close();
 		}
 
 		private void UpdateAudioSizes()
@@ -393,7 +388,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 				if (result.Pan.HasValue())
 					pan = new FileStream(result.Pan, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-				ChartFormatRB.Instance.Create(data, stream, pan, weights, milo, result.ExpertPlus, result.FixForQuickplay);
+				ChartFormatRB.Instance.Create(data, stream, pan, weights, milo, result.ExpertPlus, result.FixForQuickplay, Song.Game);
 			} else if (result.Format == ChartFormatGH2.Instance) {
 				ChartFormatGH2.Instance.Create(data, stream, result.Coop);
 			} else if (result.Format == ChartFormatChart.Instance) {

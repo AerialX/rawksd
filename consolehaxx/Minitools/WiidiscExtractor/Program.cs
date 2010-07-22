@@ -38,7 +38,7 @@ namespace WiidiscExtractor
 
 				List<Pair<int, Stream>> arkfiles = new List<Pair<int, Stream>>();
 				Stream hdrfile = null;
-				foreach (FileNode file in gen.Children.Where(n => n is FileNode)) {
+				foreach (FileNode file in gen.Files) {
 					if (file.Name.ToLower().EndsWith(".hdr"))
 						hdrfile = file.Data;
 					else if (file.Name.ToLower().EndsWith(".ark")) {

@@ -51,7 +51,8 @@ namespace ConsoleHaxx.Neversoft
 						dir = (DirectoryNode)Root.Navigate(path, true);
 						filename = node.Filename.Substring(path.Length + 1);
 					}
-					new FileNode(filename, dir, node.Size, node.Data);
+					if (dir != null)
+						dir.AddChild(new FileNode(filename, node.Size, node.Data));
 				} else
 					node.Filename = string.Empty;
 

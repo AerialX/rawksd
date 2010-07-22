@@ -51,6 +51,14 @@
 	<deletesong id="Tut_VS_Recov" />
 	<deletesong id="Tut_VS_Tilt" />
 	<deletesong id="DrumStreamTest" />
+
+	<deletesong id="SuicideAndRedemptionJ" />
+	<deletesong id="SuicideAndRedemptionK" />
+	<deletesong id="ThatWasJustYourLife" />
+	<deletesong id="TheDayThatNeverComes" />
+	<deletesong id="TheEndOfTheLine" />
+	<deletesong id="TheJudasKiss" />
+	<deletesong id="TheUnforgivenIII" />
 	
 	<song id="AceOfSpades">
 		<name>Ace of Spades</name>

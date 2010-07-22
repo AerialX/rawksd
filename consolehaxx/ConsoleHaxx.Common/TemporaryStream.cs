@@ -7,69 +7,49 @@ namespace ConsoleHaxx.Common
 	{
 		public static string BasePath;
 
-		protected Stream Base;
+		protected FileStream Base;
 		protected string Filename;
 		protected bool Closed;
 
-		public override bool CanRead
-		{
-			get
-			{
-				return true;
-			}
-		}
+		public string Name { get { return Filename; } }
 
-		public override bool CanSeek
-		{
-			get
-			{
-				return true;
-			}
-		}
+		public override bool CanRead { get { return true; } }
 
-		public override bool CanWrite
-		{
-			get
-			{
-				return true;
-			}
-		}
+		public override bool CanSeek { get { return true; } }
 
-		public override long Length
-		{
-			get
-			{
-				return Base.Length;
-			}
-		}
+		public override bool CanWrite { get { return true; } }
 
-		public override long Position
-		{
-			get
-			{
-				return Base.Position;
-			}
-			set
-			{
-				Base.Position = value;
-			}
-		}
+		public override long Length { get { return Base.Length; } }
+
+		public override long Position { get { return Base.Position; } set { Base.Position = value; } }
 
 		public override void Close()
 		{
-			Base.Close();
-			File.Delete(Filename);
+			if (!Closed)
+				Base.Close();
+			Util.Delete(Filename);
 			Closed = true;
+		}
+
+		public void ClosePersist()
+		{
+			Base.Close();
+			Closed = true;
+		}
+
+		public void Open(FileMode mode = FileMode.Create)
+		{
+			if (Closed) {
+				Base = new FileStream(Filename, mode, FileAccess.ReadWrite);
+				Closed = false;
+			}
 		}
 
 		public TemporaryStream()
 		{
-			if (BasePath != null)
-				Filename = Path.Combine(BasePath, Path.GetRandomFileName());
-			else
-				Filename = Path.GetTempFileName();
-			Base = new FileStream(Filename, FileMode.Create, FileAccess.ReadWrite);
-			Closed = false;
+			Filename = GetTempFileName();
+			Closed = true;
+			Open();
 		}
 
 		~TemporaryStream()
@@ -101,6 +81,14 @@ namespace ConsoleHaxx.Common
 		public override void Write(byte[] buffer, int offset, int count)
 		{
 			Base.Write(buffer, offset, count);
+		}
+
+		public static string GetTempFileName()
+		{
+			if (BasePath != null)
+				return Path.Combine(BasePath, Path.GetRandomFileName());
+			else
+				return Path.GetTempFileName();
 		}
 	}
 }

@@ -25,78 +25,88 @@ namespace ConsoleHaxx.RawkSD.SWF
 				}
 			}
 
-			public void AddData(FormatData data)
+			public bool Update(FormatData data = null, SongData song = null)
 			{
-				if (!Data.Contains(data))
-					Data.Add(data);
+				if (data == null)
+					data = PrimaryData;
+				if (data == null)
+					return false;
+				if (song == null)
+					song = data.Song;
 
-				SongData song = data.Song;
-				if (PrimaryData == data) {
-					Item.SubItems.Clear();
-					Item.Text = song.Name;
-					Item.SubItems.Add(song.Artist);
-					Item.SubItems.Add(song.Album);
-					Item.SubItems.Add(song.Year.ToString());
-					Item.SubItems.Add(song.TidyGenre);
-					Item.ToolTipText = song.Pack;
-					SongID = song.ID;
+				Item.SubItems.Clear();
+				Item.Text = song.Name;
+				Item.SubItems.Add(song.Artist);
+				Item.SubItems.Add(song.Album);
+				Item.SubItems.Add(song.Year.ToString());
+				Item.SubItems.Add(song.TidyGenre);
+				Item.ToolTipText = song.Pack;
+				SongID = song.ID;
 
-					Item.SubItems.Add("");
-				}
+				Item.SubItems.Add("");
 
-				if (song.Game != Game.Unknown)
+				if (Images.Game == Game.Unknown)
 					Images.SetGame(song.Game);
-				if (data.PlatformData == Program.Form.Storage)
+				
+				UpdateImage();
+
+				return true;
+			}
+
+			private void UpdateImage()
+			{
+				if (Data.FirstOrDefault(d => d.PlatformData == Program.Form.Storage) != null)
 					Images.SetImage(0, true);
-				if (data.PlatformData == Program.Form.SD)
+				else
+					Images.SetImage(0, false);
+				
+				if (Data.FirstOrDefault(d => d.PlatformData == Program.Form.SD) != null)
 					Images.SetImage(1, true);
+				else
+					Images.SetImage(1, false);
+
 				Item.SubItems[5].Text = Images.ToString();
 			}
 
-			public SongListItem(ListViewItem item, FormatData data)
+			public void AddData(FormatData data, SongData song = null)
+			{
+				if (Data.Contains(data))
+					return;
+				
+				Data.Add(data);
+
+				if (PrimaryData == data)
+					Update(data, song);
+				else
+					UpdateImage();
+			}
+
+			public bool HasData()
+			{
+				return Data.Count > 0;
+			}
+
+			public bool HasData(FormatData data)
+			{
+				return Data.Contains(data);
+			}
+
+			public void RemoveData(FormatData data)
+			{
+				if (Data.Remove(data)) {
+					Update();
+					UpdateImage();
+				}
+			}
+
+			public SongListItem(ListViewItem item, FormatData data, SongData song = null)
 			{
 				Data = new List<FormatData>();
 				Images = new SongImageList();
 
 				Item = item;
-				AddData(data);
+				AddData(data, song);
 			}
-		}
-
-		private void RefreshSongList()
-		{
-			Invoke((Action)ClearSongListData);
-			UpdateSongList();
-			Invoke((Action)ClearSongList);
-		}
-
-		private void ClearSongListData()
-		{
-			SongUpdateMutex.WaitOne();
-
-			foreach (ListViewItem item in SongList.Items) {
-				SongListItem song = item.Tag as SongListItem;
-				song.Data.Clear();
-			}
-
-			SongUpdateMutex.ReleaseMutex();
-		}
-
-		private void ClearSongList()
-		{
-			SongUpdateMutex.WaitOne();
-
-			List<ListViewItem> todelete = new List<ListViewItem>();
-			foreach (ListViewItem item in SongList.Items) {
-				SongListItem song = item.Tag as SongListItem;
-				if (song.Data.Count == 0)
-					todelete.Add(item);
-			}
-			foreach (ListViewItem item in todelete) {
-				SongList.Items.Remove(item);
-			}
-
-			SongUpdateMutex.ReleaseMutex();
 		}
 
 		private void UpdateSongList()
@@ -104,10 +114,12 @@ namespace ConsoleHaxx.RawkSD.SWF
 			SongUpdateMutex.WaitOne();
 
 			UpdateSongList(Storage);
-			UpdateSongList(SD);
 			foreach (PlatformData data in Platforms)
 				UpdateSongList(data);
+			UpdateSongList(SD);
 			Invoke((Action)AutoResizeColumns);
+
+			Invoke((Action<object, EventArgs>)SongList_SelectedIndexChanged, null, EventArgs.Empty);
 
 			SongUpdateMutex.ReleaseMutex();
 		}
@@ -124,22 +136,34 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		private void UpdateSongListBase(PlatformData data)
 		{
-			foreach (FormatData song in data.Songs) {
+			SongListItem item;
+			foreach (FormatData song in data.GetChanges(false)) {
 				SongData songdata = song.Song;
-				ListViewItem item = null;
+				item = null;
 				foreach (ListViewItem songitem in SongList.Items) {
 					SongListItem songtag = songitem.Tag as SongListItem;
 					if (songtag.SongID == songdata.ID) {
-						item = songitem;
+						item = songtag;
 						break;
 					}
 				}
 				if (item == null) {
-					item = new ListViewItem(songdata.Name);
-					item.Tag = new SongListItem(item, song);
-					SongList.Items.Add(item);
+					ListViewItem listitem = new ListViewItem("");
+					listitem.Tag = new SongListItem(listitem, song, songdata);
+					SongList.Items.Add(listitem);
 				} else {
-					(item.Tag as SongListItem).AddData(song);
+					item.AddData(song, songdata);
+				}
+			}
+			foreach (FormatData song in data.GetChanges(true)) {
+				foreach (ListViewItem songitem in SongList.Items) {
+					item = songitem.Tag as SongListItem;
+					if (item.HasData(song)) {
+						item.RemoveData(song);
+						if (!item.HasData())
+							SongList.Items.Remove(songitem);
+						break;
+					}
 				}
 			}
 		}
@@ -234,10 +258,13 @@ namespace ConsoleHaxx.RawkSD.SWF
 					}
 				}
 			} else {
-				AlbumArtPicture.Visible = false;
+				AlbumArtPicture.Visible = true;
+				AlbumArtPicture.Image = AlbumImage;
+				NameLabel.Visible = false;
 				ArtistLabel.Visible = false;
 				AlbumLabel.Visible = false;
 				GenreLabel.Visible = false;
+				YearLabel.Visible = false;
 				DifficultyLayout.Visible = false;
 
 				// TODO: Show some sort of info...
@@ -246,22 +273,37 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		private void SongList_SelectedIndexChanged(object sender, EventArgs e)
 		{
-			if (SongList.SelectedItems.Count > 0 && SongList.SelectedItems[0].Tag is SongListItem) {
-				FormatData data = (SongList.SelectedItems[0].Tag as SongListItem).PrimaryData;
-				if (data != null)
-					PopulateSongInfo(data.Song);
-			}
+			SongListTimer.Start(); // Fucking hack because SWF handles selections in a retarded fashion
+		}
 
+		private void SongListTimer_Tick(object sender, EventArgs e)
+		{
 			if (SongList.SelectedItems.Count > 0) {
+				if (SongList.SelectedItems.Count > 0 && SongList.SelectedItems[0].Tag is SongListItem) {
+					FormatData data = (SongList.SelectedItems[0].Tag as SongListItem).PrimaryData;
+					if (data != null)
+						PopulateSongInfo(data.Song);
+				}
+
 				MenuSongsEdit.Enabled = true;
 				MenuSongsDelete.Enabled = true;
 				MenuSongsInstall.Enabled = true;
 				MenuSongsExport.Enabled = true;
+				MenuSongsTranscode.Enabled = true;
 
 				ContextMenuEdit.Enabled = true;
 				ContextMenuDelete.Enabled = true;
 				ContextMenuInstall.Enabled = true;
 				ContextMenuExport.Enabled = true;
+				ContextMenuTranscode.Enabled = true;
+
+				ToolbarEdit.Enabled = true;
+				ToolbarDelete.Enabled = true;
+				ToolbarInstallLocal.Enabled = true;
+				if (SD != null)
+					ToolbarInstallSD.Enabled = true;
+				else
+					ToolbarInstallSD.Enabled = false;
 
 				if (SongList.SelectedItems.Count > 1) {
 					MenuSongsExportRBN.Enabled = false;
@@ -270,17 +312,33 @@ namespace ConsoleHaxx.RawkSD.SWF
 					MenuSongsExportRBN.Enabled = true;
 					ContextMenuExportRBA.Enabled = true;
 				}
+
+				StatusSongsLabel.Text = SongList.SelectedItems.Count.ToString() + " Song" + (SongList.SelectedItems.Count == 1 ? "" : "s") + " Selected";
 			} else {
 				MenuSongsEdit.Enabled = false;
 				MenuSongsDelete.Enabled = false;
 				MenuSongsInstall.Enabled = false;
 				MenuSongsExport.Enabled = false;
+				MenuSongsTranscode.Enabled = false;
 
 				ContextMenuEdit.Enabled = false;
 				ContextMenuDelete.Enabled = false;
 				ContextMenuInstall.Enabled = false;
 				ContextMenuExport.Enabled = false;
+				ContextMenuTranscode.Enabled = false;
+
+				ToolbarEdit.Enabled = false;
+				ToolbarDelete.Enabled = false;
+				ToolbarInstallLocal.Enabled = false;
+				ToolbarInstallSD.Enabled = false;
+
+				PopulateSongInfo(null);
+
+				if (Storage != null)
+					StatusSongsLabel.Text = Storage.Songs.Count.ToString() + " Local Song" + (Storage.Songs.Count == 1 ? "" : "s");
 			}
+
+			SongListTimer.Stop();
 		}
 
 		private IList<SongListItem> GetSelectedSongs()

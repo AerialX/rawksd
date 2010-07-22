@@ -81,7 +81,7 @@ namespace ConsoleHaxx.Harmonix
 					string filename = Util.ReadCString(stringTable);
 
 					DirectoryNode dir = Root.Navigate(pathname, true) as DirectoryNode;
-					dir.Children.Add(new FileNode(filename, dir, size, new Substream(HdrStream, sector * sectorSize + sectoroffset, (long)size)));
+					dir.AddChild(new FileNode(filename, size, new Substream(HdrStream, sector * sectorSize + sectoroffset, (long)size)));
 				}
 			} else {
 				if (Version > 5) { // Invalid version number, encrypted
@@ -165,7 +165,8 @@ namespace ConsoleHaxx.Harmonix
 					int ark;
 					for (ark = 0; offset >= arkSizes[ark]; offset -= arkSizes[ark++])
 						;
-					new FileNode(filename, dir, size, new Substream(ArkStreams[ark], offset, (long)size));
+					if (dir != null) // Arks sometimes have paths like "../../etc", so we're just going to ignore them
+						dir.AddChild(new FileNode(filename, size, new Substream(ArkStreams[ark], offset, (long)size)));
 				}
 			}
 		}

@@ -140,9 +140,14 @@ namespace ConsoleHaxx.RawkSD
 				dir = DirectoryNode.FromPath(path, data.Cache);
 			}
 
-			Ark ark = GetHarmonixArk(dir);
-			data.Session["ark"] = ark;
-			return ark;
+			try {
+				Ark ark = GetHarmonixArk(dir);
+				data.Session["ark"] = ark;
+				return ark;
+			} catch (Exception exception) {
+				Exceptions.Error(exception, "Unable to open the ark file at " + path);
+			}
+			return null;
 		}
 
 		public static Ark GetHarmonixArk(DirectoryNode dir)
@@ -153,7 +158,7 @@ namespace ConsoleHaxx.RawkSD
 
 			List<Pair<int, Stream>> arkfiles = new List<Pair<int, Stream>>();
 			Stream hdrfile = null;
-			foreach (FileNode file in gen.Children.OfType<FileNode>()) {
+			foreach (FileNode file in gen.Files) {
 				if (file.Name.ToLower().EndsWith(".hdr"))
 					hdrfile = file.Data;
 				else if (file.Name.ToLower().EndsWith(".ark")) {

@@ -19,10 +19,11 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 				U8 u8 = new U8();
 				foreach (FormatData data in songs) {
-					DirectoryNode dir = new DirectoryNode(data.Song.ID, u8.Root);
+					DirectoryNode dir = new DirectoryNode(data.Song.ID);
+					u8.Root.AddChild(dir);
 					foreach (string name in data.GetStreamNames()) {
 						Stream stream = data.GetStream(name);
-						new FileNode(name, dir, (ulong)stream.Length, stream);
+						dir.AddChild(new FileNode(name, stream));
 					}
 				}
 
@@ -217,12 +218,20 @@ namespace ConsoleHaxx.RawkSD.SWF
 				platform.Mutex.WaitOne();
 
 				foreach (FormatData data in platform.Songs) {
-					if (data.Formats.Contains(ChartFormatRB.Instance) && !data.HasStream(ChartFormatRB.Instance, ChartFormatRB.MiloFile)) {
+					if (data.Formats.Contains(ChartFormatRB.Instance)) {
 						string songid = data.Song.ID;
 						if (songid.StartsWith("rb1")) {
 							songid = songid.Substring(3);
 							DirectoryNode songdir = root.Navigate(songid) as DirectoryNode;
-							FileNode node = songdir.Navigate("gen/" + songid + ".milo_wii") as FileNode;
+							FileNode node = songdir.Navigate(songid + ".pan") as FileNode;
+							if (node != null) {
+								node.Data.Position = 0;
+								Stream stream = data.AddStream(ChartFormatRB.Instance, ChartFormatRB.PanFile);
+								Util.StreamCopy(stream, node.Data);
+								data.CloseStream(stream);
+								node.Data.Close();
+							}
+							node = songdir.Navigate("gen/" + songid + ".milo_wii") as FileNode;
 							if (node != null) {
 								node.Data.Position = 0;
 								Stream stream = data.AddStream(ChartFormatRB.Instance, ChartFormatRB.MiloFile);
@@ -396,14 +405,17 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 					progress.Progress(3);
 
-					DirectoryNode dir = new DirectoryNode("songs", stfs.Root);
-					new FileNode("songs.dta", dir, (ulong)songs.Length, songs);
-					dir = new DirectoryNode(song.ID, dir);
-					new FileNode(song.ID + ".mogg", dir, (ulong)audio.Length, audio);
-					new FileNode(song.ID + ".mid", dir, (ulong)chart.Length, chart);
-					dir = new DirectoryNode("gen", dir);
-					new FileNode(song.ID + ".milo_xbox", dir, (ulong)milo.Length, milo);
-					new FileNode(song.ID + "_weights.bin", dir, (ulong)weights.Length, weights);
+					DirectoryNode dir = new DirectoryNode("songs");
+					stfs.Root.AddChild(dir);
+					dir.AddChild(new FileNode("songs.dta", songs));
+					DirectoryNode songdir = new DirectoryNode(song.ID);
+					dir.AddChild(songdir);
+					songdir.AddChild(new FileNode(song.ID + ".mogg", audio));
+					songdir.AddChild(new FileNode(song.ID + ".mid", chart));
+					DirectoryNode gendir = new DirectoryNode("gen");
+					songdir.AddChild(gendir);
+					gendir.AddChild(new FileNode(song.ID + ".milo_xbox", milo));
+					gendir.AddChild(new FileNode(song.ID + "_weights.bin", weights));
 
 					Stream ostream = new FileStream(path, FileMode.Create);
 					stfs.Save(ostream);

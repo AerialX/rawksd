@@ -161,6 +161,11 @@ namespace ConsoleHaxx.RawkSD
 			return ret;
 		}
 
+		public virtual bool HasStream(Stream stream)
+		{
+			return Streams.ContainsValue(stream);
+		}
+
 		public virtual bool HasStream(string name)
 		{
 			return Data.Contains(name);
@@ -332,6 +337,30 @@ namespace ConsoleHaxx.RawkSD
 		{
 			return new TemporaryStream();
 		}
+
+		public override void CloseStream(string name)
+		{
+			if (Streams.ContainsKey(name)) {
+				Stream stream = Streams[name];
+				TemporaryStream temp = stream as TemporaryStream;
+				if (temp != null && MyStreams.ContainsValue(stream))
+					temp.ClosePersist();
+				else if (StreamOwnership)
+					stream.Close();
+				else
+					return;
+				
+				Streams.Remove(name);
+			}
+		}
+
+		protected override Stream OpenStream(string name)
+		{
+			TemporaryStream stream = base.OpenStream(name) as TemporaryStream;
+			if (stream != null)
+				stream.Open(FileMode.Open);
+			return stream;
+		}
 	}
 
 	public class MemoryFormatData : FormatDataPersistance
@@ -391,7 +420,7 @@ namespace ConsoleHaxx.RawkSD
 		{
 			base.DeleteStream(name);
 
-			File.Delete(GetPath(name));
+			Util.Delete(GetPath(name));
 		}
 
 		protected override Stream OpenStream(string name)

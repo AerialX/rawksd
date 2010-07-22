@@ -127,6 +127,12 @@ namespace ConsoleHaxx.RawkSD
 				OnError(this, exception);
 		}
 
+		public void Unwind()
+		{
+			while (Tasks.Count > 1)
+				EndTask();
+		}
+
 		public string RootStatus
 		{
 			get

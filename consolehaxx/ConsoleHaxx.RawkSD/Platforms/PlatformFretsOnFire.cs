@@ -48,21 +48,22 @@ namespace ConsoleHaxx.RawkSD
 			PlatformData data = new PlatformData(this, game);
 			DirectoryNode maindir = data.GetDirectoryStructure(path);
 
-			List<DirectoryNode> dirs = new List<DirectoryNode>(maindir.Children.OfType<DirectoryNode>());
+			List<DirectoryNode> dirs = new List<DirectoryNode>(maindir.Directories);
 			dirs.Add(maindir);
 
 			progress.NewTask(dirs.Count);
-			
 			foreach (DirectoryNode dir in dirs) {
 				SongData song = new SongData(data);
 				song.Name = dir.Name;
-
-				data.Session["songdir"] = dir;
-				AddSong(data, song, progress);
-				data.Session.Remove("songdir");
+				try {
+					data.Session["songdir"] = dir;
+					AddSong(data, song, progress);
+					data.Session.Remove("songdir");
+				} catch (Exception exception) {
+					Exceptions.Warning(exception, "Unable to parse the Frets on Fire song from " + song.Name);
+				}
 				progress.Progress();
 			}
-
 			progress.EndTask();
 
 			return data;
@@ -121,7 +122,7 @@ namespace ConsoleHaxx.RawkSD
 
 			List<Stream> streams = new List<Stream>();
 
-			foreach (Node node in dir.Children) {
+			foreach (Node node in dir) {
 				FileNode file = node as FileNode;
 				if (file == null)
 					continue;
@@ -290,7 +291,10 @@ namespace ConsoleHaxx.RawkSD
 				case "rb2": return Game.RockBand2;
 				case "rb3": return Game.RockBand3;
 				case "rbdlc": return Game.RockBand2;
-				case "rbtpk": return Game.RockBandTP1;
+				case "rbtpk": case "rbtpk1": return Game.RockBandTP1;
+				case "rbtpk2": return Game.RockBandTP2;
+				case "gdrb": case "rbgd": return Game.RockBandGreenDay;
+				case "tbrb": case "rbtb": return Game.RockBandBeatles;
 				case "gh1": return Game.GuitarHero1;
 				case "gh2": case "gh2dlc": return Game.GuitarHero2;
 				case "gh80s": return Game.GuitarHero80s;

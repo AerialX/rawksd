@@ -60,6 +60,20 @@ namespace ConsoleHaxx.RawkSD.SWF.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap IconDelete {
+            get {
+                object obj = ResourceManager.GetObject("IconDelete", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconEdit {
+            get {
+                object obj = ResourceManager.GetObject("IconEdit", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap IconFolder {
             get {
                 object obj = ResourceManager.GetObject("IconFolder", resourceCulture);
@@ -88,9 +102,58 @@ namespace ConsoleHaxx.RawkSD.SWF.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap IconMoveFolder {
+            get {
+                object obj = ResourceManager.GetObject("IconMoveFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconMoveToFolder {
+            get {
+                object obj = ResourceManager.GetObject("IconMoveToFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconNew {
+            get {
+                object obj = ResourceManager.GetObject("IconNew", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconOpenFile {
+            get {
+                object obj = ResourceManager.GetObject("IconOpenFile", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconOpenFolder {
+            get {
+                object obj = ResourceManager.GetObject("IconOpenFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconProperties {
+            get {
+                object obj = ResourceManager.GetObject("IconProperties", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap IconRB {
             get {
                 object obj = ResourceManager.GetObject("IconRB", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap IconRefresh {
+            get {
+                object obj = ResourceManager.GetObject("IconRefresh", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -71,52 +71,69 @@ namespace ConsoleHaxx.RawkSD
 
 			data.Game = Platform.DetermineGame(data);
 
-			FileNode qbpak = dir.Navigate("pak/qb.pak.ngc") as FileNode;
-			if (qbpak == null)
-				throw new FormatException();
+			try {
+				FileNode qbpak = dir.Navigate("pak/qb.pak.ngc") as FileNode;
+				if (qbpak == null)
+					throw new FormatException("Couldn't find qb.pak on Guitar Hero Wii disc.");
 
-			FileNode qspak = dir.Navigate("pak/qs.pak.ngc") as FileNode;
-			if (qspak == null)
-				throw new FormatException();
+				FileNode qspak = dir.Navigate("pak/qs.pak.ngc") as FileNode;
+				if (qspak == null)
+					throw new FormatException("Couldn't find qs.pak on Guitar Hero Wii disc.");
 
-			Pak qs = new Pak(new EndianReader(qspak.Data, Endianness.BigEndian));
+				Pak qs = new Pak(new EndianReader(qspak.Data, Endianness.BigEndian));
 
-			StringList strings = new StringList();
-			foreach (Pak.Node node in qs.Nodes)
-				strings.ParseFromStream(node.Data);
+				StringList strings = new StringList();
+				foreach (Pak.Node node in qs.Nodes)
+					strings.ParseFromStream(node.Data);
 
-			Pak qb = new Pak(new EndianReader(qbpak.Data, Endianness.BigEndian));
-			FileNode songlistfile = qb.Root.Find("songlist.qb.ngc", SearchOption.AllDirectories) as FileNode;
-			QbFile songlist = new QbFile(songlistfile.Data, PakFormat);
+				Pak qb = new Pak(new EndianReader(qbpak.Data, Endianness.BigEndian));
+				FileNode songlistfile = qb.Root.Find("songlist.qb.ngc", SearchOption.AllDirectories) as FileNode;
+				QbFile songlist = new QbFile(songlistfile.Data, PakFormat);
 
-			data.Session["rootdir"] = dir;
+				data.Session["rootdir"] = dir;
 
-			List<string> songsadded = new List<string>();
-			foreach (uint songlistkey in NeversoftMetadata.SonglistKeys) {
-				QbItemBase list = songlist.FindItem(QbKey.Create(songlistkey), true);
-				if (list == null || list.Items.Count == 0)
-					continue;
-
-				progress.NewTask(list.Items.Count);
-
-				foreach (QbItemArray item in (list as QbItemStruct).Items.OfType<QbItemArray>()) {
-					item.Items[0].ItemQbKey = item.ItemQbKey;
-					SongData song = NeversoftMetadata.GetSongData(data, item.Items[0] as QbItemStruct, strings);
-
-					progress.Progress();
-
-					if (songsadded.Contains(song.ID))
-						continue;
-
-					if (AddSong(data, song, progress))
-						songsadded.Add(song.ID);
+				List<QbKey> listkeys = new List<QbKey>();
+				foreach (uint songlistkey in NeversoftMetadata.SonglistKeys) {
+					QbKey key = QbKey.Create(songlistkey);
+					QbItemStruct list = songlist.FindItem(key, true) as QbItemStruct;
+					if (list != null && list.Items.Count > 0)
+						listkeys.Add(key);
 				}
 
-				progress.EndTask();
-			}
+				progress.NewTask(listkeys.Count);
+				List<string> songsadded = new List<string>();
+				foreach (QbKey songlistkey in listkeys) {
+					QbItemStruct list = songlist.FindItem(songlistkey, true) as QbItemStruct;
 
-			qbpak.Data.Close();
-			qspak.Data.Close();
+					progress.NewTask(list.Items.Count);
+
+					foreach (QbItemArray item in list.Items.OfType<QbItemArray>()) {
+						item.Items[0].ItemQbKey = item.ItemQbKey;
+						SongData song = NeversoftMetadata.GetSongData(data, item.Items[0] as QbItemStruct, strings);
+
+						progress.Progress();
+
+						if (songsadded.Contains(song.ID))
+							continue;
+
+						try {
+							if (AddSong(data, song, progress))
+								songsadded.Add(song.ID);
+						} catch (Exception exception) {
+							Exceptions.Warning(exception, "Unable to properly parse " + song.Name);
+						}
+					}
+
+					progress.EndTask();
+					progress.Progress();
+				}
+				progress.EndTask();
+
+				qbpak.Data.Close();
+				qspak.Data.Close();
+			} catch (Exception exception) {
+				Exceptions.Error(exception, "An error occurred while parsing the Guitar Hero Wii disc.");
+			}
 
 			return data;
 		}

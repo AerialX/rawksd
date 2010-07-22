@@ -18,10 +18,15 @@ namespace ConsoleHaxx.RawkSD
 			Chart = chart;
 		}
 
+		public static ChartFormat Create(Midi midi)
+		{
+			ChartFormat format = new ChartFormat(NoteChart.Create(midi));
+			return format;
+		}
+
 		public static ChartFormat Create(Stream stream)
 		{
-			ChartFormat format = new ChartFormat(NoteChart.Create(Midi.Create(Mid.Create(stream))));
-			return format;
+			return Create(Midi.Create(Mid.Create(stream)));
 		}
 
 		public void Save(Stream stream)

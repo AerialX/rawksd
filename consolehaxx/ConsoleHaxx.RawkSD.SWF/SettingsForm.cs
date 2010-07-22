@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace ConsoleHaxx.RawkSD.SWF
 {
@@ -33,6 +34,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			TemporaryText.Text = Configuration.TemporaryPath;
 			TasksNumeric.Value = Configuration.MaxConcurrentTasks;
 			PerformanceCombo.SelectedIndex = Configuration.MemorySongData ? 0 : 1;
+			PriorityCombo.SelectedIndex = (int)Configuration.DefaultThreadPriority;
 			switch (Configuration.DefaultAction) {
 				case Configuration.DefaultActionType.InstallLocal:
 					DefaultActionCombo.SelectedIndex = 1;
@@ -123,6 +125,11 @@ namespace ConsoleHaxx.RawkSD.SWF
 		private void GH5ExpertPlusCheckbox_CheckedChanged(object sender, EventArgs e)
 		{
 			Configuration.ExpertPlusGH5 = GH5ExpertPlusCheckbox.Checked;
+		}
+
+		private void PriorityCombo_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			Configuration.DefaultThreadPriority = (ThreadPriority)PriorityCombo.SelectedIndex;
 		}
 	}
 }

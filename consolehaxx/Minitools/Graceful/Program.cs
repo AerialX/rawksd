@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Drawing.Imaging;
 using System.Drawing;
+using System.Xml;
 
 namespace Graceful
 {
@@ -64,7 +65,7 @@ namespace Graceful
 			}
 
 			while (true) {
-				int selected = ConsoleMenu("Select an operation...", "Extract FPS4", "Pack FPS4", "Extract CPK", "Patch CPK", "Pack CPK", "TEX -> PNG", "PNG -> TEX", "Google Translate SCS", "Exit");
+				int selected = ConsoleMenu("Select an operation...", "Extract FPS4", "Pack FPS4", "Extract CPK", "Patch CPK", "Pack CPK", "TEX -> PNG", "PNG -> TEX", "Google Translate SCS", "Ass to XML", "XML to Subtitle", "Exit");
 				switch (selected) {
 					case 0:
 						OperationExtractFPS4();
@@ -91,9 +92,162 @@ namespace Graceful
 						OperationTranslateScs();
 						break;
 					case 8:
+						ConvertAssToXML();
+						break;
+					case 9:
+						ConvertXmlToSub();
+						break;
+					case 10:
 						return;
 				}
 			}
+		}
+
+		private static void ConvertAssToXML()
+		{
+
+		}
+
+		private struct FontDefinition
+		{
+			public string ID;
+			public PointF Scale;
+			public PointF Position;
+			public uint PositionValue;
+			public float Angle;
+			public Color Colour;
+			public PointF Limit;
+		}
+
+		private struct Subtitle
+		{
+			public string Font;
+			public string Value;
+			public uint Frame;
+		}
+
+		private static void ConvertXmlToSub()
+		{
+			string filename = ConsolePath("Path to XML file..?");
+			Stream stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+			XmlReader reader = XmlReader.Create(stream);
+			XmlDocument doc = new XmlDocument();
+			doc.Load(reader);
+			XmlElement root = doc.DocumentElement;
+			reader.Close();
+			stream.Close();
+
+			List<FontDefinition> fontlist = new List<FontDefinition>();
+
+			XmlElement fonts = root.GetElementsByTagName("fonts")[0] as XmlElement;
+			string defaultfont = fonts.Attributes["default"].Value;
+			foreach (XmlElement element in fonts.GetElementsByTagName("font")) {
+				FontDefinition font = new FontDefinition();
+				font.ID = element.Attributes["id"].Value;
+				foreach (XmlElement sub in element.ChildNodes) {
+					switch (sub.Name) {
+						case "scale":
+							font.Scale = new PointF(float.Parse(sub.Attributes["x"].Value), float.Parse(sub.Attributes["y"].Value));
+							break;
+						case "position":
+							font.Position = new PointF(float.Parse(sub.Attributes["x"].Value), float.Parse(sub.Attributes["y"].Value));
+							break;
+						case "angle":
+							font.Angle = float.Parse(sub.Attributes["value"].Value);
+							break;
+						case "colour":
+						case "color":
+							break;
+						case "limit":
+							font.Limit = new PointF(float.Parse(sub.Attributes["x"].Value), float.Parse(sub.Attributes["y"].Value));
+							break;
+					}
+				}
+
+				fontlist.Add(font);
+			}
+
+			List<Subtitle> subtitles = new List<Subtitle>();
+
+			XmlElement timeline = root.GetElementsByTagName("timeline")[0] as XmlElement;
+			foreach (XmlElement element in timeline.GetElementsByTagName("entry")) {
+				uint frame = 0;
+				if (element.HasAttribute("frame")) {
+					frame = uint.Parse(element.Attributes["frame"].Value);
+				} else if (element.HasAttribute("time")) {
+					frame = (uint)(double.Parse(element.Attributes["frame"].Value) * 30); // FPS? :(
+				}
+				foreach (XmlElement sub in element.GetElementsByTagName("subtitle")) {
+					Subtitle subtitle = new Subtitle();
+					if (sub.HasAttribute("font"))
+						subtitle.Font = sub.Attributes["font"].Value;
+					else
+						subtitle.Font = defaultfont;
+
+					subtitle.Frame = frame;
+					subtitle.Value = sub.InnerText;
+
+					subtitles.Add(subtitle);
+				}
+			}
+
+			int entrycount = (int)Util.RoundUp(subtitles.Count, 0x20 / 0x08);
+
+			Dictionary<string, ushort> strings = new Dictionary<string, ushort>();
+			MemoryStream stringtable = new MemoryStream();
+			EndianReader stringwriter = new EndianReader(stringtable, Endianness.BigEndian);
+
+			MemoryStream entrytable = new MemoryStream();
+			EndianReader entrywriter = new EndianReader(entrytable, Endianness.BigEndian);
+			foreach (Subtitle entry in subtitles)
+				WriteSubtitleEntry(fontlist, strings, stringtable, stringwriter, entrywriter, entry);
+			
+			for (int i = subtitles.Count; i < entrycount; i++)
+				WriteSubtitleEntry(fontlist, strings, stringtable, stringwriter, entrywriter, subtitles.Last());
+
+			stringwriter.PadToMultiple(0x20);
+
+			FileStream ostream = new FileStream(Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename) + ".sub"), FileMode.Create, FileAccess.Write, FileShare.None);
+			EndianReader writer = new EndianReader(ostream, Endianness.BigEndian);
+
+			writer.Write((uint)stringtable.Length);
+			writer.Write(entrycount);
+			writer.Write((uint)fontlist.Count);
+			writer.PadTo(0x20);
+
+			stringtable.Position = 0;
+			Util.StreamCopy(writer, stringtable);
+
+			entrytable.Position = 0;
+			Util.StreamCopy(writer, entrytable);
+
+			foreach (FontDefinition font in fontlist) {
+				writer.Write(font.Scale.X);
+				writer.Write(font.Scale.Y);
+				writer.Write(font.Position.X);
+				writer.Write(font.Position.Y);
+				writer.Write(font.PositionValue);
+				writer.Write(font.Angle);
+				writer.Write(font.Limit.X);
+				writer.Write(font.Limit.Y);
+			}
+
+			ostream.Close();
+		}
+
+		private static void WriteSubtitleEntry(List<FontDefinition> fontlist, Dictionary<string, ushort> strings, MemoryStream stringtable, EndianReader stringwriter, EndianReader entrywriter, Subtitle entry)
+		{
+			entrywriter.Write(entry.Frame);
+			entrywriter.Write((ushort)fontlist.IndexOf(fontlist.Find(f => f.ID == entry.Font)));
+			ushort soffset = (ushort)stringtable.Length;
+			if (strings.ContainsKey(entry.Value))
+				soffset = strings[entry.Value];
+			else {
+				stringwriter.Write(entry.Value);
+				stringwriter.Write((byte)0);
+			}
+
+			entrywriter.Write(soffset);
 		}
 
 		private static void OperationTranslateScs()
@@ -211,80 +365,56 @@ namespace Graceful
 
 		private static void OperationPatchCPK()
 		{
+			OperationPatchCPK(ConsoleMenu("Are you patching a sub-archive?", "Yes", "No") == 0);
+		}
+
+		private static void OperationPatchCPK(bool sub)
+		{
+			uint cpkoffset = 0;
 			string cpkname = ConsolePath("Full path to CPK archive..?");
+			string subcpkname = cpkname;
 			if (cpkname.IsEmpty())
 				return;
 
-			string parentcpkname = string.Empty;
-			Stream parentstream = null;
-			uint cpkoffset = 0;
-
 			Stream stream = new CachedReadStream(new FileStream(cpkname, FileMode.Open, FileAccess.Read, FileShare.Read));
+			Stream substream = stream;
 			CPK cpk = new CPK(stream);
 
-			switch (Path.GetFileName(cpkname).ToLower()) {
-				case "rootr.cpk":
-				case "map0r.cpk":
-				case "map1r.cpk":
-					parentcpkname = cpkname;
-					parentstream = stream;
-					break;
-				default:
-					parentcpkname = ConsolePath("Full path to parent CPK archive..?");
-					if (parentcpkname.IsEmpty())
-						return;
-					parentstream = new CachedReadStream(new FileStream(parentcpkname, FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read));
-
-					CPK parentcpk = new CPK(parentstream);
-					FileNode file = parentcpk.Root.Find(Path.GetFileName(cpkname), true) as FileNode;
-					if (file == null) {
-						Console.WriteLine("The CPK is not a child of the parent CPK.");
-						return;
-					}
-
-					cpkoffset = (uint)(file.Data as Substream).Offset;
-					break;
-			}
-
-			string filename = ConsolePath("Full path to file to patch in..?");
-			if (filename.IsEmpty())
-				return;
-
-			string shortname = Path.GetFileName(filename);
-			if (shortname.EndsWith(".new"))
-				shortname = shortname.Substring(0, shortname.Length - 4);
-
-		rowsearch:
-			bool dirstr = cpk.ToC.Columns.Find(r => r.Name == "DirName") != null;
-
-			UTF.Row filerow = cpk.ToC.Rows.Find(r => (r.FindValue("FileName") as UTF.StringValue).Value == shortname && (!dirstr || Path.GetDirectoryName(filename).Replace('\\', '/').EndsWith((r.FindValue("DirName") as UTF.StringValue).Value)));
-			if (filerow == null) {
-				shortname = ConsolePath("A matching filename was not found. Please enter the original filename now...");
-				if (shortname.IsEmpty())
+			if (sub) {
+				string subname = ConsolePath("Filename of CPK sub-archive..?");
+				if (subname.IsEmpty())
 					return;
+				FileNode subfile = cpk.Root.Find(subname, SearchOption.AllDirectories) as FileNode;
+				if (subfile == null) {
+					Console.WriteLine("Could not find the specified file in the parent CPK archive.");
+					return;
+				}
+				substream = subfile.Data;
 
-				goto rowsearch;
+				cpkoffset = (uint)(substream as Substream).Offset;
+
+				subcpkname = cpkname + "-" + Path.GetFileNameWithoutExtension(subname);
+
+				cpk = new CPK(substream);
 			}
 
-			string cpklenfile = parentcpkname + ".patch";
-
+			UTF.ShortValue align = cpk.Header.Rows[0].FindValue("Align") as UTF.ShortValue;
 			ulong baseoffset = cpkoffset + (cpk.Header.Rows[0].FindValue("ContentOffset") as UTF.LongValue).Value;
-			uint filelen = (uint)new FileInfo(filename).Length;
-
-			ulong fileoffset = baseoffset + (filerow.FindValue("FileOffset") as UTF.LongValue).Value;
-			if (filelen > (filerow.FindValue("FileSize") as UTF.IntValue).Value) {
-				fileoffset = Util.RoundUp(File.Exists(cpklenfile) ? ulong.Parse(File.ReadAllText(cpklenfile)) : (ulong)parentstream.Length, 0x20);
-			}
+			ulong cpklen = Util.RoundUp((ulong)(stream.Length + 0x80000000), align == null ? 0x20 : (ulong)align.Value);
+			string cpklenfile = cpkname + ".patch";
+			if (File.Exists(cpklenfile))
+				cpklen = ulong.Parse(File.ReadAllText(cpklenfile));
 
 			long rowoffset = (long)(cpk.Header.Rows[0].FindValue("TocOffset") as UTF.LongValue).Value;
 			rowoffset += 0x10;
-			EndianReader reader = new EndianReader(stream, Endianness.BigEndian);
+			EndianReader reader = new EndianReader(substream, Endianness.BigEndian);
 			reader.Position = rowoffset + 0x1A;
 			uint rowsize = reader.ReadUInt16();
 			reader.Position = rowoffset + 0x08;
 			rowoffset += reader.ReadUInt32() + 0x08;
 
-			Stream toc = new FileStream(cpkname + ".toc", FileMode.OpenOrCreate);
+			string tocname = subcpkname + ".toc";
+			Stream toc = new FileStream(tocname, FileMode.OpenOrCreate);
 			EndianReader writer = new EndianReader(toc, Endianness.BigEndian);
 			long begin = Util.RoundDown(rowoffset, 4);
 			long end = Util.RoundUp(rowoffset + rowsize * cpk.ToC.Rows.Count, 4);
@@ -294,36 +424,70 @@ namespace Graceful
 				Util.StreamCopy(toc, reader, end - begin);
 			}
 
-			writer.Position = rowoffset - begin + rowsize * cpk.ToC.Rows.IndexOf(filerow);
+			stream.Close();
 
-			foreach (UTF.Value value in filerow.Values) {
-				switch (value.Type.Name) {
-					case "FileSize":
-						writer.Write(filelen);
+			while (true) {
+				string filename = ConsolePath("Full path to file to patch in..?");
+				if (filename.IsEmpty())
+					break;
+
+				string path = filename;
+				if (path.EndsWith(".new"))
+					path = path.Substring(0, path.Length - 4);
+
+				bool dirstr = cpk.ToC.Columns.Find(r => r.Name == "DirName") != null;
+
+			rowsearch:
+				string shortname = Path.GetFileName(path);
+				string dirname = Path.GetDirectoryName(path).Replace('\\', '/');
+
+				UTF.Row filerow = cpk.ToC.Rows.Find(r => (r.FindValue("FileName") as UTF.StringValue).Value == shortname && (!dirstr || dirname.EndsWith((r.FindValue("DirName") as UTF.StringValue).Value)));
+				if (filerow == null) {
+					path = ConsolePath("A matching filename was not found. Please enter the original filename now...");
+					if (path.IsEmpty()) {
 						break;
-					case "ExtractSize":
-						writer.Write(filelen);
-						break;
-					case "FileOffset":
-						writer.Write((ulong)(fileoffset - baseoffset));
-						break;
-					default:
-						writer.Position += value.Type.Size;
-						break;
+					}
+
+					goto rowsearch;
 				}
+
+				uint filelen = (uint)new FileInfo(filename).Length;
+
+				ulong fileoffset = baseoffset + (filerow.FindValue("FileOffset") as UTF.LongValue).Value;
+				if (filelen > (filerow.FindValue("FileSize") as UTF.IntValue).Value)
+					fileoffset = cpklen;
+
+				writer.Position = rowoffset - begin + rowsize * cpk.ToC.Rows.IndexOf(filerow);
+
+				foreach (UTF.Value value in filerow.Values) {
+					switch (value.Type.Name) {
+						case "FileSize":
+							writer.Write(filelen);
+							break;
+						case "ExtractSize":
+							writer.Write(filelen);
+							break;
+						case "FileOffset":
+							writer.Write((ulong)(fileoffset - baseoffset));
+							break;
+						default:
+							writer.Position += value.Type.Size;
+							break;
+					}
+				}
+
+				if (fileoffset == cpklen) {
+					cpklen = Util.RoundUp(cpkoffset + fileoffset + filelen, align == null ? 0x20 : (ulong)align.Value);
+					File.WriteAllText(cpklenfile, cpklen.ToString());
+				}
+
+				Console.WriteLine("The following patches will need to be applied.");
+
+				Console.WriteLine("<file resize=\"false\" offset=\"0x" + Util.ToString((uint)begin + cpkoffset) + "\" disc=\"" + Path.GetFileName(cpkname) + "\" external=\"" + Path.GetFileName(tocname) + "\" />");
+				Console.WriteLine("<file resize=\"false\" offset=\"0x" + Util.ToString((uint)fileoffset) + "\" disc=\"" + Path.GetFileName(cpkname) + "\" external=\"" + Path.GetFileName(filename) + "\" />");
 			}
 
 			toc.Close();
-
-			if (fileoffset >= (ulong)parentstream.Length)
-				File.WriteAllText(cpklenfile, (cpkoffset + fileoffset + filelen).ToString());
-
-			stream.Close();
-
-			Console.WriteLine("The following patches will need to be applied.");
-
-			Console.WriteLine("<file resize=\"false\" offset=\"0x" + Util.ToString((uint)begin + cpkoffset) + "\" disc=\"" + Path.GetFileName(parentcpkname) + "\" external=\"" + Path.GetFileName(cpkname) + ".toc" + "\" />");
-			Console.WriteLine("<file resize=\"false\" offset=\"0x" + Util.ToString((uint)fileoffset) + "\" disc=\"" + Path.GetFileName(parentcpkname) + "\" external=\"" + Path.GetFileName(filename) + "\" />");
 		}
 
 		private static void OperationPackCPK()

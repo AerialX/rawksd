@@ -21,8 +21,8 @@ namespace ConsoleHaxx.Harmonix
 			SongScrollSpeed = 2300;
 			Bank = "sfx/tambourine_bank.milo";
 			Genre = "rock";
-			Album = "RawkSD";
-			Artist = "RawkSD";
+			Album = "";
+			Artist = "";
 			Name = "Custom";
 			Vocalist = "male";
 			Master = true;
@@ -103,13 +103,13 @@ namespace ConsoleHaxx.Harmonix
 			public List<int> Tracks = new List<int>();
 		}
 
-		public DTB.NodeTree ToDTB()
+		public DTB.NodeTree ToDTB(bool rawksd2 = false)
 		{
 			uint line = 1;
-			return ToDTB(ref line);
+			return ToDTB(ref line, rawksd2);
 		}
 
-		public DTB.NodeTree ToDTB(ref uint line)
+		public DTB.NodeTree ToDTB(ref uint line, bool rawksd2 = false)
 		{
 			DTB.NodeTree tree = new DTB.NodeTree(line++);
 			tree.Nodes.Add(new DTB.NodeKeyword() { Type = 0x05, Text = BaseName });
@@ -138,7 +138,14 @@ namespace ConsoleHaxx.Harmonix
 			tracks.Nodes.Add(new DTB.NodeKeyword() { Type = 0x05, Text = "tracks" });
 			DTB.NodeTree tracktree = new DTB.NodeTree(line); tracks.Nodes.Add(tracktree);
 			foreach (SongTracks track in Song.Tracks) {
-				if (track.Tracks.Count == 0)
+				if (rawksd2) {
+					int drumtrackcount = 6; // For safety with customs messing with mix and not knowing what they're doing
+					if (track.Name == "drum" && track.Tracks.Count < drumtrackcount && track.Tracks.Count > 0) {
+						for (int k = 0; k < drumtrackcount - track.Tracks.Count; k++)
+							track.Tracks.Add(track.Tracks[track.Tracks.Count - 1]);
+						// Now there are duplicates... I blame RB2.
+					}
+				} else if (track.Tracks.Count == 0)
 					continue;
 				tracks = new DTB.NodeTree(line++); tracktree.Nodes.Add(tracks);
 				tracks.Nodes.Add(new DTB.NodeKeyword() { Type = 0x05, Text = track.Name });

@@ -25,7 +25,7 @@ namespace ConsoleHaxx.Graces
 
 			for (uint i = 0; i < Base.Files - 1; i++) {
 				FPS4Base.Node node = Base.Nodes[(int)i];
-				FileNode file = new FileNode(node.Filename, Root, (ulong)node.Data.Length, node.Data);
+				Root.AddChild(new FileNode(node.Filename, node.Data));
 			}
 
 			Type = Util.ReadCString(Base.Type, 0); // There's more to the type I'm sure

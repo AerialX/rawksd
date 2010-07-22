@@ -30,8 +30,6 @@
 			this.MainLayout = new System.Windows.Forms.TableLayoutPanel();
 			this.LabelChartType = new System.Windows.Forms.Label();
 			this.ChartCombo = new System.Windows.Forms.ComboBox();
-			this.CoopCheckbox = new System.Windows.Forms.CheckBox();
-			this.ExpertPlusCheckbox = new System.Windows.Forms.CheckBox();
 			this.MiloBrowseButton = new System.Windows.Forms.Button();
 			this.WeightsBrowseButton = new System.Windows.Forms.Button();
 			this.PanBrowseButton = new System.Windows.Forms.Button();
@@ -45,8 +43,10 @@
 			this.ButtonLayout = new System.Windows.Forms.FlowLayoutPanel();
 			this.ButtonOK = new System.Windows.Forms.Button();
 			this.ButtonCancel = new System.Windows.Forms.Button();
-			this.OpenFile = new System.Windows.Forms.OpenFileDialog();
+			this.ExpertPlusCheckbox = new System.Windows.Forms.CheckBox();
+			this.CoopCheckbox = new System.Windows.Forms.CheckBox();
 			this.FixCheckbox = new System.Windows.Forms.CheckBox();
+			this.OpenFile = new System.Windows.Forms.OpenFileDialog();
 			this.MainLayout.SuspendLayout();
 			this.ButtonLayout.SuspendLayout();
 			this.SuspendLayout();
@@ -109,28 +109,6 @@
 			this.ChartCombo.Size = new System.Drawing.Size(218, 21);
 			this.ChartCombo.TabIndex = 1;
 			this.ChartCombo.SelectedIndexChanged += new System.EventHandler(this.ChartCombo_SelectedIndexChanged);
-			// 
-			// CoopCheckbox
-			// 
-			this.CoopCheckbox.AutoSize = true;
-			this.MainLayout.SetColumnSpan(this.CoopCheckbox, 2);
-			this.CoopCheckbox.Location = new System.Drawing.Point(71, 30);
-			this.CoopCheckbox.Name = "CoopCheckbox";
-			this.CoopCheckbox.Size = new System.Drawing.Size(51, 17);
-			this.CoopCheckbox.TabIndex = 3;
-			this.CoopCheckbox.Text = "Coop";
-			this.CoopCheckbox.UseVisualStyleBackColor = true;
-			// 
-			// ExpertPlusCheckbox
-			// 
-			this.ExpertPlusCheckbox.AutoSize = true;
-			this.MainLayout.SetColumnSpan(this.ExpertPlusCheckbox, 2);
-			this.ExpertPlusCheckbox.Location = new System.Drawing.Point(71, 76);
-			this.ExpertPlusCheckbox.Name = "ExpertPlusCheckbox";
-			this.ExpertPlusCheckbox.Size = new System.Drawing.Size(62, 17);
-			this.ExpertPlusCheckbox.TabIndex = 5;
-			this.ExpertPlusCheckbox.Text = "Expert+";
-			this.ExpertPlusCheckbox.UseVisualStyleBackColor = true;
 			// 
 			// MiloBrowseButton
 			// 
@@ -265,6 +243,28 @@
 			this.ButtonCancel.UseVisualStyleBackColor = true;
 			this.ButtonCancel.Click += new System.EventHandler(this.ButtonCancel_Click);
 			// 
+			// ExpertPlusCheckbox
+			// 
+			this.ExpertPlusCheckbox.AutoSize = true;
+			this.MainLayout.SetColumnSpan(this.ExpertPlusCheckbox, 2);
+			this.ExpertPlusCheckbox.Location = new System.Drawing.Point(71, 76);
+			this.ExpertPlusCheckbox.Name = "ExpertPlusCheckbox";
+			this.ExpertPlusCheckbox.Size = new System.Drawing.Size(62, 17);
+			this.ExpertPlusCheckbox.TabIndex = 5;
+			this.ExpertPlusCheckbox.Text = "Expert+";
+			this.ExpertPlusCheckbox.UseVisualStyleBackColor = true;
+			// 
+			// CoopCheckbox
+			// 
+			this.CoopCheckbox.AutoSize = true;
+			this.MainLayout.SetColumnSpan(this.CoopCheckbox, 2);
+			this.CoopCheckbox.Location = new System.Drawing.Point(71, 30);
+			this.CoopCheckbox.Name = "CoopCheckbox";
+			this.CoopCheckbox.Size = new System.Drawing.Size(51, 17);
+			this.CoopCheckbox.TabIndex = 3;
+			this.CoopCheckbox.Text = "Coop";
+			this.CoopCheckbox.UseVisualStyleBackColor = true;
+			// 
 			// FixCheckbox
 			// 
 			this.FixCheckbox.AutoSize = true;
@@ -283,6 +283,7 @@
 			this.CancelButton = this.ButtonCancel;
 			this.ClientSize = new System.Drawing.Size(292, 216);
 			this.Controls.Add(this.MainLayout);
+			this.MaximizeBox = false;
 			this.Name = "ChartForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Chart Configuration";

@@ -40,7 +40,7 @@ namespace ConsoleHaxx.RawkSD
 			FormatData formatdata = new TemporaryFormatData(song, data);
 
 			DirectoryNode dir = data.Session["songdir"] as DirectoryNode;
-			foreach (FileNode file in dir.Children.OfType<FileNode>())
+			foreach (FileNode file in dir.Files)
 				formatdata.SetStream(file.Name, file.Data);
 
 			data.AddSong(formatdata);
@@ -51,6 +51,9 @@ namespace ConsoleHaxx.RawkSD
 		public bool AddSongOld(PlatformData data, SongData song, ProgressIndicator progress)
 		{
 			FormatData formatdata = new TemporaryFormatData(song, data);
+			
+			formatdata.Song.Data.SetValue("RawkSD2Compatibility", true);
+			formatdata.Song.Version = 0;
 
 			DirectoryNode dir = data.Session["songdir"] as DirectoryNode;
 
@@ -71,7 +74,7 @@ namespace ConsoleHaxx.RawkSD
 				song.AlbumArt = WiiImage.Create(new EndianReader(albumfile.Data, Endianness.LittleEndian)).Bitmap;
 
 			if (chartfile != null)
-				ChartFormatRB.Instance.Create(formatdata, chartfile == null ? null : chartfile.Data, panfile == null ? null : panfile.Data, weightsfile == null ? null : weightsfile.Data, milofile == null ? null : milofile.Data, false, false);
+				ChartFormatRB.Instance.Create(formatdata, chartfile == null ? null : chartfile.Data, panfile == null ? null : panfile.Data, weightsfile == null ? null : weightsfile.Data, milofile == null ? null : milofile.Data, false, false, Game.RockBand2);
 
 			data.AddSong(formatdata);
 
@@ -86,7 +89,7 @@ namespace ConsoleHaxx.RawkSD
 
 			List<DirectoryNode> dirs = new List<DirectoryNode>();
 			dirs.Add(dir);
-			dirs.AddRange(dir.Children.OfType<DirectoryNode>());
+			dirs.AddRange(dir.Directories);
 
 			progress.NewTask(dirs.Count);
 
@@ -95,18 +98,24 @@ namespace ConsoleHaxx.RawkSD
 
 				FileNode datafile = songdir.Navigate("data", false, true) as FileNode;
 				FileNode newdatafile = songdir.Navigate("songdata", false, true) as FileNode;
-				if (datafile == null && newdatafile == null)
+				if (datafile == null && newdatafile == null) {
+					Exceptions.Warning("Unable to find a custom in " + songdir.Filename);
 					continue;
+				}
 
-				SongData song = null;
-				if (datafile != null) {
-					song = HarmonixMetadata.GetSongData(data, DTB.Create(new EndianReader(datafile.Data, Endianness.LittleEndian)));
-					datafile.Data.Close();
-					AddSongOld(data, song, progress);
-				} else {
-					song = SongData.Create(newdatafile.Data);
-					newdatafile.Data.Close();
-					AddSongNew(data, song, progress);
+				try {
+					SongData song = null;
+					if (datafile != null) {
+						song = HarmonixMetadata.GetSongData(data, DTB.Create(new EndianReader(datafile.Data, Endianness.LittleEndian)));
+						datafile.Data.Close();
+						AddSongOld(data, song, progress);
+					} else {
+						song = SongData.Create(newdatafile.Data);
+						newdatafile.Data.Close();
+						AddSongNew(data, song, progress);
+					}
+				} catch (Exception exception) {
+					Exceptions.Error(exception, "Unable to open the custom from " + songdir.Filename);
 				}
 
 				progress.Progress();
@@ -124,6 +133,11 @@ namespace ConsoleHaxx.RawkSD
 		public override void SaveSong(PlatformData data, FormatData formatdata, ProgressIndicator progress)
 		{
 			base.SaveSong(data, formatdata, progress);
+		}
+
+		public bool IsRawkSD2(SongData song)
+		{
+			return song.Data.GetValue<bool>("RawkSD2Compatibility") || song.Version == 0;
 		}
 	}
 }

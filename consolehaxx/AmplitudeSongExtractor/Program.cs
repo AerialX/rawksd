@@ -25,7 +25,7 @@ namespace AmplitudeSongExtractor
 			Midi midi = Midi.Create(Mid.Create((songdir.Find(songname + "_g.mid") as FileNode).Data));
 
 			Dictionary<InstrumentBank, Stream> banks = new Dictionary<InstrumentBank, Stream>();
-			foreach (FileNode node in songdir.Children.OfType<FileNode>()) {
+			foreach (FileNode node in songdir.Files) {
 				if (node.Name.EndsWith(".bnk")) {
 					InstrumentBank bank = InstrumentBank.Create(new EndianReader(node.Data, Endianness.LittleEndian));
 

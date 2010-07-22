@@ -81,42 +81,60 @@ namespace ConsoleHaxx.RawkSD
 			DirectoryNode dir = data.GetDirectoryStructure(path);
 
 			FileNode binfile = dir.Navigate("001.bin") as FileNode;
+			if (binfile == null)
+				Exceptions.Error("Unable to open Guitar Hero World Tour DLC because 001.bin is missing.");
 
 			data.Session["rootdir"] = dir;
 
-			DlcBin bin = new DlcBin(binfile.Data);
-			U8 u8 = new U8(bin.Data);
-			FileNode listfile = u8.Root.Navigate("DLC1.pak.ngc") as FileNode;
-			Pak qb = new Pak(new EndianReader(listfile.Data, Endianness.BigEndian));
-			FileNode songlistfile = qb.Root.Find("catalog_info.qb.ngc", SearchOption.AllDirectories) as FileNode;
-			QbFile songlist = new QbFile(songlistfile.Data, PakFormat);
+			try {
+				DlcBin bin = new DlcBin(binfile.Data);
+				U8 u8 = new U8(bin.Data);
+				FileNode listfile = u8.Root.Navigate("DLC1.pak.ngc") as FileNode;
+				Pak qb = new Pak(new EndianReader(listfile.Data, Endianness.BigEndian));
+				FileNode songlistfile = qb.Root.Find("catalog_info.qb.ngc", SearchOption.AllDirectories) as FileNode;
+				QbFile songlist = new QbFile(songlistfile.Data, PakFormat);
 
-			StringList strings = new StringList();
-			foreach (Pak.Node node in qb.Nodes) {
-				if (!node.Filename.HasValue())
-					strings.ParseFromStream(node.Data);
-			}
-
-			foreach (uint songlistkey in NeversoftMetadata.SonglistKeys) {
-				QbItemBase list = songlist.FindItem(QbKey.Create(songlistkey), true);
-				if (list == null || list.Items.Count == 0)
-					continue;
-
-				progress.NewTask(list.Items.Count);
-
-				foreach (QbItemArray item in (list as QbItemStruct).Items.OfType<QbItemArray>()) {
-					item.Items[0].ItemQbKey = item.ItemQbKey;
-					SongData song = NeversoftMetadata.GetSongData(data, item.Items[0] as QbItemStruct, strings);
-
-					progress.Progress();
-
-					AddSong(data, song, progress);
+				StringList strings = new StringList();
+				foreach (Pak.Node node in qb.Nodes) {
+					if (!node.Filename.HasValue())
+						strings.ParseFromStream(node.Data);
 				}
 
-				progress.EndTask();
-			}
+				List<QbKey> listkeys = new List<QbKey>();
+				foreach (uint songlistkey in NeversoftMetadata.SonglistKeys) {
+					QbKey key = QbKey.Create(songlistkey);
+					QbItemStruct list = songlist.FindItem(key, true) as QbItemStruct;
+					if (list != null && list.Items.Count > 0)
+						listkeys.Add(key);
+				}
 
-			binfile.Data.Close();
+				progress.NewTask(listkeys.Count);
+				foreach (QbKey songlistkey in listkeys) {
+					QbItemStruct list = songlist.FindItem(songlistkey, true) as QbItemStruct;
+
+					progress.NewTask(list.Items.Count);
+
+					foreach (QbItemArray item in list.Items.OfType<QbItemArray>()) {
+						item.Items[0].ItemQbKey = item.ItemQbKey;
+						SongData song = NeversoftMetadata.GetSongData(data, item.Items[0] as QbItemStruct, strings);
+
+						try {
+							AddSong(data, song, progress);
+						} catch (Exception exception) {
+							Exceptions.Warning(exception, "Unable to properly parse " + song.Name);
+						}
+						progress.Progress();
+					}
+
+					progress.EndTask();
+					progress.Progress();
+				}
+				progress.EndTask();
+
+				binfile.Data.Close();
+			} catch (Exception exception) {
+				Exceptions.Error(exception, "An error occurred while parsing the Guitar Hero World Tour DLC list.");
+			}
 
 			return data;
 		}
