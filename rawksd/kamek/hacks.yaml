@@ -19,6 +19,13 @@ hooks:
     addr_pal:   0x80348EA0
     data:       '4E800020' # blr
 
+-   name:           'Playstation USB Instruments'
+    type:           branch_insn
+    branch_type:    bl
+    src_addr_ntsc:  0x804AB34C
+    src_addr_pal:   0x804AC508
+    target_func:    'UsbTypeHook'
+
 -   name:       'Harmless Hopos'
     type:       patch
     addr_ntsc:  0x8027273C

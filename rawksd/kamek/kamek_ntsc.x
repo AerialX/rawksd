@@ -162,6 +162,9 @@ SECTIONS {
 	_ZN7HttpWii12GetFileAsyncEPKcPvi	= 0x804FF8AC;
 	_ZN7HttpWii13CompleteAsyncEii		= 0x804FF9FC;
 
+	/* UsbWii */
+	_ZN6UsbWii7GetTypeEP9HIDDevice	= 0x804AB95C;
+
 	.text : {
 		FILL (0)
 		
