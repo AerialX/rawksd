@@ -37,6 +37,10 @@ Main(_Main)
 	char link[50];
 	sprintf(link, "Link Code: %d", otp.ng_id);
 	popup_text[0]->SetText(link);
+	if (!global_config.leaderboards) {
+		Buttons[0]->Select();
+		Buttons[1]->Enable();
+	}
 }
 
 RawkMenu* LeaderboardPopup::Process()
@@ -157,7 +161,7 @@ const u8 *MenuSettings::settings_images[OPTION_SETTINGS_COUNT*3+1] = {
 };
 
 static const char device_subtitle[] = "Choose the default storage device";
-static const char leaderboard_subtitle[] = "Opt-in/out of the RawkSD Leaderboards or see your Link Code";
+static const char leaderboard_subtitle[] = "Opt-in/out of the RawkSD Leaderboards or view your Link Code";
 
 MenuSettings::MenuSettings(GuiWindow *Parent) : RawkMenu(Parent, settings_images, 238, 188),
 Subtitle(device_subtitle, 18, (GXColor){255, 255, 255, 255})

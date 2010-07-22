@@ -50,6 +50,7 @@ Main(_Main)
 
 RawkMenu *MenuPlay::Process()
 {
+	char status_text[200];
 	char mountpoint[MAXPATHLEN];
 	RVL_SetFST(NULL, 0);
 	LauncherStatus::Enum status = Launcher_ReadDisc();
@@ -62,10 +63,11 @@ RawkMenu *MenuPlay::Process()
 		case LauncherStatus::ReadError:
 			return new MenuSaves(Main, "Read Error", "\nCouldn't read the disc, are you sure it is a proper Wii disc?");
 		default: // LauncherStatus::OK
-			if (memcmp(MEM_BASE, "SZA", 3))
+			if (memcmp(MEM_BASE, "SZA", 3) || (MEM_BASE[3] != 'E' && MEM_BASE[3] != 'P'))
 				return new MenuSaves(Main, Launcher_GetGameName(), "\nOnly Rock Band 2 can be launched. Insert the correct disc and try again.");
 			popup_text[0]->SetText(Launcher_GetGameNameWide());
-			popup_text[1]->SetText("\nReading Disc.....");
+			sprintf(status_text, "\nReading Disc.....");
+			popup_text[1]->SetText(status_text);
 			ResumeGui();
 	}
 
@@ -77,7 +79,8 @@ RawkMenu *MenuPlay::Process()
 		case LauncherStatus::OutOfMemory:
 			return new MenuSaves(Main, "Memory Error", "\nOut of Memory. Not sure how this happened, but it's bad.");
 		default: // LauncherStatus::OK
-			popup_text[1]->SetText("\nApplying Patches.....");
+			strcat(status_text, "\nApplying Patches.....");
+			popup_text[1]->SetText(status_text);
 			ResumeGui();
 	}
 
@@ -99,17 +102,26 @@ RawkMenu *MenuPlay::Process()
 			} else if (default_mount==usb_mounted)
 				index = 2;
 
-			File_CreateFile("/mnt/isfs/tmp/ntsc.tpl");
-			out_fd = File_Open("/mnt/isfs/tmp/ntsc.tpl", O_WRONLY);
-			if (out_fd >=0) {
-				File_Write(out_fd, splash_tpls[index].data, splash_tpls[index].size);
-				File_Close(out_fd);
+			HaltGui();
+			strcat(status_text, "\nSaving Configuration.....");
+			popup_text[1]->SetText(status_text);
+			ResumeGui();
+
+			if (MEM_BASE[3] == 'E') {
+				File_CreateFile("/mnt/isfs/tmp/ntsc.tpl");
+				out_fd = File_Open("/mnt/isfs/tmp/ntsc.tpl", O_WRONLY);
+				if (out_fd >=0) {
+					File_Write(out_fd, splash_tpls[index].data, splash_tpls[index].size);
+					File_Close(out_fd);
+				}
 			}
-			File_CreateFile("/mnt/isfs/tmp/pal.tpl");
-			out_fd = File_Open("/mnt/isfs/tmp/pal.tpl", O_WRONLY);
-			if (out_fd >=0) {
-				File_Write(out_fd, splash_tpls[index+1].data, splash_tpls[index+1].size);
-				File_Close(out_fd);
+			else if (MEM_BASE[3] == 'P') {
+				File_CreateFile("/mnt/isfs/tmp/pal.tpl");
+				out_fd = File_Open("/mnt/isfs/tmp/pal.tpl", O_WRONLY);
+				if (out_fd >=0) {
+					File_Write(out_fd, splash_tpls[index+1].data, splash_tpls[index+1].size);
+					File_Close(out_fd);
+				}
 			}
 			File_CreateDir("/rawk");
 			File_CreateDir("/rawk/rb2");
@@ -144,20 +156,23 @@ RawkMenu *MenuPlay::Process()
 	RVL_Patch(&Disc);
 
 	HaltGui();
-	popup_text[1]->SetText("\nRunning Apploader.....");
+	strcat(status_text, "\nRunning Apploader.....");
+	popup_text[1]->SetText(status_text);
 	ResumeGui();
 	status = Launcher_RunApploader();
 	HaltGui();
 	if (status != LauncherStatus::OK)
 		return new MenuSaves(Main, "Read Error", "\nApploader Error, couldn't read the disc");
-	popup_text[1]->SetText("\nAdding playtime entry and setting video mode.....");
+	strcat(status_text, "\nAdding playtime entry and setting video mode.....");
+	popup_text[1]->SetText(status_text);
 	ResumeGui();
 	Launcher_CommitRVL(false);
 	Launcher_AddPlaytimeEntry();
 	Launcher_SetVideoMode();
 
 	HaltGui();
-	popup_text[1]->SetText("\nBooting Disc.....");
+	strcat(status_text, "\nBooting Disc.....");
+	popup_text[1]->SetText(status_text);
 	ResumeGui();
 
 	RVL_PatchMemory(&Disc);

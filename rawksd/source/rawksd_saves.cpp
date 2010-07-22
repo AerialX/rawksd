@@ -34,7 +34,7 @@ Main(Parent)
 {
 }
 
-static u8 save_copy_buffer[0x8000] ATTRIBUTE_ALIGN(32);
+u8 save_copy_buffer[0x8000] ATTRIBUTE_ALIGN(32);
 
 RawkMenu* MenuSaves::Process()
 {

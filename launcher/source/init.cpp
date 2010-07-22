@@ -20,6 +20,7 @@ bool PressA()
 {
 	printf("\tPress A to continue or press Home to exit.\n");
 	while (true) {
+		VIDEO_WaitVSync();
 		WPAD_ScanPads();
 
 		int down = WPAD_ButtonsDown(0) |
@@ -37,6 +38,7 @@ void PressHome()
 {
 	printf("\tPress Home to exit.\n");
 	do {
+		VIDEO_WaitVSync();
 		WPAD_ScanPads();
 	} while (!((WPAD_ButtonsDown(0) |
 		WPAD_ButtonsDown(1) |
