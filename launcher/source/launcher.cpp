@@ -449,6 +449,7 @@ static inline void ApplyBinaryPatches(s32 app_section_size)
 	// Return to Riiv is not working properly yet
 	//if (*(u32*)0x80001808 == 0x48415858) // "HAXX"
 	//	PatchReturnToMenu(app_section_size, 0x00010001af1bf516llu);
+	//	PatchReturnToMenu(app_section_size, 0x000100014a4f4449llu); // "JODI"
 	//	PatchReturnToMenu(app_section_size, 0x0001000152494956llu); // "RIIV"
 
 	RVL_PatchMemory(&Disc, app_address, app_section_size);

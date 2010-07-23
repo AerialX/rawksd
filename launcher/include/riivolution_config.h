@@ -54,7 +54,7 @@ struct RiiFilePatch {
 	bool Resize;
 	bool Create;
 	std::string Disc;
-	int Offset;
+	u32 Offset;
 	std::string External;
 	u32 FileOffset;
 	u32 Length;
@@ -106,7 +106,7 @@ struct RiiMemoryPatch {
 		Search = false;
 		Ocarina = false;
 	}
-	int Offset;
+	u32 Offset;
 	u8* Value;
 	u8* Original;
 	u32 Length;

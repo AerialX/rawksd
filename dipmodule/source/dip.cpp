@@ -135,7 +135,7 @@ namespace ProxiIOS { namespace DIP {
 				u32 len = buffer_in[0];
 				u64 originaloffset = ((u64)buffer_in[1] << 32) | buffer_in[2];
 				u64 newoffset = ((u64)buffer_in[3] << 32) | buffer_in[4];
-				LogPrintf("IOCTL: AddShift(0x%08x, ?, ?);\n", len);
+				LogPrintf("IOCTL: AddShift(0x%08x, 0x%08x%08x, 0x%08x%08x);\n", len, (u32)(originaloffset >> 32), (u32)originaloffset, (u32)(newoffset >> 32), (u32)newoffset);
 
 				Shift shift;
 				shift.Length = len;
@@ -234,7 +234,9 @@ namespace ProxiIOS { namespace DIP {
 					for (int i = 0; i < foundshifts; i++) {
 						Shift* shift = shifts[i];
 						s64 offset = pos - ((s64)shift->Offset << 2);
-						buffer_in[2] = (offset + ((u64)shift->OriginalOffset << 2)) >> 2;
+						u32* bufferoffset = (u32*)message->ioctl.buffer_in + 2;
+						*bufferoffset = (offset + ((u64)shift->OriginalOffset << 2)) >> 2;
+						LogPrintf("\tShifting: 0x%08x%08x\n", *bufferoffset >> 30, *bufferoffset << 2);
 					}
 
 					os_sync_after_write(message->ioctl.buffer_in, message->ioctl.length_in);
@@ -266,7 +268,7 @@ namespace ProxiIOS { namespace DIP {
 						filecover = true;
 				}
 				if (!filecover) {
-					if ((u64)pos < ShiftBase)
+					if ((u64)pos < ShiftBase || foundshifts)
 						ForwardIoctl(message);
 					os_sync_before_read(message->ioctl.buffer_io, message->ioctl.length_io);
 				}

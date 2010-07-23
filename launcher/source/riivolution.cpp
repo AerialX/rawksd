@@ -411,9 +411,6 @@ static void RVL_Patch(RiiFilePatch* file, string commonfs, bool stat=false, u64 
 	if (commonfs.size() && !external.compare(0, commonfs.size(), commonfs, 0, commonfs.size()))
 		external = external.substr(commonfs.size());
 
-	if (!file->Resize)
-		file->Length = node->Size;
-
 	if (!stat && file->Length == 0) {
 		Stats st;
 		if (!File_Stat(external.c_str(), &st) && !(st.Mode & S_IFDIR)) {
