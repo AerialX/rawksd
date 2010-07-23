@@ -37,7 +37,8 @@ extern s8 net_initted;
 extern const char *basic_popup_options[];
 extern const char *popup_error[];
 
-extern u8 save_copy_buffer[0x8000] ATTRIBUTE_ALIGN(32);
+#define BUFFER_SIZE 0x8000
+extern u8 save_copy_buffer[BUFFER_SIZE] ATTRIBUTE_ALIGN(32);
 
 #define STACK_ALIGN(type, name, cnt, alignment)		u8 _al__##name[((sizeof(type)*(cnt)) + (alignment) + (((sizeof(type)*(cnt))%(alignment)) > 0 ? ((alignment) - ((sizeof(type)*(cnt))%(alignment))) : 0))]; \
 													type *name = (type*)(((u32)(_al__##name)) + ((alignment) - (((u32)(_al__##name))&((alignment)-1))))
@@ -150,5 +151,17 @@ private:
 	GuiWindow *Main;
 public:
 	MenuPlay(GuiWindow *_Main);
+	RawkMenu *Process();
+};
+
+class MenuDump : public RawkMenu
+{
+private:
+	GuiWindow *Main;
+	int disc;
+	s64 space;
+	int old_net_initted;
+public:
+	MenuDump(GuiWindow *_Main);
 	RawkMenu *Process();
 };

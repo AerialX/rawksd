@@ -399,7 +399,7 @@ void UpdateDevice(s32 *mount, GuiImage *image, GuiImageData *regular_image, GuiI
 	if (*mount<0) {
 		// ugh
 		if (disk == DISK_NONE)
-			if (net_initted>0 && wifi_check_now) {
+			if (wifi_check_now) {
 				*mount = File_RiiFS_Mount("", 5256);
 				wifi_check_now = 0;
 			}
@@ -515,6 +515,8 @@ void MainMenu()
 	}
 
 	net_init_async(net_init_cb, &riifs_timer);
+	// use this instead if wifi debugging is on
+	//net_init_cb(1, &riifs_timer);
 
 	RawkMenu *menu;
 	GuiImageData BackgroundImage(bg_png);
@@ -577,7 +579,8 @@ void MainMenu()
 		} else {
 			UpdateDevice(&sd_mounted, &SDsticker, &SDstickerImage, &SDstickerDefaultImage, SD_DISK, "sd");
 			UpdateDevice(&usb_mounted, &USBsticker, &USBstickerImage, &USBstickerDefaultImage, USB_DISK, "usb");
-			UpdateDevice(&wifi_mounted, &WIFIsticker, &WIFIstickerImage, &WIFIstickerDefaultImage, DISK_NONE, NULL);
+			if (net_initted>0)
+				UpdateDevice(&wifi_mounted, &WIFIsticker, &WIFIstickerImage, &WIFIstickerDefaultImage, DISK_NONE, NULL);
 			usleep(THREAD_SLEEP);
 		}
 	} while (menu);

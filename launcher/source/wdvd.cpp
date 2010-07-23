@@ -72,6 +72,16 @@ int WDVD_LowRead(void *buf, u32 len, u64 offset) {
 	return (result==1) ? 0 : -result;
 }
 
+int WDVD_LowReadSectors(void *outbuf, u32 len, u32 offset)
+{
+    // make sure it's a MEM2 buffer
+    u32 high_addr = ((u32)outbuf) >> 26;
+    if ((high_addr|0x10)!=(0xD0>>2) || (u32)outbuf&0x1F)
+      return -1;
+
+	return WDVD_LowUnencryptedRead(outbuf, len<<11, (u64)offset<<11);
+}
+
 int WDVD_LowReadDiskId() {
 	int result;
 	void *outbuf = (void*)0x80000000;

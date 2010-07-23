@@ -86,6 +86,9 @@ RawkMenu* MenuMain::Process()
 			case OPTION_PLAY:
 				next = new MenuPlay(Parent);
 				break;
+			case OPTION_RIP:
+				next = new MenuDump(Parent);
+				break;
 			case OPTION_SAVES:
 				if (default_mount<0)
 					next = new MenuSaves(Parent, NULL, NULL);
