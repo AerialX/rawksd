@@ -400,7 +400,7 @@ namespace Graceful
 
 			UTF.ShortValue align = cpk.Header.Rows[0].FindValue("Align") as UTF.ShortValue;
 			ulong baseoffset = cpkoffset + (cpk.Header.Rows[0].FindValue("ContentOffset") as UTF.LongValue).Value;
-			ulong cpklen = Util.RoundUp((ulong)(stream.Length + 0x80000000), align == null ? 0x20 : (ulong)align.Value);
+			ulong cpklen = Util.RoundUp((ulong)Math.Max(stream.Length, 0x70000000), align == null ? 0x20 : (ulong)align.Value);
 			string cpklenfile = cpkname + ".patch";
 			if (File.Exists(cpklenfile))
 				cpklen = ulong.Parse(File.ReadAllText(cpklenfile));
@@ -423,8 +423,6 @@ namespace Graceful
 				reader.Position = begin;
 				Util.StreamCopy(toc, reader, end - begin);
 			}
-
-			stream.Close();
 
 			while (true) {
 				string filename = ConsolePath("Full path to file to patch in..?");
@@ -456,7 +454,7 @@ namespace Graceful
 				ulong fileoffset = baseoffset + (filerow.FindValue("FileOffset") as UTF.LongValue).Value;
 				if (filelen > (filerow.FindValue("FileSize") as UTF.IntValue).Value)
 					fileoffset = cpklen;
-
+				
 				writer.Position = rowoffset - begin + rowsize * cpk.ToC.Rows.IndexOf(filerow);
 
 				foreach (UTF.Value value in filerow.Values) {
@@ -475,7 +473,7 @@ namespace Graceful
 							break;
 					}
 				}
-
+				
 				if (fileoffset == cpklen) {
 					cpklen = Util.RoundUp(cpkoffset + fileoffset + filelen, align == null ? 0x20 : (ulong)align.Value);
 					File.WriteAllText(cpklenfile, cpklen.ToString());
@@ -487,6 +485,7 @@ namespace Graceful
 				Console.WriteLine("<file resize=\"false\" offset=\"0x" + Util.ToString((uint)fileoffset) + "\" disc=\"" + Path.GetFileName(cpkname) + "\" external=\"" + Path.GetFileName(filename) + "\" />");
 			}
 
+			stream.Close();
 			toc.Close();
 		}
 
@@ -703,10 +702,12 @@ namespace Graceful
 			while (true) {
 				Console.WriteLine(prompt);
 				for (int i = 0; i < options.Length; i++)
-					Console.WriteLine("\t" + (i + 1).ToString() + ") " + options[i]);
+					Console.WriteLine("    " + (i + 1).ToString() + ") " + options[i]);
 				Console.Write("> ");
 
 				string choice = ConsoleGetArg();
+				if (!choice.HasValue())
+					Environment.Exit(0);
 				int ret;
 				if (int.TryParse(choice, out ret) && ret > 0 && ret <= options.Length)
 					return ret - 1;
@@ -723,8 +724,7 @@ namespace Graceful
 			if (CurrentArg < Args.Length) {
 				Console.WriteLine(Args[CurrentArg]);
 				return Args[CurrentArg++];
-			} else
-				Environment.Exit(0);
+			}
 
 			return string.Empty;
 		}
