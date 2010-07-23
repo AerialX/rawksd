@@ -1140,6 +1140,7 @@ static void recover_from_reload(s32 version)
 	__IPC_Reinitialize();
 
 	__IOS_InitializeSubsystems();
+	__ES_Reset();
 	__ES_Init();
 	__STM_Init();
 }
