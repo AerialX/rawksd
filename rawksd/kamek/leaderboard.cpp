@@ -45,7 +45,7 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 	struct sockaddr_in address;
 	hostent* host;
 	int size = 0;
-	int checksum = 0;
+	u32 checksum = 0;
 	const char* song = symbol->name;
 	const char* originalsongname = gSongMgrWii.SongName(symbol);
 	bool hasname = originalsongname && strlen(originalsongname);
@@ -86,6 +86,13 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 	songname = ToHttpString(song);
 	fullsongname = ToHttpString(originalsongname);
 	artistname = ToHttpString(gSongMgrWii.SongArtist(symbol));
+
+	checksum = instrument << 3;
+	checksum |= difficulty;
+	checksum ^= console >> 4;
+	checksum ^= ~score << 6;
+	for (u32 i = 0; i < strlen(song); i++)
+		checksum ^= (u32)song[i] << 24;
 
 	message = (char*)malloc(0x100 + strlen(username) + strlen(songname) + strlen(fullsongname) + strlen(artistname) + strlen(hostname));
 	sprintf(message, "GET /rb2/post?inst=%d&diff=%d&score=%d&console=%d&nickname=%s&songid=%s&name=%s&artist=%s&valid=%d HTTP/1.1\r\nHost: %s\r\n\r\n\r\n", instrument, difficulty, score, console, username, songname, fullsongname, artistname, checksum, hostname);
