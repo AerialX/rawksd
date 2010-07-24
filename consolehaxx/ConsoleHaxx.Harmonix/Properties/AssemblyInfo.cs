@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("ConsoleHaxx.Harmonix")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("SnipeR's Redemption Network")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("ConsoleHaxx.Harmonix")]
-[assembly: AssemblyCopyright("Copyright © SnipeR's Redemption Network 2010")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

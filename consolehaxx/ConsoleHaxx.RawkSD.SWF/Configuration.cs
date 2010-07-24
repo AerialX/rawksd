@@ -49,20 +49,24 @@ namespace ConsoleHaxx.RawkSD.SWF
 			Stream stream = GetConfigurationStream(FileMode.Open, FileAccess.Read, FileShare.Read);
 			if (stream == null)
 				return;
-			DTB.NodeTree tree = DTB.Create(new EndianReader(stream, Endianness.LittleEndian));
-			stream.Close();
-			DataArray data = new DataArray(tree);
-			MaxConcurrentTasks = data.GetValue<int>("MaxConcurrentTasks");
-			LocalTranscode = data.GetValue<bool>("LocalTranscode");
-			MemorySongData = data.GetValue<bool>("MemorySongData");
-			DefaultAction = (DefaultActionType)data.GetValue<int>("DefaultAction");
-			DefaultThreadPriority = (ThreadPriority)data.GetValue<int>("DefaultThreadPriority");
-			NamePrefix = (ImportMap.NamePrefix)data.GetValue<int>("NamePrefix");
-			LocalPath = data.GetValue<string>("LocalPath");
-			IterateBins = data.GetValue<bool>("IterateBins");
-			TemporaryPath = data.GetValue<string>("TemporaryPath");
-			InstallTitle = data.GetValue<string>("InstallTitle");
-			ExpertPlusGH5 = data.GetValue<bool>("ExpertPlusGH5");
+			try {
+				DTB.NodeTree tree = DTB.Create(new EndianReader(stream, Endianness.LittleEndian));
+				stream.Close();
+				DataArray data = new DataArray(tree);
+				MaxConcurrentTasks = data.GetValue<int>("MaxConcurrentTasks");
+				LocalTranscode = data.GetValue<bool>("LocalTranscode");
+				MemorySongData = data.GetValue<bool>("MemorySongData");
+				DefaultAction = (DefaultActionType)data.GetValue<int>("DefaultAction");
+				DefaultThreadPriority = (ThreadPriority)data.GetValue<int>("DefaultThreadPriority");
+				NamePrefix = (ImportMap.NamePrefix)data.GetValue<int>("NamePrefix");
+				LocalPath = data.GetValue<string>("LocalPath");
+				IterateBins = data.GetValue<bool>("IterateBins");
+				TemporaryPath = data.GetValue<string>("TemporaryPath");
+				InstallTitle = data.GetValue<string>("InstallTitle");
+				ExpertPlusGH5 = data.GetValue<bool>("ExpertPlusGH5");
+			} catch (Exception exception) {
+				Exceptions.Warning(exception, "Error reading configuration data");
+			}
 		}
 
 		public static void Save()

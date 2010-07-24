@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ConsoleHaxx.RawkSD.SWF")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("RawkSD")]
+[assembly: AssemblyDescription("RawkSD")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("SnipeR's Redemption Network")]
-[assembly: AssemblyProduct("ConsoleHaxx.RawkSD.SWF")]
-[assembly: AssemblyCopyright("Copyright © SnipeR's Redemption Network 2010")]
+[assembly: AssemblyCompany("RawkSD Team")]
+[assembly: AssemblyProduct("RawkSD")]
+[assembly: AssemblyCopyright("RawkSD Team 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("3.0.0.0")]
+[assembly: AssemblyFileVersion("3.0.0.0")]

@@ -100,8 +100,11 @@ namespace ConsoleHaxx.RawkSD.SWF
 			if (ProgressLayout.Controls.Count == 0) {
 				ProgressLayout.Width = 0;
 				ProgressLayout.Height = 0;
+				ProgressLayout.Visible = false;
 				return;
 			}
+
+			ProgressLayout.Visible = true;
 
 			ProgressLayout.RowCount = Math.Min(4, ProgressLayout.Controls.Count);
 			ProgressLayout.ColumnCount = (int)Util.RoundUp(ProgressLayout.Controls.Count, ProgressLayout.RowCount) / ProgressLayout.RowCount;
@@ -130,6 +133,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			if (ProgressLayout.Controls.Count == 0) {
 				ProgressLayout.Width = 0;
 				ProgressLayout.Height = 0;
+				ProgressLayout.Visible = false;
 				return;
 			}
 			int cumulativewidth = 0;
