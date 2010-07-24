@@ -32,12 +32,10 @@
 #define BEGIN_ERROR			-4
 
 #define DEVICE_NONE			-1
-#define DEVICE_SD			0
-#define DEVICE_USB			1
 
 int get_disc();
 void close_disc();
-s64 get_space(int device, int init=1);
+u64 get_space(int device, int init=1);
 
 struct rip_state {
 	FILE *f_in;
@@ -56,7 +54,7 @@ struct rip_state {
 	int file_index;
 	time_t start;
 	time_t switch_time;
-	s64 device_free_space;
+	u64 device_free_space;
 	const char *out_filename;
 };
 

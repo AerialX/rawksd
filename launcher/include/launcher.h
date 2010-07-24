@@ -36,6 +36,8 @@ namespace LauncherStatus { enum Enum {
 	ReadError = -0x201
 }; }
 
+extern bool disk_subsequent_reset;
+
 LauncherStatus::Enum Launcher_Init();
 LauncherStatus::Enum Launcher_ReadDisc();
 LauncherStatus::Enum Launcher_RunApploader();

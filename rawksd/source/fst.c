@@ -678,19 +678,13 @@ static DIR_ENTRY *add_metadata_entry(u32 partition_number) {
 }
 
 static bool read_disc() {
-	if (WDVD_LowReadSectors(read_buffer, 1, 0)) {
-		printf("Couldn't read start sector\n");
+	if (WDVD_LowReadSectors(read_buffer, 1, 0))
 		return false;
-	}
     DISC_HEADER *header = (DISC_HEADER *)read_buffer;
-	if (memcmp(header->magic, "\x5d\x1c\x9e\xa3", 4)) {
-		printf("Bad Magic\n");
+	if (memcmp(header->magic, "\x5d\x1c\x9e\xa3", 4))
 		return false;
-	}
-	if (WDVD_LowReadSectors(read_buffer, 1, 128)) {
-		printf("Coudln't read partition table\n");
+	if (WDVD_LowReadSectors(read_buffer, 1, 128))
 		return false;
-	}
     PARTITION_TABLE_ENTRY tables[4];
     memcpy(tables, read_buffer, sizeof(PARTITION_TABLE_ENTRY) * 4);
     u32 table_index;
@@ -722,54 +716,34 @@ static bool read_disc() {
                 if (!meta_entry) goto error;
                 DIR_ENTRY *partition_entry = meta_entry - 1;
 
-				if (!read_title_key(partition)) {
-					printf("Couldn't read title key\n");
+				if (!read_title_key(partition))
 					goto error;
-				}
-				if (!read_partition_info(partition)) {
-					printf("Coulnd't read partition info\n");
+				if (!read_partition_info(partition))
 					goto error;
-				}
-				if (!add_ticket_entry(meta_entry)) {
-					printf("Couldn't read ticket\n");
+				if (!add_ticket_entry(meta_entry))
 					goto error;
-				}
-				if (!add_tmd_entry(meta_entry)) {
-					printf("Couldn't read tmd\n");
+				if (!add_tmd_entry(meta_entry))
 					goto error;
-				}
 
 		        data_offset = (partition->offset << 2LL) + (partition->partition_info.data_offset << 2LL);
 
-				if (!(read_and_decrypt_cluster(partition->key, read_buffer, data_offset, plaintext_to_cipher(0x420), sizeof(FST_INFO)))) {
-					printf("Couldn't read cluster\n");
+				if (!(read_and_decrypt_cluster(partition->key, read_buffer, data_offset, plaintext_to_cipher(0x420), sizeof(FST_INFO))))
 					goto error;
-				}
                 memcpy(&partition->fst_info, read_buffer, sizeof(FST_INFO));
 
-				if (!add_header_entry(meta_entry)) {
-					printf("Couldn't read header\n");
+				if (!add_header_entry(meta_entry))
 					goto error;
-				}
-				if (!add_appldr_entry(meta_entry, data_offset, &partition->key)) {
-					printf("Couldn't read apploader\n");
+				if (!add_appldr_entry(meta_entry, data_offset, &partition->key))
 					goto error;
-				}
                 if (partition->fst_info.dol_offset) {
-					if (!add_dol_entry(meta_entry, data_offset, &partition->key)) {
-						printf("Couldn't read dol\n");
+					if (!add_dol_entry(meta_entry, data_offset, &partition->key))
 						goto error;
-					}
                 }
                 if (partition->fst_info.fst_offset && partition->fst_info.fst_size) {
-					if (!add_fst_entry(meta_entry)) {
-						printf("Couldn't read FST\n");
+					if (!add_fst_entry(meta_entry))
 						goto error;
-					}
-					if (!read_partition(partition_entry, data_offset, &partition->key)) {
-						printf("Couldn't parse partition\n");
+					if (!read_partition(partition_entry, data_offset, &partition->key))
 						goto error;
-					}
                 }
 
                 partition_count++;
@@ -778,7 +752,6 @@ static bool read_disc() {
     }
     return true;
     error:
-	printf("read_disc error\n");
     return false;
 }
 
@@ -800,7 +773,6 @@ u64 FST_Mount() {
 		read_buffer = (u8*)ROUNDDOWN32(((u32)SYS_GetArena2Hi() - BUFFER_SIZE));
 		if ((u32)read_buffer < (u32)SYS_GetArena2Lo()) {
 			_CPU_ISR_Restore(level);
-			printf("MEM2 read_buffer allocation failed\n");
 			return 0;
 		}
 
@@ -812,20 +784,14 @@ u64 FST_Mount() {
 	// enable long DI unencrypted reads
 	*(u16*)0x939B0A88 = 0x2001;
 	DCFlushRange((void*)0x939B0A80, 32);
-	if (WDVD_Init()<0 || !WDVD_Reset() || WDVD_LowReadDiskId()<0) {
-		printf("FST_Mount: disc init failed\n");
+	if (WDVD_Init()<0 || WDVD_LowReadDiskId()<0)
     	return 0;
-	}
 	memcpy(&id, (void*)0x80000000, sizeof(id));
 	bool success = false;
-	if (!read_disc())
-		printf("FST_Mount: read_disc failed\n");
-	else
+	if (read_disc())
 		success = (dotab_device = AddDevice(&dotab_fst)) >= 0;
-	if (success==false) {
+	if (success==false)
 		id = 0;
-		printf("AddDevice failed\n");
-	}
     if (success) last_access = gettime();
     else FST_Unmount();
     return id;
@@ -840,11 +806,10 @@ bool FST_Unmount() {
         free(root);
         root = NULL;
     }
-    if (partitions) {
-        free(partitions);
-        partitions = NULL;
-    }
-    current = root;
+    free(partitions);
+    partitions = NULL;
+
+	current = root;
     aescache_end = 0;
     last_access = 0;
     if (dotab_device >= 0) {

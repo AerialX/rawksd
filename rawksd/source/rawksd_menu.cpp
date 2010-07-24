@@ -8,6 +8,7 @@
 
 #include "rawksd_menu.h"
 
+#include "init.h"
 #include "files.h"
 #include "launcher.h"
 #include "riivolution.h"
@@ -408,7 +409,7 @@ void UpdateDevice(s32 *mount, GuiImage *image, GuiImageData *regular_image, GuiI
 		else
 			*mount = File_Fat_Mount(disk, dev);
 		if (*mount>=0) {
-			STACK_ALIGN(config_t,new_config,1,32);
+			STACK_ALIGN(config_t,new_config,2,32);
 			char filepath[MAXPATHLEN];
 			image->SetVisible(true);
 			new_config->version = 0;
@@ -586,6 +587,7 @@ void MainMenu()
 				UpdateDevice(&wifi_mounted, &WIFIsticker, &WIFIstickerImage, &WIFIstickerDefaultImage, DISK_NONE, NULL);
 			usleep(THREAD_SLEEP);
 		}
+		CheckShutdown();
 	} while (menu);
 
 	ShutoffRumble();

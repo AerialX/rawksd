@@ -157,8 +157,11 @@ public:
 class MenuDump : public RawkMenu
 {
 private:
+	enum {RIP_BEGIN, RIP_NEED_DEVICE, RIP_RIPPING, RIP_DONE, RIP_ABORT};
+	enum {ABORT_MEM, ABORT_DISC_UNKNOWN, ABORT_DISC_RB2, ABORT_DISC_TBRB, ABORT_READ, ABORT_WRITE, ABORT_NO_DEVICE, ABORT_NO_SPACE};
 	GuiWindow *Main;
-	int disc;
+	int state;
+	int msg_index;
 	s64 space;
 	int old_net_initted;
 public:

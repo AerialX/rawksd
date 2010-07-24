@@ -67,8 +67,9 @@ RawkMenu* MenuMain::Process()
 		const char *motd = GetMotd();
 		if (motd && motd[0]) {
 			Subtitle = new GuiText(motd, 18, (GXColor){255, 255, 255, 255});
-			Subtitle->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-			Subtitle->SetPosition(264, 338);
+			Subtitle->SetAlignment(ALIGN_CENTRE, ALIGN_TOP);
+			Subtitle->SetPosition(45, 338);
+			Subtitle->SetWrap(true, 390);
 			Parent->Append(Subtitle);
 		}
 	}

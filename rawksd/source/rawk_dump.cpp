@@ -1,15 +1,17 @@
 #include "rawksd_menu.h"
 #include "fst.h"
 
+#include "launcher.h"
+#include "wdvd.h"
 #include "files.h"
 
 #include <unistd.h>
-#include <errno.h>
 #include <time.h>
 #include <dirent.h>
-#include <stdio.h>
 
 #include "rawk_dump.h"
+
+#define printf(...)
 
 #define MAX_PATH 128
 
@@ -18,12 +20,12 @@
 #define RIP_OPTIONAL		2
 #define RIP_CREATE_ONLY		4
 
-typedef struct dump_files {
+struct dump_files {
 	const char *name;
 	int type;
 };
 
-typedef struct disc_info {
+struct disc_info {
 	const char *disc_name;
 	const char *dump_path;
 	const struct dump_files *rip_files;
@@ -319,7 +321,7 @@ u64 space_needed(struct rip_state *rs, int disc)
 								continue;
 						}
 						space += st.st_size;
-						if (rs->bytes_in_current_file < st.st_size)
+						if ((s64)rs->bytes_in_current_file < st.st_size)
 							rs->bytes_in_current_file = rs->offset_in_current_file = st.st_size;
 					}
 				}
@@ -350,7 +352,7 @@ u64 space_needed(struct rip_state *rs, int disc)
 			}
 			printf("adding size %llu\n", st.st_size);
 			space += st.st_size;
-			if (rs->bytes_in_current_file<st.st_size)
+			if ((s64)rs->bytes_in_current_file<st.st_size)
 				rs->bytes_in_current_file = rs->offset_in_current_file = st.st_size;
 		}
 	}
@@ -359,7 +361,7 @@ u64 space_needed(struct rip_state *rs, int disc)
 	return space;
 }
 
-s64 get_space(int device, int init)
+u64 get_space(int device, int init)
 {
 	printf("get_space %d %d\n", device, init);
 	if (device==DEVICE_NONE)
@@ -369,32 +371,12 @@ s64 get_space(int device, int init)
 		printf("Device isn't present\n");
 		return -1;
 	}
-	s64 space=0;
+	u64 space=0;
 
-	if (!init || 1/*FatMount(rip_device[device].mount_point, rip_device[device].di)*/)
-	{
-#if 0
-		struct statvfs fidata;
-		if (statvfs(rip_device[device].prefix,&fidata) <0)
-		{
-			printf("Couldn't stat device\n");
-			space=-1;
-		}
-		else if (fidata.f_flag & ST_RDONLY)
-			space=0;
-		else
-			space = (u64)fidata.f_bfree*fidata.f_bsize;
-		if (init)
-			fatUnmount(rip_device[device].mount_point);
-#endif
-		space = 0x7FFFFFFFFFFFFFFFll;
-	}
-	else if (init)
-		printf("Couldn't mount device\n");
+	if (File_GetFreeSpace(device, &space)<0)
+		return 0;
 
-	//if (init)
-	//	rip_device[device].di->shutdown();
-	printf("free space: %lld\n", space);
+	printf("free space: %llu\n", space);
 	return space;
 }
 
@@ -411,13 +393,11 @@ bool prepare_device(struct rip_state *rs, int device)
 		}
 		// shutdown old device
 		rs->switch_time = time(0);
-		//fatUnmount(rip_device[rs->out_device].mount_point);
-		//rip_device[rs->out_device].di->shutdown();
 		rs->out_device = DEVICE_NONE;
 		rs->device_free_space = 0;
 	}
 
-	if (device>0 && rs->out_device!=device)
+	if (device>=0 && rs->out_device!=device)
 	{
 		// setup new device
 		if (File_CheckPhysical(device)<0)
@@ -458,9 +438,7 @@ bool prepare_device(struct rip_state *rs, int device)
 				}
 			}
 			printf("error setting up new device\n");
-			//fatUnmount(rip_device[device].mount_point);
 		}
-		//rip_device[device].di->shutdown();
 	}
 
 	return false;
@@ -656,10 +634,11 @@ s64 process_rip(struct rip_state *rs)
 		if (!get_next(rs))
 			return READ_ERROR;
 
+#if 0 // can't happen, the device has already been checked to make sure it is big enough for everything
 		rs->device_free_space = get_space(rs->out_device, 0);
-		printf("free space: %lld, needed: %llu\n", rs->device_free_space, rs->bytes_in_current_file);
+		printf("free space: %llu, needed: %llu\n", rs->device_free_space, rs->bytes_in_current_file);
 
-		if ((s64)(rs->bytes_in_current_file+MIN_FREE_SPACE) >= rs->device_free_space)
+		if ((rs->bytes_in_current_file+MIN_FREE_SPACE) >= rs->device_free_space)
 		{
 			printf("Not enough space on current disc\n");
 			if (rs->f_out>=0)
@@ -671,6 +650,7 @@ s64 process_rip(struct rip_state *rs)
 			prepare_device(rs, DEVICE_NONE);
 			return DEVICE_FULL;
 		}
+#endif
 	}
 
 	readed=fread(copy_buf, 1, MIN(BUFFER_SIZE*2,rs->bytes_in_current_file-rs->offset_in_current_file), rs->f_in);
@@ -725,18 +705,12 @@ void end_rip(struct rip_state *rs)
 
 	if (rs->f_out>=0)
 		File_Close(rs->f_out);
-
-	if (rs->out_device!=DEVICE_NONE)
-	{
-		//fatUnmount(rip_device[rs->out_device].mount_point);
-		//rip_device[rs->out_device].di->shutdown();
-	}
 }
 
 static struct rip_state rs;
 
 MenuDump::MenuDump(GuiWindow *_Main) :
-RawkMenu(NULL, "\nInitializing.....", "Dumping Disc"),
+RawkMenu(NULL, "\nInitializing.....", "Reading Disc"),
 Main(_Main)
 {
 	if (hId <0)
@@ -745,41 +719,131 @@ Main(_Main)
 	if (hId>=0 && copy_buf==NULL)
 		copy_buf = iosAlloc(hId, BUFFER_SIZE*2);
 
-	old_net_initted = 0;
-	disc = get_disc();
-	if (disc>=0) {
-		char title[100];
-		space = begin_rip(&rs, disc);
-		prepare_device(&rs, default_mount);
-		sprintf(title, "Dumping %s", rs.disc_name);
-		HaltGui();
-		popup_text[0]->SetText(title);
-		ResumeGui();
-		printf("copy buf is %08X\n", copy_buf);
-		if (net_initted) {
-			old_net_initted = net_initted;
-			net_initted = 0;
-		}
-	}
-	else space = 0;
+	if (disk_subsequent_reset && default_mount>=0)
+		WDVD_Reset();
+
+	old_net_initted = net_initted;
+	net_initted = 0;
+
+	memset(&rs, 0, sizeof(rs));
+	rs.f_out = -1;
+
+	state = RIP_BEGIN;
 }
+
+static char space_error[150];
+static const char *abort_messages[] = {
+	"\nCan't rip discs: Some weird memory error has happened.",
+	"\nThis disc isn't a recognized music disc or no disc is inserted.",
+	"\nYou can't use songs from Rock Band 2 as DLC for Rock Band 2, that would be silly.",
+	"\nThe Beatles: Rock Band is not supported by RawkSD.",
+	"\nAn error occurred reading the disc.",
+	"\nAn error occurred writing to the device.",
+	"\nNo storage device was detected.",
+	space_error
+};
 
 RawkMenu* MenuDump::Process()
 {
-	s64 bytes_read = 0;
-	if (copy_buf==NULL || (space>0 && ((bytes_read = process_rip(&rs))>0))) {
-		space -= bytes_read;
-		HaltGui();
-		popup_text[1]->SetText(rs.status_text);
-		ResumeGui();
-		return this;
+	RawkMenu *next = NULL;
+	switch (state) {
+		case RIP_BEGIN: {
+			int disc;
+			if (copy_buf==NULL) {
+				state = RIP_ABORT;
+				msg_index = ABORT_MEM;
+				break;
+			}
+			if (default_mount<0) {
+				state = RIP_ABORT;
+				msg_index = ABORT_NO_DEVICE;
+				break;
+			}
+			disk_subsequent_reset = true;
+			disc = get_disc();
+			switch (disc) {
+				case DISC_TBRB:
+					state = RIP_ABORT;
+					msg_index = ABORT_DISC_TBRB;
+					break;
+				case DISC_RB2:
+					state = RIP_ABORT;
+					msg_index = ABORT_DISC_RB2;
+					break;
+				case DISC_UNRECOGNIZED:
+				case -1:
+					state = RIP_ABORT;
+					msg_index = ABORT_DISC_UNKNOWN;
+					break;
+				default:
+					space = begin_rip(&rs, disc);
+					if (space<=0) {
+						state = RIP_ABORT;
+						msg_index = ABORT_READ;
+						break;
+					}
+					HaltGui();
+					popup_text[0]->SetText(rs.disc_name);
+					ResumeGui();
+					state = RIP_NEED_DEVICE;
+			}
+			break;
+		}
+		case RIP_NEED_DEVICE:
+			HaltGui();
+			popup_text[1]->SetText("\nCalculating free space.....");
+			ResumeGui();
+			prepare_device(&rs, default_mount);
+			if (rs.device_free_space < rs.total+MIN_FREE_SPACE) {
+				sprintf(space_error, "\nThe current storage device only has %llu bytes free space, this disc requires %llu bytes free.", rs.device_free_space, rs.total+MIN_FREE_SPACE);
+				state = RIP_ABORT;
+				msg_index = ABORT_NO_SPACE;
+			} else
+				state = RIP_RIPPING;
+			break;
+		case RIP_RIPPING: {
+			s64 bytes_read = process_rip(&rs);
+			if (bytes_read>0) {
+				space -= bytes_read;
+				HaltGui();
+				popup_text[1]->SetText(rs.status_text);
+				ResumeGui();
+			} else if (bytes_read<0) {
+				state = RIP_ABORT;
+				switch(bytes_read) {
+					// device full shouldn't happen since the free space has been checked already...
+					case DEVICE_FULL:
+					case WRITE_ERROR:
+						msg_index = ABORT_WRITE;
+						break;
+					//case BEGIN_ERROR:
+					//case READ_ERROR:
+					default:
+						msg_index = ABORT_READ;
+						break;
+				}
+				break;
+			}
+			if (space<=0)
+				state = RIP_DONE;
+			break;
+		}
+		case RIP_DONE:
+			HaltGui();
+			next = new MenuSaves(Main, "Ripping Completed", "\nAll files copied successfully.");
+			// fallthrough
+		case RIP_ABORT:
+		default:
+			if (next == NULL) {
+				HaltGui();
+				next = new MenuSaves(Main, "Ripping Aborted", abort_messages[msg_index]);
+			}
+		
+			end_rip(&rs);
+			close_disc();
+			net_initted = old_net_initted;
+			return next;
 	}
 
-	printf("copy_buf %p, space: %lld, bytes_read: %lld\n", copy_buf, space, bytes_read);
-
-	end_rip(&rs);
-
-	if (old_net_initted)
-		net_initted = old_net_initted;
-	return new MenuMain(Main);
+	return this;
 }

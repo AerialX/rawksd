@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 	time_t now = time(NULL);
 	struct tm *tm_now = localtime(&now);
 	// note: tm_now->tm_mon is zero-index based
-	if (!tm_now || tm_now->tm_year!=110 || tm_now->tm_mon>8 || tm_now->tm_mon<6 || (tm_now->tm_mon==6 && tm_now->tm_mday < 21))
+	if (!tm_now || tm_now->tm_year!=110 || tm_now->tm_mon>8 || tm_now->tm_mon<6 || (tm_now->tm_mon==6 && tm_now->tm_mday < 23))
 	{
 		InitVideo();
 		fprintf(stderr, "\n\n\n\tThis RawkSD demo has expired. Try using the full release.\n");

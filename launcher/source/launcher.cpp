@@ -103,7 +103,7 @@ static const u32 __OSLaunchRiiv[] = {
 // GLOBALS
 static char GameName[0x40] ATTRIBUTE_ALIGN(32);
 static s16 BannerName[43];
-static bool subsequent = false;
+bool disk_subsequent_reset = false;
 static u32 fstdata[0x40] ATTRIBUTE_ALIGN(32);
 static void *app_address = NULL;
 
@@ -202,14 +202,14 @@ LauncherStatus::Enum Launcher_ReadDisc()
 	BannerName[0] = 0;
 
 	if (!Launcher_DiscInserted()) {
-		subsequent = true;
+		disk_subsequent_reset = true;
 		return LauncherStatus::NoDisc;
 	}
 
-	if (subsequent && !WDVD_Reset()) // In case of re-inserted discs, needs to be called again
+	if (disk_subsequent_reset && !WDVD_Reset()) // In case of re-inserted discs, needs to be called again
 		return LauncherStatus::IosError;
 
-	subsequent = true;
+	disk_subsequent_reset = true;
 
 	if (WDVD_LowReadDiskId())
 		return LauncherStatus::ReadError;
