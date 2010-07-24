@@ -1105,7 +1105,7 @@
 			this.MinimumSize = new System.Drawing.Size(512, 256);
 			this.Name = "MainForm";
 			this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Show;
-			this.Text = "RawkSD v3.00 beta 1";
+			this.Text = "RawkSD v3.00 beta 1.0 [July 24 2010]";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
 			this.Load += new System.EventHandler(this.MainForm_Load);

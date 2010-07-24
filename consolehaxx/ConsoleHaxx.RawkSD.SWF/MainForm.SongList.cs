@@ -34,19 +34,21 @@ namespace ConsoleHaxx.RawkSD.SWF
 				if (song == null)
 					song = data.Song;
 
-				Item.SubItems.Clear();
-				Item.Text = song.Name;
-				Item.SubItems.Add(song.Artist);
-				Item.SubItems.Add(song.Album);
-				Item.SubItems.Add(song.Year.ToString());
-				Item.SubItems.Add(song.TidyGenre);
-				Item.ToolTipText = song.Pack;
-				SongID = song.ID;
+				try {
+					Item.SubItems.Clear();
+					Item.Text = song.Name;
+					Item.SubItems.Add(song.Artist);
+					Item.SubItems.Add(song.Album);
+					Item.SubItems.Add(song.Year.ToString());
+					Item.SubItems.Add(song.TidyGenre);
+					Item.ToolTipText = song.Pack;
+					SongID = song.ID;
 
-				Item.SubItems.Add("");
+					Item.SubItems.Add("");
 
-				if (Images.Game == Game.Unknown)
-					Images.SetGame(song.Game);
+					if (Images.Game == Game.Unknown)
+						Images.SetGame(song.Game);
+				} catch { }
 				
 				UpdateImage();
 
@@ -130,7 +132,12 @@ namespace ConsoleHaxx.RawkSD.SWF
 				return;
 
 			data.Mutex.WaitOne();
-			Invoke((Action<PlatformData>)UpdateSongListBase, data);
+			try {
+				Invoke((Action<PlatformData>)UpdateSongListBase, data);
+			} catch (Exception exception) {
+				data.Mutex.ReleaseMutex();
+				throw exception;
+			}
 			data.Mutex.ReleaseMutex();
 		}
 
@@ -158,7 +165,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			foreach (FormatData song in data.GetChanges(true)) {
 				foreach (ListViewItem songitem in SongList.Items) {
 					item = songitem.Tag as SongListItem;
-					if (item.HasData(song)) {
+					if (item != null && item.HasData(song)) {
 						item.RemoveData(song);
 						if (!item.HasData())
 							SongList.Items.Remove(songitem);
@@ -281,8 +288,11 @@ namespace ConsoleHaxx.RawkSD.SWF
 			if (SongList.SelectedItems.Count > 0) {
 				if (SongList.SelectedItems.Count > 0 && SongList.SelectedItems[0].Tag is SongListItem) {
 					FormatData data = (SongList.SelectedItems[0].Tag as SongListItem).PrimaryData;
-					if (data != null)
-						PopulateSongInfo(data.Song);
+					if (data != null) {
+						try {
+							PopulateSongInfo(data.Song);
+						} catch { }
+					}
 				}
 
 				MenuSongsEdit.Enabled = true;

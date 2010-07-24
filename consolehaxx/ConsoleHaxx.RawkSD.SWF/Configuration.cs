@@ -35,7 +35,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			NamePrefix = ImportMap.NamePrefix.None;
 			DefaultAction = DefaultActionType.InstallSD;
 			DefaultThreadPriority = ThreadPriority.BelowNormal;
-			LocalPath = "customs";
+			LocalPath = "songs";
 			IterateBins = true;
 			TemporaryPath = "temp";
 			InstallTitle = "cRBA";

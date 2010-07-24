@@ -77,13 +77,25 @@ namespace ConsoleHaxx.RawkSD
 			string customdir = Path.Combine(path, "rawk/rb2/customs");
 			if (Directory.Exists(customdir)) {
 				string dtapath = Path.Combine(customdir, "data");
+				DTB.NodeTree dtb = null;
 				if (File.Exists(dtapath)) {
 					Stream dtafile = new FileStream(dtapath, FileMode.Open, FileAccess.Read, FileShare.Read);
-					DTB.NodeTree dtb = DTB.Create(new EndianReader(dtafile, Endianness.LittleEndian));
+					try {
+						dtb = DTB.Create(new EndianReader(dtafile, Endianness.LittleEndian));
+					} catch (Exception exception) {
+						Exceptions.Warning(exception, "The rawk/rb2/customs/data cache DTB is corrupt.");
+					}
 					dtafile.Close();
+				}
+
+				if (dtb != null) {
 					progress.NewTask(dtb.Nodes.Count);
 					foreach (DTB.NodeTree node in dtb.Nodes) {
-						AddSongFromDTB(path, data, node, progress);
+						try {
+							AddSongFromDTB(path, data, node, progress);
+						} catch (Exception exception) {
+							Exceptions.Warning(exception, "Could not import RawkSD custom from data cache.");
+						}
 						progress.Progress();
 					}
 					progress.EndTask();
@@ -94,11 +106,17 @@ namespace ConsoleHaxx.RawkSD
 						try {
 							dtapath = Path.Combine(folder, "data");
 							if (File.Exists(dtapath)) {
+								dtb = null;
 								Stream dtafile = new FileStream(dtapath, FileMode.Open, FileAccess.Read, FileShare.Read);
-								DTB.NodeTree dtb = DTB.Create(new EndianReader(dtafile, Endianness.LittleEndian));
+								try {
+									dtb = DTB.Create(new EndianReader(dtafile, Endianness.LittleEndian));
+								} catch (Exception exception) {
+									Exceptions.Warning(exception, "The data file for \"" + folder + "\" is corrupt.");
+								}
 								dtafile.Close();
 
-								AddSongFromDTB(path, data, dtb, progress);
+								if (dtb != null)
+									AddSongFromDTB(path, data, dtb, progress);
 							}
 						} catch (Exception exception) {
 							Exceptions.Warning(exception, "Could not import RawkSD custom from " + folder);

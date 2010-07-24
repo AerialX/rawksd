@@ -399,8 +399,9 @@ namespace Graceful
 			}
 
 			UTF.ShortValue align = cpk.Header.Rows[0].FindValue("Align") as UTF.ShortValue;
+			ushort alignment = align == null ? (ushort)0x20 : align.Value;
 			ulong baseoffset = cpkoffset + (cpk.Header.Rows[0].FindValue("ContentOffset") as UTF.LongValue).Value;
-			ulong cpklen = Util.RoundUp((ulong)Math.Max(stream.Length, 0x70000000), align == null ? 0x20 : (ulong)align.Value);
+			ulong cpklen = Util.RoundUp((ulong)Math.Max(stream.Length, 0x70000000), alignment);
 			string cpklenfile = cpkname + ".patch";
 			if (File.Exists(cpklenfile))
 				cpklen = ulong.Parse(File.ReadAllText(cpklenfile));
@@ -475,7 +476,7 @@ namespace Graceful
 				}
 				
 				if (fileoffset == cpklen) {
-					cpklen = Util.RoundUp(cpkoffset + fileoffset + filelen, align == null ? 0x20 : (ulong)align.Value);
+					cpklen = Util.RoundUp(fileoffset + filelen, alignment);
 					File.WriteAllText(cpklenfile, cpklen.ToString());
 				}
 

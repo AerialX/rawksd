@@ -577,7 +577,7 @@ namespace ConsoleHaxx.RawkSD
 			FileNode rawksdnode = root.Find("disc_id") as FileNode;
 			if (rawksdnode != null) {
 				StreamReader reader = new StreamReader(rawksdnode.Data);
-				string name = reader.ReadLine();
+				string name = reader.ReadLine().Trim('\0');
 				rawksdnode.Data.Close();
 				switch (name) {
 					case "RB1":

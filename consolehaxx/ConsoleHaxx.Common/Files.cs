@@ -17,8 +17,10 @@ namespace ConsoleHaxx.Common
 			get
 			{
 				string name = Name;
-				for (DirectoryNode dir = Parent; dir.Parent != null; dir = dir.Parent) {
-					name = dir.Name + "/" + name;
+				if (Parent != null) {
+					for (DirectoryNode dir = Parent; dir.Parent != null; dir = dir.Parent) {
+						name = dir.Name + "/" + name;
+					}
 				}
 				return name;
 			}

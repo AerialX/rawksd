@@ -55,7 +55,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			Configuration.Load(this);
 
 			try { // It may be in use by another instance... So you get no logs, too bad.
-				LogStream = new StreamWriter(new FileStream(Path.Combine(RootPath, "rawksd.log"), FileMode.Append, FileAccess.Write, FileShare.Read));
+				LogStream = new StreamWriter(new FileStream(Path.Combine(RootPath, "rawksd.log"), FileMode.Create, FileAccess.Write, FileShare.Read));
 				LogStream.AutoFlush = true;
 				LogStream.WriteLine("RawkSD started at " + DateTime.Now.ToString());
 				Console.SetOut(LogStream);
@@ -73,7 +73,6 @@ namespace ConsoleHaxx.RawkSD.SWF
 				TemporaryPath = Path.Combine(RootPath, Configuration.TemporaryPath);
 			else
 				TemporaryPath = Configuration.TemporaryPath;
-			TemporaryPath = Path.Combine(TemporaryPath, Path.GetRandomFileName());
 
 			Directory.CreateDirectory(TemporaryPath);
 			TemporaryStream.BasePath = TemporaryPath;
@@ -749,7 +748,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 				" - nanook for his work on Queen Bee and general Guitar Hero hacking\n" +
 				" - GameZelda for his quick Guitar Hero hacking skills\n" +
 				" - Szalkow, BHK, SFenton, and tw3nz0r for their song tagging work\n" +
-				" - Everyone else on IRC for being such great testers, and for putting up with the recent lack of beta builds :)", "RawkSD", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				" - Everyone else on IRC for being such great testers, and for putting up with the recent lack of beta builds :o", "RawkSD", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 
 		private void StatusDonateLabel_Click(object sender, EventArgs e)

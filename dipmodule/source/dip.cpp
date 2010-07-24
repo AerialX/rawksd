@@ -211,24 +211,35 @@ namespace ProxiIOS { namespace DIP {
 				Clusters = buffer_in[0];
 				LogPrintf("IOCTL: SetClusters(%s);\n", Clusters ? "true" : "false");
 				return 1;
+			case Ioctl::UnencryptedRead: {
+				u32 len = buffer_in[1];
+				s64 pos = (s64)buffer_in[2] << 2;
+				LogPrintf("IOCTL: UnencryptedRead(0x%08x%08x, 0x%08x, *0x%08x);\n", (u32)(pos >> 32), (u32)pos, len, (u32)message->ioctl.buffer_io);
+				int ret = ForwardIoctl(message);
+				LogPrintf("\tForward %d\n", ret);
+				return ret;
+			}
 			case Ioctl::Read: {
 				u32 len = buffer_in[1];
 				s64 pos = (s64)buffer_in[2] << 2;
-				LogPrintf("IOCTL: Read(0x%08x%08x, 0x%08x);\n", (u32)(pos >> 32), (u32)pos, len);
+				LogPrintf("IOCTL: Read(0x%08x%08x, 0x%08x, *0x%08x);\n", (u32)(pos >> 32), (u32)pos, len, (u32)message->ioctl.buffer_io);
 
-				if (CurrentPartition != PatchPartition)
-					return ForwardIoctl(message);
+				if (CurrentPartition != PatchPartition) {
+					int ret = ForwardIoctl(message);
+					LogPrintf("\tForward %d\n", ret);
+					return ret;
+				}
 
 				Shift* shifts[MAX_FOUND];
 				int foundshifts = FindPatch(PatchType::Shift, pos, len, (void**)shifts, MAX_FOUND);
-				ipcmessage tempmessage; // Allows us to adjust the original message without actually writing to it
-				u8 tempmessagebufferin[0x20];
+				STACK_ALIGN(ipcmessage, tempmessage, 1, 0x20);
+				STACK_ALIGN(u8, tempmessagebufferin, 0x20, 0x20);
 				if (foundshifts) {
-					memcpy(&tempmessage, message, sizeof(ipcmessage));
-					tempmessage.ioctl.buffer_in = (u32*)tempmessagebufferin;
-					tempmessage.ioctl.length_in = MIN(message->ioctl.length_in, 0x20);
-					memcpy(tempmessagebufferin, message->ioctl.buffer_in, tempmessage.ioctl.length_in);
-					message = &tempmessage;
+					memcpy(tempmessage, message, sizeof(ipcmessage));
+					tempmessage->ioctl.buffer_in = (u32*)tempmessagebufferin;
+					tempmessage->ioctl.length_in = MIN(message->ioctl.length_in, 0x20);
+					memcpy(tempmessagebufferin, message->ioctl.buffer_in, tempmessage->ioctl.length_in);
+					message = tempmessage;
 					os_sync_after_write(message, sizeof(ipcmessage));
 
 					for (int i = 0; i < foundshifts; i++) {
@@ -244,8 +255,11 @@ namespace ProxiIOS { namespace DIP {
 
 				Patch* found[MAX_FOUND];
 				int foundpatches = FindPatch(PatchType::Patch, pos, len, (void**)found, MAX_FOUND);
-				if (foundpatches == 0)
-					return ForwardIoctl(message);
+				if (foundpatches == 0) {
+					int ret = ForwardIoctl(message);
+					LogPrintf("\tForward %d\n", ret);
+					return ret;
+				}
 
 				LogPrintf("\tFound 0x%08x patches\n", foundpatches);
 
@@ -299,8 +313,23 @@ namespace ProxiIOS { namespace DIP {
 				os_close(emu_fd);
 				return ret;
 			}
-			default:
-				return ForwardIoctl(message);
+			case Ioctl::Seek: {
+				s64 offset = (s64)buffer_in[1] << 2;
+				LogPrintf("IOCTL: Seek(0x%08x%08x);\n", (u32)(offset << 32), (u32)offset);
+				if (offset >= ShiftBase) {
+					LogPrintf("\tReturn 1\n");
+					return 1;
+				}
+				int ret = ForwardIoctl(message);
+				LogPrintf("\tForward %d\n", ret);
+				return ret;
+			}
+			default: {
+				LogPrintf("IOCTL: Unknown(0x%02X)\n", message->ioctl.command);
+				int ret = ForwardIoctl(message);
+				LogPrintf("\tForward %d\n", ret);
+				return ret;
+			}
 		}
 	}
 
