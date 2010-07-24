@@ -129,9 +129,12 @@ void Initialise()
 		} else {
 			printf("\tThe installation was completed successfully!\n");
 			WPAD_Shutdown();
-			// TODO: Handle this properly
-			if (Haxx_Init()<0)
+			if (Haxx_Init()<0) {
+				WPAD_Init();
+				printf("\tSomething still seems to be wrong; I'm getting outta here!\n");
+				PressHome();
 				exit(0);
+			}
 		}
 	}
 
