@@ -224,4 +224,14 @@ int FatHandler::IdleTick()
 	return 0;
 }
 
+int FatHandler::GetFreeSpace(u64 *free_bytes)
+{
+	struct statvfs fsdata;
+	int ret = FAT_GetVfsStats(Name, &fsdata);
+	IdleCount = 0;
+	if (ret >= 0)
+		*free_bytes = (u64)fsdata.f_bfree*fsdata.f_bsize;
+	return ret;
+}
+
 } }

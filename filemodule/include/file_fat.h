@@ -50,6 +50,7 @@ public:
 	int NextDir(FileInfo* dir, char* filename, Stats* st);
 	int CloseDir(FileInfo* dir);
 	int IdleTick();
+	int GetFreeSpace(u64 *free_bytes);
 };
 
 } }

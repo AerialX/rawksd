@@ -155,6 +155,7 @@ namespace ProxiIOS { namespace Filesystem {
 			case Ioctl::SetDefault: {
 				FilesystemHandler* system;
 				if (message->ioctl.length_io) {
+					// this isn't how an output buffer should be used
 					os_sync_before_read(message->ioctl.buffer_io, message->ioctl.length_io);
 					FilePathDesc desc(this, (const char*)message->ioctl.buffer_io);
 					system = desc.System;
@@ -239,6 +240,19 @@ namespace ProxiIOS { namespace Filesystem {
 				if (LogFS >= 0 && Mounted[LogFS] && message->ioctl.length_in)
 					return Mounted[LogFS]->Log(message->ioctl.buffer_in, message->ioctl.length_in);
 				return Errors::Success; }
+			case Ioctl::GetFreeSpace:
+				if (message->ioctl.length_in==sizeof(u32) && message->ioctl.length_io==sizeof(u64)) {
+					FilesystemHandler *system = Mounted[buffer_in[0]];
+					if (system) {
+						u64 space;
+						int ret = system->GetFreeSpace(&space);
+						memcpy(message->ioctl.buffer_io, &space, sizeof(u64));
+						os_sync_after_write(message->ioctl.buffer_io, sizeof(u64));
+						return ret;
+					}
+					return Errors::NotMounted;
+				}
+				return Errors::Unrecognized;
 #if 0 // testing only
 			case Ioctl::Context: {
 				static const char *exception_name[15] = {

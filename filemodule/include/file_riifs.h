@@ -135,6 +135,7 @@ namespace ProxiIOS { namespace Filesystem {
 
 			int IdleTick();
 			int Log(const void* buffer, int length);
+			int GetFreeSpace(u64 *free_bytes);
 
 #ifdef RIIFS_LOCAL_DIRNEXT
 			int NextDirCache(RiiFileInfo* dir, char* filename, Stats* st);

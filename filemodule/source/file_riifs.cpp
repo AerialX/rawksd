@@ -477,6 +477,13 @@ namespace ProxiIOS { namespace Filesystem {
 		return 0;
 	}
 
+	int RiiHandler::GetFreeSpace(u64 *free_bytes)
+	{
+		// unimplemented, just return max value
+		*free_bytes = 0x7FFFFFFFFFFFFFFFllu;
+		return 0;
+	}
+
 	int RiiHandler::Log(const void* buffer, int length)
 	{
 		if (ServerVersion >= 4)

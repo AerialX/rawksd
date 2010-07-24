@@ -212,9 +212,7 @@ namespace ProxiIOS { namespace DIP {
 				LogPrintf("IOCTL: SetClusters(%s);\n", Clusters ? "true" : "false");
 				return 1;
 			case Ioctl::UnencryptedRead: {
-				u32 len = buffer_in[1];
-				s64 pos = (s64)buffer_in[2] << 2;
-				LogPrintf("IOCTL: UnencryptedRead(0x%08x%08x, 0x%08x, *0x%08x);\n", (u32)(pos >> 32), (u32)pos, len, (u32)message->ioctl.buffer_io);
+				LogPrintf("IOCTL: UnencryptedRead(0x%08x%08x, 0x%08x, *0x%08x);\n", buffer_in[2]>>30, buffer_in[2]<<2, buffer_in[1], (u32)message->ioctl.buffer_io);
 				int ret = ForwardIoctl(message);
 				LogPrintf("\tForward %d\n", ret);
 				return ret;
@@ -314,8 +312,8 @@ namespace ProxiIOS { namespace DIP {
 				return ret;
 			}
 			case Ioctl::Seek: {
-				s64 offset = (s64)buffer_in[1] << 2;
-				LogPrintf("IOCTL: Seek(0x%08x%08x);\n", (u32)(offset << 32), (u32)offset);
+				u64 offset = (u64)buffer_in[1] << 2;
+				LogPrintf("IOCTL: Seek(0x%08x%08x);\n", (u32)(offset >> 32), (u32)offset);
 				if (offset >= ShiftBase) {
 					LogPrintf("\tReturn 1\n");
 					return 1;

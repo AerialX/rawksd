@@ -296,6 +296,21 @@ int File_Log(const void* buffer, int length)
 	return 0;
 }
 
+int File_GetFreeSpace(int fs, u64 *free_bytes)
+{
+	int ret;
+	if (file_fd<0)
+		return -1;
+
+	ioctlbuffer[0] = fs;
+	os_sync_after_write(ioctlbuffer, 4);
+	ret = os_ioctl(file_fd, IOCTL_GetFreeSpace, ioctlbuffer, 4, ioctlbuffer+8, sizeof(u64));
+	os_sync_before_read(ioctlbuffer+8, sizeof(u64));
+	memcpy(free_bytes, ioctlbuffer+8, sizeof(u64));
+
+	return ret;
+}
+
 int File_CheckPhysical(int fs)
 {
 	ioctlbuffer[0] = fs;

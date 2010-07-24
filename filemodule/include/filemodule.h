@@ -68,6 +68,8 @@ namespace ProxiIOS { namespace Filesystem {
 			Context         = IOCTL_Context,
 			// Check the physical medium for a filesystem
 			CheckPhysical   = IOCTL_CheckPhys,
+			// Get the amount of free space in bytes
+			GetFreeSpace    = IOCTL_GetFreeSpace,
 		};
 	}
 
@@ -146,6 +148,7 @@ namespace ProxiIOS { namespace Filesystem {
 			virtual int CloseDir(FileInfo* dir) { return -1; };
 			virtual int IdleTick() { return -1; };
 			virtual int Log(const void* buffer, int length) { return 0; };
+			virtual int GetFreeSpace(u64 *free_bytes) {return -1; };
 	};
 
 	class Filesystem : public ProxiIOS::Module

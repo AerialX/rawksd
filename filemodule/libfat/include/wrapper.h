@@ -2,6 +2,7 @@
 #define _FAT_WRAPPER_H_
 
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include "gctypes.h"
 #include <fcntl.h>
 #include "fat.h"
@@ -33,7 +34,7 @@ s32 FAT_Delete(const char *path);
 s32 FAT_DeleteDir(const char *dirpath);
 s32 FAT_Rename(const char *oldname, const char *newname);
 s32 FAT_Stat(const char *path, struct stat *stats);
-s32 FAT_GetVfsStats(const char *path, void *stats);
+s32 FAT_GetVfsStats(const char *path, struct statvfs *stats);
 s32 FAT_GetFileStats(s32 fd, fstats *stats);
 s32 FAT_GetUsage(const char *dirpath, u64 *size, u32 *files);
 s32 FAT_Flush(s32 fd);

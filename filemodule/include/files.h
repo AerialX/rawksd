@@ -60,6 +60,7 @@ typedef enum {
 	IOCTL_Log =         0x61,
 	IOCTL_Context =     0x62,
 	IOCTL_CheckPhys =   0x63,
+	IOCTL_GetFreeSpace= 0x64,
 } file_ioctl;
 
 typedef enum {
@@ -104,6 +105,7 @@ int File_Seek(int fd, int whence, int where);
 int File_Tell(int fd);
 int File_Sync(int fd);
 int File_Log(const void* buffer, int length);
+int File_GetFreeSpace(int fs, u64 *free_bytes);
 
 // Filesystem-specific Prototypes
 #define FILE_ID_PATH "/mnt/identifier/"

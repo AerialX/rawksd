@@ -383,7 +383,7 @@ s32 FAT_Stat(const char *path, struct stat *stats)
 	return ret;
 }
 
-s32 FAT_GetVfsStats(const char *path, void *stats)
+s32 FAT_GetVfsStats(const char *path, struct statvfs *stats)
 {
 	s32 ret;
 
