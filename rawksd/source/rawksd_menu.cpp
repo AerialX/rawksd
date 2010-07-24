@@ -492,7 +492,7 @@ static s32 net_init_cb(s32 result, void *data)
 void MainMenu()
 {
 	syswd_t riifs_timer;
-	int i;
+	u8 i;
 
 	*(u32*)0xCD006C00 = 0; // magic audio fix
 
@@ -507,10 +507,13 @@ void MainMenu()
 
 	// clear out old rawksd custom titles if they exist
 	for(i='A'; i <= 'Z'; i++) {
-		char path[50];
+		char path[64];
 		u64 titleid = 0x0001000563524200llu | i;
 		ES_DeleteTitle(titleid);
-		sprintf(path, "/mnt/isfs/ticket/00010005/635242%02X.tik", i);
+		sprintf(path, "/mnt/isfs/ticket/00010005/635242%02x.tik", i);
+		File_Delete(path);
+		// DIE!
+		sprintf(path, "/mnt/isfs/title/00010005/635242%02x/content/title.tmd", i);
 		File_Delete(path);
 	}
 

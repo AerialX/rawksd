@@ -51,7 +51,7 @@ RawkMenu* MenuSaves::Process()
 	int succeeded;
 	File_SetDefault(default_mount);
 	HaltGui();
-	MenuSaves *copying = new MenuSaves(Parent, "Please Wait", "\nCopying in Progress...", 0);
+	MenuSaves *copying = new MenuSaves(Parent, "Please Wait", "\nCopying in progress....", 0);
 	ResumeGui();
 
 	if (clicked==OPTION_BACKUP) {
@@ -67,6 +67,7 @@ RawkMenu* MenuSaves::Process()
 				succeeded = -1;
 			else {
 				int readed;
+				copying->popup_text[0]->SetText("Found NTSC savefile");
 				while ((readed = File_Read(in_fd, save_copy_buffer, sizeof(save_copy_buffer)))>0) {
 					int wrote = File_Write(out_fd, save_copy_buffer, readed);
 					if (wrote != readed) {
@@ -91,6 +92,7 @@ RawkMenu* MenuSaves::Process()
 					succeeded = -1;
 				else {
 					int readed;
+					copying->popup_text[0]->SetText("Found PAL savefile");
 					while ((readed = File_Read(in_fd, save_copy_buffer, sizeof(save_copy_buffer)))>0) {
 						int wrote = File_Write(out_fd, save_copy_buffer, readed);
 						if (wrote != readed) {
@@ -114,6 +116,7 @@ RawkMenu* MenuSaves::Process()
 				succeeded = -4;
 			else {
 				int readed;
+				copying->popup_text[0]->SetText("Found NTSC savefile");
 				while ((readed = File_Read(in_fd, save_copy_buffer, sizeof(save_copy_buffer)))>0) {
 					int wrote = File_Write(out_fd, save_copy_buffer, readed);
 					if (wrote != readed) {
@@ -137,6 +140,7 @@ RawkMenu* MenuSaves::Process()
 					succeeded = -4;
 				else {
 					int readed;
+					copying->popup_text[0]->SetText("Found PAL savefile");
 					while ((readed = File_Read(in_fd, save_copy_buffer, sizeof(save_copy_buffer)))>0) {
 						int wrote = File_Write(out_fd, save_copy_buffer, readed);
 						if (wrote != readed) {
