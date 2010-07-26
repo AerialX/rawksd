@@ -11,7 +11,11 @@
 
 #include "rawk_dump.h"
 
+#if 1
 #define printf(...)
+#else
+#include <stdio.h>
+#endif
 
 #define MAX_PATH 128
 
@@ -42,7 +46,6 @@ static const char *gh_exclusions[] = {
 	"_i.pak.ngc",
 	"_s.pak.ngc",
 	"_sfx.pak.ngc",
-	"boss",
 	"mutetest",
 	"debug",
 	"dlc",
@@ -63,7 +66,6 @@ static const char *gha_exclusions[] = {
 	"_i.pak.ngc",
 	"_s.pak.ngc",
 	"_sfx.pak.ngc",
-	"boss",
 	"mutetest",
 	"debug",
 	"dlc",
@@ -79,7 +81,9 @@ static const struct dump_files dump_gh3[] = {
 	{"music", RIP_DIR},
 	{"songs", RIP_DIR},
 	{"pak", RIP_DIR|RIP_CREATE_ONLY},
+	{"pak/album_covers", RIP_DIR|RIP_CREATE_ONLY},
 	{"pak/qb.pak.ngc", RIP_FILE},
+	{"pak/album_covers/album_covers.pak.ngc", RIP_FILE},
 	{NULL, 0}
 };
 
@@ -100,20 +104,27 @@ static const struct dump_files dump_rb1[] = {
 	{NULL, 0}
 };
 
-static const struct dump_files dump_rb_new[] = {
+static const struct dump_files dump_rb_lego[] = {
 	{"gen", RIP_DIR|RIP_CREATE_ONLY},
 	{"gen/main_wii.hdr", RIP_FILE},
 	{"gen/main_wii_0.ark", RIP_FILE},
 	{"gen/main_wii_1.ark", RIP_FILE},
-	// LRB doesn't have these
-	{"gen/main_wii_2.ark", RIP_FILE|RIP_OPTIONAL},
-	{"gen/main_wii_3.ark", RIP_FILE|RIP_OPTIONAL},
-	{"gen/main_wii_4.ark", RIP_FILE|RIP_OPTIONAL},
-	{"gen/main_wii_5.ark", RIP_FILE|RIP_OPTIONAL},
-	{"gen/main_wii_6.ark", RIP_FILE|RIP_OPTIONAL},
-	{"gen/main_wii_7.ark", RIP_FILE|RIP_OPTIONAL},
-	{"gen/main_wii_8.ark", RIP_FILE|RIP_OPTIONAL},
-	{"gen/main_wii_9.ark", RIP_FILE|RIP_OPTIONAL},
+	{NULL, 0}
+};
+
+static const struct dump_files dump_rb_gdrb[] = {
+	{"gen", RIP_DIR|RIP_CREATE_ONLY},
+	{"gen/main_wii.hdr", RIP_FILE},
+	{"gen/main_wii_0.ark", RIP_FILE},
+	{"gen/main_wii_1.ark", RIP_FILE},
+	{"gen/main_wii_2.ark", RIP_FILE},
+	{"gen/main_wii_3.ark", RIP_FILE},
+	{"gen/main_wii_4.ark", RIP_FILE},
+	{"gen/main_wii_5.ark", RIP_FILE},
+	{"gen/main_wii_6.ark", RIP_FILE},
+	{"gen/main_wii_7.ark", RIP_FILE},
+	{"gen/main_wii_8.ark", RIP_FILE},
+	{"gen/main_wii_9.ark", RIP_FILE},
 	{NULL, 0}
 };
 
@@ -134,10 +145,10 @@ static const disc_info discs[] = {
 	{"PS2 Guitar Hero 80s", "rawk/GH80S", dump_rb1, NULL},
 	{"Guitar Hero 5", "rawk/GH5", dump_ghwt, gh_exclusions},
 	{"Rock Band Metal Track Pack", "rawk/RB_METAL", dump_rb1, NULL},
-	{"Green Day Rock Band", "rawk/GDRB", dump_rb_new, NULL},
+	{"Green Day Rock Band", "rawk/GDRB", dump_rb_gdrb, NULL},
 	{"Band Hero", "rawk/BH", dump_ghwt, gh_exclusions},
 	{"Guitar Hero Van Halen", "rawk/GHVH", dump_ghwt, gh_exclusions},
-	{"LEGO Rock Band", "rawk/LRB", dump_rb_new, NULL}
+	{"LEGO Rock Band", "rawk/LRB", dump_rb_lego, NULL}
 };
 
 static const char *disc_prefix[] = {
@@ -838,7 +849,7 @@ RawkMenu* MenuDump::Process()
 				HaltGui();
 				next = new MenuSaves(Main, "Ripping Aborted", abort_messages[msg_index]);
 			}
-		
+
 			end_rip(&rs);
 			close_disc();
 			net_initted = old_net_initted;

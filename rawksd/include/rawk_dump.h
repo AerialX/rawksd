@@ -24,7 +24,7 @@
 #define DISC_RB2			254
 #define DISC_UNRECOGNIZED	255
 
-#define MIN_FREE_SPACE		16384
+#define MIN_FREE_SPACE		65536
 
 #define DEVICE_FULL			-1
 #define READ_ERROR			-2
