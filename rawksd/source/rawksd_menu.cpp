@@ -530,6 +530,7 @@ void MainMenu()
 	GuiImageData SDstickerDefaultImage(sd_sticker_def_png);
 	GuiImageData USBstickerDefaultImage(usb_sticker_def_png);
 	GuiImageData WIFIstickerDefaultImage(wifi_sticker_def_png);
+	GuiText buildText("RawkSD3 BETA " __DATE__ " " __TIME__, 14, (GXColor){255, 255, 255, 255});
 
 	Window = new GuiWindow(screenwidth, screenheight);
 	Window->SetPosition(0, 0);
@@ -539,6 +540,10 @@ void MainMenu()
 	Background.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 	Background.SetPosition(0, 0);
 	Window->Append(&Background);
+
+	buildText.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
+	buildText.SetPosition(40, 40);
+	Window->Append(&buildText);
 
 	GuiImage SDsticker(&SDstickerImage);
 	SDsticker.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
