@@ -138,7 +138,7 @@ static s32 __send_cbw(usbstorage_handle *dev, u8 lun, u32 len, u8 flags, const u
 	__stwbrx(dev->buffer, 8, len);
 	dev->buffer[12] = flags;
 	dev->buffer[13] = lun;
-	dev->buffer[14] = (cbLen > 6 ? 0x10 : 6);
+	dev->buffer[14] = cbLen;
 
 	memcpy(dev->buffer + 15, cb, cbLen);
 
@@ -322,7 +322,7 @@ static s32 __usbstorage_clearerrors(usbstorage_handle *dev, u8 lun)
 	memset(cmd, 0, sizeof(cmd));
 	cmd[0] = SCSI_TEST_UNIT_READY;
 
-	retval = __cycle(dev, lun, NULL, 0, cmd, 1, 0, &status, NULL);
+	retval = __cycle(dev, lun, NULL, 0, cmd, 6, 0, &status, NULL);
 	if(retval < 0)
 		return retval;
 
@@ -567,11 +567,14 @@ s32 USBStorage_MountLUN(usbstorage_handle *dev, u8 lun)
 s32 USBStorage_ReadCapacity(usbstorage_handle *dev, u8 lun, u32 *sector_size, u32 *n_sectors)
 {
 	s32 retval;
-	u8 cmd[] = {SCSI_READ_CAPACITY, lun << 5};
+	u8 cmd[10] = {SCSI_READ_CAPACITY, lun<<5, 0,0,0,0,0,0,0,0};
 	u8 response[8];
+	u8 status;
 
 	memset(response, 0, sizeof(response));
-	retval = __cycle(dev, lun, response, 8, cmd, 2, 0, NULL, NULL);
+	retval = __cycle(dev, lun, response, sizeof(response), cmd, sizeof(cmd), 0, &status, NULL);
+	if (status)
+		retval = USBSTORAGE_ESHORTREAD;
 	if(retval >= 0)
 	{
 		u32 _n_sectors, _sector_size;
@@ -601,7 +604,7 @@ s32 USBStorage_Read(usbstorage_handle *dev, u8 lun, u32 sector, u16 n_sectors, u
 	if(lun >= dev->max_lun)
 		return IPC_EINVAL;
 
-	u8 cmd[] = {
+	u8 cmd[10] = {
 		SCSI_READ_10,
 		lun << 5,
 		sector >> 24,
@@ -627,7 +630,7 @@ s32 USBStorage_Write(usbstorage_handle *dev, u8 lun, u32 sector, u16 n_sectors, 
 	if(lun >= dev->max_lun)
 		return IPC_EINVAL;
 
-	u8 cmd[] = {
+	u8 cmd[10] = {
 		SCSI_WRITE_10,
 		lun << 5,
 		sector >> 24,
