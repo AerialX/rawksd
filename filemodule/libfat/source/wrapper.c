@@ -217,6 +217,12 @@ s32 FAT_CreateDir(const char *dirpath)
 {
 	s32 ret;
 
+	if (dirpath==NULL)
+		return IPC_EINVAL;
+
+	if (!dirpath[0])
+		return IPC_OK;
+
 	/* Clear error code */
 	fReent._errno = 0;
 
