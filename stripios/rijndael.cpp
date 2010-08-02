@@ -13,7 +13,7 @@
 #include <string.h>
 
 #define u8 unsigned char       /* 8 bits  */
-#define u32 unsigned long       /* 32 bits */
+#define u32 unsigned int       /* 32 bits */
 #define u64 unsigned long long
 
 /* rotates x one bit to the left */
@@ -239,14 +239,14 @@ void gkey(int nb,int nk,const u8 *key)
  * Instead of just one ftable[], I could have 4, the other     *
  * 3 pre-rotated to save the ROTL8, ROTL16 and ROTL24 overhead */
 
-void encrypt(u8*buff)
+void encrypt(u8 *buff)
 {
     int i,j,k,m;
     u32 a[8],b[8],*x,*y,*t;
 
     for (i=j=0;i<Nb;i++,j+=4)
     {
-        a[i]=pack((u8 *)&buff[j]);
+        a[i]=pack(buff+j);
         a[i]^=fkey[i];
     }
     k=Nb;
@@ -280,118 +280,34 @@ void encrypt(u8*buff)
     }
     for (i=j=0;i<Nb;i++,j+=4)
     {
-        unpack(y[i],(u8 *)&buff[j]);
+        unpack(y[i],buff+j);
         x[i]=y[i]=0;   /* clean up stack */
     }
     return;
 }
 
-void decrypt(u8*buff)
-{
-    int i,j,k,m;
-    u32 a[8],b[8],*x,*y,*t;
-
-    for (i=j=0;i<Nb;i++,j+=4)
-    {
-        a[i]=pack((u8 *)&buff[j]);
-        a[i]^=rkey[i];
-    }
-    k=Nb;
-    x=a; y=b;
-
-/* State alternates between a and b */
-    for (i=1;i<Nr;i++)
-    { /* Nr is number of rounds. May be odd. */
-
-/* if Nb is fixed - unroll this next
-   loop and hard-code in the values of ri[]  */
-
-        for (m=j=0;j<Nb;j++,m+=3)
-        { /* This is the time-critical bit */
-            y[j]=rkey[k++]^rtable[(u8)x[j]]^
-                 ROTL8(rtable[(u8)(x[ri[m]]>>8)])^
-                 ROTL16(rtable[(u8)(x[ri[m+1]]>>16)])^
-                 ROTL24(rtable[x[ri[m+2]]>>24]);
-        }
-        t=x; x=y; y=t;      /* swap pointers */
-    }
-
-/* Last Round - unroll if possible */
-    for (m=j=0;j<Nb;j++,m+=3)
-    {
-        y[j]=rkey[k++]^(u32)rbsub[(u8)x[j]]^
-             ROTL8((u32)rbsub[(u8)(x[ri[m]]>>8)])^
-             ROTL16((u32)rbsub[(u8)(x[ri[m+1]]>>16)])^
-             ROTL24((u32)rbsub[x[ri[m+2]]>>24]);
-    }
-    for (i=j=0;i<Nb;i++,j+=4)
-    {
-        unpack(y[i],(u8 *)&buff[j]);
-        x[i]=y[i]=0;   /* clean up stack */
-    }
-    return;
-}
-
-void aes_set_key(const u8 *key) {
+void aes_set_key(u8 *key) {
   gentables();
   gkey(4, 4, key);
 }
 
-// CBC mode decryption
-void aes_decrypt(u8 *iv, const u8 *inbuf, u8 *outbuf, unsigned long long len) {
-  u8 block[16];
-  unsigned int blockno = 0, i;
-
-  //  debug_printf("aes_decrypt(%p, %p, %p, %lld)\n", iv, inbuf, outbuf, len);
-
-  for (blockno = 0; blockno <= (len / sizeof(block)); blockno++) {
-    unsigned int fraction;
-    if (blockno == (len / sizeof(block))) { // last block
-      fraction = len % sizeof(block);
-      if (fraction == 0) break;
-      memset(block, 0, sizeof(block));
-    } else fraction = 16;
-
-    //    debug_printf("block %d: fraction = %d\n", blockno, fraction);
-    memcpy(block, inbuf + blockno * sizeof(block), fraction);
-    decrypt(block);
-    const u8 *ctext_ptr;
-    if (blockno == 0) ctext_ptr = iv;
-    else ctext_ptr = inbuf + (blockno-1) * sizeof(block);
-
-    for(i=0; i < fraction; i++)
-      outbuf[blockno * sizeof(block) + i] =
-	ctext_ptr[i] ^ block[i];
-    //    debug_printf("Block %d output: ", blockno);
-    //    hexdump(outbuf + blockno*sizeof(block), 16);
-  }
-}
-
 // CBC mode encryption
-void aes_encrypt(u8 *iv, const u8 *inbuf, u8 *outbuf, unsigned long long len) {
-  u8 block[16];
-  unsigned int blockno = 0, i;
+void aes_encrypt(u8 *iv, const u8 *inbuf, u8 *outbuf, u32 len) {
+	unsigned int blockno, i;
 
-  //  debug_printf("aes_decrypt(%p, %p, %p, %lld)\n", iv, inbuf, outbuf, len);
+	for (blockno = 0; blockno <= (len >> 4); blockno++) {
+		unsigned int fraction;
+		if (blockno == (len >> 4)) { // last block
+			fraction = len & 0xF;
+			if (fraction == 0) return;
+			memset(iv+fraction, 0, 16-fraction);
+		} else fraction = 16;
 
-  for (blockno = 0; blockno <= (len / sizeof(block)); blockno++) {
-    unsigned int fraction;
-    if (blockno == (len / sizeof(block))) { // last block
-      fraction = len % sizeof(block);
-      if (fraction == 0) break;
-      memset(block, 0, sizeof(block));
-    } else fraction = 16;
+		for(i=0; i < fraction; i++)
+			iv[i] ^= inbuf[(blockno<<4) + i];
 
-    //    debug_printf("block %d: fraction = %d\n", blockno, fraction);
-
-    for(i=0; i < fraction; i++)
-      block[i] = inbuf[blockno * sizeof(block) + i] ^ iv[i];
-
-    encrypt(block);
-    memcpy(iv, block, sizeof(block));
-    memcpy(outbuf + blockno * sizeof(block), block, sizeof(block));
-    //    debug_printf("Block %d output: ", blockno);
-    //    hexdump(outbuf + blockno*sizeof(block), 16);
-  }
+		encrypt(iv);
+		memcpy(outbuf + (blockno<<4), iv, 16);
+	}
 }
 

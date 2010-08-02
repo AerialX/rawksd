@@ -13,6 +13,7 @@
 #include "haxx.h"
 #include "installer.h"
 #include "wdvd.h"
+#include "files.h"
 
 extern "C" void Init_DebugConsole(int use_net);
 
@@ -65,10 +66,48 @@ static void CallbackPoweroff()
 
 void CheckShutdown()
 {
+	bool disc;
+	int i;
+	static union {
+		struct {
+			u32 checksum;
+			u8 flags;
+			u8 type;
+			u8 discstate;
+			u8 returnto;
+		};
+		u32 padding[8];
+	} state ATTRIBUTE_ALIGN(32);
+
 	switch (ShutdownParam) {
 		case SYS_POWEROFF:
-			// stop the disc
-			WDVD_StopMotor(false, false);
+			memset(&state, 0, sizeof(state));
+			i = File_Open("/mnt/isfs/title/00000001/00000002/data/state.dat", O_RDONLY);
+			if (i>=0) {
+				File_Read(i, &state, sizeof(state));
+				File_Close(i);
+			}
+
+			state.discstate = 3;
+			state.type = 5;
+			if (!WDVD_VerifyCover(&disc) && disc) {
+				state.discstate = 1;
+				if (CONF_GetShutdownMode() != CONF_SHUTDOWN_IDLE)
+					state.type = 1;
+				else
+					WDVD_StopMotor(false, false);
+			}
+
+			state.padding[0] = 0; // fix checksum
+			for (i=1; i < 8; i++)
+				state.padding[0] += state.padding[i];
+
+			i = File_Open("/mnt/isfs/title/00000001/00000002/data/state.dat", O_WRONLY);
+			if (i>=0) {
+				File_Write(i, &state, sizeof(state));
+				File_Close(i);
+			}
+
 		case SYS_RETURNTOMENU:
 			SYS_ResetSystem(ShutdownParam, 0, 0);
 	}

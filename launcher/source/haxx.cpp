@@ -42,6 +42,11 @@ extern "C" {
 #endif
 
 	extern const u8 root_dat[];
+
+	extern void gkey(int nb,int nk,const u8 *key);
+	extern void gentables(void);
+	extern void aes_set_key(u8 *key);
+	extern void aes_decrypt(u8 *iv, const u8 *inbuf, u8 *outbuf, unsigned long long len);
 }
 
 extern vector<int> ToMount;
@@ -53,6 +58,102 @@ extern vector<int> ToMount;
 
 static int load_module_code(void *module_code, s32 module_size);
 static bool do_exploit();
+
+static inline u32 be32(const u8 *p)
+{
+	return (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+}
+
+static inline void bn_zero(u8 *d, const u32 n)
+{
+	memset(d, 0, n);
+}
+
+static inline void bn_copy(u8 *d, const u8 *a, const u32 n)
+{
+	memcpy(d, a, n);
+}
+
+static inline int bn_compare(const u8 *a, const u8 *b, const u32 n)
+{
+	u32 i;
+
+	for (i = 0; i < n; i++) {
+		if (a[i] < b[i])
+			return -1;
+		if (a[i] > b[i])
+			return 1;
+	}
+
+	return 0;
+}
+
+static inline void bn_sub_modulus(u8 *a, const u8 *N, const u32 n)
+{
+	u32 i;
+	u32 dig;
+	u8 c;
+
+	c = 0;
+	for (i = n - 1; i < n; i--) {
+		dig = N[i] + c;
+		c = (a[i] < dig);
+		a[i] -= dig;
+	}
+}
+
+static inline void bn_add(u8 *d, const u8 *a, const u8 *b, const u8 *N, const u32 n)
+{
+	u32 i;
+	u32 dig;
+	u8 c;
+
+	c = 0;
+	for (i = n - 1; i < n; i--) {
+		dig = a[i] + b[i] + c;
+		c = (dig >= 0x100);
+		d[i] = dig;
+	}
+
+	if (c)
+		bn_sub_modulus(d, N, n);
+
+	if (bn_compare(d, N, n) >= 0)
+		bn_sub_modulus(d, N, n);
+}
+
+static void bn_mul(u8 *d, const u8 *a, const u8 *b, const u8 *N, const u32 n)
+{
+	u32 i;
+	u8 mask;
+
+	bn_zero(d, n);
+
+	for (i = 0; i < n; i++)
+		for (mask = 0x80; mask != 0; mask >>= 1) {
+			bn_add(d, d, d, N, n);
+			if ((a[i] & mask) != 0)
+				bn_add(d, d, b, N, n);
+		}
+}
+
+static void bn_exp(u8 *d, const u8 *a, const u8 *N, const u32 n, const u8 *e, const u32 en)
+{
+	u8 t[512];
+	u32 i;
+	u8 mask;
+
+	bn_zero(d, n);
+	d[n-1] = 1;
+	for (i = 0; i < en; i++)
+		for (mask = 0x80; mask != 0; mask >>= 1) {
+			bn_mul(t, d, d, N, n);
+			if ((e[i] & mask) != 0)
+				bn_mul(d, t, a, N, n);
+			else
+				bn_copy(d, t, n);
+		}
+}
 
 int Haxx_Init()
 {
@@ -517,6 +618,9 @@ int check_for_sneek(s32 fd)
 {
 	u32 bversion;
 
+	if (*MEM_PROT==1)
+		return 2;
+
 	if (ES_GetBoot2Version(&bversion)==0 && bversion >= 5)
 	{
 		printf("Smells like sneek...");
@@ -550,60 +654,60 @@ int disable_mem2_protection(s32 fd)
 	static ioctlv vec[3] ATTRIBUTE_ALIGN(32);
 	static u32 cnt ATTRIBUTE_ALIGN(32);
 	u8 lowmem_save[0x20];
-	s32 ret;
+	s32 ret = check_for_sneek(fd);
 
-	if (check_for_sneek(fd))
+	if (ret)
 	{
 		u8 *fake_tik;
 		u8 *fake_tmd;
 
-		if (!get_certs())
-		{
-			printf("Couldn't get certs\n");
-			return 0;
-		}
-
-		fake_tik = make_ticket(0x0000000100000001llu);
-		if (fake_tik==NULL)
-		{
-			printf("Couldn't make fake ticket\n");
-			return 0;
-		}
-		fake_tmd = make_tmd(0x0000000100000001llu);
-		if (fake_tmd==NULL)
-		{
-			free(fake_tik);
-			printf("Couldn't make fake TMD\n");
-			return 0;
-		}
-
-		ret = ES_Identify((signed_blob*)sys_certs, SYS_CERTS_SIZE, (signed_blob*)fake_tmd, SIGNED_TMD_SIZE((u32*)fake_tmd), (signed_blob*)fake_tik, SIGNED_TIK_SIZE((u32*)fake_tik), &cnt);
-
-		free(fake_tik);
-		free(fake_tmd);
-
-		if (ret==0)
-		{
-
-			if (!do_patch(MEM2_INDEX))
+		if (ret==1) {
+			if (!get_certs())
 			{
-				printf("Couldn't patch MEM2 protection\n");
+				printf("Couldn't get certs\n");
 				return 0;
 			}
-			else
+
+			fake_tik = make_ticket(0x0000000100000001llu);
+			if (fake_tik==NULL)
 			{
-				u8 *i;
-				const char ESVersion[] = "$IOSVersion: ES:";
+				printf("Couldn't make fake ticket\n");
+				return 0;
+			}
+			fake_tmd = make_tmd(0x0000000100000001llu);
+			if (fake_tmd==NULL)
+			{
+				free(fake_tik);
+				printf("Couldn't make fake TMD\n");
+				return 0;
+			}
 
-				for (i = (u8*)0x939F0000; i < (u8*)0x93B00000 - strlen(ESVersion); i++)
+			ret = ES_Identify((signed_blob*)sys_certs, SYS_CERTS_SIZE, (signed_blob*)fake_tmd, SIGNED_TMD_SIZE((u32*)fake_tmd), (signed_blob*)fake_tik, SIGNED_TIK_SIZE((u32*)fake_tik), &cnt);
+
+			free(fake_tik);
+			free(fake_tmd);
+
+			if (ret)
+				return 0;
+		}
+
+		if (!do_patch(MEM2_INDEX))
+		{
+			printf("Couldn't patch MEM2 protection\n");
+			return 0;
+		}
+		else
+		{
+			u8 *i;
+			const char ESVersion[] = "$IOSVersion: ES:";
+
+			for (i = (u8*)0x939F0000; i < (u8*)0x93B00000 - strlen(ESVersion); i++)
+			{
+				if (!memcmp(i, ESVersion, strlen(ESVersion)))
 				{
-					if (!memcmp(i, ESVersion, strlen(ESVersion)))
-					{
-						printf("Found: %.40s\n", i);
-						return 1;
-					}
+					printf("Found: %.40s\n", i);
+					return 2;
 				}
-
 			}
 		}
 
@@ -1150,10 +1254,41 @@ static int load_module_code(void *module_code, s32 module_size)
 	s32 fd;
 	s32 written;
 	s32 es_fd;
+	u8 *dec;
+	u8 max[32];
+	u8 iv[32];
+	u8 key[32];
+	static const u8 elfhdr[16] = {0x7F, 0x45, 0x4C, 0x46, 0x01, 0x02, 0x01, 0x61, 0x01};
+	int i;
+
+	if (module_size<16)
+		return 0;
+
+	if (memcmp(module_code, elfhdr, sizeof(elfhdr))) {
+		dec = (u8*)memalign(32, module_size+32);
+		if (dec == NULL)
+			return 0;
+		memset(max, 0xFF, 32);
+		memcpy(dec, elfhdr, sizeof(elfhdr));
+		memcpy(key+16, module_code, 16);
+		memset(key, 0, 16);
+		bn_mul(iv, key, key, max, 32);
+		printf("Key: ");
+		for (i=0; i < 32; i++)
+			printf("%02X", iv[i]);
+		printf("\n");
+		gentables();
+		gkey(4, 8, iv);
+		aes_decrypt(iv+16, ((u8*)module_code)+16, dec+16, module_size-16);
+	} else
+		dec = (u8*)module_code;
 
 	es_fd = IOS_Open("/dev/es", 0);
-	if (es_fd<0)
+	if (es_fd<0) {
+		if (dec != module_code);
+			free(dec);
 		return 0;
+	}
 
 	ISFS_Initialize();
 	ISFS_CreateFile(LOAD_MODULE_PATH, 0, 3, 1, 1);
@@ -1162,12 +1297,14 @@ static int load_module_code(void *module_code, s32 module_size)
 	{
 		ISFS_Delete(LOAD_MODULE_PATH);
 		IOS_Close(es_fd);
+		if (dec != module_code);
+			free(dec);
 		return 0;
 	}
 
 	// slight issue here since ISFS always rounds up to 32-byte chunks
 	// but it shouldn't hurt anything...
-	written = IOS_Write(fd, module_code, module_size);
+	written = IOS_Write(fd, dec, module_size);
 	IOS_Close(fd);
 	fd = 0;
 	if (written >= module_size)
@@ -1175,6 +1312,8 @@ static int load_module_code(void *module_code, s32 module_size)
 
 	IOS_Close(es_fd);
 	ISFS_Delete(LOAD_MODULE_PATH);
+	if (dec != module_code)
+		free(dec);
 	return fd;
 }
 
@@ -1292,8 +1431,8 @@ static void read_otp()
 static bool do_exploit()
 {
 	s32 es_fd = -1;
-	int patch_failed = 0;
-	u32 sneek=0;
+	int patch_failed = 1;
+	int sneek;
 	u16 ios_rev = IOS_GetRevision();
 
 	printf("Grabbin' HAXX\n");
@@ -1311,20 +1450,22 @@ static bool do_exploit()
 		return false;
 	}
 
-	if (disable_mem2_protection(es_fd))
+	sneek = disable_mem2_protection(es_fd);
+	if (sneek)
 	{
 		u32 ng_id;
 		printf("MEM2 protection disabled\n");
+		patch_failed = 0;
 
-		if (!check_for_sneek(es_fd))
+		if (sneek==1)
 		{
 			if (!do_patch(NAND_PERMS_INDEX))
 			{
 				patch_failed = 1;
 				printf("NAND Permissions patch failed\n");
 			}
-		} else
-			sneek = 1;
+			sneek = 0;
+		}
 
 		read_otp();
 		if (ES_GetDeviceID(&ng_id) || ng_id != otp.ng_id) // wtf how
@@ -1354,6 +1495,8 @@ static bool do_exploit()
 		if (!patch_failed)
 			patch_failed = !do_patch(NAND_PERMS_INDEX);
 
+		// if sneek was found, we need to reload IOS again before doing anything else
+		// to make sure we have clean modules
 		patch_failed |= sneek;
 
 		if (!patch_failed)
@@ -1411,102 +1554,6 @@ static bool do_exploit()
 }
 
 /******* BEGIN SIGNATURE CHECKING STUF ******/
-static inline u32 be32(const u8 *p)
-{
-	return (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
-}
-
-static inline void bn_zero(u8 *d, const u32 n)
-{
-	memset(d, 0, n);
-}
-
-static inline void bn_copy(u8 *d, const u8 *a, const u32 n)
-{
-	memcpy(d, a, n);
-}
-
-static inline int bn_compare(const u8 *a, const u8 *b, const u32 n)
-{
-	u32 i;
-
-	for (i = 0; i < n; i++) {
-		if (a[i] < b[i])
-			return -1;
-		if (a[i] > b[i])
-			return 1;
-	}
-
-	return 0;
-}
-
-static inline void bn_sub_modulus(u8 *a, const u8 *N, const u32 n)
-{
-	u32 i;
-	u32 dig;
-	u8 c;
-
-	c = 0;
-	for (i = n - 1; i < n; i--) {
-		dig = N[i] + c;
-		c = (a[i] < dig);
-		a[i] -= dig;
-	}
-}
-
-static inline void bn_add(u8 *d, const u8 *a, const u8 *b, const u8 *N, const u32 n)
-{
-	u32 i;
-	u32 dig;
-	u8 c;
-
-	c = 0;
-	for (i = n - 1; i < n; i--) {
-		dig = a[i] + b[i] + c;
-		c = (dig >= 0x100);
-		d[i] = dig;
-	}
-
-	if (c)
-		bn_sub_modulus(d, N, n);
-
-	if (bn_compare(d, N, n) >= 0)
-		bn_sub_modulus(d, N, n);
-}
-
-static void bn_mul(u8 *d, const u8 *a, const u8 *b, const u8 *N, const u32 n)
-{
-	u32 i;
-	u8 mask;
-
-	bn_zero(d, n);
-
-	for (i = 0; i < n; i++)
-		for (mask = 0x80; mask != 0; mask >>= 1) {
-			bn_add(d, d, d, N, n);
-			if ((a[i] & mask) != 0)
-				bn_add(d, d, b, N, n);
-		}
-}
-
-static void bn_exp(u8 *d, const u8 *a, const u8 *N, const u32 n, const u8 *e, const u32 en)
-{
-	u8 t[512];
-	u32 i;
-	u8 mask;
-
-	bn_zero(d, n);
-	d[n-1] = 1;
-	for (i = 0; i < en; i++)
-		for (mask = 0x80; mask != 0; mask >>= 1) {
-			bn_mul(t, d, d, N, n);
-			if ((e[i] & mask) != 0)
-				bn_mul(d, t, a, N, n);
-			else
-				bn_copy(d, t, n);
-		}
-}
-
 static u32 get_sig_len(const u8 *sig)
 {
 	u32 type;
