@@ -192,21 +192,16 @@ namespace ProxiIOS { namespace DIP {
 				return AddPatch(PatchType::File, &file);
 			}
 #ifdef YARR
-			case Ioctl::SetFileProvider: {
+			case Ioctl::SetFileProvider:
 				LogPrintf("IOCTL: SetFileProvider(\"%s\");\n", (const char*)message->ioctl.buffer_in);
-				int file = File_Open((const char*)message->ioctl.buffer_in, O_RDONLY);
-				if (!file)
-					return -1;
-				Provider = new FileProvider(this, file);
+				Provider = new FileProvider(this, (const char*)message->ioctl.buffer_in);
 				if (!Provider)
 					return -1;
 				return 1;
-			}
 #endif
-			case Ioctl::SetShiftBase: {
+			case Ioctl::SetShiftBase:
 				ShiftBase = ((u64)buffer_in[0] << 32) | buffer_in[1];
 				LogPrintf("IOCTL: SetShiftBase(0x%08x%08x);\n", (u32)(ShiftBase >> 32), (u32)ShiftBase);
-			}
 			case Ioctl::SetClusters:
 				Clusters = buffer_in[0];
 				LogPrintf("IOCTL: SetClusters(%s);\n", Clusters ? "true" : "false");

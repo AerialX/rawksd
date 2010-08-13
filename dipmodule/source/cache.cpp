@@ -112,11 +112,14 @@ bool Cache::Read(void* buffer, u64 offset, u32 size)
 	u8* data = (u8*)buffer;
 	u32 sector = (u32)(offset >> 2) / (SectorSize >> 2);
 	u32 sectoroffset = ((u32)(offset >> 2) % (SectorSize >> 2)) << 2;
-	u32 read = MIN(size, SectorSize - sectoroffset);
-	ReadPartialSector(data, sector, sectoroffset, read);
-	data += read;
-	size -= read;
-	sector++;
+	if (sectoroffset) {
+		u32 read = MIN(size, SectorSize - sectoroffset);
+		if (!ReadPartialSector(data, sector, sectoroffset, read))
+			return false;
+		data += read;
+		size -= read;
+		sector++;
+	}
 
 	if (size > SectorSize) {
 		u32 sectors = (u32)(size >> 2) / (SectorSize >> 2);
@@ -129,7 +132,7 @@ bool Cache::Read(void* buffer, u64 offset, u32 size)
 	}
 
 	if (size > 0) {
-		ReadPartialSector(data, sector, 0, size);
+		return ReadPartialSector(data, sector, 0, size);
 	}
 
 	return true;

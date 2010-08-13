@@ -21,7 +21,7 @@ namespace ProxiIOS { namespace DIP {
 			u64 GetDataSize() { return (u64)DataSize << 2; }
 		} __attribute__((packed));
 
-		int File;
+		int File[3];
 		u64 Position;
 		PartitionHeader Partition;
 		u8 PartitionKey[0x10];
@@ -30,7 +30,7 @@ namespace ProxiIOS { namespace DIP {
 	public:
 		static bool ReadSectors(void* userdata, sec_t sector, sec_t numSectors, void* buffer);
 
-		FileProvider(DIP* module, int file);
+		FileProvider(DIP* module, const char* path);
 
 		int UnencryptedRead(void* buffer, u32 size, u64 offset);
 

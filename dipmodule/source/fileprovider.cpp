@@ -45,36 +45,40 @@ static void Hexdump(const void* buffer, int len)
 namespace ProxiIOS { namespace DIP {
 	bool FileProvider::ReadSectors(void* userdata, sec_t sector, sec_t numSectors, void* buffer)
 	{
+		STACK_ALIGN(u8,iv,16,32);
 		LogPrintf("ReadSectors: 0x%08x (0x%08x)\n", (u32)sector, (u32)numSectors);
-		u8 iv[0x10];
 
 		FileProvider* provider = (FileProvider*)userdata;
 
-		u64 offset = provider->Module->CurrentPartition + ((u64)provider->Partition.DataOffset << 2) + sector * 0x8000;
+		u64 offset = provider->Module->CurrentPartition + ((u64)provider->Partition.DataOffset << 2) + (u64)sector * 0x8000;
 		LogPrintf("\tOffset: 0x%08x%08x\n", (u32)(offset >> 32), (u32)offset);
-		aes_set_key(provider->PartitionKey);
-		for (sec_t i = 0; i < numSectors; i++, offset += 0x8000, buffer = (u8*)buffer + 0x8000) {
+		for (sec_t i = 0; i < numSectors; i++, offset += 0x8000, buffer = (u8*)buffer + 0x7C00) {
 			if (provider->UnencryptedRead(iv, 0x10, offset + 0x3D0) != 1)
 				return false;
 			if (provider->UnencryptedRead((u8*)buffer, 0x7C00, offset + 0x400) != 1)
 				return false;
-			os_sync_before_read(buffer, 0x7C00);
 			aes_decrypt(iv, (u8*)buffer, (u8*)buffer, 0x7C00);
-			os_sync_after_write(buffer, 0x7C00);
 		}
 
 		return true;
 	}
 
-	FileProvider::FileProvider(DIP* module, int file) : DiProvider(module), Kash(3, 1, 0x7C00, ReadSectors, this)
+	FileProvider::FileProvider(DIP* module, const char* path) : DiProvider(module), Kash(3, 1, 0x7C00, ReadSectors, this)
 	{
-		File = file;
-		Position = 0;
-		File_Seek(File, 0, SEEK_SET);
+		int i = strlen(path);
+		char *ex_path = (char*)Alloc(i+3);
+		File[0] = File_Open(path, O_RDONLY);
+		strcpy(ex_path, path);
+		strcat(ex_path, "1");
+		File[1] = File_Open(ex_path, O_RDONLY);
+		ex_path[i] = '2';
+		File[2] = File_Open(ex_path, O_RDONLY);
+		Dealloc(ex_path);
 	}
 
 	int FileProvider::UnencryptedRead(void* buffer, u32 size, u64 offset)
 	{
+		int file_index = offset >> 31;
 		LogPrintf("Unencrypted Read: 0x%08x%08x (0x%08x) - 0x%08x\n", (u32)(offset >> 32), (u32)offset, size, buffer);
 
 		// FIXME: Needs to check for dual layer
@@ -90,22 +94,13 @@ namespace ProxiIOS { namespace DIP {
 			return 32;
 		}
 
-		s64 difference = (s64)offset - (s64)Position;
-		bool negative = difference < 0;
-		if (negative)
-			difference = -difference;
-		while (difference > 0x7FFFFFFF) {
-			File_Seek(File, 0x7FFFFFFF * (negative ? -1 : 1), SEEK_CUR);
-			difference -= 0x7FFFFFFF;
-		}
-		if (difference)
-			File_Seek(File, (s32)difference * (negative ? -1 : 1), SEEK_CUR);
+		File_Seek(File[file_index], (int)offset&0x7FFFFFFF, SEEK_SET);
 
 		static u32 tempdata[0x20] ATTRIBUTE_ALIGN(32);
 		if ((int)buffer == 0 && size <= 0x20 && size >= 4)
 			buffer = tempdata;
 
-		int read = File_Read(File, buffer, size);
+		int read = File_Read(File[file_index], buffer, size);
 
 		if (buffer == tempdata) { // Fucking memcpy
 			*(u32*)0 = *tempdata;
@@ -114,8 +109,6 @@ namespace ProxiIOS { namespace DIP {
 		}
 
 		Hexdump(buffer, read);
-		if (read > 0)
-			Position = offset + read;
 
 		local_error = 0;
 
@@ -164,10 +157,8 @@ namespace ProxiIOS { namespace DIP {
 			ticket = tikbuf;
 		}
 		UnencryptedRead(ticket, 0x2A4, partition);
-		os_sync_before_read(ticket, 0x2A4);
 
 		UnencryptedRead(&Partition, sizeof(Partition), partition + 0x2A4);
-		os_sync_before_read(&Partition, sizeof(Partition));
 
 		if (tmd)
 			UnencryptedRead(tmd, Partition.TmdSize, partition + ((u64)Partition.TmdOffset << 2));
@@ -182,7 +173,6 @@ namespace ProxiIOS { namespace DIP {
 		u8 iv[0x10];
 		memset(iv, 0, 0x10);
 		memcpy(iv, (u8*)ticket + 0x1DC, 0x08);
-		os_sync_after_write(iv, 0x10);
 
 		LogPrintf("Key\n");
 		Hexdump((u8*)ticket + 0x1BF, 0x10);
@@ -190,7 +180,7 @@ namespace ProxiIOS { namespace DIP {
 		Hexdump(iv, 0x10);
 
 		aes_decrypt(iv, (u8*)ticket + 0x1BF, PartitionKey, 0x10);
-		os_sync_after_write(PartitionKey, 0x10);
+		aes_set_key(PartitionKey);
 
 		LogPrintf("Partition Key\n");
 		Hexdump(PartitionKey, 0x10);

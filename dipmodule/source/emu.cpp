@@ -1726,7 +1726,7 @@ namespace ProxiIOS { namespace EMU {
 		// only ticket paths should reach here, no need to validate
 		u32 title = HexToInt(path+17);
 		if (std::find(Banned.begin(), Banned.end(), title) != Banned.end()) {
-			LogPrintf("Attempt to open %s denied\n", path);
+			//LogPrintf("Attempt to open %s denied\n", path);
 			return NULL;
 		}
 		return new TitleFile(path, mode, TitleFile::Tik);
