@@ -88,15 +88,10 @@ void CheckShutdown()
 				File_Close(i);
 			}
 
-			state.discstate = 3;
 			state.type = 5;
-			if (!WDVD_VerifyCover(&disc) && disc) {
+			state.discstate = 0;
+			if (!WDVD_VerifyCover(&disc) && disc)
 				state.discstate = 1;
-				if (CONF_GetShutdownMode() != CONF_SHUTDOWN_IDLE)
-					state.type = 1;
-				else
-					WDVD_StopMotor(false, false);
-			}
 
 			state.padding[0] = 0; // fix checksum
 			for (i=1; i < 8; i++)
@@ -107,6 +102,7 @@ void CheckShutdown()
 				File_Write(i, &state, sizeof(state));
 				File_Close(i);
 			}
+			WII_LaunchTitle(0x100000002LL);
 
 		case SYS_RETURNTOMENU:
 			SYS_ResetSystem(ShutdownParam, 0, 0);

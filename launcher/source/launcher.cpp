@@ -198,6 +198,7 @@ LauncherStatus::Enum Launcher_Init()
 LauncherStatus::Enum Launcher_ReadDisc()
 {
 	u32 i;
+	int j;
 
 	BannerName[0] = 0;
 
@@ -254,13 +255,17 @@ LauncherStatus::Enum Launcher_ReadDisc()
 		return LauncherStatus::ReadError;
 
 	// check for WODE
-	if (WDVD_SetDVDMode(1))
-		return LauncherStatus::ReadError;
-	if (WDVD_DVDRead(sector, 1, 0x1FEAE9)==0) {
+	// enable long DI unencrypted reads
+	*(u16*)0x939B0A88 = 0x2001;
+	DCFlushRange((void*)0x939B0A80, 32);
+	j = WDVD_LowUnencryptedRead(sector, 0x20, 0xFF574F44);
+	// disable long DI unencrypted reads
+	*(u16*)0x939B0A88 = 0x2000;
+	DCFlushRange((void*)0x939B0A80, 32);
+	if (!j) {
 		if (sector[0]=='W' && sector[1]=='O' && sector[2]=='D' && sector[3]=='E')
 			return LauncherStatus::ReadError;
-	}
-	if (WDVD_SetDVDMode(0))
+	} else
 		return LauncherStatus::ReadError;
 
 	// make sure LowUnencryptedRead lba table hasn't been patched

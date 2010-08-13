@@ -166,7 +166,7 @@ static void* GetContent(u64 titleid, int contentid, u32* length)
 	return GetContent(titleid, filename, length);
 }
 
-static signed_blob* GetTMD(u64 titleid, int version)
+static signed_blob* GetTMD(u64 titleid, int version=0)
 {
 	char filename[0x10];
 	u32 length = MAX_SIGNED_TMD_SIZE;
@@ -175,10 +175,6 @@ static signed_blob* GetTMD(u64 titleid, int version)
 	else
 		strcpy(filename, "tmd");
 	return (signed_blob*)GetContent(titleid, filename, &length);
-}
-static signed_blob* GetTMD(u64 titleid)
-{
-	return GetTMD(titleid, 0);
 }
 
 signed_blob* GetTicket(u64 titleid)

@@ -203,7 +203,6 @@ int WDVD_SetDVDMode(int enable)
 	return (result==1) ? 0 : -result;
 }
 
-// to detect WODE: DVDRead lba 0x1FEAE9 and see if the first 4 bytes are "WODE"
 int WDVD_DVDRead(void *buf, u32 len, u32 lba)
 {
 	int result = 0;

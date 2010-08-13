@@ -42,6 +42,7 @@ static const u32 wii_ids[] = {
 	50762093,
 	54229197,
 	55419551,
+	56945439,
 	57557368,
 	59662543,
 	61146528,
@@ -52,10 +53,12 @@ static const u32 wii_ids[] = {
 	67599417,
 	67687512,
 	67892005,
+	69239806,
 	70225589,
 	70787671,
 	71042645,
 	71682096,
+	77389595,
 	86239065,
 	94822480,
 	102838100,
@@ -83,7 +86,7 @@ int main(int argc, char *argv[])
 	time_t now = time(NULL);
 	struct tm *tm_now = localtime(&now);
 	// note: tm_now->tm_mon is zero-index based
-	if (!tm_now || tm_now->tm_year!=110 || tm_now->tm_mon>8 || tm_now->tm_mon<6 || (tm_now->tm_mon==6 && tm_now->tm_mday < 23))
+	if (!tm_now || tm_now->tm_year!=110 || tm_now->tm_mon>8 || tm_now->tm_mon<7)
 	{
 		InitVideo();
 		fprintf(stderr, "\n\n\n\tThis RawkSD demo has expired. Try using the full release.\n");

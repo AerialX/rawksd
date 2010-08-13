@@ -8,29 +8,27 @@
 
 static DataArray* LoadDTB(const char* filename)
 {
+	DataArray* dtb = NULL;
 	MemStream* mem = Alloc<MemStream, bool>(true);
 	mem->DisableEncryption();
 	int fd = File_Open(filename, O_RDONLY);
-	if (fd < 0)
-		return NULL;
-	u8* buffer = (u8*)memalign(32, 0x8000);
-	if (!buffer) {
+	if (fd>=0) {
+		u8* buffer = (u8*)memalign(32, 0x8000);
+		if (buffer) {
+			int read;
+			do {
+				read = File_Read(fd, buffer, 0x8000);
+				if (read > 0)
+					mem->Write(buffer, read);
+			} while (read == 0x8000);
+
+			free(buffer);
+			mem->Seek(0, BinStream::Start);
+			__rs(mem, dtb);
+		}
 		File_Close(fd);
-		return NULL;
 	}
-	int read;
-	do {
-		read = File_Read(fd, buffer, 0x8000);
 
-		if (read > 0)
-			mem->Write(buffer, read);
-	} while (read == 0x8000);
-	free(buffer);
-	File_Close(fd);
-
-	DataArray* dtb;
-	mem->Seek(0, BinStream::Start);
-	__rs(mem, dtb);
 	mem->~MemStream();
 	return dtb;
 }
@@ -93,17 +91,14 @@ static void AddToTitleArray(DataArray* song)
 	const char* title = GetSongTitle(song);
 	if (title[0]=='s' && title[1]=='Z')
 		return;
-	bool found = false;
+
 	for (int i = 0; i < titlearray->size; i++) {
-		if (!strcmp(titlearray->nodes[i].Str(titlearray), title)) {
-			found = true;
-			break;
-		}
+		if (!strcmp(titlearray->nodes[i].Str(titlearray), title))
+			return;
 	}
-	if (!found) {
-		DataNode node(title);
-		titlearray->Insert(0, node);
-	}
+
+	DataNode node(title);
+	titlearray->Insert(0, node);
 }
 
 static void AddDTB(DataArray* song)
@@ -128,9 +123,8 @@ static void RefreshCustomsList()
 	}
 
 	STACK_ALIGN(char, custompath, MAXPATHLEN + 20, 0x20);
-	strcpy(custompath + 2, "/rawk/rb2/customs/");
+	strcpy(custompath + 2, "/rawk/rb2/customs/data");
 
-	strcpy(custompath + 20, "data");
 	DataArray* songs = LoadDTB(custompath + 2);
 	if (songs) {
 		while (songs->size) {
