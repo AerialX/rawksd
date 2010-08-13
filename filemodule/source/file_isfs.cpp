@@ -185,7 +185,7 @@ namespace ProxiIOS { namespace Filesystem {
 		if (!dir->dir_count)
 			return -1;
 
-		memcpy(dirname, dir->next_name, (NANDFILE_MAX+4)&~3);
+		memcpy(dirname, dir->next_name, (NANDFILE_MAX+1+3)&~3);
 		os_sync_after_write(dirname, NANDFILE_MAX+1);
 		dir->next_name += strlen(dir->next_name)+1;
 		dir->dir_count--;
@@ -193,6 +193,9 @@ namespace ProxiIOS { namespace Filesystem {
 		strcpy(full_path, dir->path);
 		strcat(full_path, "/");
 		strcat(full_path, dirname);
+
+		if (st==NULL)
+			return 0;
 		return Stat(full_path, st);
 	}
 

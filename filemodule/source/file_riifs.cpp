@@ -439,6 +439,8 @@ namespace ProxiIOS { namespace Filesystem {
 		os_sync_after_write(filename, MAXPATHLEN);
 		if (len < 0)
 			return len;
+		if (st==NULL)
+			return 0;
 		return ReceiveCommand(RII_FILE_NEXTDIR_STAT, st, sizeof(Stats));
 	}
 
@@ -447,8 +449,7 @@ namespace ProxiIOS { namespace Filesystem {
 		RiiFileInfo* info = (RiiFileInfo*)dir;
 		SendCommand(RII_OPTION_FILE, &info->File, 4);
 #ifdef RIIFS_LOCAL_DIRNEXT
-		if (info->DirCache)
-			Dealloc(info->DirCache);
+		Dealloc(info->DirCache);
 #endif
 		delete dir;
 		return ReceiveCommand(RII_FILE_CLOSEDIR);

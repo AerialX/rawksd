@@ -199,7 +199,8 @@ int FatHandler::NextDir(FileInfo* dir, char* filename, Stats* stats)
 	struct stat st;
 	int ret = FAT_NextDir(((FatFileInfo*)dir)->File, filename, &st);
 
-	StToStats(stats, &st);
+	if (stats)
+		StToStats(stats, &st);
 
 	return ret;
 }
