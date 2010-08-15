@@ -26,6 +26,7 @@
 	<song id="anarchyintheuk">
 		<album>Never Mind the Bollocks, Here's the Sex Pistols</album>
 		<genre>punk</genre>
+		<track>7</track>
 		<difficulty instrument="band" rank="300" />
 		<difficulty instrument="guitar" rank="300" />
 		<difficulty instrument="bass" rank="300" />
@@ -34,6 +35,7 @@
 	<song id="avalancha">
 		<album>Avalancha</album>
 		<genre>rock</genre>
+		<track>5</track>
 		<difficulty instrument="band" rank="150" />
 		<difficulty instrument="guitar" rank="150" />
 		<difficulty instrument="bass" rank="150" />
@@ -42,14 +44,17 @@
 	<song id="barracuda">
 		<album>Little Queen</album>
 		<genre>rock</genre>
+		<track>1</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="200" />
 		<difficulty instrument="guitar" rank="200" />
 		<difficulty instrument="bass" rank="200" />
 		<difficulty instrument="drums" rank="200" />
 	</song>
 	<song id="beforeiforget">
-		<album>Vol. 3: the Subliminal Verses</album>
+		<album>Vol. 3: (The Subliminal Verses)</album>
 		<genre>metal</genre>
+		<track>8</track>
 		<difficulty instrument="band" rank="525" />
 		<difficulty instrument="guitar" rank="525" />
 		<difficulty instrument="bass" rank="525" />
@@ -58,6 +63,7 @@
 	<song id="bellyofashark">
 		<album>Orchestra of Wolves</album>
 		<genre>punk</genre>
+		<track>4</track>
 		<difficulty instrument="band" rank="300" />
 		<difficulty instrument="guitar" rank="300" />
 		<difficulty instrument="bass" rank="300" />
@@ -66,6 +72,8 @@
 	<song id="blackmagicwoman">
 		<album>Abraxas</album>
 		<genre>blues</genre>
+		<track>2</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="450" />
 		<difficulty instrument="guitar" rank="450" />
 		<difficulty instrument="bass" rank="450" />
@@ -74,6 +82,8 @@
 	<song id="blacksunshine">
 		<album>La Sexorcisto: Devil Music, Vol. 1</album>
 		<genre>metal</genre>
+		<track>4</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="450" />
 		<difficulty instrument="guitar" rank="450" />
 		<difficulty instrument="bass" rank="450" />
@@ -82,6 +92,7 @@
 	<song id="bullsonparade">
 		<album>Evil Empire</album>
 		<genre>numetal</genre>
+		<track>2</track>
 		<difficulty instrument="band" rank="200" />
 		<difficulty instrument="guitar" rank="200" />
 		<difficulty instrument="bass" rank="200" />
@@ -90,6 +101,7 @@
 	<song id="cantbesaved">
 		<album>Still Searching</album>
 		<genre>emo</genre>
+		<track>4</track>
 		<difficulty instrument="band" rank="75" />
 		<difficulty instrument="guitar" rank="75" />
 		<difficulty instrument="bass" rank="75" />
@@ -98,14 +110,17 @@
 	<song id="cherubrock">
 		<album>Siamese Dream</album>
 		<genre>alternative</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="450" />
 		<difficulty instrument="guitar" rank="450" />
 		<difficulty instrument="bass" rank="450" />
 		<difficulty instrument="drums" rank="450" />
 	</song>
 	<song id="citiesonflame">
-		<album>Blue √ñyster Cult</album>
+		<album>Blue ÷yster Cult</album>
 		<genre>rock</genre>
+		<track>8</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="350" />
 		<difficulty instrument="guitar" rank="350" />
 		<difficulty instrument="bass" rank="350" />
@@ -114,6 +129,8 @@
 	<song id="cliffsofdover">
 		<album>Ah Via Musicom</album>
 		<genre>rock</genre>
+		<track>2</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="600" />
 		<difficulty instrument="guitar" rank="600" />
 		<difficulty instrument="bass" rank="600" />
@@ -122,6 +139,7 @@
 	<song id="closer">
 		<album>Karmacode</album>
 		<genre>fusion</genre>
+		<track>9</track>
 		<difficulty instrument="band" rank="200" />
 		<difficulty instrument="guitar" rank="200" />
 		<difficulty instrument="bass" rank="200" />
@@ -129,7 +147,8 @@
 	</song>
 	<song id="cultofpersonality">
 		<album>Vivid</album>
-		<genre>Funk</genre>
+		<genre>funk</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="575" />
 		<difficulty instrument="guitar" rank="575" />
 		<difficulty instrument="bass" rank="575" />
@@ -138,6 +157,7 @@
 	<song id="dontholdback">
 		<album>Questions and Answers</album>
 		<genre>alternative</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="350" />
 		<difficulty instrument="guitar" rank="350" />
 		<difficulty instrument="bass" rank="350" />
@@ -146,6 +166,7 @@
 	<song id="downndirty">
 		<album>L.A. Slum Lords</album>
 		<genre>punk</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="200" />
 		<difficulty instrument="guitar" rank="200" />
 		<difficulty instrument="bass" rank="200" />
@@ -154,14 +175,16 @@
 	<song id="evenflow">
 		<album>Ten</album>
 		<genre>grunge</genre>
+		<track>2</track>
 		<difficulty instrument="band" rank="350" />
 		<difficulty instrument="guitar" rank="350" />
 		<difficulty instrument="bass" rank="350" />
 		<difficulty instrument="drums" rank="350" />
 	</song>
 	<song id="fcpremix">
-		<album>Doppelg√§nger</album>
+		<album>Doppelg‰nger</album>
 		<genre>prog</genre>
+		<track>3</track>
 		<difficulty instrument="band" rank="375" />
 		<difficulty instrument="guitar" rank="375" />
 		<difficulty instrument="bass" rank="375" />
@@ -170,6 +193,7 @@
 	<song id="generationrock">
 		<album>Revolverheld</album>
 		<genre>alternative</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="150" />
 		<difficulty instrument="guitar" rank="150" />
 		<difficulty instrument="bass" rank="150" />
@@ -178,6 +202,7 @@
 	<song id="gothatfar">
 		<album>Rock My World</album>
 		<genre>rock</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="275" />
 		<difficulty instrument="guitar" rank="275" />
 		<difficulty instrument="bass" rank="275" />
@@ -186,6 +211,7 @@
 	<song id="helicopter">
 		<album>Silent Alarm</album>
 		<genre>punk</genre>
+		<track>2</track>
 		<difficulty instrument="band" rank="425" />
 		<difficulty instrument="guitar" rank="425" />
 		<difficulty instrument="bass" rank="425" />
@@ -194,6 +220,7 @@
 	<song id="hierkommtalex">
 		<album>Ein kleines bisschen Horrorschau</album>
 		<genre>punk</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="225" />
 		<difficulty instrument="guitar" rank="225" />
 		<difficulty instrument="bass" rank="225" />
@@ -202,6 +229,8 @@
 	<song id="hitmewithyourbestshot">
 		<album>Crimes of Passion</album>
 		<genre>rock</genre>
+		<track>4</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="75" />
 		<difficulty instrument="guitar" rank="75" />
 		<difficulty instrument="bass" rank="75" />
@@ -210,6 +239,8 @@
 	<song id="holidayincambodia">
 		<album>Fresh Fruit for Rotting Vegetables</album>
 		<genre>punk</genre>
+		<track>13</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="375" />
 		<difficulty instrument="guitar" rank="375" />
 		<difficulty instrument="bass" rank="375" />
@@ -217,6 +248,7 @@
 	</song>
 	<song id="imintheband">
 		<album>Rock &amp; Roll Is Dead</album>
+		<track>8</track>
 		<genre>punk</genre>
 		<difficulty instrument="band" rank="200" />
 		<difficulty instrument="guitar" rank="200" />
@@ -225,6 +257,7 @@
 	</song>
 	<song id="impulse">
 		<album>Ameliorate</album>
+		<track>2</track>
 		<genre>indierock</genre>
 		<difficulty instrument="band" rank="500" />
 		<difficulty instrument="guitar" rank="500" />
@@ -233,6 +266,7 @@
 	</song>
 	<song id="inlove">
 		<album>In Love</album>
+		<track>1</track>
 		<genre>indie</genre>
 		<difficulty instrument="band" rank="125" />
 		<difficulty instrument="guitar" rank="125" />
@@ -240,7 +274,8 @@
 		<difficulty instrument="drums" rank="125" />
 	</song>
 	<song id="knightsofcydonia">
-		<album>Black Holes &amp; Revelations</album>
+		<album>Black Holes and Revelations</album>
+		<track>11</track>
 		<genre>prog</genre>
 		<difficulty instrument="band" rank="575" />
 		<difficulty instrument="guitar" rank="575" />
@@ -250,6 +285,7 @@
 	<song id="koolthing">
 		<album>Goo</album>
 		<genre>alternative</genre>
+		<track>4</track>
 		<difficulty instrument="band" rank="300" />
 		<difficulty instrument="guitar" rank="300" />
 		<difficulty instrument="bass" rank="300" />
@@ -257,7 +293,9 @@
 	</song>
 	<song id="lagrange">
 		<album>Tres Hombres</album>
+		<track>8</track>
 		<genre>rock</genre>
+		<master>false</master>
 		<difficulty instrument="band" rank="425" />
 		<difficulty instrument="guitar" rank="425" />
 		<difficulty instrument="bass" rank="425" />
@@ -266,6 +304,7 @@
 	<song id="laydown">
 		<album>Hello Master</album>
 		<genre>metal</genre>
+		<track>2</track>
 		<difficulty instrument="band" rank="275" />
 		<difficulty instrument="guitar" rank="275" />
 		<difficulty instrument="bass" rank="275" />
@@ -274,6 +313,7 @@
 	<song id="mauvaisgarcon">
 		<album>L'Antichambre</album>
 		<genre>indie</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="375" />
 		<difficulty instrument="guitar" rank="375" />
 		<difficulty instrument="bass" rank="375" />
@@ -282,6 +322,7 @@
 	<song id="metalheavylady">
 		<album>No Generation</album>
 		<genre>rock</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="125" />
 		<difficulty instrument="guitar" rank="125" />
 		<difficulty instrument="bass" rank="125" />
@@ -290,6 +331,7 @@
 	<song id="minuscelsius">
 		<album>Stockholm Syndrome</album>
 		<genre>punk</genre>
+		<track>4</track>
 		<difficulty instrument="band" rank="125" />
 		<difficulty instrument="guitar" rank="125" />
 		<difficulty instrument="bass" rank="125" />
@@ -298,6 +340,8 @@
 	<song id="mississippiqueen">
 		<album>Climbing!</album>
 		<genre>rock</genre>
+		<track>1</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="150" />
 		<difficulty instrument="guitar" rank="150" />
 		<difficulty instrument="bass" rank="150" />
@@ -306,6 +350,7 @@
 	<song id="missmurder">
 		<album>Decemberunderground</album>
 		<genre>punk</genre>
+		<track>3</track>
 		<difficulty instrument="band" rank="225" />
 		<difficulty instrument="guitar" rank="225" />
 		<difficulty instrument="bass" rank="225" />
@@ -314,6 +359,7 @@
 	<song id="monsters">
 		<album>Voices</album>
 		<genre>emo</genre>
+		<track>5</track>
 		<difficulty instrument="band" rank="500" />
 		<difficulty instrument="guitar" rank="500" />
 		<difficulty instrument="bass" rank="500" />
@@ -322,6 +368,7 @@
 	<song id="mycurse">
 		<album>As Daylight Dies</album>
 		<genre>metal</genre>
+		<track>5</track>
 		<difficulty instrument="band" rank="450" />
 		<difficulty instrument="guitar" rank="450" />
 		<difficulty instrument="bass" rank="450" />
@@ -330,6 +377,7 @@
 	<song id="mynameisjonas">
 		<album>Weezer</album>
 		<genre>alternative</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="350" />
 		<difficulty instrument="guitar" rank="350" />
 		<difficulty instrument="bass" rank="350" />
@@ -338,6 +386,7 @@
 	<song id="nothingformehere">
 		<album>No Regrets</album>
 		<genre>numetal</genre>
+		<track>4</track>
 		<difficulty instrument="band" rank="450" />
 		<difficulty instrument="guitar" rank="450" />
 		<difficulty instrument="bass" rank="450" />
@@ -346,6 +395,7 @@
 	<song id="numberofthebeast">
 		<album>The Number of the Beast</album>
 		<genre>metal</genre>
+		<track>5</track>
 		<difficulty instrument="band" rank="600" />
 		<difficulty instrument="guitar" rank="600" />
 		<difficulty instrument="bass" rank="600" />
@@ -354,6 +404,7 @@
 	<song id="one">
 		<album>...And Justice for All</album>
 		<genre>metal</genre>
+		<track>4</track>
 		<difficulty instrument="band" rank="600" />
 		<difficulty instrument="guitar" rank="600" />
 		<difficulty instrument="bass" rank="0" />
@@ -362,6 +413,7 @@
 	<song id="one_coop">
 		<album>...And Justice for All</album>
 		<genre>metal</genre>
+		<track>4</track>
 		<difficulty instrument="band" rank="600" />
 		<difficulty instrument="guitar" rank="600" />
 		<difficulty instrument="bass" rank="600" />
@@ -370,6 +422,7 @@
 	<song id="paintitblack">
 		<album>Aftermath</album>
 		<genre>classicrock</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="275" />
 		<difficulty instrument="guitar" rank="275" />
 		<difficulty instrument="bass" rank="0" />
@@ -378,6 +431,8 @@
 	<song id="paranoid">
 		<album>Paranoid</album>
 		<genre>metal</genre>
+		<track>2</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="300" />
 		<difficulty instrument="guitar" rank="300" />
 		<difficulty instrument="bass" rank="300" />
@@ -386,6 +441,7 @@
 	<song id="prayeroftherefugee">
 		<album>The Sufferer &amp; the Witness</album>
 		<genre>punk</genre>
+		<track>6</track>
 		<difficulty instrument="band" rank="450" />
 		<difficulty instrument="guitar" rank="450" />
 		<difficulty instrument="bass" rank="450" />
@@ -394,6 +450,8 @@
 	<song id="pridenjoy">
 		<album>Texas Flood</album>
 		<genre>blues</genre>
+		<track>2</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="500" />
 		<difficulty instrument="guitar" rank="500" />
 		<difficulty instrument="bass" rank="500" />
@@ -402,6 +460,7 @@
 	<song id="radiosong">
 		<album>Pop'n'gum</album>
 		<genre>poprock</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="75" />
 		<difficulty instrument="guitar" rank="75" />
 		<difficulty instrument="bass" rank="75" />
@@ -410,6 +469,7 @@
 	<song id="rainingblood">
 		<album>Reign in Blood</album>
 		<genre>metal</genre>
+		<track>10</track>
 		<difficulty instrument="band" rank="600" />
 		<difficulty instrument="guitar" rank="600" />
 		<difficulty instrument="bass" rank="600" />
@@ -418,6 +478,7 @@
 	<song id="reptilia">
 		<album>Room on Fire</album>
 		<genre>punk</genre>
+		<track>2</track>
 		<difficulty instrument="band" rank="200" />
 		<difficulty instrument="guitar" rank="200" />
 		<difficulty instrument="bass" rank="200" />
@@ -426,6 +487,8 @@
 	<song id="rocknrollallnite">
 		<album>Dressed to Kill</album>
 		<genre>rock</genre>
+		<track>10</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="125" />
 		<difficulty instrument="guitar" rank="125" />
 		<difficulty instrument="bass" rank="125" />
@@ -434,6 +497,8 @@
 	<song id="rockulikeahurricane">
 		<album>Love at First Sting</album>
 		<genre>rock</genre>
+		<track>2</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="375" />
 		<difficulty instrument="guitar" rank="375" />
 		<difficulty instrument="bass" rank="375" />
@@ -441,7 +506,8 @@
 	</song>
 	<song id="ruby">
 		<album>Yours Truly, Angry Mob</album>
-		<genre>ruby</genre>
+		<genre>indierock</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="125" />
 		<difficulty instrument="guitar" rank="125" />
 		<difficulty instrument="bass" rank="125" />
@@ -450,6 +516,7 @@
 	<song id="sabotage">
 		<album>Ill Communication</album>
 		<genre>rock</genre>
+		<track>6</track>
 		<difficulty instrument="band" rank="125" />
 		<difficulty instrument="guitar" rank="125" />
 		<difficulty instrument="bass" rank="125" />
@@ -458,6 +525,7 @@
 	<song id="sameoldsonganddance">
 		<album>Get Your Wings</album>
 		<genre>rock</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="425" />
 		<difficulty instrument="guitar" rank="425" />
 		<difficulty instrument="bass" rank="425" />
@@ -466,6 +534,8 @@
 	<song id="schoolsout">
 		<album>School's Out</album>
 		<genre>rock</genre>
+		<track>1</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="150" />
 		<difficulty instrument="guitar" rank="150" />
 		<difficulty instrument="bass" rank="150" />
@@ -474,6 +544,8 @@
 	<song id="shebangsadrum">
 		<album>The Stone Roses</album>
 		<genre>indie</genre>
+		<track>2</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="75" />
 		<difficulty instrument="guitar" rank="75" />
 		<difficulty instrument="bass" rank="75" />
@@ -482,6 +554,8 @@
 	<song id="slowride">
 		<album>Fool for the City</album>
 		<genre>rock</genre>
+		<track>3</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="75" />
 		<difficulty instrument="guitar" rank="75" />
 		<difficulty instrument="bass" rank="75" />
@@ -490,6 +564,8 @@
 	<song id="storyofmylife">
 		<album>Social Distortion</album>
 		<genre>punk</genre>
+		<track>3</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="125" />
 		<difficulty instrument="guitar" rank="125" />
 		<difficulty instrument="bass" rank="125" />
@@ -498,6 +574,7 @@
 	<song id="stricken">
 		<album>Ten Thousand Fists</album>
 		<genre>metal</genre>
+		<track>5</track>
 		<difficulty instrument="band" rank="525" />
 		<difficulty instrument="guitar" rank="525" />
 		<difficulty instrument="bass" rank="525" />
@@ -506,6 +583,7 @@
 	<song id="suckmykiss">
 		<album>Blood Sugar Sex Magik</album>
 		<genre>alternative</genre>
+		<track>5</track>
 		<difficulty instrument="band" rank="275" />
 		<difficulty instrument="guitar" rank="275" />
 		<difficulty instrument="bass" rank="275" />
@@ -514,6 +592,8 @@
 	<song id="sunshineofyourlove">
 		<album>Disraeli Gears</album>
 		<genre>rock</genre>
+		<track>2</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="150" />
 		<difficulty instrument="guitar" rank="150" />
 		<difficulty instrument="bass" rank="150" />
@@ -522,6 +602,7 @@
 	<song id="takethislife">
 		<album>Come Clarity</album>
 		<genre>metal</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="575" />
 		<difficulty instrument="guitar" rank="575" />
 		<difficulty instrument="bass" rank="575" />
@@ -530,6 +611,7 @@
 	<song id="talkdirtytome">
 		<album>Look What the Cat Dragged In</album>
 		<genre>glam</genre>
+		<track>6</track>
 		<difficulty instrument="band" rank="75" />
 		<difficulty instrument="guitar" rank="75" />
 		<difficulty instrument="bass" rank="75" />
@@ -538,6 +620,7 @@
 	<song id="themetal">
 		<album>The Pick of Destiny</album>
 		<genre>metal</genre>
+		<track>15</track>
 		<difficulty instrument="band" rank="500" />
 		<difficulty instrument="guitar" rank="500" />
 		<difficulty instrument="bass" rank="500" />
@@ -546,6 +629,8 @@
 	<song id="theseeker">
 		<album>Meaty Beaty Big and Bouncy</album>
 		<genre>rock</genre>
+		<track>7</track>
+		<master>false</master>
 		<difficulty instrument="band" rank="225" />
 		<difficulty instrument="guitar" rank="225" />
 		<difficulty instrument="bass" rank="225" />
@@ -554,6 +639,7 @@
 	<song id="thewayitends">
 		<album>Continuum</album>
 		<genre>metal</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="500" />
 		<difficulty instrument="guitar" rank="500" />
 		<difficulty instrument="bass" rank="500" />
@@ -562,6 +648,7 @@
 	<song id="threesandsevens">
 		<album>Era Vulgaris</album>
 		<genre>rock</genre>
+		<track>8</track>
 		<difficulty instrument="band" rank="575" />
 		<difficulty instrument="guitar" rank="575" />
 		<difficulty instrument="bass" rank="575" />
@@ -570,6 +657,7 @@
 	<song id="thrufireandflames">
 		<album>Inhuman Rampage</album>
 		<genre>metal</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="699" />
 		<difficulty instrument="guitar" rank="699" />
 		<difficulty instrument="bass" rank="0" />
@@ -578,6 +666,7 @@
 	<song id="thrufireandflames_coop">
 		<album>Inhuman Rampage</album>
 		<genre>metal</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="699" />
 		<difficulty instrument="guitar" rank="699" />
 		<difficulty instrument="bass" rank="699" />
@@ -586,6 +675,7 @@
 	<song id="welcometothejungle">
 		<album>Appetite for Destruction</album>
 		<genre>rock</genre>
+		<track>1</track>
 		<difficulty instrument="band" rank="425" />
 		<difficulty instrument="guitar" rank="425" />
 		<difficulty instrument="bass" rank="425" />
@@ -594,6 +684,7 @@
 	<song id="whenyouwereyoung">
 		<album>Sam's Town</album>
 		<genre>rock</genre>
+		<track>3</track>
 		<difficulty instrument="band" rank="225" />
 		<difficulty instrument="guitar" rank="225" />
 		<difficulty instrument="bass" rank="225" />
@@ -616,9 +707,8 @@
 		<difficulty instrument="drums" rank="200" />
 	</song>
 	<song id="bossdevil">
-		<album>Million Mile Reflections</album>
+		<album>Guitar Hero 3</album>
 		<genre>metal</genre>
-		<master>false</master>
 		<difficulty instrument="band" rank="650" />
 		<difficulty instrument="guitar" rank="650" />
 		<difficulty instrument="bass" rank="650" />
