@@ -54,7 +54,7 @@
 /*  E */ s32       os_message_queue_receive(osqueue_t queue, u32* message, u32 flags);
 /*  F    os_register_event_handler(int device, osqueue_t queue, u32 message) */
 /* 10    os_unregister_event_handler */
-/* 11 */ ostimer_t os_create_timer(s32 time_us, s32 repeat_time_us, osqueue_t message_queue, s32 message);
+/* 11 */ ostimer_t os_create_timer(s32 time_us, s32 repeat_time_us, osqueue_t message_queue, u32 message);
 /* 12 */ s32       os_restart_timer(ostimer_t timer_id, s32 time_us, s32 repeat_time_us);
 /* 13 */ s32       os_stop_timer(ostimer_t timer_id);
 /* 14 */ s32       os_destroy_timer(ostimer_t time_id);
