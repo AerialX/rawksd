@@ -645,7 +645,7 @@ int disable_mem2_protection(s32 fd)
 		0xE59F2000, // ldr r2, return address in ES
 		0xE12FFF12, // bx r2
 		//0x20107084+1, // ret_address IOS37v3869
-		//0x2010710C+1, // ret_address IOS37v5662
+		//0x2010710C+1, // ret_address IOS37v5662/5663
 	};
 
 
@@ -742,6 +742,7 @@ int disable_mem2_protection(s32 fd)
 			MEM1_BASE_UNCACHED[5] = 0x20107084+1;
 			break;
 		case 5662:
+		case 5663:
 			MEM1_BASE_UNCACHED[5] = 0x2010710C+1;
 			break;
 		default:
@@ -1437,7 +1438,7 @@ static bool do_exploit()
 
 	printf("Grabbin' HAXX\n");
 
-	if (IOS_GetVersion() != (u32)HAXX_IOS || (ios_rev != 5662 && ios_rev != 3869))
+	if (IOS_GetVersion() != (u32)HAXX_IOS || (ios_rev != 5663 && ios_rev != 5662 && ios_rev != 3869))
 	{
 		printf("Wrong IOS version. Update IOS%d to the latest version.\n", (u32)HAXX_IOS);
 		return false;
