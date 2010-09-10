@@ -101,7 +101,7 @@ struct RiiMemoryPatch {
 		Offset = 0;
 		Value = NULL;
 		Original = NULL;
-		Length = 0;
+		Length = 1;
 		Align = 1;
 		Search = false;
 		Ocarina = false;
@@ -116,7 +116,7 @@ struct RiiMemoryPatch {
 
 	std::string ValueFile;
 
-	u8* GetValue();
+	u8* GetValue(std::string path);
 
 	u32 GetLength()
 	{

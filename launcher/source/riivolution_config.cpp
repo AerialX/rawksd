@@ -473,8 +473,11 @@ versionisvalid:
 							attribute = attribute.substr(2);
 						int length = attribute.size() / 2;
 						memory.Original = new u8[length];
-						if (memory.Original)
+						if (memory.Original) {
 							HexToBytes(memory.Original, attribute.c_str());
+							if (!memory.Length)
+								memory.Length = length;
+						}
 					}
 
 					patch.Memory.push_back(memory);
@@ -709,20 +712,21 @@ void SaveConfigXML(RiiDisc* disc)
 	File_Close(fd);
 }
 
-u8* RiiMemoryPatch::GetValue()
+u8* RiiMemoryPatch::GetValue(std::string path)
 {
+	u8* value = Value;
 	Stats st;
-	if (!Value && ValueFile.size() && !File_Stat(ValueFile.c_str(), &st)) {
-		int fd = File_Open(ValueFile.c_str(), O_RDONLY);
+	if (!value && path.size() && !File_Stat(path.c_str(), &st)) {
+		int fd = File_Open(path.c_str(), O_RDONLY);
 		if (fd >= 0) {
-			Value = (u8*)memalign(0x20, ROUND_UP(st.Size, 0x20));
+			value = (u8*)memalign(0x20, ROUND_UP(st.Size, 0x20));
 			if (Value) {
-				int read = File_Read(fd, Value, st.Size);
+				int read = File_Read(fd, value, st.Size);
 				Length = read;
 			}
 			File_Close(fd);
 		}
 	}
 
-	return Value;
+	return value;
 }

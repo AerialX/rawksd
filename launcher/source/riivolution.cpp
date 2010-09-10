@@ -682,9 +682,9 @@ static void* FindInBuffer(void* memory, void* end, void* pattern, int patternlen
 
 	return NULL;
 }
-static void RVL_Patch(RiiMemoryPatch* memory)
+static void RVL_Patch(RiiMemoryPatch* memory, map<string, string>* params)
 {
-	if (memory->Ocarina || (memory->Search && !memory->Original) || !memory->Offset || !memory->GetValue() || !memory->GetLength())
+	if (memory->Ocarina || (memory->Search && !memory->Original) || !memory->Offset || !memory->GetLength())
 		return;
 
 	memory->Offset = (int)MEM_PHYSICAL_OR_K0(memory->Offset);
@@ -700,19 +700,32 @@ static void RVL_Patch(RiiMemoryPatch* memory)
 	if (memory->Original && memcmp((void*)memory->Offset, memory->Original, memory->GetLength()))
 		return;
 
-	memcpy((void*)memory->Offset, memory->GetValue(), memory->GetLength());
-	DCFlushRange((void*)memory->Offset, memory->GetLength());
+	string valuefile = memory->ValueFile;
+	ApplyParams(&valuefile, params);
+	void* value = memory->GetValue(valuefile);
+	if (value) {
+		memcpy((void*)memory->Offset, value, memory->GetLength());
+		DCFlushRange((void*)memory->Offset, memory->GetLength());
+		if (!memory->Value)
+			free(value);
+	}
 }
 
-static void RVL_Patch(RiiMemoryPatch* memory, void* mem, u32 length)
+static void RVL_Patch(RiiMemoryPatch* memory, map<string, string>* params, void* mem, u32 length)
 {
-	if ((!memory->Ocarina && !memory->Search) || (memory->Search && !memory->Align) || (memory->Ocarina && !memory->Offset) || !memory->GetValue() || !memory->GetLength())
+	if ((!memory->Ocarina && !memory->Search) || (memory->Search && !memory->Align) || (memory->Ocarina && !memory->Offset) || !memory->GetLength())
 		return;
 
 	memory->Offset = (int)MEM_PHYSICAL_OR_K0(memory->Offset);
+	
+	string valuefile = memory->ValueFile;
+	ApplyParams(&valuefile, params);
+	void* value = memory->GetValue(valuefile);
+	if (!value)
+		return;
 
 	if (memory->Ocarina) {
-		void* ocarina = FindInBuffer(mem, (u8*)mem + length, memory->GetValue(), memory->GetLength(), 4);
+		void* ocarina = FindInBuffer(mem, (u8*)mem + length, value, memory->GetLength(), 4);
 		if (ocarina) {
 			u32* blr;
 			for (blr = (u32*)ocarina; (u8*)blr < (u8*)mem + length && *blr != 0x4E800020; blr++)
@@ -723,8 +736,11 @@ static void RVL_Patch(RiiMemoryPatch* memory, void* mem, u32 length)
 	} else /* if (memory->Search) */ {
 		void* ret = FindInBuffer(mem, (u8*)mem + length, memory->Original, memory->Length, memory->Align);
 		if (ret)
-			memcpy(ret, memory->GetValue(), memory->GetLength());
+			memcpy(ret, value, memory->GetLength());
 	}
+
+	if (!memory->Value)
+		free(value);
 }
 
 void RVL_PatchMemory(RiiDisc* disc, void* memory, u32 length)
@@ -733,14 +749,27 @@ void RVL_PatchMemory(RiiDisc* disc, void* memory, u32 length)
 		for (vector<RiiOption>::iterator option = section->Options.begin(); option != section->Options.end(); option++) {
 			if (option->Default == 0)
 				continue;
+			map<string, string> params;
+			ADD_DEFAULT_PARAMS(params);
+			params.insert(option->Params.begin(), option->Params.end());
 			RiiChoice* choice = &option->Choices[option->Default - 1];
+			params.insert(choice->Params.begin(), choice->Params.end());
+			u32 end = params.size();
+
 			for (vector<RiiChoice::Patch>::iterator patch = choice->Patches.begin(); patch != choice->Patches.end(); patch++) {
+				params.insert(patch->Params.begin(), patch->Params.end());
 				RiiPatch* mem = &disc->Patches[patch->ID];
 				for (vector<RiiMemoryPatch>::iterator mempatch = mem->Memory.begin(); mempatch != mem->Memory.end(); mempatch++) {
 					if (memory)
-						RVL_Patch(&*mempatch, memory, length);
+						RVL_Patch(&*mempatch, &params, memory, length);
 					else
-						RVL_Patch(&*mempatch);
+						RVL_Patch(&*mempatch, &params);
+				}
+				if (patch->Params.size()) {
+					map<string, string>::iterator endi = params.begin();
+					for (u32 i = 0; i < end; i++) // Fucking iterator needs operator+()
+						endi++;
+					params.erase(endi, patch->Params.end());
 				}
 			}
 		}
