@@ -720,7 +720,7 @@ u8* RiiMemoryPatch::GetValue(std::string path)
 		int fd = File_Open(path.c_str(), O_RDONLY);
 		if (fd >= 0) {
 			value = (u8*)memalign(0x20, ROUND_UP(st.Size, 0x20));
-			if (Value) {
+			if (value) {
 				int read = File_Read(fd, value, st.Size);
 				Length = read;
 			}
