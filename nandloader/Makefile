@@ -15,38 +15,31 @@ include $(DEVKITPPC)/wii_rules
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-TARGET		:=	rawksd
+TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	data source ../launcher/lib/libwiigui ../launcher/lib/libwiigui/libwiigui \
-				data/images data/fonts data/sounds \
-				../launcher/data ../launcher/data/images ../launcher/data/sounds
-INCLUDES	:=	include ../launcher/include ../launcher/lib/libwiigui ../launcher/lib \
-				../filemodule/include ../launcher/lib/libxml2/include ../launcher/lib/libxml++ ../launcher/lib/libxml++/libxml++
-TEXTURES	:=	textures				
-
-# Shared source files from launcher
-SOURCEDIRS	:=	../launcher/source
-SOURCEFILES	:=	init.cpp haxx.cpp installer.cpp \
-				rijndael.c http.cpp sha1.cpp wdvd.cpp \
-				riivolution.cpp riivolution_config.cpp launcher.cpp fwrite.cpp debugprint.cpp
+SOURCES		:=	source
+DATA		:=	data  
+INCLUDES	:=
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS		=	-g -O2 -Wall $(MACHDEP) $(INCLUDE)
-CXXFLAGS	=	-save-temps -Xassembler -aln=$@.lst $(CFLAGS)
-LDFLAGS		=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map,--section-start,.init=0x80900100 -T ../../launcher/lib/rvl.ld
+CFLAGS	= -O2 -Wall $(MACHDEP) $(INCLUDE)
+CXXFLAGS	=	$(CFLAGS)
+
+LDFLAGS	=	$(MACHDEP) -Wl,-Map,$(notdir $@).map -T ../stub.ld
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS :=	../../launcher/lib/libxml++/libxml++.a ../../launcher/lib/libxml2/libxml2.a -lpng -lz -lfat -lwiiuse -lbte -lasnd -logc -lvorbisidec -lfreetype ../../filemodule/libfile/libfile_wii.a
+LIBS	:=	-logc
+
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(PORTLIBS)
+LIBDIRS	:=
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -55,29 +48,21 @@ LIBDIRS	:= $(PORTLIBS)
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
 
-export OUTPUT	:=	$(CURDIR)/$(TARGETDIR)/$(TARGET)
+export OUTPUT	:=	$(CURDIR)/$(TARGET)
+
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-					$(foreach dir,$(SOURCEDIRS),$(CURDIR)/$(dir)) \
-					$(foreach dir,$(TEXTURES),$(CURDIR)/$(dir))
+					$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
 #---------------------------------------------------------------------------------
 # automatically build a list of object files for our project
 #---------------------------------------------------------------------------------
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c))) \
-				$(filter %.c,$(SOURCEFILES))
-CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp))) \
-				$(filter %.cpp,$(SOURCEFILES))
+CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))
-TTFFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.ttf)))
-PNGFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.png)))
-OGGFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.ogg)))
-PCMFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.pcm)))
-DATFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.dat)))
-XMLFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.xml)))
-SCFFILES	:=	$(foreach dir,$(TEXTURES),$(notdir $(wildcard $(dir)/*.scf)))
-TPLFILES	:=	$(SCFFILES:.scf=.tpl)
+BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -88,20 +73,17 @@ else
 	export LD	:=	$(CXX)
 endif
 
-export OFILES	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) \
-					$(addsuffix .o,$(TPLFILES)) \
-					$(sFILES:.s=.o) $(SFILES:.S=.o) \
-					$(TTFFILES:.ttf=.ttf.o) $(PNGFILES:.png=.png.o) \
-					$(OGGFILES:.ogg=.ogg.o) $(PCMFILES:.pcm=.pcm.o) \
-					$(DATFILES:.dat=.dat.o) $(XMLFILES:.xml=.xml.o)
+export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
+					$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) \
+					$(sFILES:.s=.o) $(SFILES:.S=.o)
 
 #---------------------------------------------------------------------------------
 # build a list of include paths
 #---------------------------------------------------------------------------------
-export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+export INCLUDE	:=	$(foreach dir,$(INCLUDES), -iquote $(CURDIR)/$(dir)) \
 					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 					-I$(CURDIR)/$(BUILD) \
-					-I$(LIBOGC_INC) -I$(PORTLIBS)/include/freetype2
+					-I$(LIBOGC_INC)
 
 #---------------------------------------------------------------------------------
 # build a list of library paths
@@ -116,20 +98,19 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@cp $(TARGET).dol ../launcher/data/banner.1.dat
 
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol $(OUTPUT).z.dol boot.elf
+	@rm -fr ../launcher/data/banner.1.dat
+	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
 
 #---------------------------------------------------------------------------------
-run: $(BUILD)
-	@wiiload $(OUTPUT).dol
+run:
+	wiiload $(TARGET).dol
 
-z: $(BUILD)
-	@../launcher/dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol
-	@../launcher/dollz3/dol2elf $(OUTPUT).z.dol boot.elf
-	
+
 #---------------------------------------------------------------------------------
 else
 
@@ -142,34 +123,11 @@ $(OUTPUT).dol: $(OUTPUT).elf
 $(OUTPUT).elf: $(OFILES)
 
 #---------------------------------------------------------------------------------
-# This rule links in binary data with .ttf, .png, and .mp3 extensions
+# This rule links in binary data with the .jpg extension
 #---------------------------------------------------------------------------------
-%.ttf.o : %.ttf
+%.jpg.o	:	%.jpg
+#---------------------------------------------------------------------------------
 	@echo $(notdir $<)
-	$(bin2o)
-
-%.png.o : %.png
-	@echo $(notdir $<)
-	$(bin2o)
-	
-%.ogg.o : %.ogg
-	@echo $(notdir $<)
-	$(bin2o)
-	
-%.pcm.o : %.pcm
-	@echo $(notdir $<)
-	$(bin2o)
-
-%.dat.o : %.dat
-	@echo $(notdir $<)
-	$(bin2o)
-
-%.xml.o : %.xml
-	@echo $(notdir $>)
-	$(bin2o)
-	
-%.tpl.o : %.tpl
-	@echo $(notdir $>)
 	$(bin2o)
 
 -include $(DEPENDS)

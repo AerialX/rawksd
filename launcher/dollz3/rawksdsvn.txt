@@ -1,1 +1,4 @@
 Put the dollz3 binary for your platform in this directory to build the compressed .dol.
+Compiling dol2elf.c -
+	With Visual Studio: cl dol2elf.c
+	With gcc: gcc -o dol2elf dol2elf.c

@@ -104,7 +104,7 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol $(OUTPUT).z.dol
+	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol $(OUTPUT).z.dol boot.elf
 
 #---------------------------------------------------------------------------------
 run: $(BUILD)
@@ -112,8 +112,8 @@ run: $(BUILD)
 
 z: $(BUILD)
 	@./dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol
-	@./hash $(OUTPUT).z.dol
-	@cp $(OUTPUT).z.dol hbc/apps/riivolution/boot.dol
+	@./dollz3/dol2elf $(OUTPUT).z.dol boot.elf
+	@cp boot.elf hbc/apps/riivolution/boot.elf
 	@cd hbc/apps; zip -D riiv.zip riivolution/*
 	@mv hbc/apps/riiv.zip .
 

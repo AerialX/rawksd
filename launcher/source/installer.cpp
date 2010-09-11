@@ -383,6 +383,7 @@ static u8* ReadChannelDol(const char* filename, u32* size)
 	}
 	File_Close(fd);
 
+#ifndef NO_VERIFY_INSTALL
 	u8 filehash[0x14];
 	u8 hash[0x14];
 	u8* hasharea = ret + *size - sizeof(hash);
@@ -396,6 +397,7 @@ static u8* ReadChannelDol(const char* filename, u32* size)
 	}
 
 	*size -= sizeof(hash);
+#endif
 
 	return ret;
 }
@@ -411,9 +413,9 @@ static u8* ReadChannelData(int index, u32* size)
 		return ret;
 	}
 
-	ret = ReadChannelDol("/apps/riivolution/boot.dol", size);
+	ret = ReadChannelDol("/apps/riivolution/boot.elf", size);
 	if (!ret)
-		ret = ReadChannelDol("/boot.dol", size);
+		ret = ReadChannelDol("/boot.elf", size);
 	return ret;
 }
 
