@@ -616,10 +616,17 @@ u8 *make_tmd(u64 title)
 
 int check_for_sneek(s32 fd)
 {
+	s32 xfd;
 	u32 bversion;
 
 	if (*MEM_PROT==1)
 		return 2;
+
+	xfd = IOS_Open("/dev/es/lrn2strcmp", 0);
+	if (xfd>=0) {
+		IOS_Close(xfd);
+		return 1;
+	}
 
 	if (ES_GetBoot2Version(&bversion)==0 && bversion >= 5)
 	{
