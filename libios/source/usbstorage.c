@@ -136,8 +136,10 @@ static s32 __send_cbw(usbstorage_handle *dev, u8 lun, u32 len, u8 flags, const u
 
 	memset(dev->buffer, 0, CBW_SIZE);
 
+	++dev->tag;
+
 	__stwbrx(dev->buffer, 0, CBW_SIGNATURE);
-	__stwbrx(dev->buffer, 4, ++dev->tag);
+	__stwbrx(dev->buffer, 4, dev->tag);
 	__stwbrx(dev->buffer, 8, len);
 	dev->buffer[12] = flags;
 	dev->buffer[13] = lun;
