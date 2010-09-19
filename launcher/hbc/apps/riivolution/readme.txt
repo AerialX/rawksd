@@ -1,5 +1,5 @@
 Riivolution v1.04
-June 22nd, 2010
+September 16th, 2010
 by Aaron, tueidj, Tempus, and megazig
 riivolution@japaneatahand.com
 
@@ -50,6 +50,12 @@ Special thanks to everyone that contributed: Treeki, Omega, Pop006, TobiasAmaran
 
 Changelog
 
+v1.04
+September 16th, 2010
+ - System Menu 4.3v2 compatibility (September 8th, 2010 update)
+ - New savefile redirection feature
+ - This update provides behind-the-scenes fixes that will not affect features but will improve the overall system performance.
+
 v1.03
 June 22nd, 2010
  - System Menu 4.3 compatibility
@@ -57,7 +63,6 @@ June 22nd, 2010
  - Stability fixes for all filesystems
  - Files close after a few seconds to allow them to be replaced over RiiFS
  - Improved channel install
-    - No longer requires SD/USB
  - RiiFS improvements
     - Native C++ Server
     - Connects automatically on a LAN without needing SD/USB

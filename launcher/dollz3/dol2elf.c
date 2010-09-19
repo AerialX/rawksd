@@ -7,19 +7,23 @@
 #include <stdio.h>
 
 // basic data types
+#ifdef _MSC_VER
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
-#ifdef _MSC_VER
 typedef unsigned __int64 u64;
 #else
-typedef unsigned long long u64;
+#include <stdint.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 #endif
 
 typedef struct {
-    unsigned long state[5];
-    unsigned long count[2];
-    unsigned char buffer[64];
+    u32 state[5];
+    u32 count[2];
+    uint8_t buffer[64];
 } SHA1_CTX;
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
@@ -41,16 +45,16 @@ typedef struct {
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 
-void SHA1Transform(unsigned long state[5], const unsigned char buffer[64])
+void SHA1Transform(u32 state[5], const uint8_t buffer[64])
 {
-	unsigned long a, b, c, d, e;
+	u32 a, b, c, d, e;
 	typedef union {
-	    unsigned char c[64];
-	    unsigned long l[16];
+	    uint8_t c[64];
+	    u32 l[16];
 	} CHAR64LONG16;
 	CHAR64LONG16* block;
 
-	static unsigned char workspace[64];
+	static uint8_t workspace[64];
     block = (CHAR64LONG16*)workspace;
     memcpy(block, buffer, 64);
 
@@ -108,9 +112,9 @@ void SHA1Init(SHA1_CTX* context)
 
 /* Run your data through this. */
 
-void SHA1Update(SHA1_CTX* context, const unsigned char* data, unsigned int len)
+void SHA1Update(SHA1_CTX* context, const uint8_t* data, uint32_t len)
 {
-unsigned int i, j;
+uint32_t i, j;
 
     j = (context->count[0] >> 3) & 63;
     if ((context->count[0] += len << 3) < (len << 3)) context->count[1]++;
@@ -130,22 +134,22 @@ unsigned int i, j;
 
 /* Add padding and return the message digest. */
 
-void SHA1Final(unsigned char digest[20], SHA1_CTX* context)
+void SHA1Final(uint8_t digest[20], SHA1_CTX* context)
 {
-	unsigned long i, j;
-	unsigned char finalcount[8];
+	u32 i, j;
+	uint8_t finalcount[8];
 
     for (i = 0; i < 8; i++) {
-        finalcount[i] = (unsigned char)((context->count[(i >= 4 ? 0 : 1)]
+        finalcount[i] = (uint8_t)((context->count[(i >= 4 ? 0 : 1)]
          >> ((3-(i & 3)) * 8) ) & 255);  /* Endian independent */
     }
-    SHA1Update(context, (unsigned char *)"\200", 1);
+    SHA1Update(context, (uint8_t *)"\200", 1);
     while ((context->count[0] & 504) != 448) {
-        SHA1Update(context, (unsigned char *)"\0", 1);
+        SHA1Update(context, (uint8_t *)"\0", 1);
     }
     SHA1Update(context, finalcount, 8);  /* Should cause a SHA1Transform() */
     for (i = 0; i < 20; i++) {
-        digest[i] = (unsigned char)
+        digest[i] = (uint8_t)
          ((context->state[i>>2] >> ((3-(i & 3)) * 8) ) & 255);
     }
     /* Wipe variables */
@@ -188,7 +192,7 @@ static void dol2elf(char *inname, char *outname)
 	u8 elfheader[0x400] = {0};
 	u8 segheader[0x400] = {0};
 	u8 secheader[0x400] = {0};
-	u8 strings[0x400] = "\0.strtab";
+	char strings[0x400] = "\0.strtab";
 	u32 str_offset = 9;
 	struct section section[19];
 	FILE *in, *out;
@@ -336,7 +340,7 @@ static void dol2elf(char *inname, char *outname)
 }
 
 static u8 elf_buf[0x8000];
-static char salt[] = "Viva la Riivolution!";
+static u8 salt[] = "Viva la Riivolution!";
 
 int main(int argc, char **argv)
 {
