@@ -1510,8 +1510,8 @@ static bool do_exploit()
 		if (!patch_failed)
 		{
 			usleep(4000);
-			patch_failed = !(load_sdhc_module(0x0000000100000038llu) || load_sdhc_module(0x000000010000003Cllu) || \
-				load_sdhc_module(0x000000010000003Dllu) || load_sdhc_module(0x0000000100000046llu));
+			patch_failed = !(load_sdhc_module(0x000000010000003Allu) || load_sdhc_module(0x0000000100000038llu) || \
+				load_sdhc_module(0x000000010000003Dllu) || load_sdhc_module(0x0000000100000050llu));
 			if (patch_failed)
 			{
 				printf("SDHC module couldn't be loaded, trying IOS%d SD.\n", (u32)HAXX_IOS);
