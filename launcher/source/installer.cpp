@@ -39,14 +39,6 @@ extern "C" {
 	extern const u32 banner_1_dat_size;
 }
 
-static struct {
-	const u8 *data;
-	const u32 size;
-} banner_datas[2] = {
-	{banner_0_dat, banner_0_dat_size},
-	{banner_1_dat, banner_1_dat_size}
-};
-
 static bool initfat = false;
 static bool initnet = false;
 
@@ -404,6 +396,14 @@ static u8* ReadChannelDol(const char* filename, u32* size)
 
 static u8* ReadChannelData(int index, u32* size)
 {
+	static const struct {
+		const u8 *data;
+		const u32 size;
+	} banner_datas[2] = {
+		{banner_0_dat, banner_0_dat_size},
+		{banner_1_dat, banner_1_dat_size}
+	};
+
 	u8 *ret;
 	if (index < 2) {
 		*size = banner_datas[index].size;
@@ -435,7 +435,6 @@ static void GetTitleKey(const signed_blob *s_tik, u8 *key)
 	aes_set_key(commonkey);
 	aes_decrypt(iv, keyin, key, sizeof(keyin));
 }
-
 
 int InstallChannel()
 {
