@@ -340,6 +340,8 @@
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
+				EnableEnhancedInstructionSet="0"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="false"

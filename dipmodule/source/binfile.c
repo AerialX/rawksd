@@ -175,10 +175,19 @@ BinFile* OpenBinRead(s32 file)
 			binfile->index = content_rec.index;
 			binfile->iv[0] = content_rec.index>>8;
 			binfile->iv[1] = (u8)content_rec.index;
-			if (bin_header.bk_header.contents_size != ROUND_UP(content_rec.size, 64) ||	content_rec.type != 0x4001)
-			{
-				debug_printf("DLC Open size mismatch (%d vs. %d) or contents not DLC (%04X)\n", bin_header.bk_header.contents_size, ROUND_UP(content_rec.size, 64), content_rec.type);
+			if (content_rec.type != 0x4001) {
+				debug_printf("BIN contents not DLC\n");
 				goto open_error;
+			}
+			if (bin_header.bk_header.contents_size != ROUND_UP(content_rec.size, 64))
+			{
+				if (((u32)bin_header.tmd_header.title_id>>8)==0x00635242)
+					binfile->data_size = ROUND_UP(content_rec.size, 64);
+				else
+				{
+					debug_printf("DLC Open size mismatch (%d vs. %d)\n", bin_header.bk_header.contents_size, ROUND_UP(content_rec.size, 64));
+					goto open_error;
+				}
 			}
 			found = 1;
 			break;

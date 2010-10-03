@@ -753,13 +753,13 @@ int disable_mem2_protection(s32 fd)
 			MEM1_BASE_UNCACHED[5] = 0x2010710C+1;
 			break;
 		default:
-			memcpy(MEM1_BASE, lowmem_save, sizeof(lowmem_save));
+			memcpy(MEM1_BASE_UNCACHED, lowmem_save, sizeof(lowmem_save));
 			return 0;
 	}
 
 	vec[2].data = ES_STACK_EXPLOIT;
 	vec[2].len = 0;
-	cnt = 0x20000000; // 0x20000000 * 0xD8 = 0x1B00000000 = 0
+	cnt = 0x20000000; // 0x20000000 * 0xD8 = 0x1B00000000 = (u32)0
 	//cnt = 1;
 	printf("Playing soothing music...");
 	ret = IOS_Ioctlv(fd, 0x13, 2, 1, vec); // ES_GetTicketViews
