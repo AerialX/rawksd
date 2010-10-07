@@ -626,9 +626,11 @@ bool Connection::WaitForAction()
 					{
 						// set the read pointer, it might fail if file is write only
 						// in that case set the write pointer
-						if (OpenFiles[fd]->seekg(where, whence).bad())
+						if (OpenFiles[fd]->seekg(where, whence).fail()) {
+							OpenFiles[fd]->clear();
 							OpenFiles[fd]->seekp(where, whence);
-						Return(OpenFiles[fd]->good() ? 0 : -1);
+						}
+						Return(OpenFiles[fd]->fail() ? -1 : 0);
 						OpenFiles[fd]->clear();
 					}
 					break;
