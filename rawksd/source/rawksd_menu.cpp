@@ -432,6 +432,7 @@ void UpdateDevice(s32 *mount, GuiImage *image, GuiImageData *regular_image, GuiI
 			if (default_mount<0) {
 				memcpy(&global_config, new_config, sizeof(global_config));
 				default_mount = *mount;
+				File_SetSlotLED(global_config.slot_led);
 			}
 		} else
 			return;
