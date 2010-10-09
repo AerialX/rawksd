@@ -318,6 +318,13 @@ int File_CheckPhysical(int fs)
 	return os_ioctl(file_fd, IOCTL_CheckPhys, ioctlbuffer, sizeof(ioctlbuffer), NULL, 0);
 }
 
+void File_SetSlotLED(int enabled)
+{
+	ioctlbuffer[0] = enabled;
+	os_sync_after_write(ioctlbuffer, 0x04);
+	os_ioctl(file_fd, IOCTL_SetSlotLED, ioctlbuffer, sizeof(u32), NULL, 0);
+}
+
 static const char HEX_CHARS[] = "0123456789abcdef";
 static void IntToHex(char* dest, u64 num, int length)
 {

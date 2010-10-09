@@ -10,7 +10,6 @@
 #include "ipc.h"
 #include "wiisd_io.h"
 #include "usbstorage.h"
-#include "usb2storage.h"
 #include "files.h"
 #include "mem.h"
 #include "timer.h"
@@ -48,7 +47,7 @@ namespace ProxiIOS { namespace Filesystem {
 			Rename			= IOCTL_Rename,
 
 			// These are actually done in os_seek
-			// Because we need IOSP to translate the FD for us
+			// Because we need IOS to translate the FD for us
 			Tell			= SEEK_Tell,
 			Sync			= SEEK_Sync,
 
@@ -70,6 +69,8 @@ namespace ProxiIOS { namespace Filesystem {
 			CheckPhysical   = IOCTL_CheckPhys,
 			// Get the amount of free space in bytes
 			GetFreeSpace    = IOCTL_GetFreeSpace,
+			// Set slot LED activity indicator
+			SetSlotLED      = IOCTL_SetSlotLED,
 		};
 	}
 

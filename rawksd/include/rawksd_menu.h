@@ -47,6 +47,8 @@ typedef struct {
 	u32 version;
 	time_t timestamp;
 	u8 leaderboards;
+	// version 2
+	u8 slot_led;
 } config_t;
 
 extern config_t global_config;
@@ -122,7 +124,7 @@ public:
 class MenuSettings : public RawkMenu
 {
 private:
-	enum {OPTION_DEVICES, OPTION_LEADERBOARDS, OPTION_SETTINGS_COUNT};
+	enum {OPTION_DEVICES, OPTION_LEADERBOARDS, OPTION_ACTIVITY, OPTION_SETTINGS_COUNT};
 	static const u8 *settings_images[OPTION_SETTINGS_COUNT*3+1];
 	GuiText Subtitle;
 	int sel;

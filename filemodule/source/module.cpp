@@ -1,6 +1,7 @@
 #include "filemodule.h"
 
 #include "rtc.h"
+#include "gpio.h"
 
 #include "file_fat.h"
 #include "file_riifs.h"
@@ -52,6 +53,13 @@ namespace ProxiIOS { namespace Filesystem {
 				// update (approximately) every 10 minutes
 				os_create_timer(0, 600000000, queuehandle, FSRTC_MSG);
 				return Errors::Success; }
+			case Ioctl::SetSlotLED: {
+				if (buffer_in[0])
+					gpio_enable_toggle(GPIO_OSLOT);
+				else
+					gpio_disable_toggle(GPIO_OSLOT);
+				return Errors::Success;
+				}
 			case Ioctl::InitDisc: {
 				int index = 0;
 				for (index = 0; Disk[index] != null && index < FILE_MAX_DISKS; index++)
@@ -68,9 +76,6 @@ namespace ProxiIOS { namespace Filesystem {
 					case Disks::USB:
 						Disk[index] = const_cast<DISC_INTERFACE*>(&__io_usbstorage);
 						break;
-					//case Disks::USB2:
-					//	Disk = const_cast<DISC_INTERFACE*>(&__io_usb2storage);
-					//	break;
 					default:
 						return Errors::Unrecognized;
 				}

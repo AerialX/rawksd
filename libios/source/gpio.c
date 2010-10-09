@@ -2,6 +2,8 @@
 #include "gpio.h"
 #include "syscalls.h"
 
+static u32 toggle_mask = 0xFFFFFFFF;
+
 static u32 get_starlet_gpio(u32 flag)
 {
 	// give starlet control of this gpio
@@ -61,6 +63,9 @@ void gpio_set_toggle(u32 flag)
 	u32 owner;
 	u32 data;
 
+	if (!(flag & toggle_mask))
+		return;
+
 	owner = get_starlet_gpio(flag);
 
 	set_gpio_dir(flag, 1);
@@ -88,6 +93,16 @@ bool gpio_get(u32 flag)
 	os_poke_gpios(GPIO_IS_PPC, owner);
 
 	return (data&flag);
+}
+
+void gpio_enable_toggle(u32 flag)
+{
+	toggle_mask |= flag;
+}
+
+void gpio_disable_toggle(u32 flag)
+{
+	toggle_mask &= ~flag;
 }
 
 /*

@@ -35,8 +35,6 @@ distribution.
 #include "timer.h"
 #include "gpio.h"
 
-#define VISUALIZE
-
 #define debug_printf(fmt, args...)
 #define	TAG_START						0x0BADC0DE
 
@@ -100,7 +98,7 @@ static s32 __USB_BlkMsgTimeout(usbstorage_handle *dev, u8 bEndpoint, u16 wLength
 
 	if(retval==USBSTORAGE_ETIMEDOUT)
 	{
-		gpio_set_toggle(GPIO_OSLOT);
+		gpio_set_on(GPIO_OSLOT);
 		debug_printf("__USB_BlkMsgTimeout timed out, closing device\n");
 		//USBStorage_Close(dev);
 	}
@@ -116,7 +114,7 @@ static s32 __USB_CtrlMsgTimeout(usbstorage_handle *dev, u8 bmRequestType, u8 bmR
 
 	if(retval==USBSTORAGE_ETIMEDOUT)
 	{
-		gpio_set_toggle(GPIO_OSLOT);
+		gpio_set_on(GPIO_OSLOT);
 		debug_printf("__USB_CtrlMsgTimeout timed out, closing device\n");
 		//USBStorage_Close(dev);
 	}
@@ -824,15 +822,11 @@ static bool __usbstorage_ReadSectors(u32 sector, u32 numSectors, void *buffer)
    if(__mounted != 1)
        return false;
 
-#ifdef VISUALIZE
 	gpio_set_toggle(GPIO_OSLOT);
-#endif
 
    retval = USBStorage_Read(&__usbfd, __lun, sector, numSectors, buffer);
 
-#ifdef VISUALIZE
 	gpio_set_toggle(GPIO_OSLOT);
-#endif
 
    if(retval == USBSTORAGE_ETIMEDOUT)
        __mounted = 0;
@@ -850,15 +844,11 @@ static bool __usbstorage_WriteSectors(u32 sector, u32 numSectors, const void *bu
    if(__mounted != 1)
        return false;
 
-#ifdef VISUALIZE
 	gpio_set_toggle(GPIO_OSLOT);
-#endif
 
    retval = USBStorage_Write(&__usbfd, __lun, sector, numSectors, buffer);
 
-#ifdef VISUALIZE
 	gpio_set_toggle(GPIO_OSLOT);
-#endif
 
    if(retval == USBSTORAGE_ETIMEDOUT)
        __mounted = 0;

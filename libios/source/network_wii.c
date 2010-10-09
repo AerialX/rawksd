@@ -45,8 +45,6 @@ distribution.
 #include "timer.h"
 #include "gpio.h"
 
-#define VISUALIZE
-
 #define MEM_PHYSICAL_TO_K0(x) x
 
 #define IOS_O_NONBLOCK				0x04			//(O_NONBLOCK >> 16) - it's in octal representation, so this shift leads to 0 and hence nonblocking sockets didn't work. changed it to the right value.
@@ -882,14 +880,12 @@ s32 net_sendto(s32 s, const void *data, s32 len, u32 flags, struct sockaddr *to,
 	vec[1].data = params;
 	vec[1].len = sizeof(struct sendto_params);
 
-#ifdef VISUALIZE
-	gpio_set_on(GPIO_OSLOT);
-#endif
+	gpio_set_toggle(GPIO_OSLOT);
+
 	ret = _net_convert_error(os_ioctlv(net_ip_top_fd, IOCTLV_SO_SENDTO, 2, 0, vec));
 	debug_printf("net_send returned %d\n", ret);
-#ifdef VISUALIZE
-	gpio_set_off(GPIO_OSLOT);
-#endif
+
+	gpio_set_toggle(GPIO_OSLOT);
 
 	if(message_buf != data)
 		net_free(message_buf);
@@ -919,8 +915,10 @@ s32 net_recvfrom(s32 s, void *mem, s32 len, u32 flags, struct sockaddr *from, so
 	if ((u32)mem & 0x1F || (u32)mem < 0x10000000)
 	{
 		message_buf = net_malloc(len);
-		if (message_buf == NULL)
+		if (message_buf == NULL) {
+			gpio_set_on(GPIO_OSLOT);
 			return IPC_ENOMEM;
+		}
 	}
 	else
 		message_buf = (u8*)mem;
@@ -941,17 +939,16 @@ s32 net_recvfrom(s32 s, void *mem, s32 len, u32 flags, struct sockaddr *from, so
 	vec[2].data = from;
 	vec[2].len = (fromlen ? *fromlen : 0);
 
-#ifdef VISUALIZE
-	gpio_set_on(GPIO_OSLOT);
-#endif
+	gpio_set_toggle(GPIO_OSLOT);
+
 	ret = _net_convert_error(os_ioctlv(net_ip_top_fd, IOCTLV_SO_RECVFROM, 1, 2, vec));
 	debug_printf("net_recvfrom returned %d\n", ret);
-#ifdef VISUALIZE
-	gpio_set_off(GPIO_OSLOT);
-#endif
+
+	gpio_set_toggle(GPIO_OSLOT);
 
 	if (ret > 0) {
 		if (ret > len) {
+			gpio_set_on(GPIO_OSLOT);
 			ret = -EOVERFLOW;
 			goto done;
 		}

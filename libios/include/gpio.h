@@ -22,6 +22,8 @@ void gpio_set_on(u32 flag);
 void gpio_set_off(u32 flag);
 void gpio_set_toggle(u32 flag);
 bool gpio_get(u32 flag);
+void gpio_enable_toggle(u32 flag);
+void gpio_disable_toggle(u32 flag);
 
 #ifdef __cplusplus
 }

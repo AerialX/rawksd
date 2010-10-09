@@ -39,28 +39,29 @@ typedef enum {
 
 typedef enum {
 	IOCTL_InitDisc =	0x30,
-	IOCTL_Mount	=		0x31,
-	IOCTL_Unmount	=	0x32,
-	IOCTL_MountPoint = 	0x33,
-	IOCTL_SetDefault = 	0x34,
-	IOCTL_SetLogFS =	0x35,
-	IOCTL_GetLogFS =	0x36,
-	IOCTL_Epoch =		0x37,
+	IOCTL_Mount,
+	IOCTL_Unmount,
+	IOCTL_MountPoint,
+	IOCTL_SetDefault,
+	IOCTL_SetLogFS,
+	IOCTL_GetLogFS,
+	IOCTL_Epoch,
 	IOCTL_Stat =		0x40,
-	IOCTL_CreateFile =	0x41,
-	IOCTL_Delete =		0x42,
-	IOCTL_Rename =		0x43,
-	SEEK_Tell =			0x48,
-	SEEK_Sync =			0x49,
+	IOCTL_CreateFile,
+	IOCTL_Delete,
+	IOCTL_Rename,
+	SEEK_Tell,
+	SEEK_Sync,
 	IOCTL_CreateDir =	0x50,
-	IOCTL_OpenDir =		0x51,
-	IOCTL_NextDir =		0x52,
-	IOCTL_CloseDir =	0x53,
+	IOCTL_OpenDir,
+	IOCTL_NextDir,
+	IOCTL_CloseDir,
 	IOCTL_Shorten = 	0x60,
 	IOCTL_Log =         0x61,
 	IOCTL_Context =     0x62,
-	IOCTL_CheckPhys =   0x63,
-	IOCTL_GetFreeSpace= 0x64,
+	IOCTL_CheckPhys,
+	IOCTL_GetFreeSpace,
+	IOCTL_SetSlotLED,
 } file_ioctl;
 
 typedef enum {
@@ -86,6 +87,7 @@ int File_GetMountPoint(int fs, char* mountpoint, int length);
 int File_SetLogFS(int fs);
 int File_GetLogFS();
 int File_CheckPhysical(int fs);
+void File_SetSlotLED(int enabled);
 
 int File_Stat(const char* path, Stats* st);
 int File_CreateFile(const char* path);

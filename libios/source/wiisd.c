@@ -41,8 +41,6 @@
 #include "syscalls.h"
 #include "gpio.h"
 
-#define VISUALIZE
-
 #define PAGE_SIZE512				512
 
 #define	SDIOHCR_RESPONSE			0x10
@@ -473,17 +471,13 @@ bool sdio_Transfer(u32 cmd, sec_t sector, sec_t numSectors, void *buffer)
 	if (!__sd0_sdhc)
 		sector <<= 9;
 
-#ifdef VISUALIZE
-	gpio_set_on(GPIO_OSLOT);
-#endif
+	gpio_set_toggle(GPIO_OSLOT);
 
 	ret = __sdio_sendcommand(cmd, SDIOCMD_TYPE_AC,SDIO_RESPONSE_R1,sector,numSectors,PAGE_SIZE512,buffer,NULL,0);
 
 	__sd0_deselect();
 
-#ifdef VISUALIZE
-	gpio_set_off(GPIO_OSLOT);
-#endif
+	gpio_set_toggle(GPIO_OSLOT);
 
 	return (ret>=0);
 }

@@ -129,7 +129,7 @@ RawkMenu *MenuPlay::Process()
 			out_fd = File_Open("/rawk/rb2/config", O_WRONLY);
 			if (out_fd >=0) {
 				global_config.timestamp = time(NULL);
-				global_config.version = 1;
+				global_config.version = 2;
 				File_Write(out_fd, &global_config, sizeof(global_config));
 				File_Close(out_fd);
 			}

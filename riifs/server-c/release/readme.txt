@@ -1,5 +1,5 @@
 RiiFS C++ Server
-June 22, 2010
+October 7th, 2010
 riivolution@japaneatahand.com
 
 Usage: riifs <path-to-root> <port>
@@ -23,6 +23,10 @@ However, to get Riivolution to connect to a specific or external server it needs
 </wiidisc>
 
 Changelog
+
+v1.03b
+October 7th, 2010
+ - Fix seeking after reaching end-of-file
 
 v1.03
 June 22, 2010

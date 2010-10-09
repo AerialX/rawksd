@@ -413,14 +413,16 @@ void UpdateDevice(s32 *mount, GuiImage *image, GuiImageData *regular_image, GuiI
 			char filepath[MAXPATHLEN];
 			image->SetVisible(true);
 			new_config->version = 0;
-			new_config->leaderboards = 1;
+			new_config->leaderboards = global_config.leaderboards;
 			new_config->timestamp = 0;
+			new_config->slot_led = global_config.slot_led;
 			filepath[0] = '\0';
 			File_GetMountPoint(*mount, filepath, sizeof(filepath));
 			strcat(filepath, "/rawk/rb2/config");
 			s32 in_fd = File_Open(filepath, O_RDONLY);
 			if (in_fd>=0) {
-				if (File_Read(in_fd, new_config, sizeof(*new_config))==sizeof(*new_config)) {
+				int filesize = File_Read(in_fd, new_config, sizeof(*new_config));
+				if ((filesize>=9 && new_config->version==1) || (filesize>=10 && new_config->version==2)) {
 					if (new_config->version > global_config.version || \
 						(new_config->version == global_config.version && new_config->timestamp > global_config.timestamp))
 							default_mount = -1;
@@ -505,6 +507,7 @@ void MainMenu()
 	global_config.version = 0;
 	global_config.leaderboards = 1;
 	global_config.timestamp = 0;
+	global_config.slot_led = 1;
 
 	// clear out old rawksd custom titles if they exist
 	for(i='A'; i <= 'Z'; i++) {
