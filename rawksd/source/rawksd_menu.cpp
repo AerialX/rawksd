@@ -399,41 +399,46 @@ void UpdateDevice(s32 *mount, GuiImage *image, GuiImageData *regular_image, GuiI
 {
 	if (*mount<0) {
 		// ugh
-		if (disk == DISK_NONE)
+		if (disk == DISK_NONE) {
 			if (wifi_check_now) {
 				*mount = File_RiiFS_Mount("", 5256);
 				wifi_check_now = 0;
 			}
 			else
 				return;
-		else
+		} else
 			*mount = File_Fat_Mount(disk, dev);
 		if (*mount>=0) {
 			STACK_ALIGN(config_t,new_config,2,32);
 			char filepath[MAXPATHLEN];
+
 			image->SetVisible(true);
-			new_config->version = 0;
-			new_config->leaderboards = global_config.leaderboards;
-			new_config->timestamp = 0;
-			new_config->slot_led = global_config.slot_led;
+			*new_config = global_config;
 			filepath[0] = '\0';
 			File_GetMountPoint(*mount, filepath, sizeof(filepath));
 			strcat(filepath, "/rawk/rb2/config");
 			s32 in_fd = File_Open(filepath, O_RDONLY);
+
 			if (in_fd>=0) {
 				int filesize = File_Read(in_fd, new_config, sizeof(*new_config));
-				if ((filesize>=9 && new_config->version==1) || (filesize>=10 && new_config->version==2)) {
-					if (new_config->version > global_config.version || \
-						(new_config->version == global_config.version && new_config->timestamp > global_config.timestamp))
-							default_mount = -1;
-				}
 				File_Close(in_fd);
+
+				if ((filesize>=9 && new_config->version==1) || (filesize>=10 && new_config->version==2)) {
+					if (new_config->version==1)
+						new_config->slot_led = global_config.slot_led;
+
+					if (new_config->version > global_config.version || \
+						(new_config->version == global_config.version && new_config->timestamp > global_config.timestamp)) {
+							default_mount = -1;
+							global_config = *new_config;
+							File_SetSlotLED(global_config.slot_led);
+					}
+				}
 			}
-			if (default_mount<0) {
-				memcpy(&global_config, new_config, sizeof(global_config));
+
+			if (default_mount<0)
 				default_mount = *mount;
-				File_SetSlotLED(global_config.slot_led);
-			}
+
 		} else
 			return;
 	}
