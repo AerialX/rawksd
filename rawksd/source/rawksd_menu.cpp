@@ -5,6 +5,7 @@
 #include <string.h>
 #include <math.h>
 #include <errno.h>
+#include <time.h>
 
 #include "rawksd_menu.h"
 
@@ -19,6 +20,9 @@
 #define USB_Y 401
 #define WIFI_X 37
 #define WIFI_Y 401
+
+#define SANTA_X 84
+#define SANTA_Y 144
 
 GuiTrigger Trigger[Triggers::Count];
 GuiWindow* Window;
@@ -43,6 +47,7 @@ extern "C"  {
 	extern const u8 wifi_sticker_png[];
 	extern const u8 wifi_sticker_def_png[];
 	extern const u8 Rawk1_png[];
+	extern const u8 santa_hat_png[];
 }
 
 
@@ -539,6 +544,7 @@ void MainMenu()
 	GuiImageData SDstickerDefaultImage(sd_sticker_def_png);
 	GuiImageData USBstickerDefaultImage(usb_sticker_def_png);
 	GuiImageData WIFIstickerDefaultImage(wifi_sticker_def_png);
+	GuiImageData SantaImage(santa_hat_png);
 	GuiText buildText("RawkSD3 BETA " __DATE__ " " __TIME__, 14, (GXColor){255, 255, 255, 255});
 
 	Window = new GuiWindow(screenwidth, screenheight);
@@ -571,6 +577,16 @@ void MainMenu()
 	WIFIsticker.SetPosition(WIFI_X, WIFI_Y);
 	WIFIsticker.SetVisible(false);
 	Window->Append(&WIFIsticker);
+
+	GuiImage SantaHat(&SantaImage);
+	time_t now = time(NULL);
+	struct tm *tm_now = localtime(&now);
+	if (tm_now && tm_now->tm_mon==11 && tm_now->tm_mday==25) {
+		SantaHat.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
+		SantaHat.SetPosition(SANTA_X, SANTA_Y);
+		SantaHat.SetVisible(true);
+		Window->Append(&SantaHat);
+	}
 
 	Window->SetFocus(true);
 
