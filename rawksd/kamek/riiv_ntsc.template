@@ -1,27 +1,27 @@
 <wiidisc version="1">
-	<id game="SZA">
-		<region type="E" />
-	</id>
-	<options>
-		<section name="RB2 Haxx">
-			<option name="kamek" default="1">
-				<choice name="Enabled"><patch id="kamek_ntsc" /></choice>
-			</option>
-			<option name="splash" default="1">
-				<choice name="Enabled"><patch id="ntsc_splash" /></choice>
-			</option>
-			<option name="leaderboard" default="1">
-				<choice name="On"><patch id="leaderboard_enable" /></choice>
-				<choice name="Off"><patch id="leaderboard_disable" /></choice>
-			</option>
-		</section>
-	</options>
-	<patch id="ntsc_splash">
-		<file disc="/StrapUsage/loading.tpl" external="/mnt/isfs/tmp/ntsc.tpl" />
-	</patch>
-	<patch id="leaderboard_enable">
-		<memory offset="0x80002FFC" value="1337BAAD" />
-	</patch>
-	<patch id="leaderboard_disable">
-		<memory offset="0x80002FFC" value="00000000" />
-	</patch>
+<id game="SZA">
+<region type="E" />
+</id>
+<options>
+<section name="RB2 Haxx">
+<option name="kamek" default="1">
+<choice name="Enabled"><patch id="kamek_ntsc" /></choice>
+</option>
+<option name="splash" default="1">
+<choice name="Enabled"><patch id="ntsc_splash" /></choice>
+</option>
+<option name="leaderboard" default="1">
+<choice name="On"><patch id="leaderboard_enable" /></choice>
+<choice name="Off"><patch id="leaderboard_disable" /></choice>
+</option>
+</section>
+</options>
+<patch id="ntsc_splash">
+<file disc="/StrapUsage/loading.tpl" external="/mnt/isfs/tmp/ntsc.tpl" />
+</patch>
+<patch id="leaderboard_enable">
+<memory offset="0x80002FFC" value="1337BAAD" />
+</patch>
+<patch id="leaderboard_disable">
+<memory offset="0x80002FFC" value="00000000" />
+</patch>

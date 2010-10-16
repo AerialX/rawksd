@@ -127,7 +127,7 @@ run: $(BUILD)
 	@wiiload $(OUTPUT).dol
 
 z: $(BUILD)
-	@../launcher/dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol
+	@../launcher/dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol -m
 	@../launcher/dollz3/dol2elf $(OUTPUT).z.dol boot.elf
 	
 #---------------------------------------------------------------------------------

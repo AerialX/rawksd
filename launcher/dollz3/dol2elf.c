@@ -11,19 +11,17 @@
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
-typedef unsigned __int64 u64;
 #else
 #include <stdint.h>
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
-typedef uint64_t u64;
 #endif
 
 typedef struct {
     u32 state[5];
     u32 count[2];
-    uint8_t buffer[64];
+    u8 buffer[64];
 } SHA1_CTX;
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
@@ -45,16 +43,16 @@ typedef struct {
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 
-void SHA1Transform(u32 state[5], const uint8_t buffer[64])
+void SHA1Transform(u32 state[5], const u8 buffer[64])
 {
 	u32 a, b, c, d, e;
 	typedef union {
-	    uint8_t c[64];
+	    u8 c[64];
 	    u32 l[16];
 	} CHAR64LONG16;
 	CHAR64LONG16* block;
 
-	static uint8_t workspace[64];
+	static u8 workspace[64];
     block = (CHAR64LONG16*)workspace;
     memcpy(block, buffer, 64);
 
@@ -112,9 +110,9 @@ void SHA1Init(SHA1_CTX* context)
 
 /* Run your data through this. */
 
-void SHA1Update(SHA1_CTX* context, const uint8_t* data, uint32_t len)
+void SHA1Update(SHA1_CTX* context, const u8* data, u32 len)
 {
-uint32_t i, j;
+	u32 i, j;
 
     j = (context->count[0] >> 3) & 63;
     if ((context->count[0] += len << 3) < (len << 3)) context->count[1]++;
@@ -134,22 +132,22 @@ uint32_t i, j;
 
 /* Add padding and return the message digest. */
 
-void SHA1Final(uint8_t digest[20], SHA1_CTX* context)
+void SHA1Final(u8 digest[20], SHA1_CTX* context)
 {
 	u32 i, j;
-	uint8_t finalcount[8];
+	u8 finalcount[8];
 
     for (i = 0; i < 8; i++) {
-        finalcount[i] = (uint8_t)((context->count[(i >= 4 ? 0 : 1)]
+        finalcount[i] = (u8)((context->count[(i >= 4 ? 0 : 1)]
          >> ((3-(i & 3)) * 8) ) & 255);  /* Endian independent */
     }
-    SHA1Update(context, (uint8_t *)"\200", 1);
+    SHA1Update(context, (u8 *)"\200", 1);
     while ((context->count[0] & 504) != 448) {
-        SHA1Update(context, (uint8_t *)"\0", 1);
+        SHA1Update(context, (u8 *)"\0", 1);
     }
     SHA1Update(context, finalcount, 8);  /* Should cause a SHA1Transform() */
     for (i = 0; i < 20; i++) {
-        digest[i] = (uint8_t)
+        digest[i] = (u8)
          ((context->state[i>>2] >> ((3-(i & 3)) * 8) ) & 255);
     }
     /* Wipe variables */
@@ -178,22 +176,109 @@ void wbe32(u8 *p, u32 x)
 	wbe16(p + 2, x);
 }
 
+/* stub magic to init CPU for dollz loader */
+static u8 stub [0x140] = {
+	0x3C, 0x60, 0x00, 0x11, // li r3, 0x0011
+	0x60, 0x63, 0xCC, 0x64, // ori r3, r3, 0xCC64
+	0x4C, 0x00, 0x01, 0x2C, // isync
+	0x7C, 0x70, 0xFB, 0xA6, // mtspr HID0, r3
+	0x4C, 0x00, 0x01, 0x2C, // isync
+	0x38, 0x80, 0x20, 0x00, // li r4, 0x2000
+	0x7C, 0x80, 0x01, 0x24, // mtmsr r4
+	0x4C, 0x00, 0x01, 0x2C, // isync
+
+	0x38, 0x00, 0x00, 0x00, // li r0, 0
+	0x7C, 0x10, 0x83, 0xA6, // mtspr IBAT0U, r0
+	0x7C, 0x12, 0x83, 0xA6, // mtspr IBAT1U, r0
+	0x7C, 0x14, 0x83, 0xA6, // mtspr IBAT2U, r0
+	0x7C, 0x16, 0x83, 0xA6, // mtspr IBAT3U, r0
+	0x7C, 0x10, 0x8B, 0xA6, // mtspr IBAT4U, r0
+	0x7C, 0x12, 0x8B, 0xA6, // mtspr IBAT5U, r0
+	0x7C, 0x18, 0x83, 0xA6, // mtspr DBAT0U, r0
+	0x7C, 0x1A, 0x83, 0xA6, // mtspr DBAT1U, r0
+	0x7C, 0x1C, 0x83, 0xA6, // mtspr DBAT2U, r0
+	0x7C, 0x1E, 0x83, 0xA6, // mtspr DBAT3U, r0
+	0x7C, 0x18, 0x8B, 0xA6, // mtspr DBAT4U, r0
+	0x7C, 0x1A, 0x8B, 0xA6, // mtspr DBAT5U, r0
+	0x4C, 0x00, 0x01, 0x2C, // isync
+
+	0x3C, 0x00, 0x80, 0x00, // lis r0, 0x8000
+	0x7C, 0x00, 0x01, 0xA4, // mtsr sr0, r0
+	0x7C, 0x01, 0x01, 0xA4, // mtsr sr1, r0
+	0x7C, 0x02, 0x01, 0xA4, // mtsr sr2, r0
+	0x7C, 0x03, 0x01, 0xA4, // mtsr sr3, r0
+	0x7C, 0x04, 0x01, 0xA4, // mtsr sr4, r0
+	0x7C, 0x05, 0x01, 0xA4, // mtsr sr5, r0
+	0x7C, 0x06, 0x01, 0xA4, // mtsr sr6, r0
+	0x7C, 0x07, 0x01, 0xA4, // mtsr sr7, r0
+	0x7C, 0x08, 0x01, 0xA4, // mtsr sr8, r0
+	0x7C, 0x09, 0x01, 0xA4, // mtsr sr9, r0
+	0x7C, 0x0A, 0x01, 0xA4, // mtsr sr10, r0
+	0x7C, 0x0B, 0x01, 0xA4, // mtsr sr11, r0
+	0x7C, 0x0C, 0x01, 0xA4, // mtsr sr12, r0
+	0x7C, 0x0D, 0x01, 0xA4, // mtsr sr13, r0
+	0x7C, 0x0E, 0x01, 0xA4, // mtsr sr14, r0
+	0x7C, 0x0F, 0x01, 0xA4, // mtsr sr15, r0
+	0x4C, 0x00, 0x01, 0x2C, // isync
+
+	0x38, 0x80, 0x00, 0x02, // li r4, 2
+	0x3C, 0x60, 0x80, 0x00, // lis r3, 0x8000
+	0x38, 0x63, 0x1F, 0xFF, // addi r3, r3, 0x1FFF
+	0x4C, 0x00, 0x01, 0x2C, // isync
+	0x7C, 0x99, 0x83, 0xA6, // mtspr DBAT0L, r4
+	0x7C, 0x78, 0x83, 0xA6, // mtspr DBAT0U, r3
+	0x7C, 0x91, 0x83, 0xA6, // mtspr IBAT0L, r4
+	0x7C, 0x70, 0x83, 0xA6, // mtspr IBAT0U, r3
+	0x4C, 0x00, 0x01, 0x2C, // isync
+
+	0x3C, 0x84, 0x10, 0x00, // addis r4, r4, 0x1000
+	0x3C, 0x63, 0x10, 0x00, // addis r3, r3, 0x1000
+	0x4C, 0x00, 0x01, 0x2C, // isync
+	0x7C, 0x99, 0x8B, 0xA6, // mtspr DBAT4L, r4
+	0x7C, 0x78, 0x8B, 0xA6, // mtspr DBAT4U, r3
+	0x7C, 0x91, 0x8B, 0xA6, // mtspr IBAT4L, r4
+	0x7C, 0x70, 0x8B, 0xA6, // mtspr IBAT4U, r3
+	0x4C, 0x00, 0x01, 0x2C, // isync
+
+	0x38, 0x80, 0x00, 0x2A, // li r4, 0x2A
+	0x3C, 0x63, 0x30, 0x00, // addis r3, r3, 0x3000
+	0x4C, 0x00, 0x01, 0x2C, // isync
+	0x7C, 0x9B, 0x83, 0xA6, // mtspr DBAT1L, r4
+	0x7C, 0x7A, 0x83, 0xA6, // mtspr DBAT1U, r3
+	0x7C, 0x93, 0x83, 0xA6, // mtspr IBAT1L, r4
+	0x7C, 0x72, 0x83, 0xA6, // mtspr IBAT1U, r3
+	0x4C, 0x00, 0x01, 0x2C, // isync
+
+	0x3C, 0x84, 0x10, 0x00, // addis r4, r4, 0x1000
+	0x3C, 0x63, 0x10, 0x00, // addis r3, r3, 0x1000
+	0x4C, 0x00, 0x01, 0x2C, // isync
+	0x7C, 0x9D, 0x83, 0xA6, // mtspr DBAT2L, r4
+	0x7C, 0x7C, 0x83, 0xA6, // mtspr DBAT2U, r3
+	0x7C, 0x95, 0x83, 0xA6, // mtspr IBAT2L, r4
+	0x7C, 0x74, 0x83, 0xA6, // mtspr IBAT2U, r3
+	0x4C, 0x00, 0x01, 0x2C, // isync
+
+	0x7C, 0x60, 0x00, 0xA6, // mfmsr r3
+	0x60, 0x63, 0x00, 0x30, // ori r3, r3, MSR_DR|MSR_IR
+	0x7C, 0x7B, 0x03, 0xA6, // mtsrr1 r3
+	0x3C, 0x60, 0x00, 0x00, // lis r3, _entry@h
+	0x60, 0x63, 0x00, 0x00, // ori r3, r3, _entry@l
+	0x7C, 0x7A, 0x03, 0xA6, // mtsrr0 r3
+	0x4C, 0x00, 0x00, 0x64  // rfi
+};
+
 struct section {
 	u32 addr;
 	u32 size;
 	u32 offset;
 	u32 elf_offset;
-	u32 str_offset;
 };
 
 static void dol2elf(char *inname, char *outname)
 {
 	u8 dolheader[0x100];
-	u8 elfheader[0x400] = {0};
-	u8 segheader[0x400] = {0};
-	u8 secheader[0x400] = {0};
-	char strings[0x400] = "\0.strtab";
-	u32 str_offset = 9;
+	u8 elfheader[0x34];
+	u8 segheader[0x240] = {0};
 	struct section section[19];
 	FILE *in, *out;
 	u32 n_text, n_data, n_total;
@@ -205,128 +290,99 @@ static void dol2elf(char *inname, char *outname)
 	in = fopen(inname, "rb");
 	fread(dolheader, 1, sizeof dolheader, in);
 
-	elf_offset = 0x1000;
+	memset(section, 0, sizeof section);
+	elf_offset = 0x300;
 
 	// 7 text, 11 data
-	for (i = 0; i < 18; i++) {
-		section[i].offset = be32(dolheader + 4*i);
-		section[i].addr = be32(dolheader + 0x48 + 4*i);
-		section[i].size = be32(dolheader + 0x90 + 4*i);
-		section[i].elf_offset = elf_offset;
+	// first text section is the channel stub
+	section[0].addr = 0x80003400;
+	section[0].size = sizeof(stub);
+	section[0].elf_offset = elf_offset;
+
+	for (i = 0; i < 17; i++) {
 		elf_offset += -(-section[i].size & -0x100);
+		section[i+1].offset = be32(dolheader + 4*i);
+		section[i+1].addr = be32(dolheader + 0x48 + 4*i);
+		section[i+1].size = be32(dolheader + 0x90 + 4*i);
+		section[i+1].elf_offset = elf_offset;
 	}
 
 	// bss
-	section[18].offset = 0;
 	section[18].addr = be32(dolheader + 0xd8);
 	section[18].size = be32(dolheader + 0xdc);
-	section[18].elf_offset = elf_offset;
 
 	entry = be32(dolheader + 0xe0);
 
+	stub[0x132] = (entry >> 24) | 0x80; // virtual address
+	stub[0x133] = entry >> 16;
+	stub[0x136] = entry >> 8;
+	stub[0x137] = entry;
+
 	n_text = 0;
 	for (i = 0; i < 7; i++)
-		if (section[i].size) {
-			sprintf(strings + str_offset, ".text.%d", n_text);
-			section[i].str_offset = str_offset;
-			str_offset += 8;
+		if (section[i].size)
 			n_text++;
-		}
 
 	n_data = 0;
 	for ( ; i < 18; i++)
-		if (section[i].size) {
-			sprintf(strings + str_offset, ".data.%d", n_data);
-			section[i].str_offset = str_offset;
-			str_offset += i < 16 ? 8 : 9;
+		if (section[i].size)
 			n_data++;
-		}
 
 	n_total = n_text + n_data;
-	if (section[18].size) {
-		sprintf(strings + str_offset, ".bss");
-		section[i].str_offset = str_offset;
-		str_offset += 5;
+	if (section[18].size)
 		n_total++;
-	}
 
 	printf("%d text sections, %d data sections, %d total (includes bss)\n",
 	       n_text, n_data, n_total);
 	printf("entry point = %08x\n", entry);
 
 	memset(elfheader, 0, sizeof elfheader);
-	elfheader[0] = 0x7f;
+	elfheader[0] = 0x7f; // ELF magic
 	elfheader[1] = 0x45;
 	elfheader[2] = 0x4c;
 	elfheader[3] = 0x46;
-	elfheader[4] = 0x01;
-	elfheader[5] = 0x02;
-	elfheader[6] = 0x01;
+	elfheader[4] = 0x01; // ELFCLASS32
+	elfheader[5] = 0x02; // ELFDATA2MSB
+	elfheader[6] = 0x01; // EV_CURRENT
+	elfheader[7] = 0x00; // change to ninty's EI_OSABI(0x61) when installing on NAND because IOS is stupid)
 
-	wbe16(elfheader + 0x10, 2);
-	wbe16(elfheader + 0x12, 0x14);
-	wbe32(elfheader + 0x14, 1);
-	wbe32(elfheader + 0x18, entry);
-	wbe32(elfheader + 0x1c, 0x400);
-	wbe32(elfheader + 0x20, 0x800);
-	wbe32(elfheader + 0x24, 0);
-	wbe16(elfheader + 0x28, 0x34);
-	wbe16(elfheader + 0x2a, 0x20);
-	wbe16(elfheader + 0x2c, n_total);
-	wbe16(elfheader + 0x2e, 0x28);
-	wbe16(elfheader + 0x30, n_total + 2);
-	wbe16(elfheader + 0x32, 1);
+	wbe16(elfheader + 0x10, 2);                       // e_type = ET_EXEC
+	wbe16(elfheader + 0x12, 0x14);                    // e_machine (change to EM_ARM(0x28) when.. see above)
+	wbe32(elfheader + 0x14, 1);                       // e_version = EV_CURRENT
+	wbe32(elfheader + 0x18, entry);                   // e_entry
+	wbe32(elfheader + 0x1c, sizeof(elfheader));       // e_phoff (0x34)
+	wbe32(elfheader + 0x20, 0);                       // e_shoff
+	wbe32(elfheader + 0x24, 0x80000000);              // e_flags (powerpc)
+	wbe16(elfheader + 0x28, sizeof(elfheader));       // e_ehsize (0x34)
+	wbe16(elfheader + 0x2a, 0x20);                    // e_phentsize (0x20)
+	wbe16(elfheader + 0x2c, n_total);                 // e_phnum
+	wbe16(elfheader + 0x2e, 0x28);                    // e_shentsize
+	wbe16(elfheader + 0x30, 0);                       // e_shnum
+	wbe16(elfheader + 0x32, 0);                       // e_shstrndx = SHN_UNDEF
 
 	p = segheader;
 	for (i = 0; i < 19; i++)
 		if (section[i].size) {
-			wbe32(p + 0x00, 1);
-			wbe32(p + 0x04, section[i].elf_offset);
-			wbe32(p + 0x08, section[i].addr);
-			wbe32(p + 0x0c, section[i].addr);
-			wbe32(p + 0x10, i == 18 ? 0 : section[i].size);
-			wbe32(p + 0x14, section[i].size);
-			wbe32(p + 0x18, i < 7 ? 5 : 6);
-			wbe32(p + 0x1c, 0x20);
+			wbe32(p + 0x00, 1);                             // p_type = PT_LOAD
+			wbe32(p + 0x04, section[i].elf_offset);         // p_offset
+			wbe32(p + 0x08, section[i].addr);               // p_vaddr, use physical address for IOS
+			wbe32(p + 0x0c, i ? section[i].addr : 0x80004000); // p_paddr (hack for section 0 for HBC)
+			wbe32(p + 0x10, i == 18 ? 0 : section[i].size); // p_filesz
+			wbe32(p + 0x14, section[i].size);               // p_memsz
+			wbe32(p + 0x18, 0x07F00000 | (i < 7 ? 5 : 6));  // p_flags, tweaked for IOS
+			wbe32(p + 0x1c, 0x20);                          // p_align
 			p += 0x20;
-		}
-
-	p = secheader + 0x28;
-	wbe32(p + 0x00, 1);
-	wbe32(p + 0x04, 3);
-	wbe32(p + 0x08, 0);
-	wbe32(p + 0x0c, 0);
-	wbe32(p + 0x10, 0xc00);
-	wbe32(p + 0x14, 0x400);
-	wbe32(p + 0x18, 0);
-	wbe32(p + 0x1c, 0);
-	wbe32(p + 0x20, 1);
-	wbe32(p + 0x24, 0);
-	p += 0x28;
-
-	for (i = 0; i < 19; i++)
-		if (section[i].size) {
-			wbe32(p + 0x00, section[i].str_offset);
-			wbe32(p + 0x04, i == 18 ? 8 : 1);
-			wbe32(p + 0x08, i < 7 ? 6 : 3);
-			wbe32(p + 0x0c, section[i].addr);
-			wbe32(p + 0x10, section[i].elf_offset);
-			wbe32(p + 0x14, section[i].size);
-			wbe32(p + 0x18, 0);
-			wbe32(p + 0x1c, 0);
-			wbe32(p + 0x20, 0x20);
-			wbe32(p + 0x24, 0);
-			p += 0x28;
 		}
 
 	out = fopen(outname, "wb");
 	fwrite(elfheader, 1, sizeof elfheader, out);
 	fwrite(segheader, 1, sizeof segheader, out);
-	fwrite(secheader, 1, sizeof secheader, out);
-	fwrite(strings, 1, sizeof strings, out);
 
-	for (i = 0; i < 19; i++)
-		if (section[i].size) {
+	fseek(out, section[0].elf_offset, SEEK_SET);
+	fwrite(stub, 1, section[0].size, out);
+
+	for (i = 1; i < 19; i++)
+		if (section[i].size && section[i].offset) {
 			p = malloc(section[i].size);
 			fseek(in, section[i].offset, SEEK_SET);
 			fread(p, 1, section[i].size, in);

@@ -111,7 +111,7 @@ run: $(BUILD)
 	@wiiload $(OUTPUT).dol
 
 z: $(BUILD)
-	@./dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol
+	@./dollz3/dollz3 $(OUTPUT).dol $(OUTPUT).z.dol -m
 	@./dollz3/dol2elf $(OUTPUT).z.dol boot.elf
 	@cp boot.elf hbc/apps/riivolution/boot.elf
 	@cd hbc/apps; zip -D riiv.zip riivolution/*

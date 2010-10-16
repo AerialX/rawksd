@@ -35,8 +35,6 @@ extern "C" {
 	extern const u32 banner_tik_dat_size;
 	extern const u8 banner_0_dat[];
 	extern const u32 banner_0_dat_size;
-	extern const u8 banner_1_dat[];
-	extern const u32 banner_1_dat_size;
 }
 
 static bool initfat = false;
@@ -391,25 +389,27 @@ static u8* ReadChannelDol(const char* filename, u32* size)
 	*size -= sizeof(hash);
 #endif
 
+	// patches to keep IOS happy when it boots the content
+	ret[0x07] = 0x61;
+	ret[0x13] = 0x28;
+
+	// translate all virtual address to physical
+	for (fd=0; fd < ret[0x2D]; fd++) {
+		u32 *addr = (u32*)(ret+0x3C+fd*0x20);
+		*addr = *addr & 0x3FFFFFFF;
+	}
+
 	return ret;
 }
 
 static u8* ReadChannelData(int index, u32* size)
 {
-	static const struct {
-		const u8 *data;
-		const u32 size;
-	} banner_datas[2] = {
-		{banner_0_dat, banner_0_dat_size},
-		{banner_1_dat, banner_1_dat_size}
-	};
-
 	u8 *ret;
-	if (index < 2) {
-		*size = banner_datas[index].size;
+	if (index < 1) {
+		*size = banner_0_dat_size;
 		ret = (u8*)memalign(0x20, ROUND_UP(*size, 0x20));
 		if (ret)
-			memcpy(ret, banner_datas[index].data, *size);
+			memcpy(ret, banner_0_dat, *size);
 		return ret;
 	}
 
@@ -438,7 +438,7 @@ static void GetTitleKey(const signed_blob *s_tik, u8 *key)
 
 int InstallChannel()
 {
-	int ret;
+	int i, ret;
 	static u8 metadata[MAX_SIGNED_TMD_SIZE] ATTRIBUTE_ALIGN(32);
 	static u8 tikdata[STD_SIGNED_TIK_SIZE] ATTRIBUTE_ALIGN(32);
 	u8 key[0x10];
@@ -455,22 +455,24 @@ int InstallChannel()
 		return -1;
 	}
 
-	u32 banner_dat_size[3];
-	u8* banner_dat[3];
-	for (int i = 0; i < 3; i++) {
-		banner_dat[i] = ReadChannelData(i, &banner_dat_size[i]);
-		if (!banner_dat[i] || !banner_dat_size[i]) {
-			for (int k = 0; k < i; k++)
-				free(banner_dat[k]);
-			return -2;
+	u32 banner_dat_size[2];
+	u8 *banner_dat[2];
+
+	for (i=0; i < 2; i++)
+		if ((banner_dat[i] = ReadChannelData(i, banner_dat_size+i))) {
+			metatmd->contents[i].type = 1;
+			metatmd->contents[i].index = i;
+			metatmd->contents[i].cid = i;
+			metatmd->contents[i].size = banner_dat_size[i];
+			SHA1(banner_dat[i], banner_dat_size[i], metatmd->contents[i].hash);
 		}
 
-		metatmd->contents[i].type = 1;
-		metatmd->contents[i].index = i;
-		metatmd->contents[i].cid = i;
-		metatmd->contents[i].size = banner_dat_size[i];
-		SHA1(banner_dat[i], banner_dat_size[i], metatmd->contents[i].hash);
+	if (!banner_dat[0] || !banner_dat[1]) {
+		free(banner_dat[0]);
+		free(banner_dat[1]);
+		return -2;
 	}
+
 
 	if (metatik && metatik->devicetype) {
 		// assume the ticket also contains a valid ECC public keypair
@@ -494,7 +496,7 @@ int InstallChannel()
 		u8 iv[16];
 		// this address is hardcoded for IOS37 but it might be findable by searching:
 		// it's on a 64-byte boundary and is followed "\0GCC: (GNU) 3.4.3\0\0\0"
-		// ECDH stuff always starts with \0 or \1 and will be 30 bytes long, probably padded
+		// ECDH certs/keys always starts with \0 or \1 and will be 30 bytes long, probably padded
 		// by zeroes up to 64 bytes
 		u8* const ECDH_Secret = (u8*)0x93A75180;
 		DCInvalidateRange(ECDH_Secret, 32);
@@ -510,33 +512,27 @@ int InstallChannel()
 		ret = InstallTicket(ticket);
 	}
 
+	if (ret>=0)
+		ret = StartInstall(meta);
+
 	if (ret < 0) {
-		for (int i = 0; i < 3; i++)
-			free(banner_dat[i]);
+		free(banner_dat[0]);
+		free(banner_dat[1]);
 		return ret;
 	}
 
-	ret = StartInstall(meta);
-	if (ret < 0) {
-		for (int i = 0; i < 3; i++)
-			free(banner_dat[i]);
-		return ret;
-	}
+	ret = InstallContent(metatmd, 0, banner_dat[0], banner_dat_size[0], key);
+	if (ret>=0)
+		ret = InstallContent(metatmd, 1, banner_dat[1], banner_dat_size[1], key);
 
-	for (int i = 0; i < 3; i++) {
-		ret = InstallContent(metatmd, i, banner_dat[i], banner_dat_size[i], key);
-		if (ret < 0) {
-			for (int i = 0; i < 3; i++)
-				free(banner_dat[i]);
-			CancelInstall();
-			return ret;
-		}
-	}
+	free(banner_dat[0]);
+	free(banner_dat[1]);
 
-	for (int i = 0; i < 3; i++)
-		free(banner_dat[i]);
+	if (ret < 0)
+		CancelInstall();
+	else
+		ret = EndInstall();
 
-	ret = EndInstall();
 	if (ret < 0)
 		return ret;
 
