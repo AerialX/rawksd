@@ -40,11 +40,12 @@ namespace ConsoleHaxx.RawkSD
 
 		public override bool AddSong(PlatformData data, SongData song, ProgressIndicator progress)
 		{
-			string songid = song.ID;
-			int index = int.Parse(songid.Substring(3));
-			song.ID = "dlc" + ImportMap.GetShortName(song.Name);
+			int index = int.Parse(song.ID.Substring(3));
+			//song.ID = "dlc" + ImportMap.GetShortName(song.Name);
 
 			FormatData formatdata = new TemporaryFormatData(song, data);
+
+			NeversoftMetadata.SaveSongItem(formatdata);
 
 			DirectoryNode dir = data.Session["rootdir"] as DirectoryNode;
 
@@ -54,10 +55,10 @@ namespace ConsoleHaxx.RawkSD
 			DlcBin bin = new DlcBin(binfile.Data);
 			U8 u8 = new U8(bin.Data);
 
-			FileNode chartpak = u8.Root.Find(songid + "_song.pak.ngc", SearchOption.AllDirectories) as FileNode;
-			FileNode textpak = u8.Root.Find(songid + "_text.pak.ngc", SearchOption.AllDirectories) as FileNode;
+			FileNode chartpak = u8.Root.Find(song.ID + "_song.pak.ngc", SearchOption.AllDirectories) as FileNode;
+			FileNode textpak = u8.Root.Find(song.ID + "_text.pak.ngc", SearchOption.AllDirectories) as FileNode;
 
-			FileNode audiofile = u8.Root.Find(songid + ".bik", SearchOption.AllDirectories) as FileNode;
+			FileNode audiofile = u8.Root.Find(song.ID + ".bik", SearchOption.AllDirectories) as FileNode;
 
 			if (chartpak == null || textpak == null || audiofile == null)
 				return false;
@@ -108,6 +109,9 @@ namespace ConsoleHaxx.RawkSD
 						listkeys.Add(key);
 				}
 
+				Stream str = new FileStream(@"C:\ghwt.xml", FileMode.Create);
+				StreamWriter writer = new StreamWriter(str);
+
 				progress.NewTask(listkeys.Count);
 				foreach (QbKey songlistkey in listkeys) {
 					QbItemStruct list = songlist.FindItem(songlistkey, true) as QbItemStruct;
@@ -117,6 +121,21 @@ namespace ConsoleHaxx.RawkSD
 					foreach (QbItemArray item in list.Items.OfType<QbItemArray>()) {
 						item.Items[0].ItemQbKey = item.ItemQbKey;
 						SongData song = NeversoftMetadata.GetSongData(data, item.Items[0] as QbItemStruct, strings);
+
+						writer.WriteLine("\t<song id=\"" + song.ID + "\">");
+						writer.WriteLine("\t\t<pack>Guitar Hero World Tour DLC</pack>");
+						writer.WriteLine("\t\t<nameprefix>[GHWT DLC]</nameprefix>");
+						writer.WriteLine("\t\t<name>" + song.Name + "</name>");
+						writer.WriteLine("\t\t<artist>" + song.Artist + "</artist>");
+						writer.WriteLine("\t\t<album>" + song.Album + "</album>");
+						writer.WriteLine("\t\t<genre>" + song.Genre + "</genre>");
+						writer.WriteLine("\t\t<track>" + song.AlbumTrack.ToString() + "</track>");
+						writer.WriteLine("\t\t<difficulty instrument=\"band\" rank=\"1\" />");
+						writer.WriteLine("\t\t<difficulty instrument=\"guitar\" rank=\"1\" />");
+						writer.WriteLine("\t\t<difficulty instrument=\"bass\" rank=\"1\" />");
+						writer.WriteLine("\t\t<difficulty instrument=\"drum\" rank=\"1\" />");
+						writer.WriteLine("\t\t<difficulty instrument=\"vocals\" rank=\"1\" />");
+						writer.WriteLine("\t</song>");
 
 						try {
 							AddSong(data, song, progress);
@@ -130,6 +149,7 @@ namespace ConsoleHaxx.RawkSD
 					progress.Progress();
 				}
 				progress.EndTask();
+				writer.Close();
 
 				binfile.Data.Close();
 			} catch (Exception exception) {

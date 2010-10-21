@@ -21,6 +21,36 @@ namespace ConsoleHaxx.Neversoft
 			Root = new DirectoryNode();
 		}
 
+		public FileNode FindFile(string path)
+		{
+			string filename = Path.GetFileName(path);
+			FileNode file = Root.Find(filename, SearchOption.AllDirectories, true) as FileNode;
+			if (file != null)
+				return file;
+
+			uint fullkey = QbKey.Create(path).Crc;
+			uint key = QbKey.Create(filename).Crc;
+			foreach (Node node in Nodes) {
+				string name = null;
+				if (node.FilenameCRC == fullkey || node.FilenameKey == fullkey || node.FilenamePakKey == fullkey)
+					name = path;
+				if (node.FilenameCRC == key || node.FilenameKey == key || node.FilenamePakKey == key)
+					name = filename;
+				if (name != null)
+					return new FileNode(name, node.Size, node.Data);
+			}
+			return null;
+		}
+
+		public FileNode FindFileType(uint type)
+		{
+			foreach (Node node in Nodes) {
+				if (node.FileType == type)
+					return new FileNode(node.Filename, node.Size, node.Data);
+			}
+			return null;
+		}
+
 		public Pak(EndianReader reader) : this()
 		{
 			QbKey end = QbKey.Create("last");

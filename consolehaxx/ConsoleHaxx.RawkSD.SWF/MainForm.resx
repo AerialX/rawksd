@@ -142,16 +142,16 @@
   <data name="ToolbarInstallLocal.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAhJJREFUOE+1k+9L
-        U2EUx/0LWtCrlBpCEkIoIb2LEEEoUopAJHMQVHerF+ILbdGICqaO5iomTMvw6jKYG9VKUeYPighvENGP
-        F8YKGrrfS8act7Z7n3v37bnXNkQuwV504HCeB+73ez7nPNyKChoMwyCVSkGpyr2sUETFkCSpfJNi52Qy
-        qYoTiYRaY7GYWqPR6L9NtxOUUP4eRFEEz/MlM83RlM47w+e+i2LG43EEAgFwHEc0DXYSKML1yEvk07PY
-        XHWqRi+ePYHRaNRecCQSKQHIsqwKvBMOTI0PwsPa4RmzwzvuwOTDATwe6Yd7uA8TLiuctqsnVKLtBIIg
-        qAbIvYG4sQQxuwCSfQ75pxuFmBOFH1bIX80QuXY4LIYtolAopBIorxEOh2nXQeD3azrCDE0PSGIE0qoN
-        5JsZwqfLyL3rxMcHe3GLadnaiUIQDAaJyWSC3+8nk6M2SrAIMT1FxY8grdmp+Dryn6+AXz6HzaVWLA9V
-        4qLhiPZSWTof+FmQJAspfA/k+w0IX7rwizMgs9iCzPRRzN+pwtmTtdoGo/dvAtmnKMRdkENWkJUe5N9f
-        AP/qNDIzx7Dhq4fv9j40H9ZrG7jsFiDNIvWhG2tvTViZ6wTnOYXAcCO8tgaMWQ6CvbYfdTWV2gbOATOG
-        +i+RXuYMOd/RQNqOV5OmQ1WkVq8jNTQP6HfRupvs0elyZf10/+3jP0RS1u9nOP4oAAAAAElFTkSuQmCC
+        YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAhFJREFUOE+1k99L
+        U2EYx/0LmnSXYgsSEkKK6lIiAsHIKAKRytGFua0uogtp4ogKpg7nSiZMy/DoMpgbOSoxVkoR4glC1C6M
+        GTh0v2eMOU9t57zn7Nt7jm6IHIJd9MDD875wvt/n8zwvp6yMhl6vRzKZhFzle0khiwohimLpJoXOiURC
+        EcfjcaVGo1GlRiKRf5vuJSii7B4EQQDHcUUz1dHkzvvD63qCQsZiMfj9frAsS1QN9hPIwl/ht8ilprG9
+        7lCM3ky+gsFgUF9wOBwuAkiSpAg8Y3ZMjPbBzdjgHrHBM2rH+PMevBzqhmuwC2NOCxzW+xcUor0EPM8r
+        Bsh+gbA1CyHzESTjg7TpQj7qQH7NAumHCQLbDLtZt0MUDAYVAvk1QqEQ7doH/PlMR5ii6QaJD0Fct4Ks
+        msAv3Ub2awsWnx3Co7bGnZ3IBIFAgBiNRvh8PjI+bKUEMxBSE1T8AuKGjYo7kVu+A27+BrZnL2F+oAKt
+        ujPqS2XofOCmQRIMxNBTkJ8PwH+/i9+sDumZRqTf1eFDbyWuXaxRNxjufwhkXiMfc0IKWkBW2pH71gru
+        0xWkp85iy3sC3sdVqD+pVTdw2sxAikFy4R425oxYed8C1n0Z/sFz8FhPY8R8DEzHYdRWV6gbOHpMGOi+
+        RdrbrpKb10+RpoYj5PzxSlKj1ZBqmke1B2gtJwc1mmxJP91/+/gvLvTW2TKjWXYAAAAASUVORK5CYII=
 </value>
   </data>
   <metadata name="SaveDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

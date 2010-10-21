@@ -40,7 +40,7 @@ namespace ConsoleHaxx.RawkSD
 		{
 			Stream stream = GetFormatStream(data);
 			if (stream == null)
-				return NeversoftMetadata.GetAudioFormat(data.Song) ?? HarmonixMetadata.GetAudioFormat(data.Song);
+				return NeversoftMetadata.GetAudioFormat(data) ?? HarmonixMetadata.GetAudioFormat(data.Song);
 			AudioFormat format = AudioFormat.Create(stream);
 			data.CloseStream(stream);
 			return format;

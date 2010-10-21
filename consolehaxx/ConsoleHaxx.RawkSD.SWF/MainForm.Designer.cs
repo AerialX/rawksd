@@ -129,6 +129,7 @@
 			this.ToolbarInstallSD = new System.Windows.Forms.ToolStripButton();
 			this.SaveDialog = new System.Windows.Forms.SaveFileDialog();
 			this.SongListTimer = new System.Windows.Forms.Timer(this.components);
+			this.MenuFileClose = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuStrip.SuspendLayout();
 			this.ToolDock.ContentPanel.SuspendLayout();
 			this.ToolDock.TopToolStripPanel.SuspendLayout();
@@ -160,6 +161,7 @@
             this.MenuFileSep1,
             this.MenuFileOpen,
             this.MenuFileOpenFolder,
+            this.MenuFileClose,
             this.MenuFileSep2,
             this.MenuFilePreferences,
             this.MenuFileSep3,
@@ -1093,6 +1095,13 @@
 			this.SongListTimer.Interval = 50;
 			this.SongListTimer.Tick += new System.EventHandler(this.SongListTimer_Tick);
 			// 
+			// MenuFileClose
+			// 
+			this.MenuFileClose.Enabled = false;
+			this.MenuFileClose.Name = "MenuFileClose";
+			this.MenuFileClose.Size = new System.Drawing.Size(203, 22);
+			this.MenuFileClose.Text = "Close";
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1105,7 +1114,7 @@
 			this.MinimumSize = new System.Drawing.Size(512, 256);
 			this.Name = "MainForm";
 			this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Show;
-			this.Text = "RawkSD v3.00 beta 1.0 [July 24 2010]";
+			this.Text = "RawkSD v3.00 beta 3 [October 21 2010]";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
 			this.Load += new System.EventHandler(this.MainForm_Load);
@@ -1234,6 +1243,7 @@
 		private System.Windows.Forms.ToolStripStatusLabel StatusDonateLabel;
 		private System.Windows.Forms.ToolStripMenuItem MenuSongsTranscode;
 		private System.Windows.Forms.ToolStripMenuItem ContextMenuTranscode;
+		private System.Windows.Forms.ToolStripMenuItem MenuFileClose;
 	}
 }
 

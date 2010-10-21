@@ -13,8 +13,13 @@ namespace ConsoleHaxx.Graces
 		{
 			FPS4 fps = new FPS4(stream);
 			if (fps.Type == "txmv") {
-				if (fps.Root.ChildCount != 2)
-					throw new FormatException();
+				if (fps.Root.ChildCount != 2) {
+					FileNode file = fps.Root.Files.FirstOrDefault(f => f.Name.ToUpper().EndsWith(".TTX"));
+					if (file != null)
+						fps = new FPS4(file.Data);
+					else
+						throw new FormatException();
+				}
 
 				return new Txm((fps.Root[0] as FileNode).Data, (fps.Root[1] as FileNode).Data);
 			} else if (fps.Type == "pktx") {

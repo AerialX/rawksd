@@ -11,10 +11,17 @@ namespace ConsoleHaxx.Graces
 	{
 		public const uint CpkMagic = 0x43504B20; // "CPK "
 		public const uint TocMagic = 0x544F4320; // "TOC "
+		public const uint ETocMagic = 0x45544F43; // "ETOC"
+		public const uint ITocMagic = 0x49544F43; // "ITOC"
 		
 		public UTF Header;
 
 		public UTF ToC;
+		public UTF EToC;
+		public UTF IToC;
+
+		public uint Version;
+		public uint Mode;
 
 		public DirectoryNode Root;
 
@@ -39,18 +46,38 @@ namespace ConsoleHaxx.Graces
 			UTF.Row mainrow = Header.Rows[0];
 
 			long tocoffset = (long)(mainrow.FindValue("TocOffset") as UTF.LongValue).Value;
+			long etocoffset = (long)(mainrow.FindValue("EtocOffset") as UTF.LongValue).Value;
+			long itocoffset = (long)(mainrow.FindValue("ItocOffset") as UTF.LongValue).Value;
+			//long dpkitocoffset = (long)(mainrow.FindValue("DpkItoc") as UTF.IntValue).Value;
 			long contentoffset = (long)(mainrow.FindValue("ContentOffset") as UTF.LongValue).Value;
 			uint filecount = (mainrow.FindValue("Files") as UTF.IntValue).Value;
+			UTF.ShortValue version = mainrow.FindValue("Version") as UTF.ShortValue;
+			UTF.IntValue mode = mainrow.FindValue("Mode") as UTF.IntValue;
+			if (version != null)
+				Version = version.Value;
+			if (mode != null)
+				Mode = mode.Value;
 
 			reader.Position = tocoffset;
-
 			if (reader.ReadUInt32() != TocMagic)
 				throw new FormatException();
-
 			for (int i = 0; i < 3; i++)
 				reader.ReadUInt32(); // Little Endian: 0xFF; size; 0x00;
-
 			ToC = new UTF(data);
+			
+			reader.Position = etocoffset;
+			if (reader.ReadUInt32() != ETocMagic)
+				throw new FormatException();
+			for (int i = 0; i < 3; i++)
+				reader.ReadUInt32(); // Little Endian: 0xFF; size; 0x00;
+			EToC = new UTF(data);
+
+			reader.Position = itocoffset;
+			if (reader.ReadUInt32() != ITocMagic)
+				throw new FormatException();
+			for (int i = 0; i < 3; i++)
+				reader.ReadUInt32(); // Little Endian: 0xFF; size; 0x00;
+			IToC = new UTF(data);
 
 			Cache = new DelayedStreamCache();
 
@@ -64,29 +91,40 @@ namespace ConsoleHaxx.Graces
 				string filename = (filerow.FindValue("FileName") as UTF.StringValue).Value;
 				uint packedsize = (filerow.FindValue("FileSize") as UTF.IntValue).Value;
 				uint filesize = packedsize;
+
+				if (Version == 7) // ToGf
+					offset += tocoffset;
+				else // Need to check ToG:Wii's version/mode
+					offset += contentoffset;
+
 				UTF.IntValue filesizevalue = filerow.FindValue("ExtractSize") as UTF.IntValue;
 				if (filesizevalue != null)
 					filesize = filesizevalue.Value;
 				else { // If we must, read the uncompressed size from the internal compressed file itself
-					data.Position = contentoffset + offset;
+					data.Position = offset;
 					EndianReader littlereader = new EndianReader(data, Endianness.LittleEndian);
 					if (littlereader.ReadUInt64() == 0)
 						filesize = littlereader.ReadUInt32() + 0x100;
 				}
 
 				DirectoryNode dir = Root.Navigate(dirname, true) as DirectoryNode;
-				Stream substream = new Substream(data, contentoffset + offset, packedsize);
-				if (filesize > packedsize) {
-					Stream compressed = substream;
-					substream = new DelayedStream(delegate() {
-						Stream ret = new TemporaryStream();
-						CpkCompression.Decompress(compressed, ret);
-						ret.Position = 0;
-						return ret;
-					});
-					Cache.AddStream(substream);
+				Stream substream = new Substream(data, offset, packedsize);
+				try {
+					if (filesize > packedsize) {
+						//throw new Exception();
+						Stream compressed = substream;
+						substream = new DelayedStream(delegate() {
+							Stream ret = new TemporaryStream();
+							CpkCompression.Decompress(compressed, ret);
+							ret.Position = 0;
+							return ret;
+						});
+						Cache.AddStream(substream);
+					}
+					dir.AddChild(new FileNode(filename, filesize, substream));
+				} catch {
+					dir.AddChild(new FileNode(filename, packedsize, substream));
 				}
-				dir.AddChild(new FileNode(filename, filesize, substream));
 			}
 
 			// TODO: EToc: Groups

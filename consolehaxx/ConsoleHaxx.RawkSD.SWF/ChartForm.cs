@@ -50,6 +50,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 		{
 			ChartCombo.Items.AddRange(Formats.ToArray());
 			ChartCombo.SelectedIndex = 0;
+			ExpertPlusCheckbox.Checked = Configuration.ExpertPlusGH5;
 		}
 
 		private void MiloBrowseButton_Click(object sender, EventArgs e)
@@ -74,7 +75,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 			if (OpenFile.ShowDialog(this) == DialogResult.Cancel)
 				return;
 
-			MiloTextbox.Text = OpenFile.FileName;
+			textbox.Text = OpenFile.FileName;
 		}
 
 		private void ChartCombo_SelectedIndexChanged(object sender, EventArgs e)

@@ -62,10 +62,12 @@ namespace ConsoleHaxx.RawkSD
 				case "inlove": albumname = "store_song_ScoutsStSebastian"; break;
 			}
 			if (albumname != null) {
-				Pak albumpak = data.Session["albumpak"] as Pak;
-				Pak.Node node = albumpak.Nodes.Find(n => n.FilenamePakKey == QbKey.Create(albumname).Crc);
-				if (node != null)
-					song.AlbumArt = NgcImage.Create(new EndianReader(node.Data, Endianness.BigEndian)).Bitmap;
+				if (data.Session.ContainsKey("albumpak")) {
+					Pak albumpak = data.Session["albumpak"] as Pak;
+					Pak.Node node = albumpak.Nodes.Find(n => n.FilenamePakKey == QbKey.Create(albumname).Crc);
+					if (node != null)
+						song.AlbumArt = NgcImage.Create(new EndianReader(node.Data, Endianness.BigEndian)).Bitmap;
+				}
 			}
 
 			DirectoryNode dir = data.Session["rootdir"] as DirectoryNode;

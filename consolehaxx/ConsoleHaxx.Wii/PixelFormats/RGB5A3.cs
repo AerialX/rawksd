@@ -58,15 +58,15 @@ namespace ConsoleHaxx.Wii
 		public static Color GetPixel(ushort pixel)
 		{
 			if ((pixel & 0x8000) != 0)
-				return Color.FromArgb(255, (((pixel >> 10) & 0x1F) * 255) / 31, (((pixel >> 5) & 0x1F) * 255) / 31, ((pixel & 0x1F) * 255) / 31);
-			return Color.FromArgb((((pixel >> 12) & 0x07) * 255) / 7, (((pixel >> 8) & 0x0F) * 255) / 15, (((pixel >> 4) & 0x0F) * 255) / 15, ((pixel & 0x0F) * 255) / 15);
+				return Color.FromArgb(255, ((pixel >> 10) & 0x1F) << 3, ((pixel >> 5) & 0x1F) << 3, (pixel & 0x1F) << 3);
+			return Color.FromArgb(((pixel >> 12) & 0x07) << 5, ((pixel >> 8) & 0x0F) << 4, ((pixel >> 4) & 0x0F) << 4, (pixel & 0x0F) << 4);
 		}
 
 		public static ushort GetPixel(Color colour)
 		{
 			if (colour.A == 255)
-				return (ushort)((1 << 15) | (colour.B * 31 / 255) | ((colour.G * 31 / 255) << 5) | ((colour.R * 31 / 255) << 10));
-			return (ushort)(((colour.A * 7 / 255) << 12) | ((colour.R * 15 / 255) << 8) | ((colour.G * 15 / 255) << 4) | ((colour.B * 15 / 255)));
+				return (ushort)((1 << 15) | ((int)colour.B >> 3) | (((int)colour.G >> 3) << 5) | (((int)colour.R >> 3) << 10));
+			return (ushort)((((int)colour.A >> 5) << 12) | (((int)colour.R >> 4) << 8) | (((int)colour.G >> 4) << 4) | (((int)colour.B >> 4)));
 		}
 
 		public override void EncodeImage(Stream stream, Bitmap image)

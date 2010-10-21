@@ -12,10 +12,12 @@ namespace ConsoleHaxx.RawkSD.SWF
 {
 	public static class Exports
 	{
-		public static void ExportRWK(string path, IEnumerable<FormatData> songs)
+		public static void ExportRWK(string path, IEnumerable<FormatData> songs, bool audio)
 		{
 			Program.Form.Progress.QueueTask(progress => {
 				progress.NewTask("Exporting to RawkSD archive", 2);
+
+				List<Stream> streams = new List<Stream>();
 
 				U8 u8 = new U8();
 				foreach (FormatData data in songs) {
@@ -23,6 +25,16 @@ namespace ConsoleHaxx.RawkSD.SWF
 					u8.Root.AddChild(dir);
 					foreach (string name in data.GetStreamNames()) {
 						Stream stream = data.GetStream(name);
+						int id;
+						if (name.Contains('.') && int.TryParse(Path.GetExtension(name).Substring(1), out id)) {
+							IFormat format = Platform.GetFormat(id);
+							if (format.Type == FormatType.Audio && (!audio || format == AudioFormatRB2Bink.Instance)) {
+								data.CloseStream(stream);
+								continue;
+							}
+						}
+
+						streams.Add(stream);
 						dir.AddChild(new FileNode(name, stream));
 					}
 				}
@@ -32,6 +44,9 @@ namespace ConsoleHaxx.RawkSD.SWF
 				Stream ostream = new FileStream(path, FileMode.Create, FileAccess.Write);
 				u8.Save(ostream);
 				ostream.Close();
+
+				foreach (Stream stream in streams)
+					stream.Close();
 
 				progress.Progress();
 				progress.EndTask();
@@ -173,11 +188,15 @@ namespace ConsoleHaxx.RawkSD.SWF
 					stream = new MemoryStream(Properties.Resources.rbn_weights);
 					rba.Weights = stream;
 
-					IChartFormat chartformat = data.GetFormat(FormatType.Chart) as IChartFormat;
-					NoteChart chart = PlatformRB2WiiCustomDLC.AdjustChart(data.Song, audioformat, chartformat.DecodeChart(data, progress));
-					rba.Chart = new TemporaryStream();
-					cache.AddStream(rba.Chart);
-					chart.ToMidi().ToMid().Save(rba.Chart);
+					if (data.Formats.Contains(ChartFormatRB.Instance) && !ChartFormatRB.Instance.NeedsFixing(data)) {
+						rba.Chart = data.GetStream(ChartFormatRB.Instance, ChartFormatRB.ChartFile);
+					} else {
+						IChartFormat chartformat = data.GetFormat(FormatType.Chart) as IChartFormat;
+						NoteChart chart = PlatformRB2WiiCustomDLC.AdjustChart(data.Song, audioformat, chartformat.DecodeChart(data, progress));
+						rba.Chart = new TemporaryStream();
+						cache.AddStream(rba.Chart);
+						chart.ToMidi().ToMid().Save(rba.Chart);
+					}
 
 					progress.Progress(3);
 
@@ -193,6 +212,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 					Stream ostream = new FileStream(path, FileMode.Create);
 					rba.Save(ostream);
 					ostream.Close();
+
+					data.CloseStream(rba.Chart);
 
 					if (ownformat)
 						data.Dispose();
@@ -379,8 +400,10 @@ namespace ConsoleHaxx.RawkSD.SWF
 					dta.ToDTB().SaveDTA(songs);
 
 					ChartFormat chartformat = (data.GetFormat(FormatType.Chart) as IChartFormat).DecodeChart(data, progress);
-					if (chart != null && ChartFormatRB.Instance.NeedsFixing(data))
+					if (chart != null && ChartFormatRB.Instance.NeedsFixing(data)) {
+						data.CloseStream(chart);
 						chart = null;
+					}
 
 					if (chart == null) {
 						chart = new TemporaryStream();
@@ -420,6 +443,12 @@ namespace ConsoleHaxx.RawkSD.SWF
 					Stream ostream = new FileStream(path, FileMode.Create);
 					stfs.Save(ostream);
 					ostream.Close();
+
+					data.CloseStream(audio);
+					data.CloseStream(chart);
+					data.CloseStream(pan);
+					data.CloseStream(weights);
+					data.CloseStream(milo);
 
 					if (ownformat)
 						data.Dispose();

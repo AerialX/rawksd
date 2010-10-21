@@ -76,11 +76,12 @@ namespace ConsoleHaxx.RawkSD
 		{
 			if (!data.HasStream(this, PreviewName)) {
 				AudioFormat format = new AudioFormat();
-				try {
+				/* Let it crash if it can't decode it. KIBE biks we don't know about don't belong here.
+				try { */
 					format.Decoder = new RawkAudio.Decoder(GetAudioStream(data), RawkAudio.Decoder.AudioFormat.BinkAudio);
-				} catch {
+				/*} catch {
 					format.Decoder = new ZeroDecoder(1, 28000, 0x7FFFFFFFFFFFFFFF);
-				}
+				}*/
 				Stream previewstream = new TemporaryStream();
 				CryptedMoggStream mogg = new CryptedMoggStream(previewstream);
 				mogg.WriteHeader();

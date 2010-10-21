@@ -109,7 +109,7 @@ namespace ConsoleHaxx.RawkSD
 			FileNode chartfile = dir.Navigate("notes.mid", false, true) as FileNode;
 			NoteChart chart = null;
 			if (chartfile != null) {
-				ChartFormatGH2.Instance.Create(formatdata, chartfile.Data, false); // TODO: Make a separate chart format for this; just don't use ChartFormatRB otherwise it won't fix for quickplay
+				ChartFormatRB.Instance.Create(formatdata, chartfile.Data, null, 0, null, null, 0, false, true);
 				chart = NoteChart.Create(Midi.Create(Mid.Create(chartfile.Data)));
 				chartfile.Data.Close();
 			}

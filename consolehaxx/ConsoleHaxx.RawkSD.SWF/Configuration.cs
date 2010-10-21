@@ -31,7 +31,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 		{
 			MaxConcurrentTasks = Environment.ProcessorCount;
 			LocalTranscode = true;
-			MemorySongData = false;
+			MemorySongData = true;
 			NamePrefix = ImportMap.NamePrefix.None;
 			DefaultAction = DefaultActionType.InstallSD;
 			DefaultThreadPriority = ThreadPriority.BelowNormal;

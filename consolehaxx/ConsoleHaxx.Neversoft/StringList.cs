@@ -42,29 +42,31 @@ namespace ConsoleHaxx.Neversoft
 
 		public void ParseFromStream(StreamReader reader, bool stripprefix = true)
 		{
-			while (!reader.EndOfStream) {
-				char[] chars = new char[8];
-				if (reader.Read(chars, 0, 8) != 8)
-					break;
+			try {
+				while (!reader.EndOfStream) {
+					char[] chars = new char[8];
+					if (reader.Read(chars, 0, 8) != 8)
+						break;
 
-				QbKey key = QbKey.Create(uint.Parse(new string(chars), System.Globalization.NumberStyles.HexNumber));
-				char c = '\0';
-				while (c != '"')
-					c = (char)reader.Read();
+					QbKey key = QbKey.Create(uint.Parse(new string(chars), System.Globalization.NumberStyles.HexNumber));
+					char c = '\0';
+					while (c != '"')
+						c = (char)reader.Read();
 
-				c = (char)reader.Read();
-				string str = string.Empty;
-				while (c != '"') {
-					str += c;
 					c = (char)reader.Read();
+					string str = string.Empty;
+					while (c != '"') {
+						str += c;
+						c = (char)reader.Read();
+					}
+
+					Items.Add(new KeyValuePair<QbKey, string>(key, str));
+
+					reader.Read(chars, 0, 2);
+					if (chars[0] != 0x0D || chars[1] != 0x0A)
+						break;
 				}
-
-				Items.Add(new KeyValuePair<QbKey, string>(key, str));
-
-				reader.Read(chars, 0, 2);
-				if (chars[0] != 0x0D || chars[1] != 0x0A)
-					break;
-			}
+			} catch { }
 		}
 	}
 }

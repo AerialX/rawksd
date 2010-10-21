@@ -57,7 +57,7 @@ namespace ConsoleHaxx.Graces
 			reader.Position = rowsoffset + 8;
 
 			for (uint i = 0; i < rows; i++) {
-				Row row = new Row(rowsize);
+				Row row = new Row(this, rowsize);
 				foreach (Entry column in Columns) {
 					Value value = CreateValue(reader, column, nameoffset, dataoffset);
 					row.Values.Add(value);
@@ -69,18 +69,23 @@ namespace ConsoleHaxx.Graces
 
 		public class Row
 		{
-			public Row(uint size)
+			public Row(UTF parent, uint size)
 			{
+				Parent = parent;
 				Values = new List<Value>();
 				Size = size;
 			}
 
+			public UTF Parent;
 			public uint Size;
 			public List<Value> Values;
 
 			public Value FindValue(string name)
 			{
-				return Values.FirstOrDefault(v => v.Type.Name == name);
+				Value value = Values.FirstOrDefault(v => v.Type.Name == name);
+				if (value == null)
+					return Parent.ConstantEntries.FirstOrDefault(v => v.Type.Name == name);
+				return value;
 			}
 		}
 

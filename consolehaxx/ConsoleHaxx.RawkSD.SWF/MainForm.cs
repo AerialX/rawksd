@@ -104,11 +104,12 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 			GetAsyncProgress().QueueTask(progress => {
 				progress.NewTask("Loading SD content");
+				/* wtf is this doing here?
 				if (SD != null) {
 					SongUpdateMutex.WaitOne();
 					Platforms.Add(SD);
 					SongUpdateMutex.ReleaseMutex();
-				}
+				} */
 
 				SD = PlatformRB2WiiCustomDLC.Instance.Create(SdPath, Game.Unknown, progress);
 				progress.Progress();
@@ -258,8 +259,82 @@ namespace ConsoleHaxx.RawkSD.SWF
 				SongUpdateMutex.ReleaseMutex();
 
 				UpdateSongList();
+				UpdatePlatformList();
 				progress.EndTask();
 			});
+		}
+
+		private void UpdatePlatformList()
+		{
+			SongUpdateMutex.WaitOne();
+			Invoke((Action)UpdatePlatformListBase);
+			SongUpdateMutex.ReleaseMutex();
+		}
+
+		private void UpdatePlatformListBase()
+		{
+			MenuFileClose.DropDownItems.Clear();
+			foreach (PlatformData platform in Platforms) {
+				string path = platform.Session["path"] as string;
+				if (path.IsEmpty())
+					path = platform.Session["rootpath"] as string;
+				ToolStripMenuItem menu = new ToolStripMenuItem(platform.Platform.Name + (path.IsEmpty() ? "" : " - " + path), null, (EventHandler)MenuFileClose_OnClick);
+				menu.Tag = platform;
+				MenuFileClose.DropDownItems.Add(menu);
+			}
+			if (MenuFileClose.DropDownItems.Count == 0)
+				MenuFileClose.Enabled = false;
+			else
+				MenuFileClose.Enabled = true;
+		}
+
+		private void MenuFileClose_OnClick(object sender, EventArgs e)
+		{
+			PlatformData platform = (sender as ToolStripMenuItem).Tag as PlatformData;
+			Progress.QueueTask(progress => {
+				progress.NewTask("Closing " + platform.Platform.Name, 1);
+				
+				platform.Mutex.WaitOne();
+				SongUpdateMutex.WaitOne();
+
+				platform.Dispose();
+				Platforms.Remove(platform);
+				progress.Progress();
+				
+				SongUpdateMutex.ReleaseMutex();
+				platform.Mutex.ReleaseMutex();
+
+				RemovePlatform(platform);
+				UpdatePlatformList();
+				progress.EndTask();
+			});
+		}
+
+		private void RemovePlatform(PlatformData platform)
+		{
+			SongUpdateMutex.WaitOne();
+			Invoke((Action<PlatformData>)RemovePlatformBase, platform);
+			SongUpdateMutex.ReleaseMutex();
+		}
+
+		private void RemovePlatformBase(PlatformData platform)
+		{
+			List<ListViewItem> toremove = new List<ListViewItem>();
+			foreach (ListViewItem songitem in SongList.Items) {
+				SongListItem songtag = songitem.Tag as SongListItem;
+				List<FormatData> ftoremove = new List<FormatData>();
+				foreach (FormatData data in songtag.Data) {
+					if (data.PlatformData == platform) {
+						ftoremove.Add(data);
+					}
+				}
+				if (ftoremove.Count > 0)
+					toremove.Add(songitem);
+				foreach (FormatData data in ftoremove)
+					songtag.RemoveData(data);
+			}
+			foreach (ListViewItem item in toremove)
+				SongList.Items.Remove(item);
 		}
 
 		private bool SelectPlatform(List<Pair<Engine, Game>> platforms, out Engine platform, out Game game)
@@ -346,30 +421,41 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 				progress.SetNextWeight(14);
 
-				bool audio = false;
-				if (Configuration.LocalTranscode && !data.Formats.Contains(AudioFormatRB2Mogg.Instance) && !data.Formats.Contains(AudioFormatRB2Bink.Instance)) {
+				try {
+					bool audio = false;
+					if (Configuration.LocalTranscode && !data.Formats.Contains(AudioFormatRB2Mogg.Instance) && !data.Formats.Contains(AudioFormatRB2Bink.Instance)) {
+						TaskMutex.WaitOne();
+						TemporaryFormatData olddata = new TemporaryFormatData(data.Song, data.PlatformData);
+						data.SaveTo(olddata, FormatType.Audio);
+						data.SaveTo(olddata, FormatType.Metadata);
+						TaskMutex.ReleaseMutex();
+
+						audio = true;
+						try {
+							Platform.Transcode(FormatType.Audio, olddata, new IFormat[] { AudioFormatRB2Mogg.Instance }, destination, progress);
+						} catch (UnsupportedTranscodeException exception) {
+							Exceptions.Warning(exception, "Transcoding audio from " + data.Song.Name + " to Rock Band 2 format failed.");
+						}
+						olddata.Dispose();
+					}
+
+					progress.Progress(14);
+
 					TaskMutex.WaitOne();
-					TemporaryFormatData olddata = new TemporaryFormatData(data.Song, data.PlatformData);
-					data.SaveTo(olddata, FormatType.Audio);
+					if (!audio)
+						data.SaveTo(destination);
+					else {
+						data.SaveTo(destination, FormatType.Chart);
+						data.SaveTo(destination, FormatType.Metadata);
+					}
 					TaskMutex.ReleaseMutex();
 
-					audio = true;
-					try {
-						Platform.Transcode(FormatType.Audio, olddata, new IFormat[] { AudioFormatRB2Mogg.Instance }, destination, progress);
-					} catch (UnsupportedTranscodeException exception) {
-						Exceptions.Warning(exception, "Transcoding audio from " + data.Song.Name + " to Rock Band 2 format failed.");
-					}
-					olddata.Dispose();
+					progress.Progress();
+					PlatformLocalStorage.Instance.SaveSong(Storage, destination, progress);
+				} catch (Exception ex) {
+					PlatformLocalStorage.Instance.DeleteSong(Storage, destination, progress);
+					throw new Exception("An error occurred when installing " + data.Song.Name + " locally.", ex);
 				}
-
-				progress.Progress(14);
-
-				TaskMutex.WaitOne();
-				data.SaveTo(destination, audio ? FormatType.Chart : FormatType.Unknown);
-				TaskMutex.ReleaseMutex();
-
-				progress.Progress();
-				PlatformLocalStorage.Instance.SaveSong(Storage, destination, progress);
 
 				progress.Progress();
 
@@ -412,6 +498,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 					if (local && !ownformat) {
 						dest = new TemporaryFormatData(source.Song, source.PlatformData);
 						source.SaveTo(dest, FormatType.Chart);
+						source.SaveTo(dest, FormatType.Metadata);
 						ownformat = true;
 					}
 					Platform.Transcode(FormatType.Audio, source, new IFormat[] { AudioFormatRB2Mogg.Instance }, dest, progress);
@@ -440,7 +527,21 @@ namespace ConsoleHaxx.RawkSD.SWF
 			if (SaveDialog.ShowDialog(this) == DialogResult.Cancel)
 				return;
 
-			Exports.ExportRWK(SaveDialog.FileName, GetSelectedSongData());
+			IList<FormatData> songs = GetSelectedSongData();
+			bool audio = false;
+			foreach (FormatData song in songs) {
+				if (song.GetFormatAny(FormatType.Audio) != null) {
+					audio = true;
+					break;
+				}
+			}
+
+			if (audio) {
+				if (MessageBox.Show(this, "Would you like to include audio in your custom package?\nYou may only include audio with your charts if you have permission from the artist to distribute it.", "Include Audio?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+					audio = false;
+			}
+
+			Exports.ExportRWK(SaveDialog.FileName, songs, audio);
 		}
 
 		private void MenuSongsExportRBN_Click(object sender, EventArgs e)
@@ -494,7 +595,13 @@ namespace ConsoleHaxx.RawkSD.SWF
 				EditForm.Show(data, data.PlatformData == Storage, false, this);
 			}
 
-			SongList_SelectedIndexChanged(SongList, EventArgs.Empty);
+			foreach (ListViewItem listitem in SongList.SelectedItems) {
+				SongListItem item = listitem.Tag as SongListItem;
+				if (item != null)
+					item.Update();
+			}
+
+			SongListTimer_Tick(SongList, EventArgs.Empty);
 		}
 
 		private void MenuSongsDelete_Click(object sender, EventArgs e)
@@ -618,6 +725,20 @@ namespace ConsoleHaxx.RawkSD.SWF
 					list.AddRange(platform.Songs);
 			}
 			QueueRefresh(list);
+
+			List<ListViewItem> items;
+			if (SongList.SelectedItems.Count == 0)
+				items = new List<ListViewItem>(SongList.Items.OfType<ListViewItem>());
+			else
+				items = new List<ListViewItem>(SongList.SelectedItems.OfType<ListViewItem>());
+
+			foreach (ListViewItem listitem in items) {
+				SongListItem item = listitem.Tag as SongListItem;
+				if (item != null)
+					item.Update();
+			}
+
+			SongListTimer_Tick(SongList, EventArgs.Empty);
 		}
 
 		private void QueueRefresh(List<FormatData> list)

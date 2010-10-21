@@ -29,21 +29,19 @@
 		{
 			this.Tab = new System.Windows.Forms.TabControl();
 			this.tabPage1 = new System.Windows.Forms.TabPage();
-			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+			this.OptionsLayout = new System.Windows.Forms.TableLayoutPanel();
 			this.LabelCustoms = new System.Windows.Forms.Label();
 			this.LabelTemporary = new System.Windows.Forms.Label();
-			this.LabelPerformance = new System.Windows.Forms.Label();
 			this.LabelDefaultAction = new System.Windows.Forms.Label();
 			this.CustomsText = new System.Windows.Forms.TextBox();
 			this.TemporaryText = new System.Windows.Forms.TextBox();
-			this.PerformanceCombo = new System.Windows.Forms.ComboBox();
 			this.DefaultActionCombo = new System.Windows.Forms.ComboBox();
 			this.LabelTasks = new System.Windows.Forms.Label();
 			this.TasksNumeric = new System.Windows.Forms.NumericUpDown();
 			this.LabelPriority = new System.Windows.Forms.Label();
 			this.PriorityCombo = new System.Windows.Forms.ComboBox();
 			this.tabPage2 = new System.Windows.Forms.TabPage();
-			this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+			this.ImportsLayout = new System.Windows.Forms.TableLayoutPanel();
 			this.LabelStorage = new System.Windows.Forms.Label();
 			this.LocalStorageCombo = new System.Windows.Forms.ComboBox();
 			this.LabelTags = new System.Windows.Forms.Label();
@@ -53,10 +51,10 @@
 			this.CloseButton = new System.Windows.Forms.Button();
 			this.Tab.SuspendLayout();
 			this.tabPage1.SuspendLayout();
-			this.tableLayoutPanel1.SuspendLayout();
+			this.OptionsLayout.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.TasksNumeric)).BeginInit();
 			this.tabPage2.SuspendLayout();
-			this.tableLayoutPanel2.SuspendLayout();
+			this.ImportsLayout.SuspendLayout();
 			this.ButtonLayout.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -68,50 +66,48 @@
 			this.Tab.Location = new System.Drawing.Point(0, 0);
 			this.Tab.Name = "Tab";
 			this.Tab.SelectedIndex = 0;
-			this.Tab.Size = new System.Drawing.Size(310, 192);
+			this.Tab.Size = new System.Drawing.Size(310, 164);
 			this.Tab.TabIndex = 0;
 			// 
 			// tabPage1
 			// 
-			this.tabPage1.Controls.Add(this.tableLayoutPanel1);
+			this.tabPage1.Controls.Add(this.OptionsLayout);
 			this.tabPage1.Location = new System.Drawing.Point(4, 22);
 			this.tabPage1.Name = "tabPage1";
 			this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage1.Size = new System.Drawing.Size(302, 166);
+			this.tabPage1.Size = new System.Drawing.Size(302, 138);
 			this.tabPage1.TabIndex = 0;
 			this.tabPage1.Text = "Options";
 			this.tabPage1.UseVisualStyleBackColor = true;
 			// 
-			// tableLayoutPanel1
+			// OptionsLayout
 			// 
-			this.tableLayoutPanel1.AutoSize = true;
-			this.tableLayoutPanel1.ColumnCount = 2;
-			this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-			this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-			this.tableLayoutPanel1.Controls.Add(this.LabelCustoms, 0, 0);
-			this.tableLayoutPanel1.Controls.Add(this.LabelTemporary, 0, 1);
-			this.tableLayoutPanel1.Controls.Add(this.LabelPerformance, 0, 4);
-			this.tableLayoutPanel1.Controls.Add(this.LabelDefaultAction, 0, 5);
-			this.tableLayoutPanel1.Controls.Add(this.CustomsText, 1, 0);
-			this.tableLayoutPanel1.Controls.Add(this.TemporaryText, 1, 1);
-			this.tableLayoutPanel1.Controls.Add(this.PerformanceCombo, 1, 4);
-			this.tableLayoutPanel1.Controls.Add(this.DefaultActionCombo, 1, 5);
-			this.tableLayoutPanel1.Controls.Add(this.LabelTasks, 0, 2);
-			this.tableLayoutPanel1.Controls.Add(this.TasksNumeric, 1, 2);
-			this.tableLayoutPanel1.Controls.Add(this.LabelPriority, 0, 3);
-			this.tableLayoutPanel1.Controls.Add(this.PriorityCombo, 1, 3);
-			this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 3);
-			this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-			this.tableLayoutPanel1.RowCount = 6;
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.tableLayoutPanel1.Size = new System.Drawing.Size(296, 160);
-			this.tableLayoutPanel1.TabIndex = 0;
+			this.OptionsLayout.AutoSize = true;
+			this.OptionsLayout.ColumnCount = 2;
+			this.OptionsLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+			this.OptionsLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+			this.OptionsLayout.Controls.Add(this.LabelCustoms, 0, 0);
+			this.OptionsLayout.Controls.Add(this.LabelTemporary, 0, 1);
+			this.OptionsLayout.Controls.Add(this.LabelDefaultAction, 0, 4);
+			this.OptionsLayout.Controls.Add(this.CustomsText, 1, 0);
+			this.OptionsLayout.Controls.Add(this.TemporaryText, 1, 1);
+			this.OptionsLayout.Controls.Add(this.DefaultActionCombo, 1, 4);
+			this.OptionsLayout.Controls.Add(this.LabelTasks, 0, 2);
+			this.OptionsLayout.Controls.Add(this.TasksNumeric, 1, 2);
+			this.OptionsLayout.Controls.Add(this.LabelPriority, 0, 3);
+			this.OptionsLayout.Controls.Add(this.PriorityCombo, 1, 3);
+			this.OptionsLayout.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.OptionsLayout.Location = new System.Drawing.Point(3, 3);
+			this.OptionsLayout.Name = "OptionsLayout";
+			this.OptionsLayout.RowCount = 5;
+			this.OptionsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+			this.OptionsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+			this.OptionsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+			this.OptionsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+			this.OptionsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+			this.OptionsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+			this.OptionsLayout.Size = new System.Drawing.Size(296, 132);
+			this.OptionsLayout.TabIndex = 0;
 			// 
 			// LabelCustoms
 			// 
@@ -133,20 +129,10 @@
 			this.LabelTemporary.TabIndex = 1;
 			this.LabelTemporary.Text = "Temporary Path:";
 			// 
-			// LabelPerformance
-			// 
-			this.LabelPerformance.AutoSize = true;
-			this.LabelPerformance.Location = new System.Drawing.Point(3, 105);
-			this.LabelPerformance.Name = "LabelPerformance";
-			this.LabelPerformance.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
-			this.LabelPerformance.Size = new System.Drawing.Size(70, 17);
-			this.LabelPerformance.TabIndex = 1;
-			this.LabelPerformance.Text = "Performance:";
-			// 
 			// LabelDefaultAction
 			// 
 			this.LabelDefaultAction.AutoSize = true;
-			this.LabelDefaultAction.Location = new System.Drawing.Point(3, 132);
+			this.LabelDefaultAction.Location = new System.Drawing.Point(3, 105);
 			this.LabelDefaultAction.Name = "LabelDefaultAction";
 			this.LabelDefaultAction.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
 			this.LabelDefaultAction.Size = new System.Drawing.Size(77, 17);
@@ -171,20 +157,6 @@
 			this.TemporaryText.TabIndex = 2;
 			this.TemporaryText.TextChanged += new System.EventHandler(this.TemporaryText_TextChanged);
 			// 
-			// PerformanceCombo
-			// 
-			this.PerformanceCombo.Dock = System.Windows.Forms.DockStyle.Top;
-			this.PerformanceCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.PerformanceCombo.FormattingEnabled = true;
-			this.PerformanceCombo.Items.AddRange(new object[] {
-            "Optimize Performance",
-            "Optimize Memory"});
-			this.PerformanceCombo.Location = new System.Drawing.Point(103, 108);
-			this.PerformanceCombo.Name = "PerformanceCombo";
-			this.PerformanceCombo.Size = new System.Drawing.Size(190, 21);
-			this.PerformanceCombo.TabIndex = 3;
-			this.PerformanceCombo.SelectedIndexChanged += new System.EventHandler(this.PerformanceCombo_SelectedIndexChanged);
-			// 
 			// DefaultActionCombo
 			// 
 			this.DefaultActionCombo.Dock = System.Windows.Forms.DockStyle.Top;
@@ -196,7 +168,7 @@
             "Export to .rwk",
             "Export to .rba",
             "Export to Frets on Fire"});
-			this.DefaultActionCombo.Location = new System.Drawing.Point(103, 135);
+			this.DefaultActionCombo.Location = new System.Drawing.Point(103, 108);
 			this.DefaultActionCombo.Name = "DefaultActionCombo";
 			this.DefaultActionCombo.Size = new System.Drawing.Size(190, 21);
 			this.DefaultActionCombo.TabIndex = 3;
@@ -260,36 +232,36 @@
 			// 
 			// tabPage2
 			// 
-			this.tabPage2.Controls.Add(this.tableLayoutPanel2);
+			this.tabPage2.Controls.Add(this.ImportsLayout);
 			this.tabPage2.Location = new System.Drawing.Point(4, 22);
 			this.tabPage2.Name = "tabPage2";
 			this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-			this.tabPage2.Size = new System.Drawing.Size(302, 166);
+			this.tabPage2.Size = new System.Drawing.Size(302, 138);
 			this.tabPage2.TabIndex = 1;
 			this.tabPage2.Text = "Imports";
 			this.tabPage2.UseVisualStyleBackColor = true;
 			// 
-			// tableLayoutPanel2
+			// ImportsLayout
 			// 
-			this.tableLayoutPanel2.ColumnCount = 2;
-			this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-			this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-			this.tableLayoutPanel2.Controls.Add(this.LabelStorage, 0, 0);
-			this.tableLayoutPanel2.Controls.Add(this.LocalStorageCombo, 1, 0);
-			this.tableLayoutPanel2.Controls.Add(this.LabelTags, 0, 1);
-			this.tableLayoutPanel2.Controls.Add(this.GH5ExpertPlusCheckbox, 1, 2);
-			this.tableLayoutPanel2.Controls.Add(this.NamePrefixCombo, 1, 1);
-			this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 3);
-			this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-			this.tableLayoutPanel2.RowCount = 3;
-			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-			this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-			this.tableLayoutPanel2.Size = new System.Drawing.Size(296, 160);
-			this.tableLayoutPanel2.TabIndex = 0;
+			this.ImportsLayout.ColumnCount = 2;
+			this.ImportsLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+			this.ImportsLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+			this.ImportsLayout.Controls.Add(this.LabelStorage, 0, 0);
+			this.ImportsLayout.Controls.Add(this.LocalStorageCombo, 1, 0);
+			this.ImportsLayout.Controls.Add(this.LabelTags, 0, 1);
+			this.ImportsLayout.Controls.Add(this.GH5ExpertPlusCheckbox, 1, 2);
+			this.ImportsLayout.Controls.Add(this.NamePrefixCombo, 1, 1);
+			this.ImportsLayout.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.ImportsLayout.Location = new System.Drawing.Point(3, 3);
+			this.ImportsLayout.Name = "ImportsLayout";
+			this.ImportsLayout.RowCount = 3;
+			this.ImportsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+			this.ImportsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+			this.ImportsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+			this.ImportsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+			this.ImportsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+			this.ImportsLayout.Size = new System.Drawing.Size(296, 132);
+			this.ImportsLayout.TabIndex = 0;
 			// 
 			// LabelStorage
 			// 
@@ -357,7 +329,7 @@
 			this.ButtonLayout.Controls.Add(this.CloseButton);
 			this.ButtonLayout.Dock = System.Windows.Forms.DockStyle.Bottom;
 			this.ButtonLayout.FlowDirection = System.Windows.Forms.FlowDirection.RightToLeft;
-			this.ButtonLayout.Location = new System.Drawing.Point(0, 192);
+			this.ButtonLayout.Location = new System.Drawing.Point(0, 164);
 			this.ButtonLayout.Name = "ButtonLayout";
 			this.ButtonLayout.Size = new System.Drawing.Size(310, 29);
 			this.ButtonLayout.TabIndex = 1;
@@ -379,11 +351,11 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.CloseButton;
-			this.ClientSize = new System.Drawing.Size(310, 221);
+			this.ClientSize = new System.Drawing.Size(310, 193);
 			this.Controls.Add(this.Tab);
 			this.Controls.Add(this.ButtonLayout);
 			this.MaximizeBox = false;
-			this.MinimumSize = new System.Drawing.Size(318, 248);
+			this.MinimumSize = new System.Drawing.Size(318, 220);
 			this.Name = "SettingsForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "Preferences";
@@ -391,12 +363,12 @@
 			this.Tab.ResumeLayout(false);
 			this.tabPage1.ResumeLayout(false);
 			this.tabPage1.PerformLayout();
-			this.tableLayoutPanel1.ResumeLayout(false);
-			this.tableLayoutPanel1.PerformLayout();
+			this.OptionsLayout.ResumeLayout(false);
+			this.OptionsLayout.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.TasksNumeric)).EndInit();
 			this.tabPage2.ResumeLayout(false);
-			this.tableLayoutPanel2.ResumeLayout(false);
-			this.tableLayoutPanel2.PerformLayout();
+			this.ImportsLayout.ResumeLayout(false);
+			this.ImportsLayout.PerformLayout();
 			this.ButtonLayout.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
@@ -407,17 +379,15 @@
 
 		private System.Windows.Forms.TabControl Tab;
 		private System.Windows.Forms.TabPage tabPage1;
-		private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+		private System.Windows.Forms.TableLayoutPanel OptionsLayout;
 		private System.Windows.Forms.TabPage tabPage2;
 		private System.Windows.Forms.Label LabelCustoms;
 		private System.Windows.Forms.Label LabelTemporary;
-		private System.Windows.Forms.Label LabelPerformance;
 		private System.Windows.Forms.Label LabelDefaultAction;
 		private System.Windows.Forms.TextBox CustomsText;
 		private System.Windows.Forms.TextBox TemporaryText;
-		private System.Windows.Forms.ComboBox PerformanceCombo;
 		private System.Windows.Forms.ComboBox DefaultActionCombo;
-		private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
+		private System.Windows.Forms.TableLayoutPanel ImportsLayout;
 		private System.Windows.Forms.Label LabelTasks;
 		private System.Windows.Forms.NumericUpDown TasksNumeric;
 		private System.Windows.Forms.Label LabelStorage;

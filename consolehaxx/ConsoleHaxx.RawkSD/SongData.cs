@@ -48,6 +48,7 @@ namespace ConsoleHaxx.RawkSD
 		public string Genre { get { return Tree.GetValue<string>("Genre"); } set { Tree.SetValue("Genre", value); RaisePropertyChangedEvent(); } }
 		public string TidyGenre { get { return ImportMap.Genres.ContainsKey(Genre) ? ImportMap.Genres[Genre] : Genre; } }
 
+		public string Charter { get { return Tree.GetValue<string>("Charter"); } set { Tree.SetValue("Charter", value); RaisePropertyChangedEvent(); } }
 		public string Pack { get { return Tree.GetValue<string>("Pack"); } set { Tree.SetValue("Pack", value); RaisePropertyChangedEvent(); } }
 
 		public string Vocalist { get { return Tree.GetValue<string>("Vocalist"); } set { Tree.SetValue("Vocalist", value); RaisePropertyChangedEvent(); } } // "male" "female" etc
@@ -132,6 +133,13 @@ namespace ConsoleHaxx.RawkSD
 			Master = true;
 			Year = 2010;
 			Genre = "rock";
+		}
+
+		public void SetPreviewTime(int index, int value)
+		{
+			IList<int> preview = PreviewTimes;
+			preview[index] = value;
+			PreviewTimes = preview;
 		}
 
 		void Data_PropertyChanged(DataArray data)

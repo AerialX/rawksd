@@ -69,6 +69,20 @@ namespace ConsoleHaxx.Wii
 			}
 		}
 
+		public static ushort WritePaletteColour(Color pixel, int type)
+		{
+			switch (type) {
+				case 0:
+					return IA8.GetPixel(pixel);
+				case 1:
+					return RGB565.GetPixel(pixel);
+				case 2:
+					return RGB5A3.GetPixel(pixel);
+				default:
+					throw new FormatException();
+			}
+		}
+
 		public override void EncodeImage(Stream stream, Bitmap image, Stream data, int type)
 		{
 			EndianReader writer = new EndianReader(stream, Endianness.BigEndian);
@@ -83,19 +97,12 @@ namespace ConsoleHaxx.Wii
 			}
 
 			if (palette.Count > 0x100)
-				throw new FormatException("Image palette does not fit in encoding.");
+				throw new FormatException("Image palette does not fit in encoding (more than 256 colours used).");
 
 			EndianReader datareader = new EndianReader(data, Endianness.BigEndian);
-			List<Color> datapalette = new List<Color>();
-			try {
-				for (int i = 0; i < 0x100; i++)
-					datapalette.Add(ReadPaletteColour(datareader.ReadUInt16(), type));
-			} catch { } // We can't be sure of the palette size thanks to this fucking format.
-
-			foreach (Color colour in palette) {
-				if (!datapalette.Contains(colour))
-					throw new NotImplementedException("Palette in secondary data doesn't match.");
-			}
+			for (int i = 0; i < palette.Count; i++)
+				datareader.Write(WritePaletteColour(palette[i], type));
+			datareader.PadTo(0x220);
 
 			for (int y = 0; y < image.Height; y += 4) {
 				for (int x = 0; x < image.Width; x += 8) {
@@ -105,7 +112,7 @@ namespace ConsoleHaxx.Wii
 							byte pixel = 0;
 							int xpixel = x + x1;
 							if (ypixel < image.Height && xpixel < image.Width)
-								pixel = (byte)datapalette.IndexOf(image.GetPixel(xpixel, ypixel));
+								pixel = (byte)palette.IndexOf(image.GetPixel(xpixel, ypixel));
 							writer.Write(pixel);
 						}
 					}

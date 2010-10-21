@@ -54,6 +54,12 @@ namespace ConsoleHaxx.Wii
 			return Color.FromArgb(pixel & 0xFF, intensity, intensity, intensity);
 		}
 
+		public static ushort GetPixel(Color pixel)
+		{
+			byte intensity = (byte)(((int)pixel.R + (int)pixel.G + (int)pixel.B) / 3);
+			return (ushort)((ushort)pixel.A | ((ushort)intensity << 8));
+		}
+
 		public override void EncodeImage(Stream stream, Bitmap image)
 		{
 			EndianReader writer = new EndianReader(stream, Endianness.BigEndian);

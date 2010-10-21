@@ -50,7 +50,7 @@ namespace ConsoleHaxx.RawkSD
 			progress.NewTask(5 + 12);
 
 			PakFormat format = NeversoftMetadata.GetSongItemType(data.Song);
-			SongData song = NeversoftMetadata.GetSongData(data.PlatformData, NeversoftMetadata.GetSongItem(data.Song));
+			SongData song = NeversoftMetadata.GetSongData(data.PlatformData, NeversoftMetadata.GetSongItem(data));
 
 			List<Pak> chartpaks = new List<Pak>();
 			foreach (Stream stream in chartstreams) {
@@ -59,12 +59,16 @@ namespace ConsoleHaxx.RawkSD
 
 			FileNode chartfile = null;
 			foreach (Pak pak in chartpaks) {
-				chartfile = pak.Root.Find(song.ID + ".mid.qb.ngc", SearchOption.AllDirectories, true) as FileNode ?? chartfile;
+				chartfile = pak.FindFile(song.ID + ".mid.qb.ngc") ?? chartfile;
+				chartfile = pak.FindFile(song.ID + ".mid.qb") ?? chartfile;
 			}
-			if (chartfile == null)
-				return null;
-
-			QbFile qbchart = new QbFile(chartfile.Data, format);
+			if (chartfile == null) {
+				foreach (Pak pak in chartpaks)
+					chartfile = chartfile ?? pak.FindFileType(0xa7f505c4);
+			}
+			QbFile qbchart = null;
+			if (chartfile != null)
+				qbchart = new QbFile(chartfile.Data, format);
 
 			StringList strings = new StringList();
 			foreach (Pak pak in chartpaks) {
@@ -77,7 +81,8 @@ namespace ConsoleHaxx.RawkSD
 			QbFile qbsections = null;
 			FileNode qbsectionfile = null;
 			foreach (Pak pak in chartpaks) {
-				qbsectionfile = pak.Root.Find(song.ID + ".mid_text.qb.ngc", SearchOption.AllDirectories, true) as FileNode ?? qbsectionfile;
+				qbsectionfile = pak.FindFile(song.ID + ".mid_text.qb.ngc") as FileNode ?? qbsectionfile;
+				qbsectionfile = pak.FindFile(song.ID + ".mid_text.qb") as FileNode ?? qbsectionfile;
 			}
 			if (qbsectionfile != null)
 				qbsections = new QbFile(qbsectionfile.Data, format);
@@ -85,10 +90,18 @@ namespace ConsoleHaxx.RawkSD
 			Notes notes = null;
 			FileNode notesfile = null;
 			foreach (Pak pak in chartpaks) {
-				notesfile = pak.Root.Find(song.ID + ".note.ngc", SearchOption.AllDirectories, true) as FileNode ?? notesfile;
+				notesfile = notesfile ?? pak.FindFileType(0xa9d5bc8f);
+				notesfile = pak.FindFile(song.ID + ".note.ngc") as FileNode ?? notesfile;
+				notesfile = pak.FindFile(song.ID + ".note") as FileNode ?? notesfile;
 			}
-			if (notesfile != null)
+			if (notesfile == null) {
+				foreach (Pak pak in chartpaks)
+					notesfile = pak.FindFileType(0xa9d5bc8f) ?? notesfile;
+			}
+			if (notesfile != null) {
+				notesfile.Data.Position = 0;
 				notes = Notes.Create(new EndianReader(notesfile.Data, Endianness.BigEndian));
+			}
 
 			NoteChart chart = new NoteChart();
 			chart.PartGuitar = new NoteChart.Guitar(chart);
@@ -173,6 +186,12 @@ namespace ConsoleHaxx.RawkSD
 			}
 			if (lastvnote != null)
 				lastvnote.Duration = chart.FindLastNote() - lastvnote.Time;
+
+			uint[][] jaggedvalues = GetJaggedChartValues(notes, qbchart, QbKey.Create("vocalstarpower"), QbKey.Create("vocalstarpower"), 4, 2);
+			if (jaggedvalues != null) {
+				foreach (uint[] star in jaggedvalues)
+					chart.PartVocals.Overdrive.Add(new NoteChart.Note(chart.GetTicks(star[0]), chart.GetTicksDuration(star[0], star[1])));
+			}
 		}
 
 		private bool DecodeChartVocals(SongData song, QbFile qbchart, StringList strings, Notes notes, NoteChart chart)
@@ -326,27 +345,9 @@ namespace ConsoleHaxx.RawkSD
 				case NoteChart.TrackType.Guitar:
 					instrument = chart.PartGuitar;
 					if (notes != null) {
-						// basetracktapping:	0x5F98331C, 0x23D065C7, 0x64C94EA2, 0xE8E24AB6
-						// basetrackstar:		0xEA17B930, 0xBEE50CD6, 0x972693B1, 0x0AD32D6D
-						switch (difficulty) {
-							case NoteChart.Difficulty.Easy:
-								basetrack = QbKey.Create(0x9B3C8C1C);
-								basetracktapping = QbKey.Create(0xE8E24AB6);
-								break;
-							case NoteChart.Difficulty.Medium:
-								basetrack = QbKey.Create(0x8E0665C1);
-								basetracktapping = QbKey.Create(0x64C94EA2);
-								break;
-							case NoteChart.Difficulty.Hard:
-								basetrack = QbKey.Create(0xD20139E4);
-								basetracktapping = QbKey.Create(0x23D065C7);
-								break;
-							case NoteChart.Difficulty.Expert:
-								basetrack = QbKey.Create(0x01FE0E80);
-								basetrackstar = QbKey.Create(0xEA17B930);
-								basetracktapping = QbKey.Create(0x5F98331C);
-								break;
-						}
+						basetrack = QbKey.Create("guitar" + difficulty.DifficultyToString().ToLower() + "instrument");
+						basetracktapping = QbKey.Create("guitar" + difficulty.DifficultyToString().ToLower() + "tapping");
+						basetrackstar = QbKey.Create("guitar" + difficulty.DifficultyToString().ToLower() + "starpower");
 					} else {
 						basetrack = QbKey.Create(song.ID + "_song_" + difficulty.DifficultyToString().ToLower());
 						basetrackstar = QbKey.Create(song.ID + "_" + difficulty.DifficultyToString().ToLower() + "_star");
@@ -358,23 +359,9 @@ namespace ConsoleHaxx.RawkSD
 				case NoteChart.TrackType.Bass:
 					instrument = chart.PartBass;
 					if (notes != null) {
-						// basetrackstar:	Expert,		??			??			??
-						//					0xEF07C4FB, 0xF93DE8E6, 0xADCF5D00, 0x72F27A27
-						switch (difficulty) {
-							case NoteChart.Difficulty.Easy:
-								basetrack = QbKey.Create(0xBDA26454);
-								break;
-							case NoteChart.Difficulty.Medium:
-								basetrack = QbKey.Create(0x1877EC18);
-								break;
-							case NoteChart.Difficulty.Hard:
-								basetrack = QbKey.Create(0xF49FD1AC);
-								break;
-							case NoteChart.Difficulty.Expert:
-								basetrack = QbKey.Create(0x978F8759);
-								basetrackstar = QbKey.Create(0xEF07C4FB);
-								break;
-						}
+						basetrack = QbKey.Create("bass" + difficulty.DifficultyToString().ToLower() + "instrument");
+						basetracktapping = QbKey.Create("bass" + difficulty.DifficultyToString().ToLower() + "tapping");
+						basetrackstar = QbKey.Create("bass" + difficulty.DifficultyToString().ToLower() + "starpower");
 					} else {
 						basetrack = QbKey.Create(song.ID + "_song_rhythm_" + difficulty.DifficultyToString().ToLower());
 						basetrackstar = QbKey.Create(song.ID + "_rhythm_" + difficulty.DifficultyToString().ToLower() + "_star");
@@ -386,22 +373,8 @@ namespace ConsoleHaxx.RawkSD
 				case NoteChart.TrackType.Drums:
 					instrument = chart.PartDrums;
 					if (notes != null) {
-						// basetrackstar:	0xA6FAE27E, 0x630E10F8, 0x37FCA51E, 0x3B0F5CA2
-						switch (difficulty) {
-							case NoteChart.Difficulty.Easy:
-								basetrack = QbKey.Create(0x0E0ADF37);
-								break;
-							case NoteChart.Difficulty.Medium:
-								basetrack = QbKey.Create(0x0A140DD0);
-								break;
-							case NoteChart.Difficulty.Hard:
-								basetrack = QbKey.Create(0x47376ACF);
-								break;
-							case NoteChart.Difficulty.Expert:
-								basetrack = QbKey.Create(0x85EC6691);
-								basetrackstar = QbKey.Create(0xA6FAE27E);
-								break;
-						}
+						basetrack = QbKey.Create("drums" + difficulty.DifficultyToString().ToLower() + "instrument");
+						basetrackstar = QbKey.Create("drums" + difficulty.DifficultyToString().ToLower() + "starpower");
 					} else {
 						basetrack = QbKey.Create(song.ID + "_song_drum_" + difficulty.DifficultyToString().ToLower());
 						basetrackstar = QbKey.Create(song.ID + "_drum_" + difficulty.DifficultyToString().ToLower() + "_star");
@@ -412,7 +385,7 @@ namespace ConsoleHaxx.RawkSD
 					break;
 			}
 
-			if (difficulty == NoteChart.Difficulty.Expert) { // GH4 has SP for each difficulty; RB2 has one OD for all
+			if (difficulty == NoteChart.Difficulty.Expert) { // GH has SP for each difficulty; RB2 has one OD for all
 				jaggedvalues = GetJaggedChartValues(notes, qbchart, basetrackstar, basetrackstar, 4, 2);
 				foreach (uint[] star in jaggedvalues)
 					instrument.Overdrive.Add(new NoteChart.Note(chart.GetTicks(star[0]), chart.GetTicksDuration(star[0], star[1])));
@@ -473,7 +446,8 @@ namespace ConsoleHaxx.RawkSD
 				if (notes == null)
 					transform = new int[] { 4, 1, 2, 3, 3, 0, -1 };
 				else
-					transform = new int[] { 4, 1, 2, 3, -1, 0, 4 }; // -1 -> 4?
+					//transform = new int[] { 4, 1, 2, 3, -1, 0, 4 }; // -1 -> 4?
+					transform = new int[] { 4, 1, 2, 3, 3, 0, 4 }; // TODO: Verify charts
 
 				for (int l = 0; l < numfrets; l++) {
 					if (((fret >> l) & 0x01) != 0) {
@@ -481,9 +455,11 @@ namespace ConsoleHaxx.RawkSD
 						chord = l;
 						if (track == NoteChart.TrackType.Drums) {
 							chord = transform[l];
-							
-							if (chord == 0 && ((fret & 0x2000) != 0) && !expertplus)
-								continue;
+
+							//if ((fret & 0x2000) != 0)
+							//	continue;
+							//if (chord == 0 && ((fret & 0x2000) == 0) && !expertplus) // TODO: Verify expert+
+							//	continue;
 						}
 
 						if (chord >= 0) {

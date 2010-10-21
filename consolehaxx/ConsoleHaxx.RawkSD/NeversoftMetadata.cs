@@ -10,7 +10,7 @@ using ConsoleHaxx.Neversoft;
 
 namespace ConsoleHaxx.RawkSD
 {
-	public static class NeversoftMetadata
+	public class NeversoftMetadata : IFormat
 	{
 		public static readonly uint[] QbKeysID = new uint[] { 0xA1DC81F9 };
 		public static readonly uint[] QbKeysName = new uint[] { 0xD4C98794 };
@@ -34,6 +34,10 @@ namespace ConsoleHaxx.RawkSD
 		public static readonly Pair<uint[], string>[] QbKeysGenres = new Pair<uint[], string>[] {
 			// GH5
 			new Pair<uint[], string>(new uint[] { 0xC8B6445D }, "Rock"),
+			new Pair<uint[], string>(new uint[] { 0x28955034 }, "Modern Rock"),
+			new Pair<uint[], string>(new uint[] { 0xF51BFB59 }, "Speed Metal"),
+			new Pair<uint[], string>(new uint[] { 0xE0006B71 }, "Nu Metal"),
+			new Pair<uint[], string>(new uint[] { 0xDD52AF3C }, "Hard Rock"),
 			new Pair<uint[], string>(new uint[] { 0x46FEED4A }, "Surf Rock"),
 			new Pair<uint[], string>(new uint[] { 0x1474F917 }, "Blues Rock"),
 			new Pair<uint[], string>(new uint[] { 0xF100A205 }, "Alternative"),
@@ -80,6 +84,8 @@ namespace ConsoleHaxx.RawkSD
 			0x236ADAED, // GH5.3
 			0xDE932298, // GH5.4
 			0x5A93AE17, // GHVH
+			0x150A123B, // GH6
+			0xF3A94A45, // GH6 DLC
 
 			0x5C04EE27, // GHWT DLC
 		};
@@ -183,12 +189,29 @@ namespace ConsoleHaxx.RawkSD
 			return new PakFormat("", "", "", (PakFormatType)song.Data.GetValue<int>("NeversoftSongType"));
 		}
 
-		public static QbItemStruct GetSongItem(SongData song)
+		public static void SaveSongItem(FormatData formatdata)
 		{
+			SongData song = formatdata.Song;
 			byte[] data = song.Data.GetValue<byte[]>("NeversoftSongItem");
-			if (data == null || data.Length == 0)
-				return null;
-			QbItemBase item = new QbFile(new MemoryStream(data), GetSongItemType(song)).FindItem(QbKey.Create(song.Data.GetValue<uint>("NeversoftSongItemKey")), true);
+			if (data == null)
+				return;
+			
+			Stream stream = formatdata.AddStream(Instance, "neversoftdata");
+			stream.Write(data);
+			formatdata.CloseStream(Instance, "neversoftdata");
+			song.Data.SetValue("NeversoftSongItem", new byte[0]);
+		}
+
+		public static QbItemStruct GetSongItem(FormatData formatdata)
+		{
+			SongData song = formatdata.Song;
+			Stream datastream = formatdata.GetStream(Instance, "neversoftdata");
+			if (datastream == null || datastream.Length == 0) {
+				SaveSongItem(formatdata);
+				datastream = formatdata.GetStream(Instance, "neversoftdata");
+			}
+			QbItemBase item = new QbFile(datastream, GetSongItemType(song)).FindItem(QbKey.Create(song.Data.GetValue<uint>("NeversoftSongItemKey")), true);
+			formatdata.CloseStream(datastream);
 			if (item is QbItemArray) {
 				item.Items[0].ItemQbKey = item.ItemQbKey;
 				item = item.Items[0];
@@ -231,11 +254,12 @@ namespace ConsoleHaxx.RawkSD
 			return false;
 		}
 
-		public static AudioFormat GetAudioFormat(SongData song)
+		public static AudioFormat GetAudioFormat(FormatData data)
 		{
+			SongData song = data.Song;
 			AudioFormat audioformat = new AudioFormat();
 
-			QbItemStruct item = GetSongItem(song);
+			QbItemStruct item = GetSongItem(data);
 			if (item == null)
 				return null;
 			float bandvolume = 0;
@@ -295,6 +319,54 @@ namespace ConsoleHaxx.RawkSD
 			audioformat.Mappings.Add(new AudioFormat.Mapping(bandvolume, 1, Instrument.Preview));
 
 			return audioformat;
+		}
+
+		const string FileName = "neversoftdata";
+		public static NeversoftMetadata Instance;
+		public static void Initialise()
+		{
+			Instance = new NeversoftMetadata();
+			Platform.AddFormat(Instance);
+		}
+
+		public int ID { get { return 0x1001; } }
+
+		public FormatType Type { get { return FormatType.Metadata; } }
+
+		public string Name { get { return "Neversoft Song Data"; } }
+
+		public bool Writable { get { return true; } }
+
+		public bool Readable { get { return true; } }
+
+		public object Decode(FormatData data, ProgressIndicator progress)
+		{
+			return null;
+		}
+
+		public void Encode(object data, FormatData destination, ProgressIndicator progress)
+		{
+			
+		}
+
+		public bool CanRemux(IFormat format)
+		{
+			return format == this;
+		}
+
+		public void Remux(IFormat format, FormatData data, FormatData destination, ProgressIndicator progress)
+		{
+			
+		}
+
+		public bool CanTransfer(FormatData data)
+		{
+			return true;
+		}
+
+		public bool HasFormat(FormatData format)
+		{
+			return format.HasStream(this, FileName);
 		}
 	}
 }

@@ -97,7 +97,18 @@ namespace ConsoleHaxx.RawkSD
 
 		public bool NeedsFixing(FormatData data)
 		{
-			return data.Song.Data.GetValue<bool>("RBChartFixForQuickplay") || data.Song.Data.GetValue<bool>("RBChartExpertPlus");
+			if (data.Song.Data.GetValue<bool>("RBChartFixForQuickplay") || data.Song.Data.GetValue<bool>("RBChartExpertPlus"))
+				return true;
+
+			ChartFormat chart = DecodeChart(data, new ProgressIndicator());
+			if (chart.Chart.PartVocals != null) {
+				foreach (var lyric in chart.Chart.PartVocals.Lyrics) {
+					if (lyric.Value.EndsWith("*"))
+						return true;
+				}
+			}
+
+			return false;
 		}
 	}
 }

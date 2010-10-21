@@ -48,11 +48,9 @@
 			this.TrackNumeric = new System.Windows.Forms.NumericUpDown();
 			this.GenreCombo = new System.Windows.Forms.ComboBox();
 			this.EngineLayout = new System.Windows.Forms.TableLayoutPanel();
-			this.LabelGame = new System.Windows.Forms.Label();
 			this.LabelPack = new System.Windows.Forms.Label();
 			this.LabelVersion = new System.Windows.Forms.Label();
 			this.LabelPreview = new System.Windows.Forms.Label();
-			this.GameCombo = new System.Windows.Forms.ComboBox();
 			this.PackText = new System.Windows.Forms.TextBox();
 			this.VersionNumeric = new System.Windows.Forms.NumericUpDown();
 			this.PreviewStartNumeric = new System.Windows.Forms.NumericUpDown();
@@ -104,6 +102,8 @@
 			this.ButtonCancel = new System.Windows.Forms.Button();
 			this.OpenDialog = new System.Windows.Forms.OpenFileDialog();
 			this.ErrorProvider = new System.Windows.Forms.ErrorProvider(this.components);
+			this.LabelCharter = new System.Windows.Forms.Label();
+			this.CharterText = new System.Windows.Forms.TextBox();
 			this.SongLayout.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.YearNumeric)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.AlbumArt)).BeginInit();
@@ -382,11 +382,9 @@
 			this.EngineLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
 			this.EngineLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
 			this.EngineLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-			this.EngineLayout.Controls.Add(this.LabelGame, 0, 1);
 			this.EngineLayout.Controls.Add(this.LabelPack, 0, 2);
 			this.EngineLayout.Controls.Add(this.LabelVersion, 0, 3);
 			this.EngineLayout.Controls.Add(this.LabelPreview, 0, 4);
-			this.EngineLayout.Controls.Add(this.GameCombo, 1, 1);
 			this.EngineLayout.Controls.Add(this.PackText, 1, 2);
 			this.EngineLayout.Controls.Add(this.VersionNumeric, 1, 3);
 			this.EngineLayout.Controls.Add(this.PreviewStartNumeric, 1, 4);
@@ -395,6 +393,8 @@
 			this.EngineLayout.Controls.Add(this.HopoNumeric, 1, 0);
 			this.EngineLayout.Controls.Add(this.label1, 1, 5);
 			this.EngineLayout.Controls.Add(this.label2, 2, 5);
+			this.EngineLayout.Controls.Add(this.LabelCharter, 0, 1);
+			this.EngineLayout.Controls.Add(this.CharterText, 1, 1);
 			this.EngineLayout.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.EngineLayout.Location = new System.Drawing.Point(3, 3);
 			this.EngineLayout.Name = "EngineLayout";
@@ -413,20 +413,10 @@
 			this.EngineLayout.Size = new System.Drawing.Size(313, 236);
 			this.EngineLayout.TabIndex = 0;
 			// 
-			// LabelGame
-			// 
-			this.LabelGame.AutoSize = true;
-			this.LabelGame.Location = new System.Drawing.Point(3, 26);
-			this.LabelGame.Name = "LabelGame";
-			this.LabelGame.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
-			this.LabelGame.Size = new System.Drawing.Size(38, 17);
-			this.LabelGame.TabIndex = 2;
-			this.LabelGame.Text = "Game:";
-			// 
 			// LabelPack
 			// 
 			this.LabelPack.AutoSize = true;
-			this.LabelPack.Location = new System.Drawing.Point(3, 53);
+			this.LabelPack.Location = new System.Drawing.Point(3, 52);
 			this.LabelPack.Name = "LabelPack";
 			this.LabelPack.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
 			this.LabelPack.Size = new System.Drawing.Size(35, 17);
@@ -436,7 +426,7 @@
 			// LabelVersion
 			// 
 			this.LabelVersion.AutoSize = true;
-			this.LabelVersion.Location = new System.Drawing.Point(3, 79);
+			this.LabelVersion.Location = new System.Drawing.Point(3, 78);
 			this.LabelVersion.Name = "LabelVersion";
 			this.LabelVersion.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
 			this.LabelVersion.Size = new System.Drawing.Size(45, 17);
@@ -446,30 +436,18 @@
 			// LabelPreview
 			// 
 			this.LabelPreview.AutoSize = true;
-			this.LabelPreview.Location = new System.Drawing.Point(3, 105);
+			this.LabelPreview.Location = new System.Drawing.Point(3, 104);
 			this.LabelPreview.Name = "LabelPreview";
 			this.LabelPreview.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
 			this.LabelPreview.Size = new System.Drawing.Size(79, 17);
 			this.LabelPreview.TabIndex = 8;
 			this.LabelPreview.Text = "Preview Times:";
 			// 
-			// GameCombo
-			// 
-			this.EngineLayout.SetColumnSpan(this.GameCombo, 2);
-			this.GameCombo.Dock = System.Windows.Forms.DockStyle.Top;
-			this.GameCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.GameCombo.FormattingEnabled = true;
-			this.GameCombo.Location = new System.Drawing.Point(95, 29);
-			this.GameCombo.Name = "GameCombo";
-			this.GameCombo.Size = new System.Drawing.Size(215, 21);
-			this.GameCombo.TabIndex = 3;
-			this.GameCombo.SelectedIndexChanged += new System.EventHandler(this.GameCombo_SelectedIndexChanged);
-			// 
 			// PackText
 			// 
 			this.EngineLayout.SetColumnSpan(this.PackText, 2);
 			this.PackText.Dock = System.Windows.Forms.DockStyle.Top;
-			this.PackText.Location = new System.Drawing.Point(95, 56);
+			this.PackText.Location = new System.Drawing.Point(95, 55);
 			this.PackText.Name = "PackText";
 			this.PackText.Size = new System.Drawing.Size(215, 20);
 			this.PackText.TabIndex = 5;
@@ -479,7 +457,7 @@
 			// 
 			this.EngineLayout.SetColumnSpan(this.VersionNumeric, 2);
 			this.VersionNumeric.Dock = System.Windows.Forms.DockStyle.Top;
-			this.VersionNumeric.Location = new System.Drawing.Point(95, 82);
+			this.VersionNumeric.Location = new System.Drawing.Point(95, 81);
 			this.VersionNumeric.Maximum = new decimal(new int[] {
             100000,
             0,
@@ -493,7 +471,7 @@
 			// PreviewStartNumeric
 			// 
 			this.PreviewStartNumeric.Dock = System.Windows.Forms.DockStyle.Top;
-			this.PreviewStartNumeric.Location = new System.Drawing.Point(95, 108);
+			this.PreviewStartNumeric.Location = new System.Drawing.Point(95, 107);
 			this.PreviewStartNumeric.Maximum = new decimal(new int[] {
             100000000,
             0,
@@ -507,7 +485,7 @@
 			// PreviewEndNumeric
 			// 
 			this.PreviewEndNumeric.Dock = System.Windows.Forms.DockStyle.Top;
-			this.PreviewEndNumeric.Location = new System.Drawing.Point(205, 108);
+			this.PreviewEndNumeric.Location = new System.Drawing.Point(205, 107);
 			this.PreviewEndNumeric.Maximum = new decimal(new int[] {
             100000000,
             0,
@@ -547,7 +525,7 @@
 			// 
 			this.label1.AutoSize = true;
 			this.label1.Dock = System.Windows.Forms.DockStyle.Top;
-			this.label1.Location = new System.Drawing.Point(95, 131);
+			this.label1.Location = new System.Drawing.Point(95, 130);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(104, 13);
 			this.label1.TabIndex = 11;
@@ -558,7 +536,7 @@
 			// 
 			this.label2.AutoSize = true;
 			this.label2.Dock = System.Windows.Forms.DockStyle.Top;
-			this.label2.Location = new System.Drawing.Point(205, 131);
+			this.label2.Location = new System.Drawing.Point(205, 130);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(105, 13);
 			this.label2.TabIndex = 12;
@@ -1112,6 +1090,26 @@
 			// 
 			this.ErrorProvider.ContainerControl = this;
 			// 
+			// LabelCharter
+			// 
+			this.LabelCharter.AutoSize = true;
+			this.LabelCharter.Location = new System.Drawing.Point(3, 26);
+			this.LabelCharter.Name = "LabelCharter";
+			this.LabelCharter.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
+			this.LabelCharter.Size = new System.Drawing.Size(62, 17);
+			this.LabelCharter.TabIndex = 13;
+			this.LabelCharter.Text = "Charted By:";
+			// 
+			// CharterText
+			// 
+			this.EngineLayout.SetColumnSpan(this.CharterText, 2);
+			this.CharterText.Dock = System.Windows.Forms.DockStyle.Top;
+			this.CharterText.Location = new System.Drawing.Point(95, 29);
+			this.CharterText.Name = "CharterText";
+			this.CharterText.Size = new System.Drawing.Size(215, 20);
+			this.CharterText.TabIndex = 14;
+			this.CharterText.TextChanged += new System.EventHandler(this.CharterText_TextChanged);
+			// 
 			// EditForm
 			// 
 			this.AcceptButton = this.CloseButton;
@@ -1189,11 +1187,9 @@
 		private System.Windows.Forms.NumericUpDown TrackNumeric;
 		private System.Windows.Forms.ComboBox GenreCombo;
 		private System.Windows.Forms.TableLayoutPanel EngineLayout;
-		private System.Windows.Forms.Label LabelGame;
 		private System.Windows.Forms.Label LabelPack;
 		private System.Windows.Forms.Label LabelVersion;
 		private System.Windows.Forms.Label LabelPreview;
-		private System.Windows.Forms.ComboBox GameCombo;
 		private System.Windows.Forms.TextBox PackText;
 		private System.Windows.Forms.NumericUpDown VersionNumeric;
 		private System.Windows.Forms.NumericUpDown PreviewStartNumeric;
@@ -1245,5 +1241,7 @@
 		private System.Windows.Forms.OpenFileDialog OpenDialog;
 		private System.Windows.Forms.ErrorProvider ErrorProvider;
 		private System.Windows.Forms.Button ButtonCancel;
+		private System.Windows.Forms.Label LabelCharter;
+		private System.Windows.Forms.TextBox CharterText;
 	}
 }

@@ -399,6 +399,20 @@ namespace ConsoleHaxx.RawkSD
 				Song = song;
 		}
 
+		public bool MoveTo(string path)
+		{
+			if (Directory.Exists(path))
+				return false;
+
+			if (Streams.Count > 0)
+				return false;
+
+			Directory.Move(Folder, path);
+			Folder = path;
+
+			return true;
+		}
+
 		private void Refresh()
 		{
 			string[] files = Directory.GetFiles(Folder, "*", SearchOption.TopDirectoryOnly);
@@ -426,6 +440,13 @@ namespace ConsoleHaxx.RawkSD
 		protected override Stream OpenStream(string name)
 		{
 			return new FileStream(GetPath(name), FileMode.Open, FileAccess.ReadWrite);
+		}
+
+		public string Pathname
+		{
+			get {
+				return Folder;
+			}
 		}
 	}
 	#endregion

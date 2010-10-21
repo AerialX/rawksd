@@ -305,6 +305,8 @@ namespace ConsoleHaxx.RawkSD
 				else
 					dta.AlbumArt = true;
 
+				dta.Song.MidiFile = "dlc/content/songs/" + song.ID + "/" + song.ID + ".mid";
+
 				DTB.NodeTree dtb = dta.ToDTB(PlatformRawkFile.Instance.IsRawkSD2(song));
 
 				MemoryStream songsdta = new MemoryStream();
@@ -363,7 +365,6 @@ namespace ConsoleHaxx.RawkSD
 				TMD tmd = GenerateDummyTMD(otitle);
 
 				dta.Song.Name = "dlc/" + otitle + "/" + Util.Pad(oindex.ToString(), 3) + "/content/songs/" + song.ID + "/" + song.ID;
-				dta.Song.MidiFile = "dlc/content/songs/" + song.ID + "/" + song.ID + ".mid";
 				dtb = dta.ToDTB(PlatformRawkFile.Instance.IsRawkSD2(song));
 				HarmonixMetadata.SetSongsDTA(song, dtb);
 
@@ -433,6 +434,7 @@ namespace ConsoleHaxx.RawkSD
 				bin.Content = tmd.Contents[oindex];
 				bin.Data = memoryDta;
 				bin.Generate();
+				bin.Bk.ContentSize = bin.Bk.TotalSize = 0;
 				bin.Bk.TitleID = 0x00010000535A4145UL;
 				bin.Save(binstream);
 				binstream.ClosePersist();
@@ -448,6 +450,7 @@ namespace ConsoleHaxx.RawkSD
 				bin.Content = tmd.Contents[oindex + 1];
 				bin.Data = memorySong;
 				bin.Generate();
+				bin.Bk.ContentSize = bin.Bk.TotalSize = 0;
 				bin.Bk.TitleID = 0x00010000535A4145UL;
 				bin.Save(binstream);
 				binstream.ClosePersist();
@@ -625,6 +628,13 @@ namespace ConsoleHaxx.RawkSD
 					if (drumcount == 2 && mix.Value.Value != "drums0" && mix.Value.Value != "drums0d")
 						mix.Value.Value = "drums0";
 					// TODO: Better validation
+				}
+			}
+
+			if (chart.PartVocals != null) {
+				foreach (var lyric in chart.PartVocals.Lyrics) {
+					if (lyric.Value.EndsWith("*"))
+						lyric.Value = lyric.Value.Substring(0, lyric.Value.Length - 1) + "^";
 				}
 			}
 

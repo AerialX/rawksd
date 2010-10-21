@@ -32,11 +32,13 @@ namespace ConsoleHaxx.RawkSD
 
 		public override int ID { get { throw new NotImplementedException(); } }
 
-		public override string Name { get { return "Guitar Hero 4 / 5 Wii Disc"; } }
+		public override string Name { get { return "Guitar Hero 4 / 5 / 6 Wii Disc"; } }
 
 		public override bool AddSong(PlatformData data, SongData song, ProgressIndicator progress)
 		{
 			FormatData formatdata = new TemporaryFormatData(song, data);
+
+			NeversoftMetadata.SaveSongItem(formatdata);
 
 			DirectoryNode dir = data.Session["rootdir"] as DirectoryNode;
 
@@ -87,7 +89,12 @@ namespace ConsoleHaxx.RawkSD
 					strings.ParseFromStream(node.Data);
 
 				Pak qb = new Pak(new EndianReader(qbpak.Data, Endianness.BigEndian));
-				FileNode songlistfile = qb.Root.Find("songlist.qb.ngc", SearchOption.AllDirectories) as FileNode;
+				FileNode songlistfile = qb.FindFile(@"scripts\guitar\songlist.qb.ngc");
+				if (songlistfile == null)
+					songlistfile = qb.FindFile(@"scripts\guitar\songlist.qb");
+
+				if (songlistfile == null)
+					throw new FormatException("Couldn't find the songlist on the Guitar Hero Wii disc pak.");
 				QbFile songlist = new QbFile(songlistfile.Data, PakFormat);
 
 				data.Session["rootdir"] = dir;

@@ -62,7 +62,6 @@ namespace ConsoleHaxx.RawkSD
 				path = Path.Combine(data.Session["rootpath"] as string, song.ID) + (i == 0 ? "" : i.ToString());
 				i++;
 			} while (Directory.Exists(path));
-			song.Data.SetValue("LocalStoragePath", path);
 			Directory.CreateDirectory(path);
 
 			FormatData format = new FolderFormatData(song, data, path);
@@ -77,9 +76,9 @@ namespace ConsoleHaxx.RawkSD
 
 		public override void DeleteSong(PlatformData data, FormatData formatdata, ProgressIndicator progress)
 		{
-			string path = formatdata.Song.Data.GetValue<string>("LocalStoragePath");
-			if (path == null)
+			if (!(formatdata is FolderFormatData))
 				return;
+			string path = (formatdata as FolderFormatData).Pathname;
 			formatdata.Dispose();
 			Directory.Delete(path, true);
 			base.DeleteSong(data, formatdata, progress);

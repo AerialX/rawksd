@@ -57,7 +57,7 @@ namespace ConsoleHaxx.RawkSD
 			Stream sectionstream = data.GetStream(this, SectionsName);
 
 			PakFormat format = NeversoftMetadata.GetSongItemType(data.Song);
-			SongData song = NeversoftMetadata.GetSongData(data.PlatformData, NeversoftMetadata.GetSongItem(data.Song));
+			SongData song = NeversoftMetadata.GetSongData(data.PlatformData, NeversoftMetadata.GetSongItem(data));
 			Pak chartpak = new Pak(new EndianReader(chartstream, Endianness.BigEndian)); // TODO: Endianness based on format?
 			FileNode chartfile = chartpak.Root.Find(song.ID + ".mid.qb.ngc", SearchOption.AllDirectories, true) as FileNode;
 			QbFile qbsections = new QbFile(sectionstream, format);
@@ -182,18 +182,21 @@ namespace ConsoleHaxx.RawkSD
 		{
 			string basetrack = string.Empty;
 			string basetrackstar = string.Empty;
+			string basetrackstarbattle = string.Empty;
 			string basetrackfaceoff = string.Empty;
 			NoteChart.Instrument instrument = null;
 			switch (track) {
 				case NoteChart.TrackType.Guitar:
 					basetrack = song.ID + (coop ? "_song_guitarcoop_" : "_song_") + difficulty.DifficultyToString();
 					basetrackstar = song.ID + (coop ? "_guitarcoop_" : "_") + difficulty.DifficultyToString() + "_Star";
+					basetrackstarbattle = song.ID + (coop ? "_guitarcoop_" : "_") + difficulty.DifficultyToString() + "_StarBattleMode";
 					basetrackfaceoff = song.ID + "_FaceOffp";
 					instrument = chart.PartGuitar;
 					break;
 				case NoteChart.TrackType.Bass:
 					basetrack = song.ID + (coop ? "_song_rhythmcoop_" : "_song_rhythm_") + difficulty.DifficultyToString();
 					basetrackstar = song.ID + (coop ? "_rhythmcoop_" : "_rhythm_") + difficulty.DifficultyToString() + "_Star";
+					basetrackstarbattle = song.ID + (coop ? "_rhythmcoop_" : "_rhythm_") + difficulty.DifficultyToString() + "_StarBattleMode";
 					basetrackfaceoff = song.ID + "_FaceOffP";
 					instrument = chart.PartBass;
 					break;
@@ -221,6 +224,13 @@ namespace ConsoleHaxx.RawkSD
 				if (starpower != null) {
 					foreach (QbItemInteger star in starpower.Items)
 						instrument.Overdrive.Add(new NoteChart.Note(chart.GetTicks(star.Values[0]), chart.GetTicksDuration(star.Values[0], star.Values[1])));
+				}
+				if (instrument.Overdrive.Count == 0) {
+					starpower = (qbchart.FindItem(QbKey.Create(basetrackstarbattle), false) as QbItemArray).Items[0] as QbItemArray;
+					if (starpower != null) {
+						foreach (QbItemInteger star in starpower.Items)
+							instrument.Overdrive.Add(new NoteChart.Note(chart.GetTicks(star.Values[0]), chart.GetTicksDuration(star.Values[0], star.Values[1])));
+					}
 				}
 			}
 

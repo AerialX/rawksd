@@ -25,7 +25,6 @@ namespace ConsoleHaxx.RawkSD.SWF
 			InitializeComponent();
 
 			GenreCombo.Items.AddRange(ImportMap.Genres.Select(g => g.Value).ToArray());
-			GameCombo.Items.AddRange(Platform.GetGames().Select(g => Platform.GameName(g)).ToArray());
 
 			AnimationTempoCombo.SelectedIndex = 1;
 			BankCombo.SelectedIndex = 0;
@@ -33,6 +32,8 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		public static DialogResult Show(FormatData data, bool writable, bool cancellable, Form parent)
 		{
+			string originalid = data.Song.ID;
+
 			EditForm form = new EditForm();
 			form.Data = data;
 			form.Writable = writable;
@@ -40,6 +41,20 @@ namespace ConsoleHaxx.RawkSD.SWF
 				form.CancelButton = form.CloseButton;
 				form.ButtonCancel.Visible = false;
 			}
+			string newid = data.Song.ID;
+
+			if (String.Compare(newid, originalid, true) != 0 && writable && data is FolderFormatData) { // Rename/move local storage if possible
+				string path = null;
+				int i = 0;
+				do {
+					path = Path.Combine(data.PlatformData.Session["rootpath"] as string, newid) + (i == 0 ? "" : i.ToString());
+					i++;
+				} while (Directory.Exists(path));
+				if (!(data as FolderFormatData).MoveTo(path)) {
+					// onoes we're toast
+				}
+			}
+
 			return form.ShowDialog(parent);
 		}
 
@@ -59,7 +74,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 				MasterCheckbox.Enabled = false;
 
 				HopoNumeric.Enabled = false;
-				GameCombo.Enabled = false;
+				CharterText.Enabled = false;
 				PackText.ReadOnly = true;
 				VersionNumeric.Enabled = false;
 				PreviewStartNumeric.Enabled = false;
@@ -98,7 +113,7 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 			// Engine Data
 			HopoNumeric.Value = song.HopoThreshold;
-			GameCombo.Text = Platform.GameName(song.Game);
+			CharterText.Text = song.Charter;
 			PackText.Text = song.Pack;
 			VersionNumeric.Value = song.Version;
 			PreviewStartNumeric.Value = song.PreviewTimes[0];
@@ -247,6 +262,13 @@ namespace ConsoleHaxx.RawkSD.SWF
 				Song.ID = IdText.Text;
 		}
 
+
+		private void CharterText_TextChanged(object sender, EventArgs e)
+		{
+			if (Song != null)
+				Song.Charter = CharterText.Text;
+		}
+
 		private void NameText_TextChanged(object sender, EventArgs e)
 		{
 			if (Song != null)
@@ -309,8 +331,10 @@ namespace ConsoleHaxx.RawkSD.SWF
 
 		private void GameCombo_SelectedIndexChanged(object sender, EventArgs e)
 		{
-			if (Song != null)
-				throw new NotImplementedException();
+			if (Song != null) {
+				//throw new NotImplementedException();
+				Exceptions.Warning(new NotImplementedException(), "RawkSD doesn't support changing a custom's Game yet.");
+			}
 		}
 
 		private void VersionNumeric_ValueChanged(object sender, EventArgs e)
@@ -322,13 +346,13 @@ namespace ConsoleHaxx.RawkSD.SWF
 		private void PreviewStartNumeric_ValueChanged(object sender, EventArgs e)
 		{
 			if (Song != null)
-				Song.PreviewTimes[0] = (int)PreviewStartNumeric.Value;
+				Song.SetPreviewTime(0, (int)PreviewStartNumeric.Value);
 		}
 
 		private void PreviewEndNumeric_ValueChanged(object sender, EventArgs e)
 		{
 			if (Song != null)
-				Song.PreviewTimes[1] = (int)PreviewEndNumeric.Value;
+				Song.SetPreviewTime(1, (int)PreviewEndNumeric.Value);
 		}
 
 		private void CloseButton_Click(object sender, EventArgs e)

@@ -74,16 +74,9 @@ namespace ConsoleHaxx.Wii
 				throw new FormatException("Image palette does not fit in encoding.");
 
 			EndianReader datareader = new EndianReader(data, Endianness.BigEndian);
-			List<Color> datapalette = new List<Color>();
-			try {
-				for (int i = 0; i < 0x10; i++)
-					datapalette.Add(CI8.ReadPaletteColour(datareader.ReadUInt16(), type));
-			} catch { } // We can't be sure of the palette size thanks to this fucking format.
-
-			foreach (Color colour in palette) {
-				if (!datapalette.Contains(colour))
-					throw new NotImplementedException("Palette in secondary data doesn't match.");
-			}
+			for (int i = 0; i < palette.Count; i++)
+				datareader.Write(CI8.WritePaletteColour(palette[i], type));
+			datareader.PadTo(0x40);
 
 			for (int y = 0; y < image.Height; y += 8) {
 				for (int x = 0; x < image.Width; x += 8) {
@@ -94,7 +87,7 @@ namespace ConsoleHaxx.Wii
 							for (int x2 = 0; x2 < 2; x2++) {
 								int xpixel = x + x1 + x2;
 								if (ypixel < image.Height && xpixel < image.Width)
-									pixel |= (byte)(datapalette.IndexOf(image.GetPixel(xpixel, ypixel)) << (4 * (1 - x2)));
+									pixel |= (byte)(palette.IndexOf(image.GetPixel(xpixel, ypixel)) << (4 * (1 - x2)));
 							}
 							writer.Write(pixel);
 						}

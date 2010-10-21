@@ -11,6 +11,7 @@ using System.Globalization;
 using System.Drawing.Imaging;
 using System.Drawing;
 using System.Xml;
+using ConsoleHaxx.Wii;
 
 namespace Graceful
 {
@@ -370,6 +371,8 @@ namespace Graceful
 
 		private static void OperationPatchCPK(bool sub)
 		{
+			bool togf = false;
+
 			uint cpkoffset = 0;
 			string cpkname = ConsolePath("Full path to CPK archive..?");
 			string subcpkname = cpkname;
@@ -398,21 +401,24 @@ namespace Graceful
 				cpk = new CPK(substream);
 			}
 
+			togf = (cpk.Version == 7);
+
 			UTF.ShortValue align = cpk.Header.Rows[0].FindValue("Align") as UTF.ShortValue;
 			ushort alignment = align == null ? (ushort)0x20 : align.Value;
-			ulong baseoffset = cpkoffset + (cpk.Header.Rows[0].FindValue("ContentOffset") as UTF.LongValue).Value;
-			ulong cpklen = Util.RoundUp((ulong)Math.Max(stream.Length, 0x70000000), alignment);
+			ulong cpklen = Util.RoundUp((ulong)Math.Max(stream.Length, togf ? stream.Length : 0x70000000), alignment);
 			string cpklenfile = cpkname + ".patch";
 			if (File.Exists(cpklenfile))
 				cpklen = ulong.Parse(File.ReadAllText(cpklenfile));
 
-			long rowoffset = (long)(cpk.Header.Rows[0].FindValue("TocOffset") as UTF.LongValue).Value;
-			rowoffset += 0x10;
+			long tocoffset = (long)(cpk.Header.Rows[0].FindValue("TocOffset") as UTF.LongValue).Value;
+			long rowoffset = tocoffset + 0x10;
 			EndianReader reader = new EndianReader(substream, Endianness.BigEndian);
 			reader.Position = rowoffset + 0x1A;
 			uint rowsize = reader.ReadUInt16();
 			reader.Position = rowoffset + 0x08;
 			rowoffset += reader.ReadUInt32() + 0x08;
+
+			ulong baseoffset = cpkoffset + (togf ? (ulong)tocoffset : (cpk.Header.Rows[0].FindValue("ContentOffset") as UTF.LongValue).Value);
 
 			string tocname = subcpkname + ".toc";
 			Stream toc = new FileStream(tocname, FileMode.OpenOrCreate);
@@ -543,20 +549,54 @@ namespace Graceful
 			foreach (string file in files) {
 				string name = Path.GetFileName(file);
 				string basename = Path.GetFileNameWithoutExtension(name);
+				string extension = Path.GetExtension(name);
 
 				Txm.Image image = tex.Images.FirstOrDefault(i => i.Name == basename);
-				if (image == null)
-					continue;
+				if (image == null) {
+					if (extension != ".dat" && extension != ".png")
+						continue;
+					image = new Txm.Image();
+					image.Name = basename;
+					image.PrimaryEncoding = PixelEncoding.GetEncoding<CI8>();
+					image.SecondaryData = new MemoryStream();
+					image.Unknown1 = 1;
+					image.Unknown2 = 2 << 4;
+					image.Unknown3 = 1;
+					tex.Images.Add(image);
+				}
 
 				Stream stream = new FileStream(file, FileMode.Open);
-				if (Path.GetExtension(file) == ".dat") {
-					image.SecondaryData = stream;
-				} else if (Path.GetExtension(file) == ".png") {
+				if (extension == ".dat") {
+					image.SecondaryData = new MemoryStream((int)stream.Length);
+					Util.StreamCopy(image.SecondaryData, stream);
+				} else if (extension == ".png") {
 					Bitmap bitmap = new Bitmap(stream);
 					stream.Close();
-					stream = new TemporaryStream();
+					stream = new MemoryStream();
+					if (image.SecondaryData is Substream || image.SecondaryData == null)
+						image.SecondaryData = new MemoryStream();
 					image.SecondaryData.Position = 0;
-					image.PrimaryEncoding.EncodeImage(stream, bitmap, image.SecondaryData, image.Unknown2 >> 4);
+					try {
+						image.PrimaryEncoding.EncodeImage(stream, bitmap, image.SecondaryData, image.Unknown2 >> 4);
+					} catch (NotImplementedException ex) {
+						if (image.PrimaryEncoding.ID == 0xAAE4) {
+							image.PrimaryEncoding = new ARGB();
+							image.Unknown1 = 5;
+							image.Unknown2 = 0xa5;
+							image.Unknown3 = 4;
+						} else {
+							image.PrimaryEncoding = PixelEncoding.GetEncoding<CI8>();
+							image.Unknown1 = 1;
+							image.Unknown2 = 2 << 4;
+							image.Unknown3 = 1;
+						}
+
+						try {
+							image.PrimaryEncoding.EncodeImage(stream, bitmap, image.SecondaryData, image.Unknown2 >> 4);
+						} catch {
+							throw ex;
+						}
+					}
 					image.Width = (uint)bitmap.Width;
 					image.Height = (uint)bitmap.Height;
 					image.PrimaryData = stream;
@@ -577,9 +617,11 @@ namespace Graceful
 				fps.Flags = FPS4Base.NodeFlags.SectionSize | FPS4Base.NodeFlags.Filesize | FPS4Base.NodeFlags.Offset;
 				fps.Type = new byte[] { 0x74, 0x78, 0x6D, 0x76 }; // "txmv"
 				fps.TypeOffset = 0x40;
-				fps.Nodes.Add(new FPS4Base.Node(0x60, 0x60, 0x60, "", 0, 0, txmstream));
-				fps.Nodes.Add(new FPS4Base.Node(0xC0, (uint)txvstream.Length, (uint)txvstream.Length, "", 0, 0, txvstream));
-				fps.Nodes.Add(new FPS4Base.Node(0xC0 + (uint)txvstream.Length, 0, 0, "", 0, 0, null));
+				uint txmlen = (uint)Util.RoundUp(txmstream.Length, 0x20);
+				uint txvlen = (uint)Util.RoundUp(txvstream.Length, 0x20);
+				fps.Nodes.Add(new FPS4Base.Node(0x60, txmlen, (uint)txmstream.Length, "", 0, 0, txmstream));
+				fps.Nodes.Add(new FPS4Base.Node(0x60 + txmlen, txvlen, (uint)txvstream.Length, "", 0, 0, txvstream));
+				fps.Nodes.Add(new FPS4Base.Node(0x60 + txmlen + txvlen, 0, 0, "", 0, 0, null));
 				fps.Save(texstream);
 			}
 

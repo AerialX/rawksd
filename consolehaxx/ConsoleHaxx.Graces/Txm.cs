@@ -49,7 +49,9 @@ namespace ConsoleHaxx.Graces
 							}
 							break;
 						case 0x0A:
-							return Width * Height / 4;
+							return (uint)(Util.RoundUp(Width, 0x10) * Util.RoundUp(Height, 0x10) / 4);
+						case 0x04:
+							return (uint)(Util.RoundUp(Width, 8) * Util.RoundUp(Height, 8) / 2);
 					}
 
 					return 0;
@@ -83,8 +85,24 @@ namespace ConsoleHaxx.Graces
 				image.Unknown1 = reader.ReadUInt32();
 				image.Unknown2 = reader.ReadByte();
 				image.Unknown3 = reader.ReadByte();
-				
-				image.PrimaryEncoding = PixelEncoding.GetEncoding(reader.ReadUInt16());
+
+				ushort encoding = reader.ReadUInt16();
+
+				if (encoding == 0xAAE4) { // PS3 ToGf
+					if (image.Unknown2 == 0x88 || image.Unknown2 == 0xa8)
+						image.PrimaryEncoding = new DXT5();
+					else if (image.Unknown2 == 0xa5)
+						image.PrimaryEncoding = new ARGB();
+					else if (image.Unknown2 == 0x85)
+						image.PrimaryEncoding = new TiledARGB();
+					else if (image.Unknown2 == 0xa6 || image.Unknown2 == 0x86)
+						image.PrimaryEncoding = new DXT1();
+					else {
+						Console.WriteLine("WARNING: Unknown PS3 encoding 0x" + image.Unknown2.ToString("x"));
+						image.PrimaryEncoding = new NullEncoding();
+					}
+				} else
+					image.PrimaryEncoding = PixelEncoding.GetEncoding(encoding);
 				nameoffsets[image] = reader.Position + reader.ReadUInt32();
 				uint offset1 = reader.ReadUInt32();
 				uint offset2 = reader.ReadUInt32();
@@ -105,6 +123,7 @@ namespace ConsoleHaxx.Graces
 		public void Save(Stream txm, Stream data)
 		{
 			EndianReader writer = new EndianReader(txm, Endianness.BigEndian);
+			EndianReader datawriter = new EndianReader(data, Endianness.BigEndian);
 
 			long basetxm = txm.Position;
 			long basedata = data.Position;
@@ -132,16 +151,19 @@ namespace ConsoleHaxx.Graces
 
 				nameoffset += image.Name.Length + 1;
 
+				datawriter.PadToMultiple(0x20);
 				writer.Write((uint)(data.Position - basedata));
 
 				image.PrimaryData.Position = 0;
-				Util.StreamCopy(data, image.PrimaryData, image.PrimaryLength);
+				datawriter.Pad(image.PrimaryLength - Util.StreamCopy(data, image.PrimaryData, image.PrimaryLength));
+				datawriter.PadToMultiple(0x20);
 
-				if (image.SecondaryData != null) {
+				if (image.SecondaryData != null && image.SecondaryData.Length > 0) {
 					writer.Write((uint)(data.Position - basedata));
 
 					image.SecondaryData.Position = 0;
-					Util.StreamCopy(data, image.SecondaryData);
+					datawriter.Pad(image.SecondaryLength - Util.StreamCopy(data, image.SecondaryData));
+					datawriter.PadToMultiple(0x20);
 				} else
 					writer.Write((uint)0);
 			}

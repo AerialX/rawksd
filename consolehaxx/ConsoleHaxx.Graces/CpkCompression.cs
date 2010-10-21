@@ -10,6 +10,7 @@ namespace ConsoleHaxx.Graces
 	public static class CpkCompression
 	{
 		const int vle_levels = 4;
+		const ulong CompressionMagic = 0x4352494C41594C41; // "CRILAYLA"
 
 		public static ushort GetNextBits(EndianReader reader, ref long offset_p, ref byte bit_pool_p, ref int bits_left_p, int bit_count)
 		{
@@ -42,9 +43,9 @@ namespace ConsoleHaxx.Graces
 		public static void Decompress(Stream data, Stream dest)
 		{
 			EndianReader reader = new EndianReader(data, Endianness.LittleEndian);
-			for (int i = 0; i < 2; i++)
-				if (reader.ReadUInt32() != 0)
-					throw new FormatException();
+			ulong magic = reader.ReadUInt64(Endianness.BigEndian);
+			if (magic != 0 && magic != CompressionMagic)
+				throw new FormatException();
 
 			long length = reader.ReadUInt32();
 

@@ -249,7 +249,7 @@ namespace ConsoleHaxx.RawkSD
 			PlatformFretsOnFire.Initialise();
 			PlatformGH2PS2Disc.Initialise();
 			PlatformGH3WiiDisc.Initialise();
-			//PlatformGH4WiiDLC.Initialise();
+			PlatformGH4WiiDLC.Initialise();
 			PlatformGH5WiiDisc.Initialise();
 			//PlatformGH5WiiDLC.Initialise();
 			PlatformLocalStorage.Initialise();
@@ -280,6 +280,8 @@ namespace ConsoleHaxx.RawkSD
 			AudioFormatRB2Bink.Initialise();
 			AudioFormatRB2Mogg.Initialise();
 			AudioFormatVGS.Initialise();
+
+			NeversoftMetadata.Initialise();
 		}
 
 		public static Instrument InstrumentFromString(string s)
@@ -520,6 +522,9 @@ namespace ConsoleHaxx.RawkSD
 						break;
 					case "RKX":
 						game = Game.RockBand;
+						break;
+					case "SXI":
+						game = Game.GuitarHero6;
 						break;
 					case "R33":
 						game = Game.RockBandACDC;
