@@ -150,6 +150,7 @@ BinFile* OpenBinRead(s32 file)
 	if (i) {
 		u32 disc_title = (*(u32*)0)>>8;
 		switch (disc_title) {
+			case 0x00535A42: // RB3 can use RB2 DLC (region must match)
 			case 0x00523336: // GDRB can use RB2 DLC (region must match)
 				if (i & ~VERIFY_ERROR_TITLE2 || (bin_header.bk_header.title_id_2>>8) != 0x00535A41)
 					goto open_error;
