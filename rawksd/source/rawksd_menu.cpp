@@ -116,8 +116,28 @@ void InitGUIThreads()
 	LWP_CreateThread(&guithread, UpdateGUI, NULL, NULL, 0, 70);
 }
 
+RawkImage::RawkImage(GuiImageData *imgData) :
+GuiImage(imgData)
+{
+}
+
+// Just like base class except only scaled vertically and never tiled
+void RawkImage::Draw()
+{
+	if(!image || !IsVisible() || tile == 0)
+		return;
+
+	float currScale = GetScale();
+	int currLeft = GetLeft();
+
+	Menu_DrawImg(currLeft, GetTop(), width, height, image, imageangle, 1.0, currScale, GetAlpha());
+
+	UpdateEffects();
+}
+
+
 MenuImage::MenuImage(GuiImageData *imgData) :
-GuiImage(imgData),
+RawkImage(imgData),
 original(imgData)
 {
 	image = (u8*)memalign(32, width*height*4);
@@ -186,7 +206,7 @@ void MenuImage::Draw()
 
 	len = (len+31)&~31;
 	DCFlushRange(image, len);
-	GuiImage::Draw();
+	RawkImage::Draw();
 }
 
 MenuButton::MenuButton(GuiWindow *_Parent, int x, int y, const u8 *normal_png, const u8 *select_png, const u8 *disabled_png, Triggers::Enum trigger, int _id) :
@@ -196,12 +216,12 @@ lbl_selected(NULL),
 id(_id)
 {
 	imgdata_normal = new GuiImageData(normal_png);
-	img_normal = new GuiImage(imgdata_normal);
+	img_normal = new RawkImage(imgdata_normal);
 	imgdata_selected = new GuiImageData(select_png);
 	img_selected = new MenuImage(imgdata_selected);
 	if (disabled_png) {
 		imgdata_disabled = new GuiImageData(disabled_png);
-		img_disabled = new GuiImage(imgdata_disabled);
+		img_disabled = new RawkImage(imgdata_disabled);
 	} else {
 		imgdata_disabled = NULL;
 		img_disabled = NULL;
@@ -221,6 +241,7 @@ id(_id)
 		img_disabled->SetAlignment(ALIGN_LEFT, ALIGN_TOP);
 		img_disabled->SetPosition(0,0);
 	}
+	button->SetEffect(EFFECT_SCALE, 5, 100);
 
 	Parent->Append(button);
 }

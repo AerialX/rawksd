@@ -53,7 +53,14 @@ typedef struct {
 
 extern config_t global_config;
 
-class MenuImage : public GuiImage
+class RawkImage : public GuiImage
+{
+public:
+	RawkImage(GuiImageData *imgData);
+	void Draw();
+};
+
+class MenuImage : public RawkImage
 {
 private:
 	static float shine_pos;

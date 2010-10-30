@@ -244,16 +244,16 @@ void GuiImage::Grayscale()
  */
 void GuiImage::Draw()
 {
-	if(!image || !this->IsVisible() || tile == 0)
+	if(!image || !IsVisible() || tile == 0)
 		return;
 
-	float currScale = this->GetScale();
-	int currLeft = this->GetLeft();
+	float currScale = GetScale();
+	int currLeft = GetLeft();
 
 	if(tile > 0)
 	{
 		for(int i=0; i<tile; i++)
-			Menu_DrawImg(currLeft+width*i, this->GetTop(), width, height, image, imageangle, currScale, currScale, this->GetAlpha());
+			Menu_DrawImg(currLeft+width*i, GetTop(), width, height, image, imageangle, currScale, currScale, GetAlpha());
 	}
 	else
 	{
@@ -261,12 +261,12 @@ void GuiImage::Draw()
 		if(scale != 1)
 			currLeft = currLeft - width/2 + (width*scale)/2;
 
-		Menu_DrawImg(currLeft, this->GetTop(), width, height, image, imageangle, currScale, currScale, this->GetAlpha());
+		Menu_DrawImg(currLeft, GetTop(), width, height, image, imageangle, currScale, currScale, GetAlpha());
 	}
 
 	if(stripe > 0)
-		for(int y=0; y < this->GetHeight(); y+=6)
-			Menu_DrawRectangle(currLeft,this->GetTop()+y,this->GetWidth(),3,(GXColor){0, 0, 0, stripe},1);
+		for(int y=0; y < GetHeight(); y+=6)
+			Menu_DrawRectangle(currLeft,GetTop()+y,GetWidth(),3,(GXColor){0, 0, 0, stripe},1);
 
-	this->UpdateEffects();
+	UpdateEffects();
 }

@@ -397,6 +397,10 @@ void GuiElement::SetEffect(int eff, int amount, int target)
 	{
 		alphaDyn = alpha;
 	}
+	else if (eff & EFFECT_SCALE)
+	{
+		scaleDyn = 0;
+	}
 
 	effects |= eff;
 	effectAmount = amount;
@@ -501,23 +505,23 @@ void GuiElement::UpdateEffects()
 		if(effectAmount < 0 && alphaDyn <= 0)
 		{
 			alphaDyn = 0;
-			effects = 0; // shut off effect
+			effects &= ~EFFECT_FADE; // shut off effect
 		}
 		else if(effectAmount > 0 && alphaDyn >= alpha)
 		{
 			alphaDyn = alpha;
-			effects = 0; // shut off effect
+			effects &= ~EFFECT_FADE; // shut off effect
 		}
 	}
 	if(effects & EFFECT_SCALE)
 	{
-		scaleDyn += effectAmount/100.0;
+		scaleDyn += (f32)effectAmount/100.0;
 
-		if((effectAmount < 0 && scaleDyn <= effectTarget/100.0)
-			|| (effectAmount > 0 && scaleDyn >= effectTarget/100.0))
+		if((effectAmount < 0 && scaleDyn <= (f32)effectTarget/100.0)
+			|| (effectAmount > 0 && scaleDyn >= (f32)effectTarget/100.0))
 		{
-			scaleDyn = effectTarget/100.0;
-			effects = 0; // shut off effect
+			scaleDyn = (f32)effectTarget/100.0;
+			effects &= ~EFFECT_SCALE; // shut off effect
 		}
 	}
 }

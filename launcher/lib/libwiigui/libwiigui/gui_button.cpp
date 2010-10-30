@@ -127,7 +127,7 @@ void GuiButton::SetSoundClick(GuiSound * snd)
  */
 void GuiButton::Draw()
 {
-	if(!this->IsVisible())
+	if(!IsVisible())
 		return;
 
 	// draw image
@@ -149,7 +149,7 @@ void GuiButton::Draw()
 			label[i]->Draw();
 	}
 
-	this->UpdateEffects();
+	UpdateEffects();
 }
 
 void GuiButton::Update(GuiTrigger * t)

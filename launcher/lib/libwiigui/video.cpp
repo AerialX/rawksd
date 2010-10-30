@@ -145,7 +145,7 @@ InitVideo ()
 	GX_SetCopyClear (background, 0x00ffffff);
 	GX_SetDispCopyGamma (GX_GM_1_0);
 	GX_SetCullMode (GX_CULL_NONE);
-	
+
 	ResetVideo_Menu();
 	// Finally, the video is up and ready for use :)
 }
@@ -203,24 +203,22 @@ void Menu_DrawImg(f32 xpos, f32 ypos, u16 width, u16 height, u8 data[],
 	GX_SetVtxDesc (GX_VA_TEX0, GX_DIRECT);
 
 	Mtx m,m1,m2, mv;
-	width *=.5;
-	height*=.5;
 	guMtxIdentity (m1);
 	guMtxScaleApply(m1,m1,scaleX,scaleY,1.0);
 	guVector axis = (guVector) {0 , 0, 1 };
 	guMtxRotAxisDeg (m2, &axis, degrees);
 	guMtxConcat(m2,m1,m);
 
-	guMtxTransApply(m,m, xpos+width,ypos+height,0);
+	guMtxTransApply(m,m, xpos,ypos,0);
 	guMtxConcat (GXmodelView2D, m, mv);
 	GX_LoadPosMtxImm (mv, GX_PNMTX0);
 
 	GX_Begin(GX_QUADS, GX_VTXFMT0,4);
-	GX_Position3f32(-width, -height,  0);
+	GX_Position3f32(0, 0,  0);
 	GX_Color4u8(0xFF,0xFF,0xFF,alpha);
 	GX_TexCoord2f32(0, 0);
 
-	GX_Position3f32(width, -height,  0);
+	GX_Position3f32(width, 0,  0);
 	GX_Color4u8(0xFF,0xFF,0xFF,alpha);
 	GX_TexCoord2f32(1, 0);
 
@@ -228,7 +226,7 @@ void Menu_DrawImg(f32 xpos, f32 ypos, u16 width, u16 height, u8 data[],
 	GX_Color4u8(0xFF,0xFF,0xFF,alpha);
 	GX_TexCoord2f32(1, 1);
 
-	GX_Position3f32(-width, height,  0);
+	GX_Position3f32(0, height,  0);
 	GX_Color4u8(0xFF,0xFF,0xFF,alpha);
 	GX_TexCoord2f32(0, 1);
 	GX_End();
