@@ -123,7 +123,7 @@ namespace ProxiIOS { namespace DIP {
 	int DIP::HandleIoctl(ipcmessage* message)
 	{
 		u32 *buffer_in = (u32*)message->ioctl.buffer_in;
-		os_sync_before_read(buffer_in, message->ioctl.length_in);
+		os_sync_before_read(buffer_in, (message->ioctl.length_in+31)&~31);
 		switch (message->ioctl.command) {
 			case Ioctl::Allocate: {
 				LogPrintf("IOCTL: Allocate(0x%08x);\n", buffer_in[0]);

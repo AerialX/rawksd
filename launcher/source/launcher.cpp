@@ -313,6 +313,7 @@ LauncherStatus::Enum Launcher_RVL()
 		return LauncherStatus::ReadError;
 
 	RVL_SetFST(fstbuffer, fstdata[2]);
+	BannerName[0] = 0;
 	free(fstbuffer);
 	return LauncherStatus::OK;
 }
@@ -525,11 +526,10 @@ LauncherStatus::Enum Launcher_RunApploader()
 	// read the apploader info
 	if (WDVD_LowRead(&app, sizeof(app_info), APP_INFO_OFFSET))
 		return LauncherStatus::ReadError;
-	DCFlushRange(&app, sizeof(app_info));
 	// read the apploader into memory
 	if (WDVD_LowRead(MEM_APPLOADER, app.loader_size + app.data_size, APP_DATA_OFFSET))
 		return LauncherStatus::ReadError;
-	DCFlushRange(MEM_APPLOADER, app.loader_size + app.data_size);
+	ICInvalidateRange(MEM_APPLOADER, app.loader_size + app.data_size);
 	app.start(&app_enter, &app_loader, &app_exit);
 	app_enter((AppReport)nullprintf);
 
@@ -569,6 +569,7 @@ LauncherStatus::Enum Launcher_Launch()
 		WDVD_Close();
 		__ES_Close();
 		DCFlushRange(MEM_BASE, 0x17FFFFFF);
+		ICFlashInvalidate();
 
 		SYS_ResetSystem(SYS_SHUTDOWN, 0, 0);
 		__lwp_thread_stopmultitasking((void(*)())app_address);

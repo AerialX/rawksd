@@ -44,11 +44,13 @@ static const u32 wii_ids[] = {
 	55419551,
 	56945439,
 	57557368,
+	57744747,
 	59662543,
 	61146528,
 	61164127,
 	67187940,
 	67395627,
+	67433503,
 	67499962,
 	67599417,
 	67687512,
@@ -58,6 +60,7 @@ static const u32 wii_ids[] = {
 	70787671,
 	71042645,
 	71682096,
+	75822111,
 	77389595,
 	86239065,
 	94822480,
@@ -67,11 +70,11 @@ static const u32 wii_ids[] = {
 
 int main(int argc, char *argv[])
 {
-	u32 i;
-
 	Initialise();
 	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS);
 
+#if 0
+	u32 i;
 	for (i=0; i < sizeof(wii_ids)/sizeof(wii_ids[0]); i++) {
 		if (otp.ng_id == wii_ids[i])
 			i = 200;
@@ -82,14 +85,15 @@ int main(int argc, char *argv[])
 		PressHome();
 		exit(0);
 	}
+#endif
 
 	time_t now = time(NULL);
 	struct tm *tm_now = localtime(&now);
 	// note: tm_now->tm_mon is zero-index based
-	if (!tm_now || tm_now->tm_year!=110 || tm_now->tm_mon!=10)
+	if (!tm_now || ((tm_now->tm_year!=110 || tm_now->tm_mon!=11) && (tm_now->tm_year!=111 || tm_now->tm_mon!=0)))
 	{
 		InitVideo();
-		fprintf(stderr, "\n\n\n\tThis RawkSD demo has expired. Try using the full release.\n");
+		fprintf(stderr, "\n\n\n\tThis RawkSD demo has expired. A newer version should be available soon.\n");
 		PressHome();
 		exit(0);
 	}

@@ -70,6 +70,7 @@ void* RVL_GetFST()
 
 void RVL_SetFST(void* address, u32 size)
 {
+	free(fst);
 	if (!size || !address) {
 		fst = NULL;
 		size = 0;
@@ -717,7 +718,7 @@ static void RVL_Patch(RiiMemoryPatch* memory, map<string, string>* params, void*
 		return;
 
 	memory->Offset = (int)MEM_PHYSICAL_OR_K0(memory->Offset);
-	
+
 	string valuefile = memory->ValueFile;
 	ApplyParams(&valuefile, params);
 	void* value = memory->GetValue(valuefile);
