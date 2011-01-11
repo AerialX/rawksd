@@ -117,7 +117,7 @@
 		<difficulty instrument="drums" rank="450" />
 	</song>
 	<song id="citiesonflame">
-		<album>Blue ÷yster Cult</album>
+		<album>Blue √ñyster Cult</album>
 		<genre>rock</genre>
 		<track>8</track>
 		<master>false</master>
@@ -182,7 +182,7 @@
 		<difficulty instrument="drums" rank="350" />
 	</song>
 	<song id="fcpremix">
-		<album>Doppelg‰nger</album>
+		<album>Doppelg√§nger</album>
 		<genre>prog</genre>
 		<track>3</track>
 		<difficulty instrument="band" rank="375" />
