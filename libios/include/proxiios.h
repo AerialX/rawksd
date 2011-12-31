@@ -127,6 +127,7 @@ namespace ProxiIOS {
 		{
 			strncpy(ProxyDevice, proxydevice, 0x20);
 			ProxyDevice[0x20 - 1] = '\0';
+			ProxyHandle = -1;
 		}
 
 		virtual int ForwardIoctl(ipcmessage* message);

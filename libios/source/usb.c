@@ -572,6 +572,30 @@ s32 USB_WriteCtrlMsg(usb_device *dev,u8 bmRequestType,u8 bmRequest,u16 wValue,u1
 	return __usb_control_message(dev,bmRequestType,bmRequest,wValue,wIndex,wLength,rpData,timeout);
 }
 
+s32 USB_DeviceRemovalNotifyAsync(usb_device *dev, osqueue_t cb_queue, ipcmessage *cb_msg)
+{
+	return os_ioctl_async(dev->fd,USB_IOCTL_DEVREMOVALHOOK,NULL,0,NULL,0,cb_queue,cb_msg);
+}
+
+s32 USB_DeviceInsertNotifyAsync(const char *devpath,u16 vid,u16 pid,osqueue_t cb_queue, ipcmessage *cb_msg)
+{
+	s32 ret;
+	ioctlv vec[2];
+	s32 fd = os_open(devpath, 0);
+	if (fd<0)
+		return IPC_ENOENT;
+
+	vec[0].data = &vid;
+	vec[1].data = &pid;
+	vec[0].len = sizeof(u16);
+	vec[1].len = sizeof(u16);
+
+	ret = os_ioctlv_async(fd,USB_IOCTL_DEVINSERTHOOK,2,0,vec,cb_queue,cb_msg);
+
+	os_close(fd);
+	return ret;
+}
+
 void USB_SuspendDevice(usb_device *dev)
 {
 	os_ioctl(dev->fd,USB_IOCTL_SUSPENDDEV,NULL,0,NULL,0);

@@ -199,6 +199,9 @@ s32 USB_SetAlternativeInterface(usb_device *dev, u8 interface, u8 alternateSetti
 s32 USB_ClearHalt(usb_device *dev, u8 endpointAddress);
 s32 USB_GetDeviceList(const char *devpath,void *descr_buffer,u8 num_descr,u8 b0,u8 *cnt_descr);
 
+s32 USB_DeviceRemovalNotifyAsync(usb_device *dev, osqueue_t cb_queue, ipcmessage *cb_msg);
+s32 USB_DeviceInsertNotifyAsync(const char *devpath,u16 vid,u16 pid,osqueue_t cb_queue, ipcmessage *cb_msg);
+
 #ifdef __cplusplus
    }
 #endif

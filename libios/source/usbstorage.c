@@ -589,10 +589,6 @@ s32 USBStorage_ReadCapacity(usbstorage_handle *dev, u8 lun, u32 *sector_size, u3
 		memcpy(&_n_sectors, response, 4);
 		memcpy(&_sector_size, response+4, 4);
 		debug_printf("Number of sectors: %u, Sector size %u (%08X)\n", _n_sectors, _sector_size, retval);
-		if (_sector_size !=512) { // only multiples of 512 supported (multiples other than 1 not currently implemented)
-			debug_printf("Invalid sector size, not a multiple of 512\n");
-			return IPC_EINVAL; // proper error code?
-		}
 		if(n_sectors != NULL)
 			*n_sectors = _n_sectors;
 		if(sector_size != NULL)

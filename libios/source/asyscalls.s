@@ -249,6 +249,11 @@ os_destroy_key:
 	syscall 0x5C
 	
 	.code 32
+	.global os_init_key
+os_init_key:
+	syscall 0x5D
+	
+	.code 32
 	.global os_set_sig_info
 os_set_sig_info:
 	syscall 0x5F

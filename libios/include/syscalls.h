@@ -123,7 +123,7 @@
 /* 53    os_syscall_53 */
 /* 54    os_set_ahbprot(int enable) */
 /* 55    os_get_bc_flag */
-/* 56 */ void      os_poke_gpios(u32 reg, u32 value);
+/* 56 */ int       os_poke_gpios(u32 reg, u32 value);
 /* 57    os_syscall_57 */
 /* 58    os_set_debug_gpios */
 /* 59    os_load_PPC */
@@ -131,7 +131,7 @@
  // enum usage {crypto, sig, ecc_pair, info}, enum type {aes, hmac, cert_2048, cert_4096, ecc, console_id, seeprom_counter}
 /* 5B */ int       os_create_key(int *keyid_out, u32 usage, u32 type);
 /* 5C */ int       os_destroy_key(int key_id);
-/* 5D    os_decrypt_key(int *keyid_out, u32 zero, u32 decrypt_key_id, u32 one, u32 zero, void *iv, void *cipher_title_key) */
+/* 5D */ int       os_init_key(int key_id, u32 zero, u32 decrypt_key_id, u32 one, u32 zero2, void *iv, const void *cipher_title_key);
 /* 5E    os_syscall_5E */
 /* 5F */ int       os_set_sig_info(const u8 *data, /*optional*/const int *tag_data, int keyid); // data length should match key type
 /* 60 */ int       os_get_sig_info(u8 *data, /*optional*/int *tag_data, int keyid);
