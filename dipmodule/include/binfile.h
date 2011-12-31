@@ -10,11 +10,12 @@ extern "C" {
 typedef struct
 {
     u8 buf[16];
-    u8 iv[16];
     s32 handle;
     u32 pos;
     u32 data_size;
     u32 header_size;
+    u8 iv[16];
+    int key_index;
     u16 index;
     u8 mode;
 } BinFile;

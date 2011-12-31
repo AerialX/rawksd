@@ -2,6 +2,10 @@
 
 //#define LOGGING
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef LOGGING
 void LogInit();
 void LogPrintf(const char *fmt, ...);
@@ -14,4 +18,8 @@ void LogTimestamp();
 #define LogDeinit(...)
 #define LogMessage(...)
 #define LogTimestamp(...)
+#endif
+
+#ifdef __cplusplus
+}
 #endif

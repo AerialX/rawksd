@@ -14,10 +14,11 @@
 
 #if 0
 void LogPrintf(const char *fmt, ...);
-#define debug_printf LogPrintf
 #else
-#define debug_printf(fmt, args...)
+#include "logging.h"
 #endif
+#define debug_printf LogPrintf
+
 
 #define BIN_READ  1
 #define BIN_WRITE 2
@@ -34,8 +35,7 @@ void LogPrintf(const char *fmt, ...);
 
 #define FSERR_EINVAL	-103
 
-void dlc_aes_decrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len);
-void dlc_aes_encrypt(u8 *iv, u8 *inbuf, u8 *outbuf, u32 len);
+static const u8 null_key[16] ATTRIBUTE_ALIGN(32) = {0};
 
 inline unsigned int verify_bk(BK_Header *bk)
 {
@@ -122,6 +122,37 @@ int FileSeek(BinFile* file, s32 where)
 	return 0;
 }
 
+static int get_key_index(tmd *TMD)
+{
+	int index = ES_KEY_PRNG;
+
+	if ((TMD->title_type & 0x18)==0x18)
+	{
+		u32 title_lo = TMD->title_id|0xFF;
+		u32 title_hi = (TMD->title_id>>32);
+
+		if (title_hi == 0x00010005 && (title_lo == 0x735841FF || title_lo - 0x735A41FF < 0x700 || title_lo == 0x635242FF))
+		{
+			if (os_create_key(&index, 0, 0))
+			{
+				debug_printf("Failed to create NULL key for BIN\n");
+				return 0;
+			}
+
+			debug_printf("Created Key ID %d\n", index);
+
+			if (os_init_key(index, 0, 0, 0, 0, NULL, null_key))
+			{
+				debug_printf("Failed to init NULL key for BIN\n");
+				os_destroy_key(index);
+				return 0;
+			}
+		}
+	}
+
+	return index;
+}
+
 BinFile* OpenBinRead(s32 file)
 {
 	u32 i, found=0;
@@ -150,11 +181,14 @@ BinFile* OpenBinRead(s32 file)
 	if (i) {
 		u32 disc_title = (*(u32*)0)>>8;
 		switch (disc_title) {
-			case 0x00535A42: // RB3 can use RB2 DLC (region must match)
+			case 0x00535A42: // RB3 customs or RB2 DLC (region must match)
+				if ((((u32)bin_header.tmd_header.title_id)>>8)==0x00635242)
+					break;
 			case 0x00523336: // GDRB can use RB2 DLC (region must match)
 				if (i & ~VERIFY_ERROR_TITLE2 || (bin_header.bk_header.title_id_2>>8) != 0x00535A41)
 					goto open_error;
 				break;
+
 			case 0x00535A41: // RB2 customs
 				if (i & ~(VERIFY_ERROR_TITLE2_REGION|VERIFY_ERROR_WII_ID) || (((u32)bin_header.tmd_header.title_id)>>8)!=0x00635242)
 					goto open_error;
@@ -201,10 +235,20 @@ BinFile* OpenBinRead(s32 file)
     	goto open_error;
 	}
 
+	binfile->key_index = get_key_index(&bin_header.tmd_header);
+	if (!binfile->key_index)
+		goto open_error;
+
     if (SeekBin(binfile, 0, SEEK_SET)>=0)
 	    return binfile;
 
 open_error:
+	if (binfile->key_index)
+	{
+		debug_printf("Destroying Key ID %d\n", binfile->key_index);
+		os_destroy_key(binfile->key_index);
+	}
+
 	Dealloc(binfile);
 	return NULL;
 }
@@ -218,8 +262,11 @@ static void CloseWriteBin(BinFile* file)
 	file->pos &= 0xF;
 	if (file->pos)
 	{
+		int enc_result;
 		debug_printf("Flushing %u bytes\n", file->pos);
-		dlc_aes_encrypt(file->iv, file->buf, file->buf, file->pos);
+		enc_result = os_aes_encrypt(file->key_index, file->iv, file->buf, file->pos, file->buf);
+		debug_printf("os_aes_encrypt returned %d (%08X %08X %08X)\n", enc_result, file->iv, file->buf, file->pos);
+		//dlc_aes_encrypt(file->iv, file->buf, file->buf, file->pos);
 		FileWrite(file, file->buf, 16);
 	}
 
@@ -244,9 +291,18 @@ static void CloseWriteBin(BinFile* file)
 
 void CloseBin(BinFile* file)
 {
-	if (file && file->mode == BIN_WRITE)
-		CloseWriteBin(file);
-    Dealloc(file);
+	if (file)
+	{
+		if (file->mode == BIN_WRITE)
+			CloseWriteBin(file);
+		if (file->key_index)
+		{
+			debug_printf("Destroying Key ID %d\n", file->key_index);
+			os_destroy_key(file->key_index);
+		}
+
+    	Dealloc(file);
+	}
 }
 
 s32 SeekBin(BinFile* file, s32 where, u32 origin)
@@ -297,10 +353,13 @@ s32 SeekBin(BinFile* file, s32 where, u32 origin)
 			// decrypt initial bytes of block
 			if (where&0xF)
 			{
+				int dec_result;
 				if (FileRead(file, file->buf, 16))
 					return result;
 				file->pos -= (16-(where&0xF));
-				dlc_aes_decrypt(file->iv, file->buf, file->buf, 16);
+				os_aes_decrypt(file->key_index, file->iv, file->buf, 16, file->buf);
+				debug_printf("os_aes_decrypt returned %d\n", dec_result);
+				//dlc_aes_decrypt(file->iv, file->buf, file->buf, 16);
 				memmove(file->buf, file->buf+(where&0xF), 16-(where&0xF));
 			}
 			result = where - file->header_size;
@@ -336,12 +395,15 @@ s32 ReadBin(BinFile* file, u8* buffer, u32 numbytes)
 		// middle bytes (16 byte blocks)
 		i = ROUND_UP(numbytes, 16);
 		if (i) {
+			int dec_result;
 			if (FileRead(file, tempbuffer, i)) {
 				if (tempbuffer != buffer)
 					Dealloc(tempbuffer);
 				return FSERR_EINVAL;
 			}
-			dlc_aes_decrypt(file->iv, tempbuffer, tempbuffer, i);
+			dec_result = os_aes_decrypt(file->key_index, file->iv, tempbuffer, i, tempbuffer);
+			debug_printf("os_aes_decrypt returned %d\n", dec_result);
+			//dlc_aes_decrypt(file->iv, tempbuffer, tempbuffer, i);
 		}
 
 		if (tempbuffer != buffer) {
@@ -366,7 +428,7 @@ BinFile* CreateBinFile(u16 index, u32* tmd_buf, u32 tmd_size, s32 file)
 
     BK_Header bk_header;
 
-    debug_printf("CreateBinFile index %u %p %u\n", index, tmd, tmd_size);
+    debug_printf("CreateBinFile index %u %p %u\n", index, tmd_buf, tmd_size);
 
 	if (!tmd_buf || !tmd_size || index>=512)
 		return NULL;
@@ -396,7 +458,9 @@ BinFile* CreateBinFile(u16 index, u32* tmd_buf, u32 tmd_size, s32 file)
     bk_header.title_id_2 = *(u32*)0;
     setAccessMask(bk_header.content_mask, index);
 
-	if (FileSeek(bin, 0))
+	if (!(bin->key_index = get_key_index((tmd*)tmd_buf)))
+		debug_printf("Failed to create or init key for output BIN\n");
+	else if (FileSeek(bin, 0))
 		debug_printf("Couldn't seek back to start\n");
 	else if (FileWrite(bin, &bk_header, sizeof(bk_header)))
 		debug_printf("Couldn't write bk_header\n");
@@ -411,6 +475,9 @@ BinFile* CreateBinFile(u16 index, u32* tmd_buf, u32 tmd_size, s32 file)
 		return bin;
 	}
 
+	if (bin->key_index)
+		os_destroy_key(bin->key_index);
+
 	Dealloc(bin);
 	return NULL;
 }
@@ -421,6 +488,7 @@ s32 WriteBin(BinFile* file, u8* buffer, u32 numbytes)
 
 	if (file && file->mode == BIN_WRITE)
 	{
+		int enc_result;
 		s32 bytes_left;
 		result = numbytes;
 
@@ -435,7 +503,9 @@ s32 WriteBin(BinFile* file, u8* buffer, u32 numbytes)
 			if (!(file->pos&0xF))
 			{
 				file->pos -= 16;
-				dlc_aes_encrypt(file->iv, file->buf, file->buf, 16);
+				enc_result = os_aes_encrypt(file->key_index, file->iv, file->buf, 16, file->buf);
+				debug_printf("os_aes_encrypt returned %d (%08X %08X %08X)\n", enc_result, file->iv, file->buf, 16);
+				//dlc_aes_encrypt(file->iv, file->buf, file->buf, 16);
 				if (FileWrite(file, file->buf, 16))
 				{
 					debug_printf("Error writing leading encrypted block\n");
@@ -446,15 +516,20 @@ s32 WriteBin(BinFile* file, u8* buffer, u32 numbytes)
 		}
 
 		bytes_left = numbytes&~0xF;
-		if (bytes_left)
+		while (bytes_left)
 		{
-			dlc_aes_encrypt(file->iv, buffer, buffer, bytes_left);
-			if (FileWrite(file, buffer, bytes_left))
+			s32 enc_bytes = (bytes_left >= 0x10000) ? 0x10000 : bytes_left;
+
+			enc_result = os_aes_encrypt(file->key_index, file->iv, buffer, enc_bytes, buffer);
+			debug_printf("os_aes_encrypt returned %d (%08X %08X %08X)\n", enc_result, file->iv, buffer, enc_bytes);
+			//dlc_aes_encrypt(file->iv, buffer, buffer, bytes_left);
+			if (FileWrite(file, buffer, enc_bytes))
 			{
 				debug_printf("Error writing bulk encrypted block\n");
 				return FSERR_EINVAL;
 			}
-			buffer += bytes_left;
+			buffer += enc_bytes;
+			bytes_left -= enc_bytes;
 		}
 
 		bytes_left = numbytes&0xF;

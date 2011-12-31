@@ -222,7 +222,7 @@ namespace ProxiIOS { namespace EMU {
 		int TryOpen(const char *name, u32 mode, RiivFile **x);
 		void CheckForDLCTitle(const char* path);
 	public:
-		EMU(u8 *stack, const int stack_size);
+		EMU(u8 *stack, const int stacksize);
 
 		int Start();
 

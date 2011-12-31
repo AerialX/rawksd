@@ -49,6 +49,7 @@ distribution.
 
 #define ES_KEY_CONSOLE		1
 #define ES_KEY_COMMON		4
+#define ES_KEY_PRNG         5
 #define ES_KEY_SDCARD		6
 
 #ifdef __cplusplus
