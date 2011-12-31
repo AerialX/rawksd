@@ -205,8 +205,10 @@ static int _FAT_directory_mbsncasecmp (const char* s1, const char* s2, size_t le
 
 
 static bool _FAT_directory_entryGetAlias (const u8* entryData, char* destName) {
-	int i=0;
-	int j=0;
+	char c;
+	bool caseInfo;
+	int i = 0;
+	int j = 0;
 
 	destName[0] = '\0';
 	if (entryData[0] != DIR_ENTRY_FREE) {
@@ -220,14 +222,18 @@ static bool _FAT_directory_entryGetAlias (const u8* entryData, char* destName) {
 			}
 		} else {
 			// Copy the filename from the dirEntry to the string
+			caseInfo = entryData[DIR_ENTRY_caseInfo] & CASE_LOWER_BASE;
 			for (i = 0; (i < 8) && (entryData[DIR_ENTRY_name + i] != ' '); i++) {
-				destName[i] = entryData[DIR_ENTRY_name + i];
+				c = entryData[DIR_ENTRY_name + i];
+				destName[i] = (caseInfo ? tolower((unsigned char)c) : c);
 			}
 			// Copy the extension from the dirEntry to the string
 			if (entryData[DIR_ENTRY_extension] != ' ') {
 				destName[i++] = '.';
+				caseInfo = entryData[DIR_ENTRY_caseInfo] & CASE_LOWER_EXT;
 				for ( j = 0; (j < 3) && (entryData[DIR_ENTRY_extension + j] != ' '); j++) {
-					destName[i++] = entryData[DIR_ENTRY_extension + j];
+					c = entryData[DIR_ENTRY_extension + j];
+					destName[i++] = (caseInfo ? tolower((unsigned char)c) : c);
 				}
 			}
 			destName[i] = '\0';
@@ -252,7 +258,7 @@ static bool _FAT_directory_incrementDirEntryPosition (PARTITION* partition, DIR_
 
 	// Increment offset, wrapping at the end of a sector
 	++ position.offset;
-	if (position.offset == BYTES_PER_READ / DIR_ENTRY_DATA_SIZE) {
+	if (position.offset == (partition->bytesPerSectorMask+1) / DIR_ENTRY_DATA_SIZE) {
 		position.offset = 0;
 		// Increment sector when wrapping
 		++ position.sector;
@@ -440,10 +446,6 @@ bool _FAT_directory_getVolumeLabel (PARTITION* partition, char *label) {
 	end = false;
 	//this entry should be among the first 3 entries in the root directory table, if not, then system can have trouble displaying the right volume label
 	while(!end) {
-		if (_FAT_directory_incrementDirEntryPosition (partition, &entryEnd, false) == false) {
-			end = true;
-		}
-
 		if(!_FAT_cache_readPartialSector (partition->cache, entryData,
 			_FAT_fat_clusterToSector(partition, entryEnd.cluster) + entryEnd.sector,
 			entryEnd.offset * DIR_ENTRY_DATA_SIZE, DIR_ENTRY_DATA_SIZE))
@@ -456,6 +458,10 @@ bool _FAT_directory_getVolumeLabel (PARTITION* partition, char *label) {
 			}
 			return true;
 		} else if (entryData[0] == DIR_ENTRY_LAST) {
+			end = true;
+		}
+
+		if (_FAT_directory_incrementDirEntryPosition (partition, &entryEnd, false) == false) {
 			end = true;
 		}
 	}
@@ -1113,8 +1119,8 @@ void _FAT_directory_entryStat (PARTITION* partition, DIR_ENTRY* entry, struct st
 		u8array_to_u16 (entry->entryData, DIR_ENTRY_cDate)
 	);
 	st->st_spare3 = 0;
-	st->st_blksize = BYTES_PER_READ;				// Prefered file I/O block size
-	st->st_blocks = (st->st_size + BYTES_PER_READ - 1) / BYTES_PER_READ;	// File size in blocks
+	st->st_blksize = (partition->bytesPerSectorMask+1);				// Prefered file I/O block size
+	st->st_blocks = (st->st_size + partition->bytesPerSectorMask) >> partition->bytesPerSectorLog;	// File size in blocks
 	st->st_spare4[0] = 0;
 	st->st_spare4[1] = 0;
 }

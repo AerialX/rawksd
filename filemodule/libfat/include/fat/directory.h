@@ -4,7 +4,7 @@
  a FAT partition
 
  Copyright (c) 2006 Michael "Chishm" Chisholm
-
+	
  Redistribution and use in source and binary forms, with or without modification,
  are permitted provided that the following conditions are met:
 
@@ -57,6 +57,9 @@
 #define ATTRIB_HID	0x02			// Hidden
 #define ATTRIB_RO	0x01			// Read only
 
+#define CASE_LOWER_EXT  0x10		// WinNT lowercase extension
+#define CASE_LOWER_BASE 0x08		// WinNT lowercase basename
+
 typedef enum {FT_DIRECTORY, FT_FILE} FILE_TYPE;
 
 typedef struct {
@@ -77,7 +80,7 @@ enum DIR_ENTRY_offset {
 	DIR_ENTRY_name = 0x00,
 	DIR_ENTRY_extension = 0x08,
 	DIR_ENTRY_attributes = 0x0B,
-	DIR_ENTRY_reserved = 0x0C,
+	DIR_ENTRY_caseInfo = 0x0C,
 	DIR_ENTRY_cTime_ms = 0x0D,
 	DIR_ENTRY_cTime = 0x0E,
 	DIR_ENTRY_cDate = 0x10,
@@ -132,7 +135,7 @@ Returns true on success, false on failure
 */
 bool _FAT_directory_entryFromPath (PARTITION* partition, DIR_ENTRY* entry, const char* path, const char* pathEnd);
 
-/*
+/* 
 Changes the current directory to the one specified by path
 Returns true on success, false on failure
 */
@@ -156,10 +159,10 @@ bool _FAT_directory_addEntry (PARTITION* partition, DIR_ENTRY* entry, uint32_t d
 /*
 Get the start cluster of a file from it's entry data
 */
-uint32_t _FAT_directory_entryGetCluster (PARTITION* partition, const uint8_t* entryData);
+uint32_t _FAT_directory_entryGetCluster (PARTITION* partition, const uint8_t* entryData); 
 
-/*
-Fill in the file name and entry data of DIR_ENTRY* entry.
+/* 
+Fill in the file name and entry data of DIR_ENTRY* entry. 
 Assumes that the entry's dataStart and dataEnd are correct
 Returns true on success, false on failure
 */

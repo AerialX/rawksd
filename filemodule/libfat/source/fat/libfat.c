@@ -61,7 +61,9 @@ static const devoptab_t dotab_fat = {
 	_FAT_statvfs_r,
 	_FAT_ftruncate_r,
 	_FAT_fsync_r,
-	NULL	/* Device data */
+	NULL,	/* Device data */
+	NULL,
+	NULL
 };
 
 bool fatMount (const char* name, const DISC_INTERFACE* interface, sec_t startSector, uint32_t cacheSize, uint32_t SectorsPerPage) {
@@ -69,7 +71,7 @@ bool fatMount (const char* name, const DISC_INTERFACE* interface, sec_t startSec
 	devoptab_t* devops;
 	char* nameCopy;
 
-	if(!name || !interface)
+	if(!name || strlen(name) > 8 || !interface)
 		return false;
 
 	if(!interface->startup())
@@ -79,6 +81,12 @@ bool fatMount (const char* name, const DISC_INTERFACE* interface, sec_t startSec
 		interface->shutdown();
 		return false;
 	}
+
+	char devname[10];
+	strcpy(devname, name);
+	strcat(devname, ":");
+	if(FindDevice(devname) >= 0)
+		return true;
 
 	devops = _FAT_mem_allocate (sizeof(devoptab_t) + strlen(name) + 1+20);
 	if (!devops) {
@@ -97,7 +105,6 @@ bool fatMount (const char* name, const DISC_INTERFACE* interface, sec_t startSec
 	}
 
 	// Add an entry for this device to the devoptab table
-	//*devops = dotab_fat;
 	memcpy (devops, &dotab_fat, sizeof(dotab_fat));
 	strcpy (nameCopy, name);
 	devops->name = nameCopy;
@@ -268,6 +275,3 @@ void fatGetVolumeLabel (const char* name, char *label) {
 	}
 	if(!strncmp(label, "NO NAME", 7)) label[0]='\0';
 }
-
-
-

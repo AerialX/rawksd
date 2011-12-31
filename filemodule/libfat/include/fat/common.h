@@ -29,7 +29,6 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
-#define BYTES_PER_READ 512
 #include <fat.h>
 #include <stddef.h>
 #include <stdint.h>

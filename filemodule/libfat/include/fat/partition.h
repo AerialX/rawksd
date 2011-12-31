@@ -34,8 +34,7 @@
 #include "cache.h"
 #include "lock.h"
 
-// Device name
-extern const char* DEVICE_NAME;
+#define MAX_SECTOR_SIZE     4096
 
 // Filesystem type
 typedef enum {FS_UNKNOWN, FS_FAT12, FS_FAT16, FS_FAT32} FS_TYPE;
@@ -45,6 +44,8 @@ typedef struct {
 	uint32_t sectorsPerFat;
 	uint32_t lastCluster;
 	uint32_t firstFree;
+	uint32_t numberFreeCluster;
+	uint32_t numberLastAllocCluster;
 } FAT;
 
 typedef struct {
@@ -57,9 +58,12 @@ typedef struct {
 	uint32_t              rootDirCluster;
 	uint32_t              numberOfSectors;
 	sec_t                 dataStart;
-	uint32_t              bytesPerSector;
+	uint32_t              bytesPerSectorLog;
+	uint32_t              bytesPerSectorMask;
 	uint32_t              sectorsPerCluster;
-	uint32_t              bytesPerCluster;
+	uint32_t              bytesPerClusterLog;
+	uint32_t              bytesPerClusterMask;
+	uint32_t              fsInfoSector;
 	FAT                   fat;
 	// Values that may change after construction
 	uint32_t              cwdCluster;			// Current working directory cluster
@@ -85,5 +89,20 @@ void _FAT_partition_destructor (PARTITION* partition);
 Return the partition specified in a path, as taken from the devoptab.
 */
 PARTITION* _FAT_partition_getPartitionFromPath (const char* path);
+
+/*
+Create the fs info sector.
+*/
+void _FAT_partition_createFSinfo(PARTITION * partition);
+
+/*
+Read the fs info sector data.
+*/
+void _FAT_partition_readFSinfo(PARTITION * partition);
+
+/*
+Write the fs info sector data.
+*/
+void _FAT_partition_writeFSinfo(PARTITION * partition);
 
 #endif // _PARTITION_H
