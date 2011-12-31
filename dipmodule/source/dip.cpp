@@ -215,11 +215,11 @@ namespace ProxiIOS { namespace DIP {
 			case Ioctl::Read: {
 				u32 len = buffer_in[1];
 				s64 pos = (s64)buffer_in[2] << 2;
-				LogPrintf("IOCTL: Read(0x%08x%08x, 0x%08x, *0x%08x);\n", (u32)(pos >> 32), (u32)pos, len, (u32)message->ioctl.buffer_io);
+				//LogPrintf("IOCTL: Read(0x%08x%08x, 0x%08x, *0x%08x);\n", (u32)(pos >> 32), (u32)pos, len, (u32)message->ioctl.buffer_io);
 
 				if (CurrentPartition != PatchPartition) {
 					int ret = ForwardIoctl(message);
-					LogPrintf("\tForward %d\n", ret);
+					//LogPrintf("\tForward %d\n", ret);
 					return ret;
 				}
 
@@ -250,7 +250,7 @@ namespace ProxiIOS { namespace DIP {
 				int foundpatches = FindPatch(PatchType::Patch, pos, len, (void**)found, MAX_FOUND);
 				if (foundpatches == 0) {
 					int ret = ForwardIoctl(message);
-					LogPrintf("\tForward %d\n", ret);
+					//LogPrintf("\tForward %d\n", ret);
 					return ret;
 				}
 
@@ -318,9 +318,9 @@ namespace ProxiIOS { namespace DIP {
 				return ret;
 			}
 			default: {
-				LogPrintf("IOCTL: Unknown(0x%02X)\n", message->ioctl.command);
+				//LogPrintf("IOCTL: Unknown(0x%02X)\n", message->ioctl.command);
 				int ret = ForwardIoctl(message);
-				LogPrintf("\tForward %d\n", ret);
+				//LogPrintf("\tForward %d\n", ret);
 				return ret;
 			}
 		}

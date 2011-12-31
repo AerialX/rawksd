@@ -35,7 +35,7 @@ export ROOT	:= $(CURDIR)
 
 all:
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
-	@$(MAKE) -C $(BUILD) --no-print-directory -f $(CURDIR)/Makefile.ios BUILDING=all
+	@$(MAKE) -C $(BUILD) -f $(CURDIR)/Makefile.ios BUILDING=all
 clean:
 	@echo clean ...
 	@rm -fr $(BUILD)

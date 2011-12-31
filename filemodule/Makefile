@@ -46,17 +46,17 @@ export ROOT	:= $(CURDIR)
 
 all:
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
-	@$(MAKE) -C ../libios --no-print-directory -f Makefile
-	@$(MAKE) -C libfile --no-print-directory -f Makefile.ios
-	@$(MAKE) -C libfile --no-print-directory -f Makefile.wii
-	@$(MAKE) -C libfat --no-print-directory -f Makefile
-	@$(MAKE) -C $(BUILD) --no-print-directory -f $(CURDIR)/Makefile BUILDING=all
+	@$(MAKE) -C ../libios -f Makefile
+	@$(MAKE) -C libfile -f Makefile.ios
+	@$(MAKE) -C libfile -f Makefile.wii
+	@$(MAKE) -C libfat -f Makefile
+	@$(MAKE) -C $(BUILD) -f $(CURDIR)/Makefile BUILDING=all
 	
 clean:
 	@echo clean ...
-	@$(MAKE) -C libfile --no-print-directory -f Makefile.ios clean
-	@$(MAKE) -C libfile --no-print-directory -f Makefile.wii clean
-	@$(MAKE) -C libfat --no-print-directory -f Makefile clean
+	@$(MAKE) -C libfile -f Makefile.ios clean
+	@$(MAKE) -C libfile -f Makefile.wii clean
+	@$(MAKE) -C libfat -f Makefile clean
 	@rm -fr $(BUILD) $(BIN)/*.elf ../launcher/data/$(TARGET).dat
 else
 

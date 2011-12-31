@@ -46,7 +46,7 @@ static void* FindIosIoctl(char* buffer, u32 length)
 		0x40820014,0x80610008,0x38800000,0x00000000,0x7c7f1b78,0x39610030,0x7fe3fb78,0x00000000,
 		0x80010034,0x7c0803a6,0x38210030,0x4e800020
 	};
-	u32 findme_length = 76;
+	u32 findme_length = sizeof(findme)/sizeof(findme[0]);
 
 	return FindFunction(buffer, length, findme, findme_length);
 }
@@ -80,8 +80,8 @@ static void* FindFwrite(char* buffer, u32 length)
 		0x28000002,0x4182000c,0x38000000,0x901c0028,0x7c7ddb96,0xbb210014,0x80010034,0x7c0803a6,
 		0x38210030,0x4e800020
 	};
-	u32 findme_length = 194;
-	
+	u32 findme_length = sizeof(findme)/sizeof(findme[0]);
+
 	return FindFunction(buffer, length, findme, findme_length);
 }
 
@@ -91,10 +91,10 @@ static void* FindFwriteShort(char* buffer, u32 length)
 		0x7fdbc9d7,0x4182001c,0x881c000a,0x2c000000,0x40820010,0x801c0004,0x00000000,0x4082000c,
 		0x38600000,0x00000008,0x28000002,0x40820008
 	};
-	u32 findme_length = 12;
+	u32 findme_length = sizeof(findme)/sizeof(findme[0]);
 
 	void * check = NULL;
-	
+
 	check= FindFunction(buffer, length, findme, findme_length);
 	if(check)
 		check = (void*)( (u32)check - 0x40 );
@@ -138,7 +138,7 @@ int Fwrite_Patch()
 	patch[6] = (0x48 << 24) | (((u8*)iosioctl_location - ((u8*)fwrite_location + 0x18)) & 0x3ffffff);
 
 	memcpy(fwrite_location, patch, sizeof(patch));
-	
+
 	return 0;
 }
 

@@ -165,9 +165,9 @@ int ch341_send(const void *_data, u32 size)
 		// change \n to \r, since most terminals treat \n as linefeed only
 		for (j=0; j < bytes_to_send; j++)
 		{
-			if (data[j]=='\n')
-				*(priv->outbuffer[priv->out_flip]+j) = '\r';
-			else
+			//if (data[j]=='\n')
+			//	*(priv->outbuffer[priv->out_flip]+j) = '\r';
+			//else
 				*(priv->outbuffer[priv->out_flip]+j) = data[j];
 		}
 		if (bytes_to_send)

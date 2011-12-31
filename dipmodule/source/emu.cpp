@@ -1221,6 +1221,7 @@ namespace ProxiIOS { namespace EMU {
 
 		LogPrintf("Initializing %s\n", nand_dir);
 		int i;
+		// FIXME: Only map files that exist (use 000.bin TMD)
 		if (!strncmp(nand_dir, "/title/00010005/635242", 22)) {
 			for (i=0; i < 512; i++)
 				content_map[i] = i;
