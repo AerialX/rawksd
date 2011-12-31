@@ -17,6 +17,9 @@
 
 extern "C" void Init_DebugConsole(int use_net);
 
+vu16* const _memReg = (vu16*)0xCC004000;
+extern u8 _start[], __RO_END[];
+
 bool PressA()
 {
 	printf("\tPress A to continue or press Home to exit.\n");
@@ -47,11 +50,13 @@ void PressHome()
 		WPAD_ButtonsDown(3)) & WPAD_BUTTON_HOME));
 }
 
-static volatile int ShutdownParam = 0;
+static volatile int ShutdownParam;
 
 static void CallbackReset()
 {
 	ShutdownParam = SYS_RETURNTOMENU;
+	_memReg[16] = 0;
+
 }
 
 static void CallbackPoweroffWiimote(int chan)
@@ -109,10 +114,28 @@ void CheckShutdown()
 	}
 }
 
+void fix_mem_hdlr()
+{
+	IRQ_Request(IRQ_MEM3, (raw_irq_handler_t)CallbackReset, NULL);
+	SYS_ProtectRange(SYS_PROTECTCHAN3, _start, __RO_END-_start, SYS_PROTECTREAD);
+	ShutdownParam = 0;
+	_memReg[16] = 0;
+}
+
 u32 MALLOC_MEM2 = 1;
 enum { INSTALL_APPROACH_NOTHING = 0, INSTALL_APPROACH_UPDATE, INSTALL_APPROACH_DOWNGRADE };
+
 void Initialise()
 {
+#if 1
+	ShutdownParam = SYS_POWEROFF;
+
+	IRQ_Request(IRQ_MEM3, (raw_irq_handler_t)fix_mem_hdlr, NULL);
+	SYS_ProtectRange(SYS_PROTECTCHAN3, (void*)0x80000000, 0x8000, SYS_PROTECTREAD);
+#else
+	ShutdownParam = 0;
+#endif
+
 	InitVideo();
 
 	if (Haxx_Init() < 0) {

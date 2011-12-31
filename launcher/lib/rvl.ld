@@ -103,13 +103,10 @@ SECTIONS
 	.rodata1   : { *(.rodata1) }
 	.sdata2   : { *(.sdata2) *(.sdata2.*) *(.gnu.linkonce.s2.*) }
 	.sbss2   : { *(.sbss2) *(.sbss2.*) *(.gnu.linkonce.sb2.*) }
-  /* Adjust the address for the data segment.  We want to adjust up to
-     the same address within the page on the next page up.  */
-  /* Ensure the __preinit_array_start label is properly aligned.  We
-     could instead move the label definition inside the section, but
-     the linker would then create the section even if it turns out to
-     be empty, which isn't pretty.  */
-	. = ALIGN(32 / 8);
+  /* Align to a page boundary so we can set RX memory protection on the
+     text+read-only sections. */
+	. = ALIGN(0x400);
+	PROVIDE (__RO_END = .);
 	PROVIDE (__preinit_array_start = .);
 	.preinit_array     : { *(.preinit_array) }
 	PROVIDE (__preinit_array_end = .);
@@ -272,11 +269,11 @@ __intrstack_end = (__stack_addr);
 __Arena1Lo = (0x81330000);
 __Arena1Hi = (0x816ffff0);
 __Arena2Lo = (0x90002000);
-__Arena2Hi = (0x933E0000);
+__Arena2Hi = (0x933C0000);
 
 __gxregs = (__Arena1Hi + 31) & (-32);
-__ipcbufferLo = (0x933e0000);
-__ipcbufferHi = (0x93400000);
+__ipcbufferLo = (0x933C0000);
+__ipcbufferHi = (0x933E0000);
 
 /* for backward compatibility with old crt0 */
 PROVIDE (__stack = (0x816ffff0));

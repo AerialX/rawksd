@@ -36,7 +36,7 @@ SOURCEFILES	:=	init.cpp haxx.cpp installer.cpp \
 
 CFLAGS		=	-fdata-sections -ffunction-sections -g -O2 -Wall $(MACHDEP) $(INCLUDE)
 CXXFLAGS	=	-save-temps -Xassembler -aln=$@.lst $(CFLAGS)
-LDFLAGS		=	-g $(MACHDEP) -Wl,--gc-sections -Wl,-Map,$(notdir $@).map,--section-start,.init=0x80900100 -T ../../launcher/lib/rvl.ld
+LDFLAGS		=	-g $(MACHDEP) -Wl,--gc-sections,-Map,$(notdir $@).map,--section-start,.init=0x80900400 -T ../../launcher/lib/rvl.ld
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
