@@ -440,6 +440,10 @@ static inline void ApplyBinaryPatches(s32 app_section_size)
 	while ((found = FindInBuffer(app_address, app_section_size, "/dev/di", 7)))
 		((u8*)found)[6] = 'o'; // "/dev/di" to "/dev/do"
 
+	// USB_HID
+	while ((found = FindInBuffer(app_address, app_section_size, "/dev/usb/hid", 12)))
+		((u8*)found)[11] = '0'; // "/dev/usb/hid" to "/dev/usb/hi0"
+
 	// prevent NWC from failing to init or shutting down our sockets
 	if (ToMount.size()) {
 		if ((found = FindInBuffer(app_address, app_section_size, SOStartupCode, sizeof(SOStartupCode))))
@@ -450,7 +454,7 @@ static inline void ApplyBinaryPatches(s32 app_section_size)
 	}
 
 	// Apply fwrite patch
-	Fwrite_FindPatchLocation((char*)app_address, app_section_size);
+	//Fwrite_FindPatchLocation((char*)app_address, app_section_size);
 
 	// Return to Riiv is not working properly yet
 	//if (*(u32*)0x80001808 == 0x48415858) // "HAXX"
@@ -544,8 +548,9 @@ LauncherStatus::Enum Launcher_RunApploader()
 	}
 
 	// Fwrite patch needs to be fixed for SMG+SMG2
-	if (memcmp(MEM_BASE, "RMG", 3) && memcmp(MEM_BASE, "SB4", 3))
-		Fwrite_Patch();
+// fwrite patch causes crashes if fwrite is used in a callback (RB1->USB device found)
+//	if (memcmp(MEM_BASE, "RMG", 3) && memcmp(MEM_BASE, "SB4", 3))
+//		Fwrite_Patch();
 
 	// copy the IOS version over the expected IOS version
 	memcpy(MEM_IOSEXPECTED, MEM_IOSVERSION, 4);
@@ -566,9 +571,12 @@ LauncherStatus::Enum Launcher_Launch()
 		RVL_Close();
 		ISFS_Deinitialize();
 		WPAD_Shutdown();
+		USB_Deinitialize();
 		WDVD_Close();
 		__ES_Close();
-		DCFlushRange(MEM_BASE, 0x17FFFFFF);
+		SYS_ProtectRange(SYS_PROTECTCHAN3, NULL, 0, SYS_PROTECTRDWR);
+		__MaskIrq(IM_MEMADDRESS);
+		DCFlushRange(MEM_BASE, 0x01800000);
 		ICFlashInvalidate();
 
 		SYS_ResetSystem(SYS_SHUTDOWN, 0, 0);
