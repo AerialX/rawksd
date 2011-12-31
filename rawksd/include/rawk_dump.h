@@ -16,8 +16,8 @@
 #define DISC_GH5			14
 #define DISC_METAL			15
 #define DISC_GDRB			16
-#define DISC_BH             17
-#define DISC_GHVH           18
+#define DISC_BH				17
+#define DISC_GHVH			18
 #define DISC_LRB			19
 
 #define DISC_TBRB			253
@@ -50,7 +50,7 @@ struct rip_state {
 	u64 bytes_in_current_file;
 	u64 offset_in_current_file;
 	char dir_name[50];
-	DIR_ITER *d;
+	DIR *d;
 	int file_index;
 	time_t start;
 	time_t switch_time;

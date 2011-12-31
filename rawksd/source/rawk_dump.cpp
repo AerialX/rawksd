@@ -301,11 +301,11 @@ u64 space_needed(struct rip_state *rs, int disc)
 		printf("Checking file %s\n", files[i].name);
 		if ((files[i].type & RIP_DIR) && !(files[i].type & RIP_CREATE_ONLY))
 		{
-			DIR_ITER *d=NULL;
+			DIR *d=NULL;
 			for (j=0;disc_prefix[j]!=NULL;j++)
 			{
 				sprintf(full_filename, "%s%s/", disc_prefix[j], files[i].name);
-				if ((d=diropen(full_filename)))
+				if ((d=opendir(full_filename)))
 					break;
 			}
 			if (d==NULL)
@@ -318,8 +318,15 @@ u64 space_needed(struct rip_state *rs, int disc)
 			}
 			else
 			{
-				while (!dirnext(d, full_filename, &st))
+				struct dirent *ent;
+				while ((ent = readdir(d)))
 				{
+					char cur_filename[MAX_PATH];
+
+					sprintf(cur_filename, "%s/%s", full_filename, ent->d_name);
+					if (stat(cur_filename, &st) != 0)
+						continue;
+
 					if (!(st.st_mode & S_IFDIR)) {
 						if (excl)
 						{
@@ -336,7 +343,7 @@ u64 space_needed(struct rip_state *rs, int disc)
 							rs->bytes_in_current_file = rs->offset_in_current_file = st.st_size;
 					}
 				}
-				dirclose(d);
+				closedir(d);
 			}
 		}
 		else if (!(files[i].type & RIP_CREATE_ONLY))
@@ -481,7 +488,7 @@ bool get_next(struct rip_state *rs, int dirs_only=0)
 	const char **excl = discs[rs->disc].exclusions;
 	const struct dump_files *files = discs[rs->disc].rip_files;
 	static char full_filename[MAX_PATH];
-	char short_filename[MAX_PATH];
+	struct dirent *ent;
 
 	if (rs->f_in)
 	{
@@ -496,15 +503,20 @@ bool get_next(struct rip_state *rs, int dirs_only=0)
 	}
 
 
-	while (rs->d && !dirnext(rs->d, short_filename, &st))
+	while (rs->d && (ent = readdir(rs->d)))
 	{
-		printf("found %s\n", short_filename);
+		printf("found %s\n", ent->d_name);
+		full_filename[MAX_PATH-1] = 0;
+		snprintf(full_filename, MAX_PATH-1, "%s%s", rs->dir_name, ent->d_name);
+		if (stat(full_filename, &st) != 0)
+			continue;
+
 		if ((st.st_mode&S_IFREG) && !(st.st_mode&S_IFDIR)) {
 			if (excl)
 			{
 				for (j=0;excl[j];j++)
 				{
-					if (strcasestr(short_filename, excl[j]))
+					if (strcasestr(ent->d_name, excl[j]))
 						break;
 				}
 				if (excl[j])
@@ -515,12 +527,10 @@ bool get_next(struct rip_state *rs, int dirs_only=0)
 			}
 			rs->bytes_in_current_file = st.st_size;
 			rs->offset_in_current_file = 0;
-			strncpy(rs->file_name, short_filename, 31);
-			full_filename[MAX_PATH-1] = 0;
-			snprintf(full_filename, MAX_PATH-1, "%s%s", rs->dir_name, short_filename);
+			strncpy(rs->file_name, ent->d_name, 31);
 			printf("opening %s for reading\n", full_filename);
 			rs->f_in = fopen(full_filename, "rb");
-			snprintf(full_filename, MAX_PATH-1, "%s/%s", files[rs->file_index].name, short_filename);
+			snprintf(full_filename, MAX_PATH-1, "%s/%s", files[rs->file_index].name, ent->d_name);
 			printf("opening %s for writing\n", full_filename);
 			rs->f_out = File_OpenPath(full_filename, O_CREAT|O_TRUNC|O_WRONLY);
 			if (rs->f_in==NULL || rs->f_out<0)
@@ -532,7 +542,7 @@ bool get_next(struct rip_state *rs, int dirs_only=0)
 
 	if (rs->d)
 	{
-		dirclose(rs->d);
+		closedir(rs->d);
 		rs->d = NULL;
 	}
 
@@ -549,7 +559,7 @@ bool get_next(struct rip_state *rs, int dirs_only=0)
 		for(j=0;disc_prefix[j]!=NULL;j++)
 		{
 			sprintf(full_filename, "%s%s/", disc_prefix[j], files[rs->file_index].name);
-			if ((rs->d=diropen(full_filename)))
+			if ((rs->d=opendir(full_filename)))
 				break;
 		}
 		if (rs->d==NULL)
@@ -563,7 +573,7 @@ bool get_next(struct rip_state *rs, int dirs_only=0)
 			if (files[rs->file_index].type&RIP_CREATE_ONLY || dirs_only)
 			{
 				printf("create directory\n");
-				dirclose(rs->d);
+				closedir(rs->d);
 				rs->d = NULL;
 			}
 			else
@@ -709,7 +719,7 @@ void end_rip(struct rip_state *rs)
 		return;
 
 	if (rs->d)
-		dirclose(rs->d);
+		closedir(rs->d);
 
 	if (rs->f_in)
 		fclose(rs->f_in);
