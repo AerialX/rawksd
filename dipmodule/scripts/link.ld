@@ -2,29 +2,22 @@ OUTPUT_FORMAT("elf32-bigarm", "elf32-bigarm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(_start)
  
+__ram_end__                     = 0x13788000;
+
 MEMORY {
 	ios_info_table	: ORIGIN = 0x0, LENGTH = 0xD4
 	exe(rwx)	: ORIGIN = 0x13740000, LENGTH = 0x8000
-	ram(rw)		: ORIGIN = 0x13748000, LENGTH = 0x41000
+	ram(rw)		: ORIGIN = 0x13748000, LENGTH = 0x40000
 }
-
-
-
-__exe_start_virt__			= 0x13740000;
-__exe_start_phys__			= 0x13740000;
-__ram_start_virt__			= 0x13748000;
-__ram_start_phys__			= 0x13748000;
-__ios_info_table_start		= 0x0;
-
  
 SECTIONS
 {
     .debug_aranges 0 : { *(.debug_aranges) } .debug_pubnames 0 : { *(.debug_pubnames) } .debug_info 0 : { *(.debug_info) } .debug_abbrev 0 : { *(.debug_abbrev) } .debug_line 0 : { *(.debug_line) } .debug_frame 0 : { *(.debug_frame) } .debug_str 0 : { *(.debug_str) } .debug_loc 0 : { *(.debug_loc) } .debug_macinfo 0 : { *(.debug_macinfo) } .note.arm.ident 0 : { KEEP (*(.note.arm.ident)) }
-    .ios_info_table __ios_info_table_start :  {
+    .ios_info_table 0 :  {
 		. = .;
 		KEEP (*(.ios_info_table))
 	} > ios_info_table
-    .init __exe_start_virt__ : AT (__exe_start_phys__) {
+    .init : {
 		. = .;
 		KEEP (*(.init))
 	} > exe
@@ -36,7 +29,7 @@ SECTIONS
     	*(.glue_7) 
     	*(.glue_7t)
 	} > exe
-    .data __ram_start_virt__ : AT (__ram_start_phys__) {
+    .data : {
 		KEEP( *(.ios_data) )
 		*(.data*)
 		*(.data1)
@@ -87,6 +80,10 @@ SECTIONS
 		*(.gnu.linkonce.b.*)
 		*(COMMON)
 		KEEP( *(.ios_bss) )
-	} > ram
-  	. = ALIGN(4);
+		. = ALIGN (8);
+		PROVIDE(HEAP_START = .);
+		. = ABSOLUTE(__ram_end__);
+	} > ram    
 }
+
+PROVIDE(HEAP_END = __ram_end__);

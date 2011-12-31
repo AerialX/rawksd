@@ -46,9 +46,9 @@ export ROOT	:= $(CURDIR)
 
 all:
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
-	@$(MAKE) -C ../libios --no-print-directory -f Makefile
-	@$(MAKE) -C ../filemodule/libfile --no-print-directory -f Makefile.ios
-	@$(MAKE) -C $(BUILD) --no-print-directory -f $(CURDIR)/Makefile BUILDING=all
+	@$(MAKE) -C ../libios -f Makefile
+	@$(MAKE) -C ../filemodule/libfile -f Makefile.ios
+	@$(MAKE) -C $(BUILD) -f $(CURDIR)/Makefile BUILDING=all
 clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(BIN)/*.elf ../launcher/data/$(TARGET).dat
