@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<app version="1">
+	<name>RawkSD</name>
+	<coder>The RawkSD Team</coder>
+	<version>3.0b4</version>
+	<release_date></release_date>
+	<short_description>Rock Band 2 Customs</short_description>
+	<long_description>
+		RawkSD allows you to play your own custom songs in Rock Band 2 from an SD/SDHC card, USB drive, or even stream them over wifi!
+		
+		WARNING: DO NOT REMOVE THE SD CARD OR USB DRIVE AFTER THE GAME HAS STARTED.
+	</long_description>
+</app>
