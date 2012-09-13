@@ -175,8 +175,12 @@ int RVL_AddEmu(const char* nandpath, const char* external, int clone)
 
 int RVL_BanDLC(u32 title)
 {
+#ifndef YARR
 	ioctlbuffer[0] = title;
 	return IOS_Ioctl(fd, Ioctl::BanTitle, ioctlbuffer, 4, NULL, 0);
+#else
+	return 0;
+#endif
 }
 
 int RVL_DLC(const char* path)
