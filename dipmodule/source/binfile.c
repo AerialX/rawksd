@@ -124,14 +124,16 @@ int FileSeek(BinFile* file, s32 where)
 
 static int get_key_index(tmd *TMD)
 {
-	int index = ES_KEY_PRNG;
+	int index = 0;
 
 	if ((TMD->title_type & 0x18)==0x18)
 	{
 		u32 title_lo = TMD->title_id|0xFF;
 		u32 title_hi = (TMD->title_id>>32);
 
-		if (title_hi == 0x00010005 && (title_lo == 0x735841FF || title_lo - 0x735A41FF < 0x700 || title_lo == 0x635242FF))
+		index = ES_KEY_PRNG;
+
+		if (title_hi == 0x00010005 && (title_lo == 0x735841FF || (title_lo - 0x735A41FF) < 0x700 || title_lo == 0x635242FF))
 		{
 			if (os_create_key(&index, 0, 0))
 			{
@@ -264,8 +266,8 @@ static void CloseWriteBin(BinFile* file)
 	{
 		int enc_result;
 		debug_printf("Flushing %u bytes\n", file->pos);
-		enc_result = os_aes_encrypt(file->key_index, file->iv, file->buf, file->pos, file->buf);
-		debug_printf("os_aes_encrypt returned %d (%08X %08X %08X)\n", enc_result, file->iv, file->buf, file->pos);
+		enc_result = os_aes_encrypt(file->key_index, file->iv, file->buf, 16, file->buf);
+		debug_printf("os_aes_encrypt returned %d (%08X %08X %08X)\n", enc_result, file->iv, file->buf, 16);
 		//dlc_aes_encrypt(file->iv, file->buf, file->buf, file->pos);
 		FileWrite(file, file->buf, 16);
 	}
@@ -357,7 +359,7 @@ s32 SeekBin(BinFile* file, s32 where, u32 origin)
 				if (FileRead(file, file->buf, 16))
 					return result;
 				file->pos -= (16-(where&0xF));
-				os_aes_decrypt(file->key_index, file->iv, file->buf, 16, file->buf);
+				dec_result = os_aes_decrypt(file->key_index, file->iv, file->buf, 16, file->buf);
 				debug_printf("os_aes_decrypt returned %d\n", dec_result);
 				//dlc_aes_decrypt(file->iv, file->buf, file->buf, 16);
 				memmove(file->buf, file->buf+(where&0xF), 16-(where&0xF));
@@ -458,7 +460,7 @@ BinFile* CreateBinFile(u16 index, u32* tmd_buf, u32 tmd_size, s32 file)
     bk_header.title_id_2 = *(u32*)0;
     setAccessMask(bk_header.content_mask, index);
 
-	if (!(bin->key_index = get_key_index((tmd*)tmd_buf)))
+	if (!(bin->key_index = get_key_index((tmd*)SIGNATURE_PAYLOAD(tmd_buf))))
 		debug_printf("Failed to create or init key for output BIN\n");
 	else if (FileSeek(bin, 0))
 		debug_printf("Couldn't seek back to start\n");
