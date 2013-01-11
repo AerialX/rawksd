@@ -6,23 +6,27 @@
 #define LEADERBOARD_ENABLED() \
 	(*(u32*)0x80002FFC == 0x1337BAAD)
 
+static const char asciitohex[16] = "0123456789ABCDEF";
+
 static char* ToHttpString(const char* str, int length = 0)
 {
 	if (!length)
 		length = strlen(str);
-	char* dest = (char*)malloc(length * 3 + 1);
-	*dest = '\0';
+	char *dest, *d;
+	dest = d = (char*)malloc(length * 3 + 1);
+
 	for (int i = 0; i < length; i++) {
 		char chr = str[i];
-		char temp[0x08];
 		if ((chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z') || (chr >= '0' && chr <= '9')) {
-			temp[0] = chr;
-			temp[1] = '\0';
-		} else
-			sprintf(temp, "%%%02X", (int)chr);
-		strcat(dest, temp);	
+			*d++ = chr;
+		} else {
+			*d++ = '%';
+			*d++ = asciitohex[(chr>>4)&0xF];
+			*d++ = asciitohex[chr&0xF];
+		}
 	}
 
+	*d = '\0';
 	return dest;
 }
 
@@ -53,7 +57,8 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 	memset(&address, 0, sizeof(address));
 	address.sin_family = PF_INET;
 	address.sin_len = 8;
-	
+
+	// FIXME: should use the friend code instead of console ID to handle wii->wiiu migration
 	const char* fullusername = ThePlatformMgr.GetUsernameFull(); // Full username is in the format "RB2OnlineName;consolefriendcode"
 	char* colon = strrchr(fullusername, ';');
 
@@ -61,7 +66,7 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 		OSReport("RawkSD: Error getting ID\n");
 		goto onerror;
 	}
-	
+
 	host = net_gethostbyname(hostname);
 	if (!host || host->h_length != sizeof(address.sin_addr) || host->h_addrtype != PF_INET || host->h_addr_list == NULL || host->h_addr_list[0] == NULL) {
 		OSReport("RawkSD: Host lookup failed.\n");
