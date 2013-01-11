@@ -14,6 +14,9 @@
 				<choice name="On"><patch id="leaderboard_enable" /></choice>
 				<choice name="Off"><patch id="leaderboard_disable" /></choice>
 			</option>
+			<option name="vidflip" default="0">
+				<choice name="Enabled"><patch id="vid_flip" /></choice>
+			</option>
 		</section>
 	</options>
 	<patch id="pal_splash">
@@ -28,6 +31,11 @@
 	</patch>
 	<patch id="leaderboard_disable">
 		<memory offset="0x80002FFC" value="00000000" />
+	</patch>
+	<patch id="vid_flip">
+		<memory offset="0x805C4544" value="281D000E" />
+		<memory offset="0x80592728" value="4BA6EFD8" />
+		<memory offset="0x80001700" value="8062A568EC21182AEC42202AFC601850FC80205048591018" />
 	</patch>
 <patch id="kamek_pal">
 <memory offset="0x8013DC98" value="4bec4105" />

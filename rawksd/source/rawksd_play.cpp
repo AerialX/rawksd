@@ -153,6 +153,14 @@ RawkMenu *MenuPlay::Process()
 	if (!global_config.leaderboards) // disable magic leaderboard word if necessary
 		Disc.Sections[0].Options[2].Default = 2;
 
+//	flip video if April 1st
+	time_t now = time(NULL);
+	struct tm *tm_now = localtime(&now);
+	if (tm_now && tm_now->tm_mon==3 && tm_now->tm_mday==1)
+	{
+		Disc.Sections[0].Options[3].Default = 1;
+	}
+
 	RVL_Patch(&Disc);
 
 	HaltGui();
