@@ -1,0 +1,22 @@
+<wiidisc version="1">
+	<id game="SZB">
+		<region type="E" />
+	</id>
+	<options>
+		<section name="RB3 Haxx">
+			<option name="customs" default="1">
+				<choice name="Enabled"><patch id="ntsc_customs" /></choice>
+			</option>
+			<option name="splash" default="1">
+				<choice name="Enabled"><patch id="ntsc_splash" /></choice>
+			</option>
+		</section>
+	</options>
+	<patch id="ntsc_customs">
+		<file disc="/gen/main_wii_2.ark" offset="0x00901e0a" external="/mnt/isfs/tmp/rb3.dtb" />
+		<memory search="true" align="4" original="fc318eb5dd075a906e81e8951190ce9b094addbf" value="4e1810186a19bc799c581cb81e45f75c90bdfab1" />
+	</patch>
+	<patch id="ntsc_splash">
+		<file disc="/StrapUsage/loading.tpl" external="/mnt/isfs/tmp/ntsc.tpl" />
+	</patch>
+</wiidisc>

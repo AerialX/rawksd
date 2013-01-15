@@ -22,6 +22,11 @@ extern "C" {
 	extern const u8 rb2_pal_xml[];
 	extern const u32 rb2_pal_xml_size;
 
+	extern const u8 rb3_ntsc_xml[];
+	extern const u32 rb3_ntsc_xml_size;
+	extern const u8 rb3_pal_xml[];
+	extern const u32 rb3_pal_xml_size;
+
 	/* sigh */
 	extern const u8 ntsc_usb_tpl[];
 	extern const u32 ntsc_usb_tpl_size;
@@ -35,6 +40,9 @@ extern "C" {
 	extern const u32 pal_sd_tpl_size;
 	extern const u8 pal_wifi_tpl[];
 	extern const u32 pal_wifi_tpl_size;
+
+	extern const u8 rb3_store_dtb[];
+	extern const u32 rb3_store_dtb_size;
 };
 
 static const struct {const u8 *data; const u32 size;} splash_tpls[] = {
@@ -64,8 +72,8 @@ RawkMenu *MenuPlay::Process()
 		case LauncherStatus::ReadError:
 			return new MenuSaves(Main, "Read Error", "\nCouldn't read the disc, are you sure it is a proper Wii disc?");
 		default: // LauncherStatus::OK
-			if (memcmp(MEM_BASE, "SZA", 3) || (MEM_BASE[3] != 'E' && MEM_BASE[3] != 'P'))
-				return new MenuSaves(Main, Launcher_GetGameName(), "\nOnly Rock Band 2 can be launched. Insert the correct disc and try again.");
+			if ((memcmp(MEM_BASE, "SZA", 3) && memcmp(MEM_BASE, "SZB", 3)) || (MEM_BASE[3] != 'E' && MEM_BASE[3] != 'P'))
+				return new MenuSaves(Main, Launcher_GetGameName(), "\nOnly Rock Band 2 or 3 can be launched. Insert the correct disc and try again.");
 			popup_text[0]->SetText(Launcher_GetGameNameWide());
 			sprintf(status_text, "\nReading Disc.....");
 			popup_text[1]->SetText(status_text);
@@ -88,6 +96,8 @@ RawkMenu *MenuPlay::Process()
 	std::vector<RiiDisc> discs;
 	ParseXML((const char*)rb2_ntsc_xml, rb2_ntsc_xml_size, &discs, "", "", 0);
 	ParseXML((const char*)rb2_pal_xml, rb2_pal_xml_size, &discs, "", "", 0);
+	ParseXML((const char*)rb3_ntsc_xml, rb3_ntsc_xml_size, &discs, "", "", 0);
+	ParseXML((const char*)rb3_pal_xml, rb3_pal_xml_size, &discs, "", "", 0);
 	Disc = CombineDiscs(&discs);
 
 	if (default_mount>=0) {
@@ -123,6 +133,12 @@ RawkMenu *MenuPlay::Process()
 					File_Write(out_fd, splash_tpls[index+1].data, splash_tpls[index+1].size);
 					File_Close(out_fd);
 				}
+			}
+			File_CreateFile("/mnt/isfs/tmp/rb3.dtb");
+			out_fd = File_Open("/mnt/isfs/tmp/rb3.dtb", O_WRONLY);
+			if (out_fd >= 0) {
+				File_Write(out_fd, rb3_store_dtb, rb3_store_dtb_size);
+				File_Close(out_fd);
 			}
 			File_CreateDir("/rawk");
 			File_CreateDir("/rawk/rb2");

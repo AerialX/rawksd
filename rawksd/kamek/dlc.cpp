@@ -24,6 +24,7 @@ static DataArray* LoadDTB(const char* filename)
 
 			free(buffer);
 			mem->Seek(0, BinStream::Start);
+			//dtb->Load(mem);
 			__rs(mem, dtb);
 		}
 		File_Close(fd);
@@ -127,7 +128,7 @@ static void RefreshCustomsList()
 
 	DataArray* songs = LoadDTB(custompath + 2);
 	if (songs) {
-		while (songs->size) {
+		/*while (songs->size) {
 			if (songs->nodes->type == 0x10) {
 				DataArray* song = songs->nodes->LiteralArray(songs);
 				const char* id = GetSongID(song);
@@ -137,7 +138,28 @@ static void RefreshCustomsList()
 				}
 			}
 			songs->Remove(0);
+		}*/
+		for (int i = 0; i < songs->size; i++) {
+			if (songs->nodes[i].type == 0x10) {
+				DataArray* song = songs->nodes[i].LiteralArray(songs);
+				const char* id = GetSongID(song);
+				if (id && !strncmp(id, "rwk", 3)) {
+					AddToTitleArray(song);
+					customs->Insert(0, songs->nodes[i]);
+				}
+			}
 		}
+		/*while (songs->size) {
+			if (songs->nodes->type == 0x10) {
+				DataArray* song = songs->nodes->LiteralArray(songs);
+				const char* id = GetSongID(song);
+				if (id && !strncmp(id, "rwk", 3)) {
+					AddToTitleArray(song);
+					customs->Insert(0, songs->nodes[0]);
+				}
+			}
+			songs->Remove(0);
+		}*/
 		songs->TryDestruct();
 	} else {
 		custompath[20] = '\0';

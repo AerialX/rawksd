@@ -77,6 +77,7 @@ OGGFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.ogg)))
 PCMFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.pcm)))
 DATFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.dat)))
 XMLFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.xml)))
+DTBFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.dtb)))
 SCFFILES	:=	$(foreach dir,$(TEXTURES),$(notdir $(wildcard $(dir)/*.scf)))
 TPLFILES	:=	$(SCFFILES:.scf=.tpl)
 
@@ -94,7 +95,8 @@ export OFILES	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) \
 					$(sFILES:.s=.o) $(SFILES:.S=.o) \
 					$(TTFFILES:.ttf=.ttf.o) $(PNGFILES:.png=.png.o) \
 					$(PCMFILES:.pcm=.pcm.o) \
-					$(DATFILES:.dat=.dat.o) $(XMLFILES:.xml=.xml.o)
+					$(DATFILES:.dat=.dat.o) $(XMLFILES:.xml=.xml.o) \
+					$(DTBFILES:.dtb=.dtb.o)
 
 #---------------------------------------------------------------------------------
 # build a list of include paths
@@ -170,6 +172,10 @@ $(OUTPUT).elf: $(OFILES)
 	$(bin2o)
 	
 %.tpl.o : %.tpl
+	@echo $(notdir $>)
+	$(bin2o)
+
+%.dtb.o : %.dtb
 	@echo $(notdir $>)
 	$(bin2o)
 

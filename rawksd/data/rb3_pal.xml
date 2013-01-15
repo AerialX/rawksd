@@ -1,0 +1,27 @@
+<wiidisc version="1">
+	<id game="SZB">
+		<region type="P" />
+	</id>
+	<options>
+		<section name="RB3 Haxx">
+			<option name="customs" default="1">
+				<choice name="Enabled"><patch id="pal_customs" /></choice>
+			</option>
+			<option name="splash" default="1">
+				<choice name="Enabled"><patch id="pal_splash" /></choice>
+			</option>
+		</section>
+	</options>
+	<patch id="pal_customs">
+		<file disc="/gen/main_wii_2.ark" offset="0x00901e0a" external="/mnt/isfs/tmp/rb3.dtb" />
+		<memory search="true" align="4" original="fc318eb5dd075a906e81e8951190ce9b094addbf" value="4e1810186a19bc799c581cb81e45f75c90bdfab1" />
+	</patch>
+	<patch id="pal_splash">
+		<file disc="/StrapUsage/loading.tpl" external="/mnt/isfs/tmp/pal.tpl" />
+		<file disc="/StrapUsage/drummer_deu.tpl" external="/mnt/isfs/tmp/pal.tpl" />
+		<file disc="/StrapUsage/drummer_eng.tpl" external="/mnt/isfs/tmp/pal.tpl" />
+		<file disc="/StrapUsage/drummer_esl.tpl" external="/mnt/isfs/tmp/pal.tpl" />
+		<file disc="/StrapUsage/drummer_fre.tpl" external="/mnt/isfs/tmp/pal.tpl" />
+		<file disc="/StrapUsage/drummer_ita.tpl" external="/mnt/isfs/tmp/pal.tpl" />
+	</patch>
+</wiidisc>

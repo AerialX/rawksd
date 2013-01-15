@@ -573,10 +573,10 @@ void MainMenu()
 	Background.SetPosition(0, 0);
 	Window->Append(&Background);
 
-//	GuiText buildText("RawkSD3 BETA " __DATE__ " " __TIME__, 14, (GXColor){255, 255, 255, 255});
-//	buildText.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
-//	buildText.SetPosition(40, 40);
-//	Window->Append(&buildText);
+	GuiText buildText("RawkSD3 BETA " __DATE__ " " __TIME__, 14, (GXColor){255, 255, 255, 255});
+	buildText.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
+	buildText.SetPosition(40, 40);
+	Window->Append(&buildText);
 
 	GuiImage SDsticker(&SDstickerImage);
 	SDsticker.SetAlignment(ALIGN_LEFT, ALIGN_TOP);
