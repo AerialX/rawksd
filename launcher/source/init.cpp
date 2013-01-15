@@ -20,6 +20,8 @@ extern "C" void Init_DebugConsole(int use_net);
 vu16* const _memReg = (vu16*)0xCC004000;
 extern u8 _start[], __RO_END[];
 
+u32 is_wiiu;
+
 bool PressA()
 {
 	printf("\tPress A to continue or press Home to exit.\n");
@@ -114,12 +116,18 @@ void CheckShutdown()
 	}
 }
 
-void fix_mem_hdlr()
+void die()
 {
-	IRQ_Request(IRQ_MEM3, (raw_irq_handler_t)CallbackReset, NULL);
-	SYS_ProtectRange(SYS_PROTECTCHAN3, _start, __RO_END-_start, SYS_PROTECTREAD);
+	*(vu32*)0xCD800070 &= ~1;
+	*(int*)0xCC003024 = ShutdownParam;
+}
+
+static void fix_mem_hdlr()
+{
 	ShutdownParam = 0;
-	_memReg[16] = 0;
+	IRQ_Request(IRQ_MEM3, (raw_irq_handler_t)die, NULL);
+	SYS_ProtectRange(SYS_PROTECTCHAN3, _start, __RO_END-_start, SYS_PROTECTREAD);
+	_memReg[16] = ShutdownParam;
 }
 
 u32 MALLOC_MEM2 = 1;
@@ -136,13 +144,22 @@ void Initialise()
 	ShutdownParam = 0;
 #endif
 
+	if (ES_GetDeviceID(&is_wiiu)>=0 && is_wiiu >= 0x20000000)
+		is_wiiu = 1;
+	else
+		is_wiiu = 0;
+
 	InitVideo();
 
 	if (Haxx_Init() < 0) {
 		int approach = 0;
 		WPAD_Init();
 		printf("\n\n");
-		if (IOS_GetVersion() != (u32)HAXX_IOS) {
+		if (is_wiiu) {
+			printf("IOS Error. Please try relaunching this program from HBC.\n");
+			PressHome();
+			exit(0);
+		} else if (IOS_GetVersion() != (u32)HAXX_IOS) {
 			printf("\tIOS%d does not seem to be installed on your system.\n\tIt's perfectly safe to install it; do you want to do so now?\n", (u32)HAXX_IOS);
 			if (!PressA())
 				exit(0);
@@ -170,10 +187,10 @@ void Initialise()
 		Installer_Initialize();
 		switch (approach) {
 			case INSTALL_APPROACH_UPDATE:
-				ret = Install(HAXX_IOS, HAXX_IOS_MAXIMUM, false);
+				ret = Install(HAXX_IOS, /*HAXX_IOS_MAXIMUM*/5663, false);
 				break;
 			case INSTALL_APPROACH_DOWNGRADE:
-				ret = Install(HAXX_IOS, HAXX_IOS_MAXIMUM, true);
+				ret = Install(HAXX_IOS, /*HAXX_IOS_MAXIMUM*/5663, true);
 				break;
 			default:
 				exit(0);

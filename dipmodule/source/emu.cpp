@@ -47,7 +47,7 @@ extern "C" void LogPrintf(const char *fmt, ...)
 
 void LogMessage(ipcmessage* message)
 {
-	const char *IoctlNames[] = {
+	static const char *IoctlNames[] = {
 		"Format",
 		"GetStats",
 		"CreateDir",
@@ -139,7 +139,7 @@ typedef s32 (*NANDFS_Func)(const ipcmessage*);
 
 // IOS37 specific stuff
 static const struct ProxiIOS::EMU::ISFSFile *FS_Files = (struct ProxiIOS::EMU::ISFSFile*)0x200499A4;
-static const NANDFS_Func NAND_Funcs[7] = {
+static NANDFS_Func NAND_Funcs[7] = {
 	// these are thumb functions so add 1 to the pointers
 	(NANDFS_Func)(0x200055A8+1), // handle_fs_open
 	(NANDFS_Func)(0x20005D34+1), // handle_fs_close
@@ -194,6 +194,15 @@ static int FilesystemHook(const ipcmessage* message, int* result)
 	}
 
 	if (fs_internal_queue < 0) {
+		if (((*(u32*)0x3140)&0xFFFF)==5919+1)
+		{
+			u32 i;
+			for (i=0; i < sizeof(NAND_Funcs)/sizeof(NAND_Funcs[0]); i++)
+			{
+				NAND_Funcs[i] = (NANDFS_Func)((u32)NAND_Funcs[i]-0x2C);
+			}
+		}
+
 		fs_internal_queue = os_message_queue_create(fs_internal_msgs, sizeof(fs_internal_msgs)/sizeof(u32));
 		if (fs_internal_queue >= 0) {
 			// emu calls this device when it wants to access the nand fs

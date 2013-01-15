@@ -208,6 +208,12 @@ static const char* option_subtitles[] = {
 MenuSettings::MenuSettings(GuiWindow *Parent) : RawkMenu(Parent, settings_images, 238, 188),
 Subtitle(option_subtitles[0], 18, (GXColor){255, 255, 255, 255})
 {
+	if (is_wiiu)
+	{
+		Buttons[OPTION_ACTIVITY]->button->SetSelectable(false);
+		Buttons[OPTION_ACTIVITY]->button->SetVisible(false);
+	}
+
 	MenuButton *back = new MenuButton(Parent, 0, 0, NULL, Triggers::Back, OPTION_SETTINGS_COUNT);
 	back->button->SetSelectable(false);
 	Buttons.push_back(back);
