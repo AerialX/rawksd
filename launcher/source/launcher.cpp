@@ -444,6 +444,9 @@ static inline void ApplyBinaryPatches(s32 app_section_size)
 	while ((found = FindInBuffer(app_address, app_section_size, "/dev/usb/hid", 12)))
 		((u8*)found)[11] = '0'; // "/dev/usb/hid" to "/dev/usb/hi0"
 
+//	while ((found = FindInBuffer(app_address, app_section_size, "/dev/net/ssl", 12)))
+//		((u8*)found)[11] = '0'; // "/dev/net/ssl" to "/dev/net/ss0"
+
 	// prevent NWC from failing to init or shutting down our sockets
 	if (ToMount.size()) {
 		if ((found = FindInBuffer(app_address, app_section_size, SOStartupCode, sizeof(SOStartupCode))))
@@ -576,7 +579,7 @@ LauncherStatus::Enum Launcher_Launch()
 		__ES_Close();
 		SYS_ProtectRange(SYS_PROTECTCHAN3, NULL, 0, SYS_PROTECTRDWR);
 		__MaskIrq(IM_MEMADDRESS);
-		DCFlushRange(MEM_BASE, 0x01800000);
+		DCFlushRangeNoSync(MEM_BASE, 0x01800000);
 		ICFlashInvalidate();
 
 		SYS_ResetSystem(SYS_SHUTDOWN, 0, 0);

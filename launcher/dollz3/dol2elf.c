@@ -1,7 +1,3 @@
-// Copyright 2007,2008  Segher Boessenkool  <segher@kernel.crashing.org>
-// Licensed under the terms of the GNU GPL, version 2
-// http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -177,7 +173,7 @@ void wbe32(u8 *p, u32 x)
 }
 
 /* stub magic to init CPU for dollz loader */
-static u8 stub [0x140] = {
+static u8 stub [] = {
 	0x3C, 0x60, 0x00, 0x11, // li r3, 0x0011
 	0x60, 0x63, 0xCC, 0x64, // ori r3, r3, 0xCC64
 	0x4C, 0x00, 0x01, 0x2C, // isync
@@ -313,10 +309,10 @@ static void dol2elf(char *inname, char *outname)
 
 	entry = be32(dolheader + 0xe0);
 
-	stub[0x132] = (entry >> 24) | 0x80; // virtual address
-	stub[0x133] = entry >> 16;
-	stub[0x136] = entry >> 8;
-	stub[0x137] = entry;
+	stub[sizeof(stub)-14] = (entry >> 24) | 0x80; // virtual address
+	stub[sizeof(stub)-13] = entry >> 16;
+	stub[sizeof(stub)-10] = entry >> 8;
+	stub[sizeof(stub)-9] = entry;
 
 	n_text = 0;
 	for (i = 0; i < 7; i++)

@@ -30,14 +30,14 @@
  * 16 - SSL (/dev/net/ssl)
  * 17 - USB (/dev/usb/hid, maybe more in later IOSes)
  * 18 - P2P (?)
- * 19 - UNKNOWN
+ * 19 - WFS (?)
  */
 
 #ifdef __cplusplus
    extern "C" {
 #endif /* __cplusplus */
 
-/*  0 */ int       os_thread_create( u32 (*entry)(void* _arg), void* arg, void* stack_top, u32 stacksize, u32 priority, u32 detached);
+/*  0 */ int       os_thread_create(u32 (*entry)(void* _arg), void* arg, void* stack_top, u32 stacksize, u32 priority, u32 detached);
 /*  1    int       os_thread_join(int thread_id, int *return_code);  srsly, don't use this. */
 /*  2    os_thread_cancel */
 /*  3 */ int       os_get_thread_id(void);

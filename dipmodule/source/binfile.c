@@ -257,7 +257,7 @@ open_error:
 
 static void CloseWriteBin(BinFile* file)
 {
-	static const u8 padding[49] ATTRIBUTE_ALIGN(32) = "BananaBananaBananaBananaBananaBananaBananaBanana";
+	static const u8 padding[0x30] ATTRIBUTE_ALIGN(32) = "BananaBananaBananaBananaBananaBananaBananaBanana";
 	u8 padding_count;
 	u32 total_size;
 
@@ -282,10 +282,9 @@ static void CloseWriteBin(BinFile* file)
 		FileWrite(file, padding, padding_count);
 	}
 
-	if (!FileSeek(file, 0x18))
+	if (FileSeek(file, 0x18) || FileWrite(file, &file->data_size, sizeof(file->data_size)) || FileWrite(file, &total_size, sizeof(total_size)))
 	{
-		if (!FileWrite(file, &file->data_size, sizeof(file->data_size)))
-			FileWrite(file, &total_size, sizeof(total_size));
+		debug_printf("Error writing file sizes in header.\n");
 	}
 
 	debug_printf("Closed a WriteBin file\n");

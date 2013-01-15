@@ -7,8 +7,11 @@
 #include <string.h>
 
 #ifndef USE_LWP
+#include "syscalls.h"
 static u32 heaphandle;
-#else
+
+#else // USE_LWP
+
 #define MEM_LOCK_MSG 0x5afec0de
 static heap_cntrl heap;
 static u32 mem_msg;

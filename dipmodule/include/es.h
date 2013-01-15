@@ -147,12 +147,12 @@ typedef struct _tmd {
 	u16 region;                             //0x19c
 	u8 ratings[16];                 //0x19e
 	u8 reserved[12];                //0x1ae
-	u8 ipc_mask[12];
-	u8 reserved2[18];
-	u32 access_rights;
-	u16 title_version;
-	u16 num_contents;
-	u16 boot_index;
+	u8 ipc_mask[12];                //0x1ba
+	u8 reserved2[18];               //0x1c6
+	u32 access_rights;              //0x1d8
+	u16 title_version;              //0x1dc
+	u16 num_contents;               //0x1de
+	u16 boot_index;                 //0x1e0
 	u16 fill3;
 	// content records follow
 	// C99 flexible array

@@ -109,7 +109,7 @@ namespace ProxiIOS { namespace Debugger {
 		for (ret = 10000; (id / ret) == 0; ret /= 10)
 			;
 		while (id) {
-			char digit[2] = { 0, 0 };
+			char digit[2] = {0};
 			int value = id / ret;
 			digit[0] = '0' + value;
 			strcat(MountPoint, digit);

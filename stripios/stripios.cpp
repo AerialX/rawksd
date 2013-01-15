@@ -47,34 +47,34 @@ typedef uint64_t u64;
 
 typedef struct
 {
-        u32		ident0;
-		u32		ident1;
-		u32		ident2;
-		u32		ident3;
-        u32		machinetype;
-        u32		version;
-        u32		entry;
-        u32       phoff;
-        u32       shoff;
-        u32		flags;
-        u16      ehsize;
-        u16      phentsize;
-        u16      phnum;
-        u16      shentsize;
-        u16      shnum;
-        u16      shtrndx;
+	u32 ident0;
+	u32 ident1;
+	u32 ident2;
+	u32 ident3;
+	u32 machinetype;
+	u32 version;
+	u32 entry;
+	u32 phoff;
+	u32 shoff;
+	u32 flags;
+	u16 ehsize;
+	u16 phentsize;
+	u16 phnum;
+	u16 shentsize;
+	u16 shnum;
+	u16 shtrndx;
 } elfheader;
 
 typedef struct
 {
-       u32      type;
-       u32      offset;
-       u32      vaddr;
-       u32      paddr;
-       u32      filesz;
-       u32      memsz;
-       u32      flags;
-       u32      align;
+	u32 type;
+	u32 offset;
+	u32 vaddr;
+	u32 paddr;
+	u32 filesz;
+	u32 memsz;
+	u32 flags;
+	u32 align;
 } elfphentry;
 
 typedef struct
@@ -169,6 +169,7 @@ static u8 aes_pos = 0;
 
 size_t write_out(u8 *buf, size_t length, size_t count, FILE *out)
 {
+#if 1
 	length *= count;
 	while (length) {
 		size_t to_write = (length + aes_pos > 16) ? 16-aes_pos : length;
@@ -184,6 +185,9 @@ size_t write_out(u8 *buf, size_t length, size_t count, FILE *out)
 	}
 
 	return count;
+#else
+	return fwrite(buf, length, count, out);
+#endif
 }
 
 void write_finish(FILE *out)
@@ -472,15 +476,12 @@ s32 main(s32 argc, char* argv[])
 	}
 
 cleanup:
-	if (offsetsizes)
-		delete[] offsetsizes;
-	if (entries)
-		delete[] entries;
-	if (origentries)
-		delete[] origentries;
+	delete[] offsetsizes;
+	delete[] entries;
+	delete[] origentries;
+
 	if (fout)
 		write_finish(fout);
-
 	if (fin)
 		fclose(fin);
 

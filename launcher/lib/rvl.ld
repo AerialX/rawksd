@@ -269,11 +269,11 @@ __intrstack_end = (__stack_addr);
 __Arena1Lo = (0x81330000);
 __Arena1Hi = (0x816ffff0);
 __Arena2Lo = (0x90002000);
-__Arena2Hi = (0x933C0000);
+__Arena2Hi = (0x931C0000);
 
 __gxregs = (__Arena1Hi + 31) & (-32);
-__ipcbufferLo = (0x933C0000);
-__ipcbufferHi = (0x933E0000);
+__ipcbufferLo = (0x931C0000);
+__ipcbufferHi = (0x93200000);
 
 /* for backward compatibility with old crt0 */
 PROVIDE (__stack = (0x816ffff0));
