@@ -28,7 +28,7 @@ TEXTURES	:=	textures
 SOURCEDIRS	:=	../launcher/source
 SOURCEFILES	:=	init.cpp haxx.cpp installer.cpp \
 				rijndael.c http.cpp sha1.cpp wdvd.cpp \
-				riivolution.cpp riivolution_config.cpp launcher.cpp fwrite.cpp debugprint.cpp
+				riivolution.cpp riivolution_config.cpp launcher.cpp fwrite.cpp debugprint.cpp ssl.cpp
 
 #---------------------------------------------------------------------------------
 # options for code generation
