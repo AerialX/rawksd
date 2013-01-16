@@ -159,6 +159,12 @@ SECTIONS {
 	_ZN7HttpWii12GetFileAsyncEPKcPvi	= 0x805012D8;
 	_ZN7HttpWii13CompleteAsyncEii		= 0x80501428;
 
+	/* Net */
+	TheNet								= 0x8082A038;
+
+	/* Server */
+	_ZN6Server11IsConnectedEv			= 0x80455E7C;
+
 	/* UsbWii */
 	_ZN6UsbWii7GetTypeEP9HIDDevice	= 0x804ACB18;
 	

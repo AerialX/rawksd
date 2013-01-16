@@ -38,6 +38,8 @@ template<typename T, typename... Args> T* Alloc(Args... args)
 #include "rb2/SongMgr.h"
 
 #include "rb2/HttpWii.h"
+#include "rb2/Net.h"
+#include "rb2/Server.h"
 
 #include "rb2/RockCentralGateway.h"
 

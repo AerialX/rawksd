@@ -57,7 +57,7 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 {
 	if (!LEADERBOARD_ENABLED())
 		return false;
-	if (!ThePlatformMgr.IsConnected)
+	if (!ThePlatformMgr.IsConnected || !TheNet.server->IsConnected())
 		return false;
 	if (symbol==NULL || symbol->name==NULL)
 		return false;
@@ -85,12 +85,13 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 
 	// FIXME: should use the friend code instead of console ID to handle wii->wiiu migration
 	const char* fullusername = ThePlatformMgr.GetUsernameFull(); // Full username is in the format "RB2OnlineName;consolefriendcode"
+	char* colon;
 	if (fullusername==NULL)
 	{
 		OSReport("RawkSD: Failed to get fullusername\n");
 		goto onerror;
 	}
-	const char* colon = strrchr(fullusername, ';');
+	colon = strrchr(fullusername, ';');
 
 	if (ES_GetDeviceID(&console) < 0) {
 		OSReport("RawkSD: Error getting ID\n");
@@ -171,7 +172,7 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 
 	OSReport("RawkSD: Leaderboard submission for \"%s\" succeeded.\n", song);
 	if (panel) {
-		sprintf(message, "Your new high score%s%s been sent to the RawkSD Leaderboards!", originalsongname ? " for " : "", originalsongname ? originalsongname : "");
+		sprintf(message, "Your new high score%s%s has been sent to the RawkSD Leaderboards!", originalsongname ? " for " : "", originalsongname ? originalsongname : "");
 		panel->QueueMessage(message);
 	}
 	free(message);
@@ -185,7 +186,7 @@ onerror:
 	{
 		if (panel) {
 			sprintf(message, "An error occurred uploading your high score%s%s to RawkSD.", originalsongname ? " for " : "", originalsongname ? originalsongname : "");
-			GetPMPanel()->QueueMessage(message);
+			panel->QueueMessage(message);
 		}
 		free(message);
 	}
