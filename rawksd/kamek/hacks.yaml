@@ -1,5 +1,5 @@
 ---
-source_files: [hacks.cpp]
+source_files: [hacks.cpp, crtsaves.S]
 hooks:
 -   name:       'Disable SD Card'
     type:       patch
