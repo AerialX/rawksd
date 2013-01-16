@@ -172,7 +172,7 @@ static bool SubmitLeaderboardRawkSD(Symbol* symbol, int instrument, int difficul
 
 	OSReport("RawkSD: Leaderboard submission for \"%s\" succeeded.\n", song);
 	if (panel) {
-		sprintf(message, "Your new high score%s%s has been sent to the RawkSD Leaderboards!", originalsongname ? " for " : "", originalsongname ? originalsongname : "");
+		sprintf(message, "Your new high score%s%s has been sent to the RawkSD Leaderboards!", (originalsongname && !originalsongname[0]) ? " for " : "", originalsongname ? originalsongname : "");
 		panel->QueueMessage(message);
 	}
 	free(message);
@@ -185,7 +185,7 @@ onerror:
 	if (message)
 	{
 		if (panel) {
-			sprintf(message, "An error occurred uploading your high score%s%s to RawkSD.", originalsongname ? " for " : "", originalsongname ? originalsongname : "");
+			sprintf(message, "An error occurred uploading your high score%s%s to RawkSD.", (originalsongname && !originalsongname[0]) ? " for " : "", originalsongname ? originalsongname : "");
 			panel->QueueMessage(message);
 		}
 		free(message);
