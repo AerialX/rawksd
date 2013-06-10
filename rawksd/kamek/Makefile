@@ -1,5 +1,5 @@
 all:
-	@python kamek.py project.yaml
+	@python2 kamek.py project.yaml
 	@echo "Creating XML..."
 	@cat riiv.template > riiv.xml
 	@echo '<patch id="test_ntsc">' >> riiv.xml

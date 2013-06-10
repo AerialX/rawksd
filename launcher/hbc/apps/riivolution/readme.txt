@@ -1,5 +1,5 @@
-Riivolution v1.04
-September 16th, 2010
+Riivolution v1.05
+June 10th, 2013
 by Aaron, tueidj, Tempus, and megazig
 riivolution@japaneatahand.com
 
@@ -16,6 +16,9 @@ A: No. And that's not a bug.
 
 Q: Does Riivolution work with my PAL/NTSC/JAP Wii/game?
 A: Yes.
+
+Q: Does Riivolution work on my Wii U?
+A: It does now! In vWii mode (it does not work with Wii U games) Riivolution can be run or installed through Smash Stack, other game exploits, or the Homebrew Channel if it's already installed.
 
 Q: What IOS does it need installed?
 A: Riivolution requires an updated IOS37; if you're on System Menu 4.2 or 4.3 you don't need to do anything.
@@ -49,6 +52,12 @@ Special thanks to everyone that contributed: Treeki, Omega, Pop006, TobiasAmaran
 
 
 Changelog
+
+v1.05
+June 10th, 2013
+ - Wii U (Virtual Wii Menu) is now supported
+ - New Wii Remote Plus remotes are now properly supported
+
 
 v1.04
 September 16th, 2010

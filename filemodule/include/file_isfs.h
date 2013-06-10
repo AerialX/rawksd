@@ -16,7 +16,7 @@ namespace ProxiIOS { namespace Filesystem {
 	struct IsfsDirInfo : public FileInfo
 	{
 		IsfsDirInfo(FilesystemHandler* system, const char *_path, u32 count, int &filefd);
-		~IsfsDirInfo() {Dealloc(dir_names); Dealloc(path);}
+		~IsfsDirInfo();
 
 		const char *next_name;
 		u32 dir_count;

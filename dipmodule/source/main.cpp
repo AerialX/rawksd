@@ -1,7 +1,6 @@
 #include "dip.h"
 #include "emu.h"
 #include "usbhid.h"
-#include "generic_dev.h"
 
 #include <gctypes.h>
 #include <mem.h>

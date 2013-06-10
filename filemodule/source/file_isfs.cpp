@@ -151,6 +151,12 @@ namespace ProxiIOS { namespace Filesystem {
 		os_ioctlv(filefd, ISFS::ReadDir, 2, 2, vec);
 	}
 
+	IsfsDirInfo::~IsfsDirInfo()
+	{
+		Dealloc(dir_names);
+		Dealloc(path);
+	}
+
 	FileInfo* IsfsHandler::OpenDir(const char* _path)
 	{
 		char path[ISFS_MAXPATH_LEN];

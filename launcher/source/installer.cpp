@@ -35,6 +35,8 @@ extern "C" {
 	extern const u32 banner_tik_dat_size;
 	extern const u8 banner_0_dat[];
 	extern const u32 banner_0_dat_size;
+	extern const u8 banner_vwii_dat[];
+	extern const u32 banner_vwii_dat_size;
 }
 
 static bool initfat = false;
@@ -390,28 +392,37 @@ static u8* ReadChannelDol(const char* filename, u32* size)
 #endif
 
 	// patches to keep IOS happy when it boots the content
-	ret[0x07] = 0x61;
-	ret[0x13] = 0x28;
+	if (!is_wiiu) {
+		ret[0x07] = 0x61;
+		ret[0x13] = 0x28;
 
-	// translate all virtual address to physical
-	for (fd=0; fd < ret[0x2D]; fd++) {
-		u32 *addr = (u32*)(ret+0x3C+fd*0x20);
-		*addr = *addr & 0x3FFFFFFF;
+		// translate all virtual address to physical
+		for (fd=0; fd < ret[0x2D]; fd++) {
+			u32 *addr = (u32*)(ret+0x3C+fd*0x20);
+			*addr = *addr & 0x3FFFFFFF;
+		}
 	}
 
+	return ret;
+}
+
+static u8* CopyChannelData(const u8* data, u32 isize, u32* size)
+{
+	*size = isize;
+	u8* ret = (u8*)memalign(0x20, ROUND_UP(isize, 0x20));
+	if (ret)
+		memcpy(ret, data, *size);
 	return ret;
 }
 
 static u8* ReadChannelData(int index, u32* size)
 {
 	u8 *ret;
-	if (index < 1) {
-		*size = banner_0_dat_size;
-		ret = (u8*)memalign(0x20, ROUND_UP(*size, 0x20));
-		if (ret)
-			memcpy(ret, banner_0_dat, *size);
-		return ret;
-	}
+	if (index < 1)
+		return CopyChannelData(banner_0_dat, banner_0_dat_size, size);
+
+	if (index < 2 && is_wiiu)
+		return CopyChannelData(banner_vwii_dat, banner_vwii_dat_size, size);
 
 	ret = ReadChannelDol("/apps/riivolution/boot.elf", size);
 	if (!ret)
@@ -455,21 +466,25 @@ int InstallChannel()
 		return -1;
 	}
 
-	u32 banner_dat_size[2];
-	u8 *banner_dat[2];
+	int banner_count = is_wiiu ? 3 : 2;
+	u32 banner_dat_size[banner_count];
+	u8 *banner_dat[banner_count];
 
-	for (i=0; i < 2; i++)
+	ret = 0;
+	metatmd->num_contents = banner_count;
+	for (i=0; i < banner_count; i++)
 		if ((banner_dat[i] = ReadChannelData(i, banner_dat_size+i))) {
 			metatmd->contents[i].type = 1;
 			metatmd->contents[i].index = i;
 			metatmd->contents[i].cid = i;
 			metatmd->contents[i].size = banner_dat_size[i];
 			SHA1(banner_dat[i], banner_dat_size[i], metatmd->contents[i].hash);
-		}
+		} else
+			ret = -1;
 
-	if (!banner_dat[0] || !banner_dat[1]) {
-		free(banner_dat[0]);
-		free(banner_dat[1]);
+	if (ret < 0) {
+		for (i=0; i < banner_count; i++)
+			free(banner_dat[i]);
 		return -2;
 	}
 
@@ -479,7 +494,7 @@ int InstallChannel()
 		ES_GetDeviceID(&metatik->devicetype);
 	}
 
-	if (!forge_sig((u8*)ticket, banner_tik_dat_size) || !forge_sig((u8*)meta, banner_tmd_dat_size))
+	if (!forge_sig((u8*)ticket, banner_tik_dat_size) || !forge_sig((u8*)meta, 0x1e4 + 0x24 * banner_count))
 		return -3;
 
 	GetTitleKey(ticket, key);
@@ -516,17 +531,16 @@ int InstallChannel()
 		ret = StartInstall(meta);
 
 	if (ret < 0) {
-		free(banner_dat[0]);
-		free(banner_dat[1]);
+		for (i = 0; i < banner_count; i++)
+			free(banner_dat[i]);
 		return ret;
 	}
 
-	ret = InstallContent(metatmd, 0, banner_dat[0], banner_dat_size[0], key);
-	if (ret>=0)
-		ret = InstallContent(metatmd, 1, banner_dat[1], banner_dat_size[1], key);
+	for (i = 0; i < banner_count && ret >= 0; i++)
+		ret = InstallContent(metatmd, i, banner_dat[i], banner_dat_size[i], key);
 
-	free(banner_dat[0]);
-	free(banner_dat[1]);
+	for (i = 0; i < banner_count; i++)
+		free(banner_dat[i]);
 
 	if (ret < 0)
 		CancelInstall();

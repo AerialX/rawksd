@@ -58,6 +58,7 @@ namespace ProxiIOS { namespace Debugger {
 			char MountPoint[0x40];
 
 			DebuggerHandler(Debugger* fs) { Module = fs; memset(MountPoint, 0, 0x40); }
+			virtual ~DebuggerHandler() { }
 
 			virtual int Connect(const void* options, int length) { return -1; };
 			virtual int Disconnect() { return -1; };

@@ -172,13 +172,13 @@ int Haxx_Init()
 		return -1;
 
 	usleep(4000);
-	if (load_module_code(filemodule_dat, filemodule_dat_size) < 0)
+	if (load_module_code(filemodule_dat, filemodule_dat_size) <= 0)
 		return -1;
 
 	printf("Riiv filemodule loaded\n");
 
 	usleep(4000);
-	if (load_module_code(dipmodule_dat, dipmodule_dat_size) < 0)
+	if (load_module_code(dipmodule_dat, dipmodule_dat_size) <= 0)
 		return -1;
 
 	printf("Riiv dipmodule loaded\n");
@@ -186,7 +186,7 @@ int Haxx_Init()
 	usleep(4000);
 
 #ifdef DEBUGGER
-	if (load_module_code(megamodule_dat, megamodule_dat_size) < 0)
+	if (load_module_code(megamodule_dat, megamodule_dat_size) <= 0)
 		return -1;
 
 	printf("Riiv megamodule loaded\n");
@@ -1610,7 +1610,6 @@ static bool do_exploit()
 			is_wiiu = 1;
 		else
 		{
-			is_wiiu = 0;
 			seeprom_read(&seeprom, 0, sizeof(seeprom));
 			//seeprom_write(korean_key, 0x74, 16);
 			//seeprom_write(null_key, 0x74, 16);

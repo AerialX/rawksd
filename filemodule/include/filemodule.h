@@ -126,6 +126,7 @@ namespace ProxiIOS { namespace Filesystem {
 			char MountPoint[0x40];
 
 			FilesystemHandler(Filesystem* fs) { Module = fs; memset(MountPoint, 0, 0x40); }
+			virtual ~FilesystemHandler() { }
 
 			virtual int Mount(const void* options, int length) { return -1; };
 			virtual int Unmount() { return -1; };

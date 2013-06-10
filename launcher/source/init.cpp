@@ -144,7 +144,8 @@ void Initialise()
 	ShutdownParam = 0;
 #endif
 
-	if (ES_GetDeviceID(&is_wiiu)>=0 && is_wiiu >= 0x20000000)
+	is_wiiu = 0;
+	if (ES_GetDeviceID(&is_wiiu)<0 || is_wiiu >= 0x20000000)
 		is_wiiu = 1;
 	else
 		is_wiiu = 0;
