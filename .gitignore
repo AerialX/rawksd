@@ -1,0 +1,10 @@
+*.a
+*.elf
+*.dol
+*.pyc
+*.zip
+*.exe
+bin/
+build/
+buildios/
+buildwii/
