@@ -339,7 +339,7 @@ const u8 tmd_hash[20] = {
 };
 
 // 1st word = value to search, 2nd word = mask of bits to disregard
-static const s16 old_dev_fs_main[] = {
+static const u16 old_dev_fs_main[] = {
 	0xD009, 0,
 	0x68A0, 0,
 	0xF7FF, 0x07FF, 0xF9CF, 0xFFFF,
@@ -381,7 +381,7 @@ static const u16 new_dev_fs_main[] = {
 /* 20005EA6 */ 0xD1ED      // bne 20005E84 (-23)
 };
 
-static const s16 old_dev_fs_open_flash[] = {
+static const u16 old_dev_fs_open_flash[] = {
 	0xB510, 0,
 	0x2005, 0,
 	0x4240, 0,
@@ -408,7 +408,7 @@ static const s16 old_dev_fs_open_flash[] = {
 };
 
 // assume this will be placed at a mod 4 address
-static const s16 new_dev_fs_open_flash[] = {
+static const u16 new_dev_fs_open_flash[] = {
 /* 200051FC */ 0xB500,     // push {lr}
                0x4809,     // ldr r0, =dev_flash_fds
                0x2200,     // movs r2, #0

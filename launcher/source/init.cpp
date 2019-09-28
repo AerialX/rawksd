@@ -54,7 +54,7 @@ void PressHome()
 
 static volatile int ShutdownParam;
 
-static void CallbackReset()
+static void CallbackReset(u32 a, void* b)
 {
 	ShutdownParam = SYS_RETURNTOMENU;
 	_memReg[16] = 0;

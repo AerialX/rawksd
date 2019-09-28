@@ -3,6 +3,7 @@
 #include "riivolution_config.h"
 #include "launcher.h"
 
+#include <sys/param.h>
 #include <unistd.h>
 #include <malloc.h>
 

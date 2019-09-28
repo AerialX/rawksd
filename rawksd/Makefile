@@ -41,7 +41,8 @@ LDFLAGS		=	-g $(MACHDEP) -Wl,--gc-sections,-Map,$(notdir $@).map,--section-start
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS :=	../../launcher/lib/libxml++/libxml++.a ../../launcher/lib/libxml2/libxml2.a -lpng -lz -lfat -lwiiuse -lbte -lasnd -logc -lvorbisidec -lfreetype ../../filemodule/libfile/libfile_wii.a
+LIBS :=	../../launcher/lib/libxml++/libxml++.a ../../launcher/lib/libxml2/libxml2.a -lpng -lz -lfat -lwiiuse -lbte -lasnd -logc -lvorbisidec -logg -lfreetype -lbz2 ../../filemodule/libfile/libfile_wii.a
+PORTLIBS := $(PORTLIBS_PATH)/ppc
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib

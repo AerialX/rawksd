@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "rawksd_menu.h"
 #include "fst.h"
 
@@ -16,6 +17,8 @@
 #else
 #include <stdio.h>
 #endif
+
+#include <string.h>
 
 #define MAX_PATH 128
 
