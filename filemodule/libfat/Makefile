@@ -18,7 +18,7 @@ INCLUDES	:=  include include/fat ../../libios/include
 #---------------------------------------------------------------------------------
 # the prefix on the compiler executables
 #---------------------------------------------------------------------------------
-PREFIX		:= $(DEVKITARM)/bin/arm-eabi-
+PREFIX		:= $(DEVKITARM)/bin/arm-none-eabi-
 CC			:= $(PREFIX)gcc
 CXX			:= $(PREFIX)g++
 AR			:= $(PREFIX)ar

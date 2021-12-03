@@ -268,7 +268,7 @@ static bool FakesignTMD(signed_blob* blob)
 	tmd* meta = (tmd*)SIGNATURE_PAYLOAD(blob);
 	u32 size = TMD_SIZE(meta);
 	for(u32 fill = 0; fill < 0xFFFF; fill++) {
-		meta->fill3 = fill;
+		meta->fill2 = fill;
 		sha1 hash; SHA1((u8*)meta, size, hash);
 
 		if (hash[0] == 0)

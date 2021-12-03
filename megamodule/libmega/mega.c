@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <unistd.h>
+#include <sys/param.h>
 
 #ifdef GEKKO
 #include <stdlib.h>

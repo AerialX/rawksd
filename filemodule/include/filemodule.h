@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <sys/iosupport.h>
+#include <sys/param.h>
 
 #include "gctypes.h"
 #include "proxiios.h"

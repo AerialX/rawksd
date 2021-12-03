@@ -301,7 +301,7 @@ int _FAT_syncToDisc (FILE_STRUCT* file) {
 }
 
 
-int _FAT_close_r (struct _reent *r, int fd) {
+int _FAT_close_r (struct _reent *r, void *fd) {
 	FILE_STRUCT* file = (FILE_STRUCT*)  fd;
 	int ret = 0;
 
@@ -338,7 +338,7 @@ int _FAT_close_r (struct _reent *r, int fd) {
 	return ret;
 }
 
-ssize_t _FAT_read_r (struct _reent *r, int fd, char *ptr, size_t len) {
+ssize_t _FAT_read_r (struct _reent *r, void *fd, char *ptr, size_t len) {
 	FILE_STRUCT* file = (FILE_STRUCT*)  fd;
 	PARTITION* partition;
 	CACHE* cache;
@@ -634,7 +634,7 @@ static bool _FAT_file_extend_r (struct _reent *r, FILE_STRUCT* file) {
 }
 
 
-ssize_t _FAT_write_r (struct _reent *r, int fd, const char *ptr, size_t len) {
+ssize_t _FAT_write_r (struct _reent *r, void *fd, const char *ptr, size_t len) {
 	FILE_STRUCT* file = (FILE_STRUCT*)  fd;
 	PARTITION* partition;
 	CACHE* cache;
@@ -862,7 +862,7 @@ ssize_t _FAT_write_r (struct _reent *r, int fd, const char *ptr, size_t len) {
 }
 
 
-off_t _FAT_seek_r (struct _reent *r, int fd, off_t pos, int dir) {
+off_t _FAT_seek_r (struct _reent *r, void *fd, off_t pos, int dir) {
 	FILE_STRUCT* file = (FILE_STRUCT*)  fd;
 	PARTITION* partition;
 	uint32_t cluster, nextCluster;
@@ -964,7 +964,7 @@ off_t _FAT_seek_r (struct _reent *r, int fd, off_t pos, int dir) {
 
 
 
-int _FAT_fstat_r (struct _reent *r, int fd, struct stat *st) {
+int _FAT_fstat_r (struct _reent *r, void *fd, struct stat *st) {
 	FILE_STRUCT* file = (FILE_STRUCT*)  fd;
 	PARTITION* partition;
 	DIR_ENTRY fileEntry;
@@ -999,7 +999,7 @@ int _FAT_fstat_r (struct _reent *r, int fd, struct stat *st) {
 	return 0;
 }
 
-int _FAT_ftruncate_r (struct _reent *r, int fd, off_t len) {
+int _FAT_ftruncate_r (struct _reent *r, void *fd, off_t len) {
 	FILE_STRUCT* file = (FILE_STRUCT*)  fd;
 	PARTITION* partition;
 	int ret=0;
@@ -1111,7 +1111,7 @@ int _FAT_ftruncate_r (struct _reent *r, int fd, off_t len) {
 	return ret;
 }
 
-int _FAT_fsync_r (struct _reent *r, int fd) {
+int _FAT_fsync_r (struct _reent *r, void *fd) {
 	FILE_STRUCT* file = (FILE_STRUCT*)  fd;
 	int ret = 0;
 
