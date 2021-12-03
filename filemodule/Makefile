@@ -17,7 +17,7 @@ INCLUDES	:=  include ../libios/include libfat/include
 SCRIPTDIR	:=  scripts
 BIN		:=  bin
 
-STRIPIOS	:=  ../stripios/stripios
+STRIPIOS	:=  ../stripios/stripios.exe
 
 LIBS		:=  ../libfat/libfat.a ../../libios/libios.a
 LIBDIRS		:=
