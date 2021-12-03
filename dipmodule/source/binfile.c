@@ -37,7 +37,7 @@ void LogPrintf(const char *fmt, ...);
 
 static const u8 null_key[16] ATTRIBUTE_ALIGN(32) = {0};
 
-inline unsigned int verify_bk(BK_Header *bk)
+static unsigned int verify_bk(BK_Header *bk)
 {
 	unsigned int failed=0;
 	u32 wii_id = 0;
