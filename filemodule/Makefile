@@ -110,6 +110,7 @@ LDFLAGS	= -g $(ARCH) -specs=$(SPECS) -T$(LINKSCRIPT) $(LIBPATHS) $(LIBS) -Wl,--g
 
 $(OUTPUT).elf: $(TARGET).elf
 	@echo stripping $(notdir $@)
+	@mkdir -p $(ROOT)/$(BIN)
 	@$(STRIPIOS) $< $@
 	@cp -f $@ ../../launcher/data/$(TARGET).dat
 	
