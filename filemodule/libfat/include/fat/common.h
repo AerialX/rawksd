@@ -61,7 +61,9 @@
    #define DEFAULT_CACHE_PAGES 4
    #define DEFAULT_SECTORS_PAGE 64
    //#define USE_LWP_LOCK
+#ifdef GEKKO
    #define USE_RTC_TIME
+#endif
 #elif defined (__gamecube__)
    #define DEFAULT_CACHE_PAGES 4
    #define DEFAULT_SECTORS_PAGE 64

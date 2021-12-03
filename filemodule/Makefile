@@ -106,7 +106,7 @@ CFLAGS	=	-g $(ARCH) $(INCLUDE) -fno-strict-aliasing -Wall -O2 -fomit-frame-point
 
 AFLAGS	=	-g $(ARCH) -x assembler-with-cpp
 
-LDFLAGS	= -g $(ARCH) -specs=$(SPECS) -T$(LINKSCRIPT) $(LIBPATHS) $(LIBS) -Wl,--gc-sections -Wl,-static -Wl,-Map,$(TARGET).map -nostartfiles
+LDFLAGS	= -g $(ARCH) -specs=$(SPECS) -T$(LINKSCRIPT) $(LIBPATHS) $(LIBS) -Wl,-wrap,mktime -Wl,--gc-sections -Wl,-static -Wl,-Map,$(TARGET).map -nostartfiles
 
 $(OUTPUT).elf: $(TARGET).elf
 	@echo stripping $(notdir $@)

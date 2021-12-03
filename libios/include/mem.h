@@ -21,6 +21,9 @@ u32 HeapInfo();
 	inline void operator delete(void* data) {
 		Dealloc(data);
 	}
+	inline void operator delete(void* data, unsigned int size) {
+		Dealloc(data);
+	}
 	inline void* operator new[](size_t size) {
 		return Alloc(size);
 	}
