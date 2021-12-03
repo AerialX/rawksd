@@ -506,6 +506,7 @@ static int _ISO9660_dirnext_r(struct _reent *r, DIR_ITER *dirState, char *filena
     }
     DIR_ENTRY *entry = &state->entry.children[state->index++];
     strncpy(filename, entry->name, ISO_MAXPATHLEN - 1);
+    filename[ISO_MAXPATHLEN - 1] = 0;
     stat_entry(entry, st);
     return 0;
 }
