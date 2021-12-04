@@ -1,29 +1,50 @@
-all:
+BUILD := build
+
+# an arbitrary file produced by the kamek build
+KAMEK_BUILD := $(BUILD)/pal_riiv.xml
+
+KAMEK_EXT := cpp c S x yaml template py
+DEPENDS := $(wildcard $(foreach ext,$(KAMEK_EXT),*.$(ext)))
+
+riiv:
+
+all: $(KAMEK_BUILD) riiv rb2_ntsc rb2_pal
+
+export PATH := $(PATH):$(DEVKITPPC)/bin
+$(KAMEK_BUILD):
 	@python2 kamek.py project.yaml
+
+riiv: $(BUILD)/riiv.xml
+$(BUILD)/riiv.xml: riiv.template $(KAMEK_BUILD)
 	@echo "Creating XML..."
-	@cat riiv.template > riiv.xml
-	@echo '<patch id="test_ntsc">' >> riiv.xml
-	@cat build/ntsc_riiv.xml >> riiv.xml
-	@echo '</patch>' >> riiv.xml
-	@echo '<patch id="test_pal">' >> riiv.xml
-	@cat build/pal_riiv.xml >> riiv.xml
-	@echo '</patch>' >> riiv.xml
-	@echo '</wiidisc>' >> riiv.xml
+	@cat $< > $@
+	@echo '<patch id="test_ntsc">' >> $@
+	@cat $(BUILD)/ntsc_riiv.xml >> $@
+	@echo '</patch>' >> $@
+	@echo '<patch id="test_pal">' >> $@
+	@cat $(BUILD)/pal_riiv.xml >> $@
+	@echo '</patch>' >> $@
+	@echo '</wiidisc>' >> $@
+
+rb2_ntsc: $(BUILD)/rb2_ntsc.xml
+$(BUILD)/rb2_ntsc.xml: riiv_ntsc.template $(KAMEK_BUILD)
+	@cat $< > $@
+	@echo '<patch id="kamek_ntsc">' >> $@
+	@cat $(BUILD)/ntsc_riiv.xml >> $@
+	@echo '</patch>' >> $@
+	@echo '</wiidisc>' >> $@
 	
-	@cat riiv_ntsc.template > ../data/rb2_ntsc.xml
-	@echo '<patch id="kamek_ntsc">' >> ../data/rb2_ntsc.xml
-	@cat build/ntsc_riiv.xml >> ../data/rb2_ntsc.xml
-	@echo '</patch>' >> ../data/rb2_ntsc.xml
-	@echo '</wiidisc>' >> ../data/rb2_ntsc.xml
-	
-	@cat riiv_pal.template > ../data/rb2_pal.xml
-	@echo '<patch id="kamek_pal">' >> ../data/rb2_pal.xml
-	@cat build/pal_riiv.xml >> ../data/rb2_pal.xml
-	@echo '</patch>' >> ../data/rb2_pal.xml
-	@echo '</wiidisc>' >> ../data/rb2_pal.xml
+rb2_pal: $(BUILD)/rb2_pal.xml
+$(BUILD)/rb2_pal.xml: riiv_pal.template $(KAMEK_BUILD) $(BUILD)
+	@cat $< > $@
+	@echo '<patch id="kamek_pal">' >> $@
+	@cat build/pal_riiv.xml >> $@
+	@echo '</patch>' >> $@
+	@echo '</wiidisc>' >> $@
 
 clean:
-	rm -rf build
-	rm -f riiv.xml
-	rm -f ../data/rb2_ntsc.xml
-	rm -f ../data/rb2_pal.xml
+	rm -rf $(BUILD)
+
+.PHONY: all riiv rb2_ntsc rb2_pal
+.DELETE_ON_ERROR:
+.SECONDARY:

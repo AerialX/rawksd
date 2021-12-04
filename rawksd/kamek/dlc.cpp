@@ -4,6 +4,7 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/param.h>
 #include <files.h>
 
 static DataArray* LoadDTB(const char* filename)
