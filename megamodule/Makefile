@@ -46,9 +46,8 @@ export ROOT	:= $(CURDIR)
 
 all:
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
-	@$(MAKE) -C ../libios --no-print-directory -f Makefile
+	@$(MAKE) -C ../libios --no-print-directory
 	@$(MAKE) -C libmega --no-print-directory -f Makefile.ios
-	@$(MAKE) -C libmega --no-print-directory -f Makefile.wii
 	@$(MAKE) -C $(BUILD) --no-print-directory -f $(CURDIR)/Makefile BUILDING=all
 	
 clean:
@@ -133,11 +132,8 @@ $(OUTPUT).elf: $(TARGET).elf
 	@$(bin2o)
 
 -include $(DEPENDS)
-	
-define bin2o
-	@echo  -e "\t.section .rodata\n\t.align 4\n\t.global $(*)\n\t.global $(*)_end\n$(*):\n\t.incbin \"$(subst /,\\\\\\\\,$(shell echo $< | sed 's=/==;s=/=:/='))\"\n$(*)_end:\n" > $@.s
-	@$(CC)  $(ASFLAGS) $(AFLAGS) -c $@.s -o $@
-	@rm -rf $@.s
-endef
 
 endif
+
+.DELETE_ON_ERROR:
+.SECONDARY:
