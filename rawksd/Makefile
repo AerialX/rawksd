@@ -25,3 +25,15 @@ SOURCEFILES	:=	init.cpp haxx.cpp installer.cpp \
 INIT_ADDR := 0x80900400
 
 include $(LAUNCHER_DIR)/common.mk
+
+ifneq ($(BUILD),$(notdir $(CURDIR)))
+
+rawk.zip: boot.elf
+	@echo packaging ... $@
+	@cp $< hbc/apps/rawksd/boot.elf
+	@cd hbc/apps; zip -D $@ rawksd/*
+	@mv hbc/apps/$@ $@
+
+z: rawk.zip
+
+endif
