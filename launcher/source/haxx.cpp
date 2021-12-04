@@ -28,24 +28,24 @@ using std::vector;
 #define HW_GPIO1OUT         0x0D8000E0
 #define HW_GPIO1IN          0x0D8000E8
 
-extern "C" {
-	extern u8 filemodule_dat[];
-	extern u32 filemodule_dat_size;
+#include "root_dat.h"
 
-	extern u8 dipmodule_dat[];
-	extern u32 dipmodule_dat_size;
+extern "C" {
+	extern u8 filemodule_elf[];
+	extern u8 filemodule_elf_end[];
+
+	extern u8 dipmodule_elf[];
+	extern u8 dipmodule_elf_end[];
 
 #ifdef DEBUGGER
-	extern u8 megamodule_dat[];
-	extern u32 megamodule_dat_size;
+	extern u8 megamodule_elf[];
+	extern u8 megamodule_elf_end[];
 #endif
 
 #ifdef BABELFISH
 	extern u8 babelfish_dat[];
-	extern u32 babelfish_dat_size;
+	extern u8 babelfish_dat_end[];
 #endif
-
-	extern const u8 root_dat[];
 
 	extern void gkey(int nb,int nk,const u8 *key);
 	extern void gentables(void);
@@ -62,7 +62,7 @@ extern vector<int> ToMount;
 #define HAXX_IOS 0x0000000100000089ULL
 #endif
 
-static int load_module_code(void *module_code, s32 module_size);
+static int load_module_code(u8 *module_code, u8* module_end);
 static bool do_exploit();
 
 static inline u32 be32(const u8 *p)
@@ -172,13 +172,13 @@ int Haxx_Init()
 		return -1;
 
 	usleep(4000);
-	if (load_module_code(filemodule_dat, filemodule_dat_size) <= 0)
+	if (load_module_code(filemodule_elf, filemodule_elf_end) <= 0)
 		return -1;
 
 	printf("Riiv filemodule loaded\n");
 
 	usleep(4000);
-	if (load_module_code(dipmodule_dat, dipmodule_dat_size) <= 0)
+	if (load_module_code(dipmodule_elf, dipmodule_elf_end) <= 0)
 		return -1;
 
 	printf("Riiv dipmodule loaded\n");
@@ -186,7 +186,7 @@ int Haxx_Init()
 	usleep(4000);
 
 #ifdef DEBUGGER
-	if (load_module_code(megamodule_dat, megamodule_dat_size) <= 0)
+	if (load_module_code(megamodule_elf, megamodule_elf_end) <= 0)
 		return -1;
 
 	printf("Riiv megamodule loaded\n");
@@ -1257,7 +1257,7 @@ static void recover_from_reload(s32 version)
 	__STM_Init();
 }
 
-static int load_module_code(void *module_code, s32 module_size)
+static int load_module_code(u8 *module_code, u8 *module_end)
 {
 	s32 fd;
 	s32 written;
@@ -1267,6 +1267,7 @@ static int load_module_code(void *module_code, s32 module_size)
 	u8 iv[32];
 	u8 key[32];
 	static const u8 elfhdr[16] = {0x7F, 0x45, 0x4C, 0x46, 0x01, 0x02, 0x01, 0x61, 0x01};
+	s32 module_size = module_end - module_code;
 	int i;
 
 	if (module_size<16)
@@ -1374,7 +1375,7 @@ static int load_sdhc_module(u64 title_ios)
 	}
 
 	if (found)
-		ret = load_module_code(module_buf, size);
+		ret = load_module_code(module_buf, module_buf + size);
 
 	free(tmd_blob);
 	free(module_buf);

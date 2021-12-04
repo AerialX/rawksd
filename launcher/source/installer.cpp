@@ -28,16 +28,10 @@ extern "C" {
 
 #define NUS_URL_BASE "http://nus.cdn.shop.wii.com/ccs/download"
 
-extern "C" {
-	extern const u8 banner_tmd_dat[];
-	extern const u32 banner_tmd_dat_size;
-	extern const u8 banner_tik_dat[];
-	extern const u32 banner_tik_dat_size;
-	extern const u8 banner_0_dat[];
-	extern const u32 banner_0_dat_size;
-	extern const u8 banner_vwii_dat[];
-	extern const u32 banner_vwii_dat_size;
-}
+#include "banner_tmd_dat.h"
+#include "banner_tik_dat.h"
+#include "banner_0_dat.h"
+#include "banner_vwii_dat.h"
 
 static bool initfat = false;
 static bool initnet = false;
