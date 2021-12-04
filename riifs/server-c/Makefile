@@ -7,6 +7,8 @@ OBJECTS := riifs.o
 
 ifeq ($(OS),Windows_NT)
 OBJECTS += riifs_win32.o
+LIBS := -lws2_32
+TARGET := $(TARGET).exe
 else
 OBJECTS += riifs_pthread.o
 LIBS := -lpthread
