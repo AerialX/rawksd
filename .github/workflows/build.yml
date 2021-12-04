@@ -1,8 +1,27 @@
 on:
 - push
 - pull_request
+
 jobs:
-  build:
+  riiv:
+    name: Riivolution
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitppc:20210726
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        dpkg --add-architecture i386
+        apt-get update && apt-get install -y --no-install-recommends g++ libgcc1:i386 zlib1g:i386
+      name: dependencies
+    - run: make launcher -j
+    - uses: actions/upload-artifact@v2
+      with:
+        name: riivolution
+        path: launcher/riiv.zip
+    - run: make riifs -j
+  rawk:
+    name: RawkSD
     runs-on: ubuntu-latest
     container:
       image: devkitpro/devkitppc:20210726
@@ -12,14 +31,71 @@ jobs:
         dpkg --add-architecture i386
         apt-get update && apt-get install -y --no-install-recommends g++ libgcc1:i386 zlib1g:i386 python3 python3-yaml
       name: dependencies
-    - run: make launcher -j
-    - uses: actions/upload-artifact@v2
-      with:
-        name: riivolution
-        path: launcher/riiv.zip
     - run: make rawksd -j
     - uses: actions/upload-artifact@v2
       with:
         name: rawksd
         path: rawksd/rawk.zip
-    - run: make riifs -j
+  msys2:
+    name: Windows MSYS2
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - uses: msys2/setup-msys2@v2
+      with:
+        release: false
+    - uses: actions/checkout@v2
+    - run: |
+        pacman-key --recv BC26F752D25B92CE272E0F44F7FD5492264BB9D0 --keyserver keyserver.ubuntu.com || pacman-key --recv BC26F752D25B92CE272E0F44F7FD5492264BB9D0
+        pacman-key --lsign BC26F752D25B92CE272E0F44F7FD5492264BB9D0
+        pacman --noconfirm -U https://pkg.devkitpro.org/devkitpro-keyring.pkg.tar.xz
+        echo -e '[dkp-libs]\nServer = https://pkg.devkitpro.org/packages' >> /etc/pacman.conf
+        echo -e '[dkp-windows]\nServer = https://pkg.devkitpro.org/packages/windows/$arch/' >> /etc/pacman.conf
+        sed -i 's/^CheckSpace/#CheckSpace/g' /etc/pacman.conf
+        pacman --noconfirm -Sy
+      name: devkitPro
+    - run: |
+        pacman -S --noconfirm --needed wii-dev ppc-portlibs wii-portlibs devkitARM
+      name: devkitPPC
+    - run: |
+        pacman -S --noconfirm --needed python-yaml zip unzip python
+      name: dependencies
+    - run: |
+        DEVKITPRO=/opt/devkitpro DEVKITPPC=$DEVKITPRO/devkitPPC DEVKITARM=$DEVKITPRO/devkitARM \
+        make launcher -j
+      name: make launcher
+    - uses: actions/upload-artifact@v2
+      with:
+        name: msys2-riivolution
+        path: launcher/riiv.zip
+    - run: |
+        PYTHON=/usr/bin/python3.exe \
+        DEVKITPRO=/opt/devkitpro DEVKITPPC=$DEVKITPRO/devkitPPC DEVKITARM=$DEVKITPRO/devkitARM \
+        make rawksd -j
+      name: make rawksd
+    - uses: actions/upload-artifact@v2
+      with:
+        name: msys2-rawksd
+        path: rawksd/rawk.zip
+  mingw:
+    name: Windows Mingw
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: make riifs
+    - uses: actions/upload-artifact@v2
+      with:
+        name: mingw32-riifs
+        path: riifs/server-c/riifs.exe
+    - run: make -C stripios
+    - uses: actions/upload-artifact@v2
+      with:
+        name: mingw32-stripios
+        path: stripios/stripios.exe
+    - run: make -C launcher/dollz3
+    - uses: actions/upload-artifact@v2
+      with:
+        name: mingw32-dol2elf
+        path: launcher/dollz3/dol2elf.exe

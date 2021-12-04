@@ -71,6 +71,8 @@ export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 
+export PATH := $(PATH):$(DEVKITPPC)/bin:$(DEVKITPRO)/tools/bin
+
 ifeq ($(strip $(CPPFILES)),)
 	export LD	:=	$(CC)
 else
