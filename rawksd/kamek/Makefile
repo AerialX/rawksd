@@ -10,9 +10,16 @@ riiv:
 
 all: $(KAMEK_BUILD) riiv rb2_ntsc rb2_pal
 
+PYTHON ?= python
+
+PYTHON_VERSION := $(shell $(PYTHON) --version 2>&1)
+ifeq (,$(findstring Python 3.,$(PYTHON_VERSION)))
+PYTHON := python3
+endif
+
 export PATH := $(PATH):$(DEVKITPPC)/bin
 $(KAMEK_BUILD):
-	@python2 kamek.py project.yaml
+	@$(PYTHON) kamek.py project.yaml
 
 riiv: $(BUILD)/riiv.xml
 $(BUILD)/riiv.xml: riiv.template $(KAMEK_BUILD)
