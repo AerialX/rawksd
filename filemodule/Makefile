@@ -47,6 +47,7 @@ export ROOT	:= $(CURDIR)
 all:
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
 	@[ -d $(BIN) ] || mkdir -p $(BIN)
+	@$(MAKE) --no-print-directory -C ../stripios
 	@$(MAKE) --no-print-directory -C ../libios
 	@$(MAKE) --no-print-directory -C libfile -f Makefile.ios
 	@$(MAKE) --no-print-directory -C libfat

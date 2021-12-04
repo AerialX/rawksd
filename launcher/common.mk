@@ -111,14 +111,16 @@ $(LIB_FILE):
 $(LIB_MEGA):
 	@$(HOSTMAKE) --no-print-directory -C $(COMMON_DIR)/megamodule/libmega -f Makefile.wii
 
+# serialize module builds...
+build-modules:
+	@for mod in $(MODULES); do $(HOSTMAKE) --no-print-directory -C $(COMMON_DIR)/$$mod || exit 1; done
+
 define moduledep =
-$(COMMON_DIR)/$(1)/bin/$(1).elf:
-	@$$(HOSTMAKE) --no-print-directory -C $(COMMON_DIR)/$(1)
+$(COMMON_DIR)/$(1)/bin/$(1).elf: build-modules
+	@true
 
 $(1).elf.o: $(COMMON_DIR)/$(1)/bin/$(1).elf
 	@$$(bin2o)
-
-.PHONY: $(COMMON_DIR)/$(1)/bin/$(1).elf
 endef
 $(foreach mod,$(MODULES),$(eval $(call moduledep,$(mod))))
 
@@ -137,7 +139,7 @@ all: $(OUTPUT).dol
 $(OUTPUT).dol: $(OUTPUT).elf
 $(OUTPUT).elf: $(OFILES) $(filter %.a,$(LIBS))
 
-.PHONY: $(LIB_MEGA) $(LIB_FILE)
+.PHONY: $(LIB_MEGA) $(LIB_FILE) build-modules
 
 endif
 
