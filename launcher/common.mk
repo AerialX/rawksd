@@ -45,7 +45,8 @@ $(DOLLZ3):
 $(DOL2ELF):
 	@$(HOSTMAKE) --no-print-directory -C $(LAUNCHER_DIR)/dollz3 dol2elf.exe
 
-BINFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(foreach ext,$(BIN_EXTS),$(dir)/*.$(ext)))))
+BINFILES += $(foreach dir,$(SOURCES),$(notdir $(wildcard $(foreach ext,$(BIN_EXTS),$(dir)/*.$(ext)))))
+BINFILES += $(MODULES:=.elf)
 
 export CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c))) \
 				$(filter %.c,$(SOURCEFILES))
@@ -59,7 +60,6 @@ TPLFILES	:=	$(SCFFILES:.scf=.tpl)
 export OFILES	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) \
 					$(addsuffix .o,$(TPLFILES)) \
 					$(sFILES:.s=.o) $(SFILES:.S=.o) \
-					$(foreach mod,$(MODULES),$(mod).elf.o) \
 					$(BINFILES:=.o) \
 
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(dir)) \

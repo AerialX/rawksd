@@ -23,4 +23,3 @@ jobs:
         name: rawksd
         path: rawksd/rawk.zip
     - run: make riifs -j
-    - run: make -C rawksd/kamek

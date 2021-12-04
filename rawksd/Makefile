@@ -22,6 +22,8 @@ SOURCEFILES	:=	init.cpp haxx.cpp installer.cpp \
 				rijndael.c http.cpp sha1.cpp wdvd.cpp \
 				riivolution.cpp riivolution_config.cpp launcher.cpp fwrite.cpp debugprint.cpp ssl.cpp
 
+BINFILES += rb2_ntsc.xml rb2_pal.xml
+
 INIT_ADDR := 0x80900400
 
 include $(LAUNCHER_DIR)/common.mk
@@ -35,5 +37,28 @@ rawk.zip: boot.elf
 	@mv hbc/apps/$@ $@
 
 z: rawk.zip
+
+clean: clean-kamek
+
+clean-kamek:
+	@$(HOSTMAKE) --no-print-directory -C kamek clean
+
+.PHONY: clean-kamek
+
+else
+
+KAMEK := $(SOURCE_DIR)/kamek
+KAMEK_EXT := cpp c S x yaml template py
+KAMEK_DEPENDS := $(wildcard $(foreach ext,$(KAMEK_EXT),$(KAMEK)/*.$(ext)))
+
+$(KAMEK)/build/rb2_pal.xml: $(KAMEK_DEPENDS)
+	@$(HOSTMAKE) -C $(KAMEK) rb2_ntsc rb2_pal
+$(KAMEK)/build/rb2_ntsc.xml: $(KAMEK)/build/rb2_pal.xml
+
+rb2_ntsc.xml.o: $(KAMEK)/build/rb2_ntsc.xml
+	@$(bin2o)
+
+rb2_pal.xml.o: $(KAMEK)/build/rb2_pal.xml
+	@$(bin2o)
 
 endif

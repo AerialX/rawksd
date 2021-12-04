@@ -35,7 +35,7 @@ $(BUILD)/rb2_ntsc.xml: riiv_ntsc.template $(KAMEK_BUILD)
 	@echo '</wiidisc>' >> $@
 	
 rb2_pal: $(BUILD)/rb2_pal.xml
-$(BUILD)/rb2_pal.xml: riiv_pal.template $(KAMEK_BUILD) $(BUILD)
+$(BUILD)/rb2_pal.xml: riiv_pal.template $(KAMEK_BUILD)
 	@cat $< > $@
 	@echo '<patch id="kamek_pal">' >> $@
 	@cat build/pal_riiv.xml >> $@
