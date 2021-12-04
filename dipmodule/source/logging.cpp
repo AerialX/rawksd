@@ -33,3 +33,11 @@ void LogDeinit()
 {
 }
 #endif
+
+namespace std {
+	// aliased from std::__throw_length_error()
+	void __logging_abort(const char* message) {
+		LogPrintf("__throw_length_error: %s", message);
+		os_crash();
+	}
+}

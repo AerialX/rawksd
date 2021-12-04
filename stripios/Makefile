@@ -1,5 +1,8 @@
-stripios.exe: stripios.cpp rijndael.cpp
-	g++ stripios.cpp rijndael.cpp -o stripios.exe
+TARGET := stripios.exe
+$(TARGET): stripios.cpp rijndael.cpp
+	@echo compiling $@ ...
+	@$(CXX) -o $@ $^
+
 clean:
 	@echo "clean ..."
-	@rm -f stripios.exe
+	@rm -f $(TARGET)

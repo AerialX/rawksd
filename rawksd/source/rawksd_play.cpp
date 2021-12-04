@@ -14,36 +14,19 @@
 #include <vector>
 #include <map>
 
+#include "rb2_ntsc_xml.h"
+#include "rb2_pal_xml.h"
+#include "rb3_ntsc_xml.h"
+#include "rb3_pal_xml.h"
+#include "rb3_store_dtb.h"
+#include "ntsc_usb_tpl.h"
+#include "ntsc_sd_tpl.h"
+#include "ntsc_wifi_tpl.h"
+#include "pal_usb_tpl.h"
+#include "pal_sd_tpl.h"
+#include "pal_wifi_tpl.h"
+
 extern std::map<int, bool> UsedFilesystems;
-
-extern "C" {
-	extern const u8 rb2_ntsc_xml[];
-	extern const u32 rb2_ntsc_xml_size;
-	extern const u8 rb2_pal_xml[];
-	extern const u32 rb2_pal_xml_size;
-
-	extern const u8 rb3_ntsc_xml[];
-	extern const u32 rb3_ntsc_xml_size;
-	extern const u8 rb3_pal_xml[];
-	extern const u32 rb3_pal_xml_size;
-
-	/* sigh */
-	extern const u8 ntsc_usb_tpl[];
-	extern const u32 ntsc_usb_tpl_size;
-	extern const u8 ntsc_sd_tpl[];
-	extern const u32 ntsc_sd_tpl_size;
-	extern const u8 ntsc_wifi_tpl[];
-	extern const u32 ntsc_wifi_tpl_size;
-	extern const u8 pal_usb_tpl[];
-	extern const u32 pal_usb_tpl_size;
-	extern const u8 pal_sd_tpl[];
-	extern const u32 pal_sd_tpl_size;
-	extern const u8 pal_wifi_tpl[];
-	extern const u32 pal_wifi_tpl_size;
-
-	extern const u8 rb3_store_dtb[];
-	extern const u32 rb3_store_dtb_size;
-};
 
 static const struct {const u8 *data; const u32 size;} splash_tpls[] = {
 	{ntsc_sd_tpl, ntsc_sd_tpl_size}, {pal_sd_tpl, pal_sd_tpl_size},

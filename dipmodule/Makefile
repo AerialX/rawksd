@@ -17,7 +17,7 @@ INCLUDES	:=  include ../libios/include ../filemodule/include
 SCRIPTDIR	:=  scripts
 BIN			:=  bin
 
-STRIPIOS	:=  ../stripios/stripios
+STRIPIOS	:=  ../stripios/stripios.exe
 
 LIBS		:=	../../filemodule/libfile/libfile_ios.a ../../libios/libios.a
 LIBDIRS		:=
@@ -25,7 +25,7 @@ LIBDIRS		:=
 #---------------------------------------------------------------------------------
 # the prefix on the compiler executables
 #---------------------------------------------------------------------------------
-PREFIX		:= $(DEVKITARM)/bin/arm-eabi-
+PREFIX		:= $(DEVKITARM)/bin/arm-none-eabi-
 CC			:= $(PREFIX)gcc
 CXX			:= $(PREFIX)g++
 AR			:= $(PREFIX)ar
@@ -46,12 +46,16 @@ export ROOT	:= $(CURDIR)
 
 all:
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
-	@$(MAKE) -C ../libios -f Makefile
-	@$(MAKE) -C ../filemodule/libfile -f Makefile.ios
-	@$(MAKE) -C $(BUILD) -f $(CURDIR)/Makefile BUILDING=all
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
+	@$(MAKE) --no-print-directory -C ../stripios
+	@$(MAKE) --no-print-directory -C ../libios
+	@$(MAKE) --no-print-directory -C ../filemodule/libfile -f Makefile.ios
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile BUILDING=all
+
 clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(BIN)/*.elf ../launcher/data/$(TARGET).dat
+
 else
 
 TARGET := $(notdir $(ROOT))
@@ -111,7 +115,6 @@ LDFLAGS	= -g $(ARCH) -specs=$(SPECS) -T$(LINKSCRIPT) $(LIBPATHS) $(LIBS) -Wl,--g
 $(OUTPUT).elf: $(TARGET).elf
 	@echo stripping $(notdir $@)
 	@$(STRIPIOS) $< $@
-	@cp $@ ../../launcher/data/$(TARGET).dat
 
 %.elf: $(OFILES) $(LIBS)
 	@echo linking $(notdir $@)
@@ -134,11 +137,8 @@ $(OUTPUT).elf: $(TARGET).elf
 	@$(bin2o)
 
 -include $(DEPENDS)
-	
-define bin2o
-	@echo  -e "\t.section .rodata\n\t.align 4\n\t.global $(*)\n\t.global $(*)_end\n$(*):\n\t.incbin \"$(subst /,\\\\\\\\,$(shell echo $< | sed 's=/==;s=/=:/='))\"\n$(*)_end:\n" > $@.s
-	@$(CC)  $(ASFLAGS) $(AFLAGS) -c $@.s -o $@
-	@rm -rf $@.s
-endef
 
 endif
+
+.DELETE_ON_ERROR:
+.SECONDARY:

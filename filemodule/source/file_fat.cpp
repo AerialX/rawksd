@@ -51,7 +51,7 @@ int FatHandler::Mount(const void* options, int length)
 	} else
 		strcpy(Name, __fatName);
 
-	if (fatMount(Name, Module->Disk[phys], 0, 5, 8) < 0)
+	if (!fatMount(Name, Module->Disk[phys], 0, 5, 8))
 		return Errors::DiskNotMounted;
 
 	strcpy(MountPoint, "/mnt/");

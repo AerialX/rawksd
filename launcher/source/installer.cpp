@@ -28,16 +28,10 @@ extern "C" {
 
 #define NUS_URL_BASE "http://nus.cdn.shop.wii.com/ccs/download"
 
-extern "C" {
-	extern const u8 banner_tmd_dat[];
-	extern const u32 banner_tmd_dat_size;
-	extern const u8 banner_tik_dat[];
-	extern const u32 banner_tik_dat_size;
-	extern const u8 banner_0_dat[];
-	extern const u32 banner_0_dat_size;
-	extern const u8 banner_vwii_dat[];
-	extern const u32 banner_vwii_dat_size;
-}
+#include "banner_tmd_dat.h"
+#include "banner_tik_dat.h"
+#include "banner_0_dat.h"
+#include "banner_vwii_dat.h"
 
 static bool initfat = false;
 static bool initnet = false;
@@ -268,7 +262,7 @@ static bool FakesignTMD(signed_blob* blob)
 	tmd* meta = (tmd*)SIGNATURE_PAYLOAD(blob);
 	u32 size = TMD_SIZE(meta);
 	for(u32 fill = 0; fill < 0xFFFF; fill++) {
-		meta->fill3 = fill;
+		meta->fill2 = fill;
 		sha1 hash; SHA1((u8*)meta, size, hash);
 
 		if (hash[0] == 0)

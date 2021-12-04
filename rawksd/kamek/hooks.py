@@ -6,13 +6,13 @@ u32 = struct.Struct('>I')
 def make_branch_insn(fromAddr, toAddr, branchType):
 	branchTypes = ['b', 'bl', 'ba', 'bla']
 	if branchType not in branchTypes:
-		raise ValueError, 'invalid branch type: %s' % branchType
+		raise(ValueError, 'invalid branch type: %s' % branchType)
 	
 	extra = branchTypes.index(branchType)
 	
 	distance = toAddr - fromAddr
 	if distance >= 0x2000000 or distance <= -0x2000000:
-		raise ValueError, 'branching too far'
+		raise(ValueError, 'branching too far')
 	
 	return (distance & 0x3FFFFFC) | 0x48000000 | extra
 
@@ -49,7 +49,7 @@ class Hook(object):
 		for field in self.required_data:
 			field = field.replace('%CONFIG%', current_config_name)
 			if field not in data:
-				raise ValueError, 'hook %s : %s is missing the field %s' % (module.moduleName, data['name'], field)
+				raise(ValueError, 'hook %s : %s is missing the field %s' % (module.moduleName, data['name'], field))
 	
 	def create_patches(self):
 		pass

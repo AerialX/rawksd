@@ -3,6 +3,8 @@
 #include <proxiios.h>
 #include "binfile.h"
 
+#define __throw_length_error __logging_abort
+
 #include <vector>
 
 #define EMU_MODULE_NAME "emu"

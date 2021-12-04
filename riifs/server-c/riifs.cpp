@@ -177,7 +177,7 @@ int TcpClient::Write(void *data, int len)
 
 int TcpClient::Read(ofstream *dst, int len)
 {
-	u64 read = 0;
+	int read = 0;
 	while (read < len) {
 		int ret = 0;
 		ret = Read(buffer, MIN(TCP_BUFFER_LEN, len-read));
@@ -194,7 +194,7 @@ int TcpClient::Read(ofstream *dst, int len)
 
 int TcpClient::Write(ifstream *src, int len)
 {
-	u64 read=0;
+	int read=0;
 	while (read < len) {
 		int ret;
 		src->read(buffer, MIN(TCP_BUFFER_LEN, len-read));

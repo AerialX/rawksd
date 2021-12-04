@@ -71,15 +71,15 @@ typedef struct _FILE_STRUCT FILE_STRUCT;
 
 extern int _FAT_open_r (struct _reent *r, void *fileStruct, const char *path, int flags, int mode);
 
-extern int _FAT_close_r (struct _reent *r, int fd);
+extern int _FAT_close_r (struct _reent *r, void *fd);
 
-extern ssize_t _FAT_write_r (struct _reent *r,int fd, const char *ptr, size_t len);
+extern ssize_t _FAT_write_r (struct _reent *r, void *fd, const char *ptr, size_t len);
 
-extern ssize_t _FAT_read_r (struct _reent *r, int fd, char *ptr, size_t len);
+extern ssize_t _FAT_read_r (struct _reent *r, void *fd, char *ptr, size_t len);
 
-extern off_t _FAT_seek_r (struct _reent *r, int fd, off_t pos, int dir);
+extern off_t _FAT_seek_r (struct _reent *r, void *fd, off_t pos, int dir);
 
-extern int _FAT_fstat_r (struct _reent *r, int fd, struct stat *st);
+extern int _FAT_fstat_r (struct _reent *r, void *fd, struct stat *st);
 
 extern int _FAT_stat_r (struct _reent *r, const char *path, struct stat *st);
 
@@ -91,9 +91,9 @@ extern int _FAT_chdir_r (struct _reent *r, const char *name);
 
 extern int _FAT_rename_r (struct _reent *r, const char *oldName, const char *newName);
 
-extern int _FAT_ftruncate_r (struct _reent *r, int fd, off_t len);
+extern int _FAT_ftruncate_r (struct _reent *r, void *fd, off_t len);
 
-extern int _FAT_fsync_r (struct _reent *r, int fd);
+extern int _FAT_fsync_r (struct _reent *r, void *fd);
 
 /*
 Synchronizes the file data to disc.

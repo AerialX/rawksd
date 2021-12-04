@@ -25,7 +25,7 @@ u32 = struct.Struct('>I')
 verbose = True
 
 def print_debug(s):
-	if verbose: print '* '+s
+	if verbose: print('* '+s)
 
 
 def read_configs(filename):
@@ -53,7 +53,7 @@ def generate_ocarina_patch(offset, data):
 	count = len(data)
 	
 	offset -= 0x80000000
-	for i in xrange(count >> 2):
+	for i in range(count >> 2):
 		out.append('%08X %s' % (offset | 0x4000000, binascii.hexlify(data[i*4:i*4+4])))
 		offset += 4
 	
@@ -76,12 +76,12 @@ class KamekModule(object):
 		
 		self.data = yaml.safe_load(self.rawData)
 		if not isinstance(self.data, dict):
-			raise ValueError, 'the module file %s is an invalid format (it should be a YAML mapping)' % self.moduleName
+			raise(ValueError, 'the module file %s is an invalid format (it should be a YAML mapping)' % self.moduleName)
 		
 		# verify it
 		for field in self._requiredFields:
 			if field not in self.data:
-				raise ValueError, 'Missing field in the module file %s: %s' % (self.moduleName, field)
+				raise(ValueError, 'Missing field in the module file %s: %s' % (self.moduleName, field))
 
 
 
@@ -108,7 +108,7 @@ class KamekBuilder(object):
 			
 			# hook setup
 			self._hook_contexts = {}
-			for name, hookType in hooks.HookTypes.iteritems():
+			for name, hookType in hooks.HookTypes.items():
 				if hookType.has_context:
 					self._hook_contexts[hookType] = hookType.context_type()
 			
@@ -159,7 +159,7 @@ class KamekBuilder(object):
 						hook = hookType(self, m, hookData)
 						self._hooks.append(hook)
 					else:
-						raise ValueError, 'Unknown hook type: %s' % hookData['type']
+						raise(ValueError, 'Unknown hook type: %s' % hookData['type'])
 	
 	
 	def _compile_modules(self):
@@ -182,8 +182,8 @@ class KamekBuilder(object):
 				
 				errorVal = subprocess.call(new_command)
 				if errorVal != 0:
-					print 'BUILD FAILED!'
-					print 'g++ returned %d - an error occurred while compiling %s' % (errorVal, sourcefile)
+					print('BUILD FAILED!')
+					print('g++ returned %d - an error occurred while compiling %s' % (errorVal, sourcefile))
 					sys.exit(1)
 				
 				self._moduleFiles.append(objfile)
@@ -212,8 +212,8 @@ class KamekBuilder(object):
 		
 		errorVal = subprocess.call(ld_command)
 		if errorVal != 0:
-			print 'BUILD FAILED!'
-			print 'ld returned %d' % errorVal
+			print('BUILD FAILED!')
+			print('ld returned %d' % errorVal)
 			sys.exit(1)
 		
 		print_debug('Linked successfully')
@@ -269,7 +269,7 @@ class KamekBuilder(object):
 		
 		# next up, run it through c++filt
 		print_debug('Running c++filt')
-		p = subprocess.Popen('powerpc-eabi-c++filt', stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+		p = subprocess.Popen('powerpc-eabi-c++filt', stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding='utf-8')
 		
 		symbolNameList = [sym[1] for sym in self._symbols]
 		filtResult = p.communicate('\n'.join(symbolNameList))
@@ -287,7 +287,7 @@ class KamekBuilder(object):
 			if sym[2] == find_symbol:
 				return sym[0]
 		
-		raise ValueError, 'Cannot find function: %s' % find_symbol
+		raise(ValueError, 'Cannot find function: %s' % find_symbol)
 	
 	
 	def _add_patch(self, offset, data):
@@ -359,12 +359,12 @@ class KamekProject(object):
 		
 		self.data = yaml.safe_load(self.rawData)
 		if not isinstance(self.data, dict):
-			raise ValueError, 'the project file is an invalid format (it should be a YAML mapping)'
+			raise(ValueError, 'the project file is an invalid format (it should be a YAML mapping)')
 		
 		# verify it
 		for field in self._requiredFields:
 			if field not in self.data:
-				raise ValueError, 'Missing field in the project file: %s' % field
+				raise(ValueError, 'Missing field in the project file: %s' % field)
 		
 		# load each module
 		self.modules = []
@@ -385,11 +385,11 @@ class KamekProject(object):
 
 
 def main():
-	print version_str
-	print
+	print(version_str)
+	print()
 	
 	if len(sys.argv) < 2:
-		print 'No input file specified'
+		print('No input file specified')
 		sys.exit()
 	
 	project = KamekProject(os.path.normpath(sys.argv[1]))
