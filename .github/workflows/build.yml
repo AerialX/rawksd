@@ -1,0 +1,25 @@
+on:
+- push
+- pull_request
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitppc:20210726
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        dpkg --add-architecture i386
+        apt-get update && apt-get install -y --no-install-recommends g++ libgcc1:i386 zlib1g:i386
+      name: dependencies
+    - run: make launcher -j
+    - uses: actions/upload-artifact@v2
+      with:
+        name: riivolution
+        path: launcher/riiv.zip
+    - run: make rawksd -j
+    - uses: actions/upload-artifact@v2
+      with:
+        name: rawksd
+        path: rawksd/rawk.zip
+    - run: make riifs -j
