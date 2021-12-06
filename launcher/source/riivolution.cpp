@@ -509,7 +509,6 @@ static void RVL_Patch(RiiDLCPatch* DLC, string commonfs)
 
 static void ApplyParams(std::string* str, map<string, string>* params)
 {
-	bool found = false;
 	string::size_type pos;
 	while ((pos = str->find("{$")) != string::npos) {
 		string::size_type pend = str->find("}", pos);
@@ -520,7 +519,6 @@ static void ApplyParams(std::string* str, map<string, string>* params)
 		else
 			paramname = param->second;
 		*str = str->substr(0, pos) + paramname + str->substr(pend + 1);
-		found = true;
 	}
 }
 

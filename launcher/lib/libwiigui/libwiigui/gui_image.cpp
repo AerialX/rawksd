@@ -266,7 +266,7 @@ void GuiImage::Draw()
 
 	if(stripe > 0)
 		for(int y=0; y < GetHeight(); y+=6)
-			Menu_DrawRectangle(currLeft,GetTop()+y,GetWidth(),3,(GXColor){0, 0, 0, stripe},1);
+			Menu_DrawRectangle(currLeft,GetTop()+y,GetWidth(),3,(GXColor){0, 0, 0, (u8)stripe},1);
 
 	UpdateEffects();
 }

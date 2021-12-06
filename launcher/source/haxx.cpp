@@ -1294,7 +1294,7 @@ static int load_module_code(u8 *module_code, u8 *module_end)
 
 	es_fd = IOS_Open("/dev/es", 0);
 	if (es_fd<0) {
-		if (dec != module_code);
+		if (dec != module_code)
 			free(dec);
 		return 0;
 	}
@@ -1306,7 +1306,7 @@ static int load_module_code(u8 *module_code, u8 *module_end)
 	{
 		ISFS_Delete(LOAD_MODULE_PATH);
 		IOS_Close(es_fd);
-		if (dec != module_code);
+		if (dec != module_code)
 			free(dec);
 		return 0;
 	}

@@ -12,7 +12,9 @@
 #define unsetAccessMask(mask, bit) (mask[bit>>3] &= ~(1 << (bit&7)))
 #define checkAccessMask(mask, bit) (mask[bit>>3] & (1 << (bit&7)))
 
-#if 0
+//#define BINFILE_LOGGING
+
+#ifdef BINFILE_LOGGING
 void LogPrintf(const char *fmt, ...);
 #else
 #include "logging.h"
@@ -268,6 +270,7 @@ static void CloseWriteBin(BinFile* file)
 		debug_printf("Flushing %u bytes\n", file->pos);
 		enc_result = os_aes_encrypt(file->key_index, file->iv, file->buf, 16, file->buf);
 		debug_printf("os_aes_encrypt returned %d (%08X %08X %08X)\n", enc_result, file->iv, file->buf, 16);
+		(void)enc_result;
 		//dlc_aes_encrypt(file->iv, file->buf, file->buf, file->pos);
 		FileWrite(file, file->buf, 16);
 	}
@@ -360,6 +363,7 @@ s32 SeekBin(BinFile* file, s32 where, u32 origin)
 				file->pos -= (16-(where&0xF));
 				dec_result = os_aes_decrypt(file->key_index, file->iv, file->buf, 16, file->buf);
 				debug_printf("os_aes_decrypt returned %d\n", dec_result);
+				(void)dec_result;
 				//dlc_aes_decrypt(file->iv, file->buf, file->buf, 16);
 				memmove(file->buf, file->buf+(where&0xF), 16-(where&0xF));
 			}
@@ -403,6 +407,7 @@ s32 ReadBin(BinFile* file, u8* buffer, u32 numbytes)
 				return FSERR_EINVAL;
 			}
 			dec_result = os_aes_decrypt(file->key_index, file->iv, tempbuffer, i, tempbuffer);
+			(void)dec_result;
 			debug_printf("os_aes_decrypt returned %d\n", dec_result);
 			//dlc_aes_decrypt(file->iv, tempbuffer, tempbuffer, i);
 		}
@@ -450,14 +455,16 @@ BinFile* CreateBinFile(u16 index, u32* tmd_buf, u32 tmd_size, s32 file)
 	bin->header_size = ROUND_UP(tmd_size+sizeof(bk_header), 64);
 
 	memset(&bk_header, 0, sizeof(bk_header));
-    bk_header.size = 0x70;
-    bk_header.magic = 0x426B /*'Bk'*/;
-    bk_header.version = 1;
-	os_get_4byte_key(ES_KEY_CONSOLE, &bk_header.NG_id);
-    bk_header.tmd_size = tmd_size;
-    bk_header.title_id_1 = 0x00010000;
-    bk_header.title_id_2 = *(u32*)0;
-    setAccessMask(bk_header.content_mask, index);
+	bk_header.size = 0x70;
+	bk_header.magic = 0x426B /*'Bk'*/;
+	bk_header.version = 1;
+	u32 ngid;
+	os_get_4byte_key(ES_KEY_CONSOLE, &ngid);
+	bk_header.NG_id = ngid;
+	bk_header.tmd_size = tmd_size;
+	bk_header.title_id_1 = 0x00010000;
+	bk_header.title_id_2 = *(u32*)0;
+	setAccessMask(bk_header.content_mask, index);
 
 	if (!(bin->key_index = get_key_index((tmd*)SIGNATURE_PAYLOAD(tmd_buf))))
 		debug_printf("Failed to create or init key for output BIN\n");
@@ -506,6 +513,7 @@ s32 WriteBin(BinFile* file, u8* buffer, u32 numbytes)
 				file->pos -= 16;
 				enc_result = os_aes_encrypt(file->key_index, file->iv, file->buf, 16, file->buf);
 				debug_printf("os_aes_encrypt returned %d (%08X %08X %08X)\n", enc_result, file->iv, file->buf, 16);
+				(void)enc_result;
 				//dlc_aes_encrypt(file->iv, file->buf, file->buf, 16);
 				if (FileWrite(file, file->buf, 16))
 				{
@@ -523,6 +531,7 @@ s32 WriteBin(BinFile* file, u8* buffer, u32 numbytes)
 
 			enc_result = os_aes_encrypt(file->key_index, file->iv, buffer, enc_bytes, buffer);
 			debug_printf("os_aes_encrypt returned %d (%08X %08X %08X)\n", enc_result, file->iv, buffer, enc_bytes);
+			(void)enc_result;
 			//dlc_aes_encrypt(file->iv, buffer, buffer, bytes_left);
 			if (FileWrite(file, buffer, enc_bytes))
 			{

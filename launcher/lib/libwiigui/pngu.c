@@ -11,6 +11,7 @@ Modified by Tantric, 2009
 ********************************************************************************************/
 #include <stdio.h>
 #include <malloc.h>
+#include <string.h>
 #include "pngu.h"
 #include "png.h"
 

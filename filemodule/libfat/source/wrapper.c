@@ -135,16 +135,18 @@ s32 FAT_Open_Prealloc(const char *path, u32 mode, FILE_STRUCT* fs)
 
 s32 FAT_Close(s32 fd)
 {
+	FILE_STRUCT *fs = (FILE_STRUCT *)fd;
+
 	/* Close file */
-	s32 ret = _FAT_close_r(&fReent, fd);
-	Dealloc((void*)fd);
+	s32 ret = _FAT_close_r(&fReent, fs);
+	Dealloc(fs);
 	return ret;
 }
 
 s32 FAT_Close_Prealloc(s32 fd)
 {
 	/* Close file */
-	return _FAT_close_r(&fReent, fd);
+	return _FAT_close_r(&fReent, (void*)fd);
 }
 
 s32 FAT_Read(s32 fd, void *buffer, u32 len)
@@ -155,7 +157,7 @@ s32 FAT_Read(s32 fd, void *buffer, u32 len)
 	fReent._errno = 0;
 
 	/* Read file */
-	ret = _FAT_read_r(&fReent, fd, buffer, len);
+	ret = _FAT_read_r(&fReent, (void*)fd, buffer, len);
 	//if (ret < 0)
 	//	ret = __FAT_GetError();
 
@@ -170,7 +172,7 @@ s32 FAT_Write(s32 fd, void *buffer, u32 len)
 	fReent._errno = 0;
 
 	/* Write file */
-	ret = _FAT_write_r(&fReent, fd, buffer, len);
+	ret = _FAT_write_r(&fReent, (void*)fd, buffer, len);
 	if (ret < 0)
 		ret = __FAT_GetError();
 
@@ -185,7 +187,7 @@ s32 FAT_Flush(s32 fd)
 	fReent._errno = 0;
 
 	/* Sync file */
-	ret = _FAT_fsync_r(&fReent, fd);
+	ret = _FAT_fsync_r(&fReent, (void*)fd);
 	if (ret < 0)
 		ret = __FAT_GetError();
 
@@ -200,7 +202,7 @@ s32 FAT_Seek(s32 fd, u32 where, u32 whence)
 	fReent._errno = 0;
 
 	/* Seek file */
-	ret = _FAT_seek_r(&fReent, fd, where, whence);
+	ret = _FAT_seek_r(&fReent, (void*)fd, where, whence);
 	//if (ret < 0)
 	//	ret = __FAT_GetError();
 
@@ -248,7 +250,7 @@ s32 FAT_CreateFile(const char *filepath)
 		return __FAT_GetError();
 
 	/* Close file */
-	_FAT_close_r(&fReent, ret);
+	_FAT_close_r(&fReent, (void*)ret);
 
 	return 0;
 }

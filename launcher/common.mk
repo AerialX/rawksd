@@ -18,7 +18,7 @@ INCLUDES := $(SOURCE_DIR)/$(BUILD) $(SOURCE_DIR)/include $(LAUNCHER_DIR)/include
 						$(COMMON_DIR)/filemodule/include \
 						$(LAUNCHER_DIR)/lib/libxml2/include $(LAUNCHER_DIR)/lib/libxml++ $(LAUNCHER_DIR)/lib/libxml++/libxml++
 
-CFLAGS		=	-fdata-sections -ffunction-sections -g -O2 -Wall $(MACHDEP) $(INCLUDE)
+CFLAGS		=	-fdata-sections -ffunction-sections -g -O2 -Wall -Wno-deprecated-declarations -Wno-multistatement-macros $(MACHDEP) $(INCLUDE)
 CXXFLAGS	=	-Xassembler -aln=$@.lst $(CFLAGS)
 LDFLAGS		=	$(MACHDEP) -Wl,--gc-sections -Wl,-Map,$(notdir $@).map,--section-start,.init=$(INIT_ADDR) -T $(LAUNCHER_DIR)/lib/rvl.ld
 

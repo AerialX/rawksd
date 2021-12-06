@@ -95,6 +95,8 @@ namespace ProxiIOS { namespace Filesystem {
 
 			result = os_ioctl(fd, ISFS::GetFileStats, NULL, 0, isfs_stats, 8);
 			os_close(fd);
+			if (result < 0)
+				return -1;
 			st->Size = isfs_stats->Length;
 			Dealloc(isfs_stats);
 		} else

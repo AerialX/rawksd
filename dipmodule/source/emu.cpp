@@ -337,7 +337,7 @@ namespace ProxiIOS { namespace EMU {
 		param.ownerperm = owner_perm;
 		param.groupperm = group_perm;
 		param.otherperm = other_perm;
-		strncpy(param.path, path, ISFS_MAXPATH_LEN);
+		strncpy(param.path, path, ISFS_MAXPATH_LEN - 1);
 		int ret = FS_Ioctl(fsfd, ISFS::CreateFile, &param, sizeof(param), NULL, 0);
 		FS_Close(fsfd);
 		return ret;
@@ -1695,7 +1695,9 @@ namespace ProxiIOS { namespace EMU {
 		strcpy(TIK->issuer, "Root-CA00000001-XS00000003");
 		strcpy((char*)TIK->cipher_title_key, "japaneatahand.com");
 		memcpy(&TIK->ticketid, "[RawkSD]", 8);
-		os_get_4byte_key(ES_KEY_CONSOLE, &TIK->devicetype);
+		u32 devicetype;
+		os_get_4byte_key(ES_KEY_CONSOLE, &devicetype);
+		TIK->devicetype = devicetype;
 		TIK->titleid = GetTitleID(path, Tik);
 		TIK->access_mask = 0xFFFF;
 		TIK->reserved[1] = 0xFF;

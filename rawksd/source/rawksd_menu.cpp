@@ -102,7 +102,7 @@ static void* UpdateGUI(void*)
 			if (exitRequested) {
 				for(i = 0; i < 255; i += 15) {
 					Window->Draw();
-					Menu_DrawRectangle(0, 0, screenwidth, screenheight, (GXColor){0, 0, 0, i}, 1);
+					Menu_DrawRectangle(0, 0, screenwidth, screenheight, (GXColor){0, 0, 0, (u8)i}, 1);
 					Menu_Render();
 				}
 				ExitApp();

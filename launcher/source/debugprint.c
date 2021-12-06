@@ -35,7 +35,7 @@ static void InitializeNetwork(const char *ip_str, const int port)
 	}
 }
 
-static int DebugPrint(struct _reent *r, int fd, const char *ptr, size_t len)
+static ssize_t DebugPrint(struct _reent *r, void *fd, const char *ptr, size_t len)
 {
 	File_Log(ptr, len);
 	if (socket >= 0) {

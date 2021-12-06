@@ -394,6 +394,7 @@ s32 net_init(void)
 
 	octets = (u8 *) &ip_addr;
 	debug_printf(" %d.%d.%d.%d\n", octets[0], octets[1], octets[2], octets[3]);
+	(void)octets;
 
 	return 0;
 

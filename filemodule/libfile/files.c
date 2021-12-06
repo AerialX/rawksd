@@ -359,6 +359,6 @@ int File_Fat_Mount(disk_phys disk, const char* name)
 
 	char options[0x40];
 	memcpy(options, &ret, sizeof(u32));
-	strncpy(options + 4, name, 0x40 - 4);
+	strncpy(options + 4, name, 0x40 - 4 - 1);
 	return File_Mount(FS_FAT, options, 4 + strlen(name) + 1);
 }

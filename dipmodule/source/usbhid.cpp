@@ -230,13 +230,15 @@ namespace ProxiIOS { namespace USB {
 					ipcmessage *msg = (ipcmessage*)message->ioctl.buffer_in;
 					//LogPrintf("USB_HID proxy response for %p: %d\n", message->ioctl.buffer_in, message->result);
 					if (msg->ioctl.command == 3) {
+#if 0
 						usbhid_transfer *xfer = (usbhid_transfer*)msg->ioctl.buffer_in;
 						u32 *udata = (u32*)(xfer->data&0x7FFFFFFF);
 						u8 *bdata = (u8*)udata;
-						//if (message->result==15)
-						//	LogPrintf("%08X %08X %08X %02X%02X%02X\n", udata[0], udata[1], udata[2], bdata[12], bdata[13], bdata[14]);
-						//if (message->result==16)
-						//	LogPrintf("%08X %08X %08X %08X\n", udata[0], udata[1], udata[2], udata[3]);
+						if (message->result==15)
+							LogPrintf("%08X %08X %08X %02X%02X%02X\n", udata[0], udata[1], udata[2], bdata[12], bdata[13], bdata[14]);
+						if (message->result==16)
+							LogPrintf("%08X %08X %08X %08X\n", udata[0], udata[1], udata[2], udata[3]);
+#endif
 					}
 
 					os_message_queue_ack(msg, message->result);
