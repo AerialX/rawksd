@@ -29,4 +29,10 @@ riiv.zip: boot.elf
 
 z: riiv.zip
 
+clean: clean-riiv
+clean-riiv:
+	@rm -f riiv.zip hbc/apps/riivolution/boot.elf
+
+.PHONY: clean-riiv
+
 endif

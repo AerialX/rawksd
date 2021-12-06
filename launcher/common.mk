@@ -48,7 +48,7 @@ export OUTPUT	:=	$(CURDIR)/$(TARGETDIR)/$(TARGET)
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
 					$(foreach dir,$(SOURCEDIRS),$(CURDIR)/$(dir)) \
 					$(foreach dir,$(TEXTURES),$(CURDIR)/$(dir))
-export DEPSDIR» :=» $(CURDIR)/$(BUILD)
+export DEPSDIR := $(CURDIR)/$(BUILD)
 
 $(DOLLZ3):
 	@$(HOSTMAKE) --no-print-directory -C $(LAUNCHER_DIR)/dollz3 dollz3.exe

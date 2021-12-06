@@ -23,7 +23,7 @@ $(KAMEK_BUILD):
 
 riiv: $(BUILD)/riiv.xml
 $(BUILD)/riiv.xml: riiv.template $(KAMEK_BUILD)
-	@echo "Creating XML..."
+	@echo "Creating XML $(notdir $@)..."
 	@cat $< > $@
 	@echo '<patch id="test_ntsc">' >> $@
 	@cat $(BUILD)/ntsc_riiv.xml >> $@
@@ -50,7 +50,8 @@ $(BUILD)/rb2_pal.xml: riiv_pal.template $(KAMEK_BUILD)
 	@echo '</wiidisc>' >> $@
 
 clean:
-	rm -rf $(BUILD)
+	@echo clean kamek ...
+	@rm -rf $(BUILD)
 
 .PHONY: all riiv rb2_ntsc rb2_pal
 .DELETE_ON_ERROR:

@@ -54,7 +54,7 @@ all:
 
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(BIN)/*.elf ../launcher/data/$(TARGET).dat
+	@rm -fr $(BUILD) $(BIN) ../launcher/data/$(TARGET).dat
 
 else
 

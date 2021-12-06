@@ -38,12 +38,15 @@ rawk.zip: boot.elf
 
 z: rawk.zip
 
-clean: clean-kamek
+clean: clean-kamek clean-rawk
 
 clean-kamek:
 	@$(HOSTMAKE) --no-print-directory -C kamek clean
 
-.PHONY: clean-kamek
+clean-rawk:
+	@rm -f rawk.zip hbc/apps/rawksd/boot.elf
+
+.PHONY: clean-kamek clean-rawk
 
 else
 
