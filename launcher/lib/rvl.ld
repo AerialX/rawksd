@@ -101,7 +101,10 @@ SECTIONS
 
 	.rodata   : { *(.rodata) *(.rodata.*) *(.gnu.linkonce.r.*) } :data
 	.rodata1   : { *(.rodata1) }
-	.sdata2   : { *(.sdata2) *(.sdata2.*) *(.gnu.linkonce.s2.*) }
+	.sdata2   : {
+		PROVIDE(_SDA2_BASE_ = .);
+		*(.sdata2) *(.sdata2.*) *(.gnu.linkonce.s2.*)
+	}
 	.sbss2   : { *(.sbss2) *(.sbss2.*) *(.gnu.linkonce.sb2.*) }
   /* Align to a page boundary so we can set RX memory protection on the
      text+read-only sections. */
@@ -179,6 +182,7 @@ SECTIONS
 
 	.sdata     :
 	{
+		PROVIDE(_SDA_BASE_ = .);
 		*(.sdata)
 		*(.sdata.*)
 		*(.gnu.linkonce.s.*)
