@@ -39,6 +39,7 @@ jobs:
   msys2:
     name: Windows MSYS2
     runs-on: windows-latest
+    continue-on-error: true
     defaults:
       run:
         shell: msys2 {0}
