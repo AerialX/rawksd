@@ -399,6 +399,7 @@ LauncherStatus::Enum Launcher_ScrubPlaytimeEntry()
 	return LauncherStatus::IosError;
 }
 
+#ifdef RETURN_TO_MENU
 static void PatchReturnToMenu(s32 app_section_size, u64 titleID)
 {
 	u32 *found;
@@ -431,6 +432,7 @@ static void PatchReturnToMenu(s32 app_section_size, u64 titleID)
 		code[7] = titleID & 0xFFFF;
 	}
 }
+#endif
 
 static inline void ApplyBinaryPatches(s32 app_section_size)
 {
@@ -456,14 +458,18 @@ static inline void ApplyBinaryPatches(s32 app_section_size)
 			((u32*)found)[3] = 0x4E800020;
 	}
 
+#ifdef FWRITE_PATCH
 	// Apply fwrite patch
-	//Fwrite_FindPatchLocation((char*)app_address, app_section_size);
+	Fwrite_FindPatchLocation((char*)app_address, app_section_size);
+#endif
 
+#ifdef RETURN_TO_MENU
 	// Return to Riiv is not working properly yet
-	//if (*(u32*)0x80001808 == 0x48415858) // "HAXX"
-	//	PatchReturnToMenu(app_section_size, 0x00010001af1bf516llu);
-	//	PatchReturnToMenu(app_section_size, 0x000100014a4f4449llu); // "JODI"
-	//	PatchReturnToMenu(app_section_size, 0x0001000152494956llu); // "RIIV"
+	if (*(u32*)0x80001808 == 0x48415858) // "HAXX"
+		PatchReturnToMenu(app_section_size, 0x00010001af1bf516llu);
+	PatchReturnToMenu(app_section_size, 0x000100014a4f4449llu); // "JODI"
+	PatchReturnToMenu(app_section_size, 0x0001000152494956llu); // "RIIV"
+#endif
 
 	RVL_PatchMemory(&Disc, app_address, app_section_size);
 }
@@ -550,10 +556,12 @@ LauncherStatus::Enum Launcher_RunApploader()
 		app_disc_offset = 0;
 	}
 
+#ifdef FWRITE_PATCH
 	// Fwrite patch needs to be fixed for SMG+SMG2
-// fwrite patch causes crashes if fwrite is used in a callback (RB1->USB device found)
-//	if (memcmp(MEM_BASE, "RMG", 3) && memcmp(MEM_BASE, "SB4", 3))
-//		Fwrite_Patch();
+	// fwrite patch causes crashes if fwrite is used in a callback (RB1->USB device found)
+	if (memcmp(MEM_BASE, "RMG", 3) && memcmp(MEM_BASE, "SB4", 3))
+		Fwrite_Patch();
+#endif
 
 	// copy the IOS version over the expected IOS version
 	memcpy(MEM_IOSEXPECTED, MEM_IOSVERSION, 4);

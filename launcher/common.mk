@@ -22,9 +22,19 @@ CFLAGS		=	-fdata-sections -ffunction-sections -g -O2 -Wall -Wno-deprecated-decla
 CXXFLAGS	=	-Xassembler -aln=$@.lst $(CFLAGS)
 LDFLAGS		=	$(MACHDEP) -Wl,--gc-sections -Wl,-Map,$(notdir $@).map,--section-start,.init=$(INIT_ADDR) -T $(LAUNCHER_DIR)/lib/rvl.ld
 
+export DEBUGGER ?=
+export RETURN_TO_MENU ?=
+export FWRITE_PATCH ?=
+
 ifdef $(DEBUGGER)
 	MODULES += megamodule
 	CFLAGS += -DDEBUGGER=1
+endif
+ifdef $(RETURN_TO_MENU)
+	CFLAGS += -DRETURN_TO_MENU=1
+endif
+ifdef $(FWRITE_PATCH)
+	CFLAGS += -DFWRITE_PATCH=1
 endif
 
 RES_EXTS += ttf png ogg pcm dat tpl xml
