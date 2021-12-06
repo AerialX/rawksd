@@ -1,32 +1,46 @@
 #pragma once
 
 #include <gctypes.h>
+#include <stddef.h>
 
-//#define YARR
-//#define DEBUGGER
+static constexpr size_t MEM1_SIZE = 0x01800000;
+static constexpr size_t MEM1_APPLOADER_OFFSET = 0x01200000;
+static constexpr size_t MEM1_EXE_OFFSET = 0x3F00;
+extern "C" u32 MEM1_BASE[MEM1_EXE_OFFSET / sizeof(u32)];
+extern "C" u32 MEM_APPLOADER[(MEM1_SIZE - MEM1_APPLOADER_OFFSET) / sizeof(u32)];
 
-#define MEM_BASE			((u8*)0x80000000)
-#define MEM_BOOTCODE		((u32*)0x80000020)
-#define MEM_VERSION			((u32*)0x80000024)
-#define MEM_ARENA1LOW		((u32*)0x80000030)
-#define MEM_BUSSPEED		((u32*)0x800000F8)
-#define MEM_CPUSPEED		((u32*)0x800000FC)
-#define MEM_IOSVERSION		((u32*)0x80003140)
-#define MEM_GAMEONLINE		((u32*)0x80003180)
-#define MEM_TITLEFLAGS		((u32*)0x80003184)
-#define MEM_IOSEXPECTED		((u32*)0x80003188)
-#define MEM_VIDEOMODE		((u32*)0x800000CC)
-#define MEM_PHYSICALSIZE	((u32*)0x80000028)
-#define MEM_VIRTUALSIZE		((u32*)0x800000F0)
-#define MEM_BI2				((u32*)0x800000F4)
+#define DEFINE_ARRAY(ty, len, sym, target) static constexpr ty (&sym)[len] = reinterpret_cast<ty(&)[len]>(target);
+#define DEFINE_MEM(ty, sym, off) static constexpr ty& sym = reinterpret_cast<ty&>(MEM1_BASE[off / sizeof(u32)])
+#define MEM1_BYTE(ty, off) (reinterpret_cast<ty&>(MEM1_BASE_BYTES[off]))
 
-#define MEM_FSTADDRESS		((void**)0x80000038)
-#define MEM_FSTADDRESS2		((void**)0x80003110)
-#define MEM_APPLOADER		((u32*)0x81200000)
+DEFINE_ARRAY(u8, MEM1_EXE_OFFSET, MEM1_BASE_BYTES, MEM1_BASE);
+DEFINE_MEM(u32, MEM_GAMECODE, 0);
+DEFINE_ARRAY(char, sizeof(u32), MEM_GAMECODE_CHARS, MEM1_BASE[0]);
+#define MEM_GAMEREGION MEM1_BYTE(char, 3)
+DEFINE_ARRAY(char, sizeof(u16), MEM_MAKERCODE_CHARS, MEM1_BASE[1]);
+#define MEM_DISCNUMBER MEM1_BYTE(u8, 6)
+#define MEM_DISCVERSION MEM1_BYTE(u8, 7)
+DEFINE_MEM(u32, MEM_BOOTCODE, 0x20);
+DEFINE_MEM(u32, MEM_VERSION, 0x24);
+DEFINE_MEM(size_t, MEM_PHYSICALSIZE, 0x28);
+DEFINE_MEM(size_t, MEM_ARENA1LOW, 0x30);
+DEFINE_MEM(size_t, MEM_ARENA1HIGH, 0x34);
+DEFINE_MEM(size_t, MEM_FSTADDRESS, 0x38);
+DEFINE_MEM(size_t, MEM_FSTSIZE, 0x3C);
+DEFINE_MEM(u32, MEM_VIDEOMODE, 0xCC);
+DEFINE_MEM(size_t, MEM_VIRTUALSIZE, 0xF0);
+DEFINE_MEM(u32, MEM_BI2, 0xF4);
+DEFINE_MEM(u32, MEM_BUSSPEED, 0xF8);
+DEFINE_MEM(u32, MEM_CPUSPEED, 0xFC);
+DEFINE_MEM(u32, MEM_IOSVERSION, 0x3140);
+DEFINE_MEM(u32, MEM_GAMEONLINE, 0x3180);
+DEFINE_MEM(u32, MEM_TITLEFLAGS, 0x3184);
+DEFINE_MEM(u32, MEM_IOSEXPECTED, 0x3188);
 
-#define MEM_ARENA1HIGH		((void**)0x80000034)
-#define MEM_FSTSIZE			((u32*)0x8000003C)
-#define MEM_EXE				((void*)0x80003F00)
+DEFINE_MEM(size_t, MEM_FSTADDRESS2, 0x3110);
+
+#undef DEFINE_ARRAY
+#undef DEFINE_MEM
 
 namespace LauncherStatus { enum Enum {
 	OK = 0,

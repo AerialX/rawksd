@@ -454,7 +454,7 @@ Menus::Enum MenuInit()
 		}
 		File_Close(fd);
 		File_Delete("/mnt/isfs/title/00010001/52494956/data/disc.sys");
-		if ((u32)old_disc == *(u32*)MEM_BASE)
+		if ((u32)old_disc == MEM_GAMECODE)
 			return Menus::Launch;
 	}
 #endif

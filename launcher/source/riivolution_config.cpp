@@ -194,13 +194,13 @@ versionisvalid:
 		}
 
 		ELEMENT_START("id") {
-			ELEMENT_ATTRIBUTE("game", memcmp(MEM_BASE, attribute.c_str(), attribute.length()))
+			ELEMENT_ATTRIBUTE("game", memcmp(MEM_GAMECODE_CHARS, attribute.c_str(), attribute.length()))
 				return false;
-			ELEMENT_ATTRIBUTE("developer", memcmp(MEM_BASE + 4, attribute.c_str(), attribute.length()))
+			ELEMENT_ATTRIBUTE("developer", memcmp(MEM_MAKERCODE_CHARS, attribute.c_str(), attribute.length()))
 				return false;
-			ELEMENT_ATTRIBUTE("disc", (u8)ELEMENT_INT(attribute) != *(MEM_BASE + 6))
+			ELEMENT_ATTRIBUTE("disc", (u8)ELEMENT_INT(attribute) != MEM_DISCNUMBER)
 				return false;
-			ELEMENT_ATTRIBUTE("version", (u8)ELEMENT_INT(attribute) != *(MEM_BASE + 7))
+			ELEMENT_ATTRIBUTE("version", (u8)ELEMENT_INT(attribute) != MEM_DISCVERSION)
 				return false;
 
 			bool foundregion = false;
@@ -211,7 +211,7 @@ versionisvalid:
 
 				ELEMENT_START("region") {
 					hasregion = true;
-					ELEMENT_ATTRIBUTE("type", attribute[0] == *(MEM_BASE + 3))
+					ELEMENT_ATTRIBUTE("type", attribute[0] == MEM_GAMEREGION)
 						foundregion = true;
 				}
 			}
@@ -657,7 +657,7 @@ void ParseConfigXMLs(RiiDisc* disc)
 	char filename[MAXPATHLEN];
 	strcpy(filename, RIIVOLUTION_CONFIG_PATH);
 	strcat(filename, "/");
-	strncat(filename, (const char*)MEM_BASE, 4);
+	strncat(filename, MEM_GAMECODE_CHARS, 4);
 	strcat(filename, ".xml");
 
 	Stats st;
@@ -680,7 +680,7 @@ void SaveConfigXML(RiiDisc* disc)
 	char filename[MAXPATHLEN];
 	strcpy(filename, RIIVOLUTION_CONFIG_PATH);
 	strcat(filename, "/");
-	strncat(filename, (const char*)MEM_BASE, 4);
+	strncat(filename, MEM_GAMECODE_CHARS, 4);
 	strcat(filename, ".xml");
 
 	File_CreateDir(RIIVOLUTION_PATH);

@@ -52,7 +52,7 @@ RawkMenu *MenuPlay::Process()
 		case LauncherStatus::ReadError:
 			return new MenuSaves(Main, "Read Error", "\nCouldn't read the disc, are you sure it is a proper Wii disc?");
 		default: // LauncherStatus::OK
-			if (memcmp(MEM_BASE, "SZA", 3) || (MEM_BASE[3] != 'E' && MEM_BASE[3] != 'P'))
+			if (memcmp(MEM_GAMECODE_CHARS, "SZA", 3) || (MEM_GAMEREGION != 'E' && MEM_GAMEREGION != 'P'))
 				return new MenuSaves(Main, Launcher_GetGameName(), "\nOnly Rock Band 2 can be launched. Insert the correct disc and try again.");
 			popup_text[0]->SetText(Launcher_GetGameNameWide());
 			sprintf(status_text, "\nReading Disc.....");
@@ -96,7 +96,7 @@ RawkMenu *MenuPlay::Process()
 			popup_text[1]->SetText(status_text);
 			ResumeGui();
 
-			if (MEM_BASE[3] == 'E') {
+			if (MEM_GAMEREGION == 'E') {
 				File_CreateFile("/mnt/isfs/tmp/ntsc.tpl");
 				out_fd = File_Open("/mnt/isfs/tmp/ntsc.tpl", O_WRONLY);
 				if (out_fd >=0) {
@@ -104,7 +104,7 @@ RawkMenu *MenuPlay::Process()
 					File_Close(out_fd);
 				}
 			}
-			else if (MEM_BASE[3] == 'P') {
+			else if (MEM_GAMEREGION == 'P') {
 				File_CreateFile("/mnt/isfs/tmp/pal.tpl");
 				out_fd = File_Open("/mnt/isfs/tmp/pal.tpl", O_WRONLY);
 				if (out_fd >=0) {

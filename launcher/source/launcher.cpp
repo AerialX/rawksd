@@ -24,6 +24,10 @@
 
 #define PLAYLOG_FILE "/mnt/isfs/title/00000001/00000002/data/play_rec.dat"
 
+extern "C" {
+	extern volatile u32 AI_CONTROL;
+}
+
 // TYPEDEFS
 typedef void (*AppReport) (const char*, ...);
 typedef void (*AppEnter) (AppReport);
@@ -344,12 +348,12 @@ LauncherStatus::Enum Launcher_CommitRVL(bool dip)
 		if (difference > 0) {
 			difference = ROUND_UP(difference, 0x40);
 			// TODO: Check that these two are equal first
-			*MEM_ARENA1HIGH = (u8*)*MEM_ARENA1HIGH - difference;
-			*MEM_FSTADDRESS = (u8*)*MEM_FSTADDRESS - difference;
-			*MEM_FSTADDRESS2 = (u8*)*MEM_FSTADDRESS2 - difference;
-			*MEM_FSTSIZE = RVL_GetFSTSize();
+			MEM_ARENA1HIGH = MEM_ARENA1HIGH - difference;
+			MEM_FSTADDRESS = MEM_FSTADDRESS - difference;
+			MEM_FSTADDRESS2 = MEM_FSTADDRESS2 - difference;
+			MEM_FSTSIZE = RVL_GetFSTSize();
 		}
-		memcpy(*MEM_FSTADDRESS, RVL_GetFST(), RVL_GetFSTSize());
+		memcpy((u8*)MEM_FSTADDRESS, RVL_GetFST(), RVL_GetFSTSize());
 	}
 
 	return LauncherStatus::OK;
@@ -479,10 +483,10 @@ LauncherStatus::Enum Launcher_SetVideoMode()
 	GXRModeObj* vmode;
 	u32 tvmode = CONF_GetVideo();
 	if (tvmode==CONF_VIDEO_PAL) {
-		if (MEM_BASE[3]=='P')
-			*MEM_VIDEOMODE = VI_EURGB60;
+		if (MEM_GAMECODE_CHARS[3]=='P')
+			MEM_VIDEOMODE = VI_EURGB60;
 		else
-			*MEM_VIDEOMODE = VI_NTSC;
+			MEM_VIDEOMODE = VI_NTSC;
 		if (CONF_GetProgressiveScan() > 0 && VIDEO_HaveComponentCable()) {
 			// avoid libogc VIDEO_Configure() fail
 			//vmode = &TVEurgb60Hz480Prog;
@@ -491,7 +495,7 @@ LauncherStatus::Enum Launcher_SetVideoMode()
 			vmode = &TVEurgb60Hz480IntDf;
 		else {
 			vmode = &TVPal528IntDf;
-			*MEM_VIDEOMODE = VI_PAL;
+			MEM_VIDEOMODE = VI_PAL;
 		}
 	} else {
 		if (CONF_GetProgressiveScan() > 0 && VIDEO_HaveComponentCable())
@@ -499,9 +503,9 @@ LauncherStatus::Enum Launcher_SetVideoMode()
 		else
 			vmode = &TVNtsc480IntDf;
 		if (tvmode==CONF_VIDEO_NTSC)
-			*MEM_VIDEOMODE = VI_NTSC;
+			MEM_VIDEOMODE = VI_NTSC;
 		else
-			*MEM_VIDEOMODE = VI_MPAL;
+			MEM_VIDEOMODE = VI_MPAL;
 	}
 
 	VIDEO_Configure(vmode);
@@ -524,17 +528,17 @@ LauncherStatus::Enum Launcher_RunApploader()
 	settime(secs_to_ticks(time(NULL) - 946684800));
 
 	// put crap in memory to keep the apploader/dol happy
-	*MEM_VIRTUALSIZE = 0x01800000;
-	*MEM_PHYSICALSIZE = 0x01800000;
-	*MEM_BI2 = 0;
-	*MEM_BOOTCODE = 0x0D15EA5E;
-	*MEM_VERSION = 1;
-	*MEM_ARENA1LOW = 0;
-	*MEM_BUSSPEED = 0x0E7BE2C0;
-	*MEM_CPUSPEED = 0x2B73A840;
-	*MEM_TITLEFLAGS = 0x80000000;
-	memcpy(MEM_GAMEONLINE, MEM_BASE, 4);
-	DCFlushRange(MEM_BASE, 0x3F00);
+	MEM_VIRTUALSIZE = MEM1_SIZE;
+	MEM_PHYSICALSIZE = MEM1_SIZE;
+	MEM_BI2 = 0;
+	MEM_BOOTCODE = 0x0D15EA5E;
+	MEM_VERSION = 1;
+	MEM_ARENA1LOW = 0;
+	MEM_BUSSPEED = 0x0E7BE2C0;
+	MEM_CPUSPEED = 0x2B73A840;
+	MEM_TITLEFLAGS = 0x80000000;
+	MEM_GAMEONLINE = MEM_GAMECODE;
+	DCFlushRange(MEM1_BASE, MEM1_EXE_OFFSET);
 
 	// read the apploader info
 	if (WDVD_LowRead(&app, sizeof(app_info), APP_INFO_OFFSET))
@@ -559,14 +563,14 @@ LauncherStatus::Enum Launcher_RunApploader()
 #ifdef FWRITE_PATCH
 	// Fwrite patch needs to be fixed for SMG+SMG2
 	// fwrite patch causes crashes if fwrite is used in a callback (RB1->USB device found)
-	if (memcmp(MEM_BASE, "RMG", 3) && memcmp(MEM_BASE, "SB4", 3))
+	if (memcmp(MEM_GAMECODE_CHARS, "RMG", 3) && memcmp(MEM_GAMECODE_CHARS, "SB4", 3))
 		Fwrite_Patch();
 #endif
 
 	// copy the IOS version over the expected IOS version
-	memcpy(MEM_IOSEXPECTED, MEM_IOSVERSION, 4);
+	MEM_IOSEXPECTED = MEM_IOSVERSION;
 
-	*(u32*)0xCD006C00 = 0;	// deinit audio due to libogc fail
+	AI_CONTROL = 0;	// deinit audio due to libogc fail
 
 	app_address = app_exit();
 
@@ -587,7 +591,7 @@ LauncherStatus::Enum Launcher_Launch()
 		__ES_Close();
 		SYS_ProtectRange(SYS_PROTECTCHAN3, NULL, 0, SYS_PROTECTRDWR);
 		__MaskIrq(IM_MEMADDRESS);
-		DCFlushRangeNoSync(MEM_BASE, 0x01800000);
+		DCFlushRangeNoSync(MEM1_BASE, MEM1_SIZE);
 		ICFlashInvalidate();
 
 		SYS_ResetSystem(SYS_SHUTDOWN, 0, 0);

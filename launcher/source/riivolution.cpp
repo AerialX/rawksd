@@ -553,9 +553,9 @@ static void RVL_Patch(RiiPatch* patch, map<string, string>* params, string commo
 	char sng_id[9]; \
 	sprintf(sng_id, "%08X", otp.ng_id); \
 	params["__ngid"] = string(sng_id); \
-	params["__gameid"] = string((char*)MEM_BASE, 3); \
-	params["__region"] = string((char*)MEM_BASE + 3, 1); \
-	params["__maker"] = string((char*)MEM_BASE + 4, 2); \
+	params["__gameid"] = string(MEM_GAMECODE_CHARS, 3); \
+	params["__region"] = string(1, MEM_GAMEREGION); \
+	params["__maker"] = string(MEM_MAKERCODE_CHARS, 2); \
 }
 
 void RVL_Patch(RiiDisc* disc)
@@ -633,8 +633,7 @@ void RVL_Unmount()
 				continue;
 			s32 tik_file = File_Open(tik_path, O_RDONLY);
 			if (tik_file>=0) {
-				u32 game_id;
-				memcpy(&game_id, MEM_BASE, 4);
+				u32 game_id = MEM_GAMECODE;
 				File_Read(tik_file, tik_data, STD_SIGNED_TIK_SIZE);
 				if ((tik_data[0x76] && tik_data[0x76] != otp.ng_id) || (tik_data[0x7A]==(game_id&~tik_data[0x7B]) && check_cert_chain((u8*)tik_data, STD_SIGNED_TIK_SIZE)))
 					RVL_BanDLC(tik_data[0x78]);

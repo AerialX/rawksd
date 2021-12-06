@@ -1,6 +1,7 @@
 #include <ogc/ipc.h>
 #include <string.h>
 #include "wdvd.h"
+#include "launcher.h"
 
 static int di_fd = -1;
 
@@ -84,7 +85,7 @@ int WDVD_LowReadSectors(void *outbuf, u32 len, u32 offset)
 
 int WDVD_LowReadDiskId() {
 	int result;
-	void *outbuf = (void*)0x80000000;
+	void *outbuf = MEM1_BASE;
 
 	if (di_fd<0)
 		return -1;

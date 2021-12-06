@@ -25,10 +25,6 @@ using std::vector;
 #define printf(...)
 #endif
 
-#define MEM2_PROT           0x0D8B420A
-#define HW_GPIO1OUT         0x0D8000E0
-#define HW_GPIO1IN          0x0D8000E8
-
 #include "root_dat.h"
 
 extern "C" {
@@ -52,6 +48,25 @@ extern "C" {
 	extern void gentables(void);
 	extern void aes_set_key(u8 *key);
 	extern void aes_decrypt(u8 *iv, const u8 *inbuf, u8 *outbuf, unsigned long long len);
+
+	extern u16 MEM2_PROT;
+	extern u32 HW_GPIO1OUT;
+	extern u32 HW_GPIO1IN;
+
+	#define SYSCALL_DEVICE_OPEN 0xE6000390
+	#define ES_MODULE_SIZE      0x20000
+	#define ES_STACK_SIZE       0x1500
+	extern u32 ES_STACK[ES_STACK_SIZE / sizeof(u32)];
+	static constexpr u32* ES_STACK_END = ES_STACK + ES_STACK_SIZE / sizeof(u32);
+	extern u32 ES_MODULE_START[ES_MODULE_SIZE / sizeof(u32)];
+	static constexpr u32* ES_MODULE_END = ES_MODULE_START + ES_MODULE_SIZE / sizeof(u32);
+
+	extern u32 MEM1_BASE_UNCACHED[MEM1_SIZE/sizeof(u32)];
+	extern u16 MEM_PROT;
+	extern u32 MEM1_IOSVERSION;
+	extern volatile u32 OTP_COMMAND;
+	extern volatile u32 OTP_DATA;
+	extern volatile u32 IPC_REG_1;
 }
 
 otp_t otp;
@@ -261,19 +276,6 @@ void Haxx_Mount(vector<int>* mounted)
 
 extern "C" void udelay(int us);
 
-#define ES_STACK_END        0x20112500
-#define ES_MODULE_START     ((u8*)0x939F0000)
-#define ES_MODULE_SIZE      0x20000
-#define SYSCALL_DEVICE_OPEN 0xE6000390
-
-#define MEM1_BASE           ((u32*)0x80000000)
-#define MEM1_BASE_UNCACHED  ((u32*)0xC0000000)
-#define MEM_PROT            ((u16*)0xCD8B420A)
-#define MEM1_IOSVERSION     ((u32*)0xC0003140)
-#define OTP_COMMAND			((volatile u32*)0xCD8001EC)
-#define OTP_DATA			((volatile u32*)0xCD8001F0)
-#define IPC_REG_1           ((volatile u32*)0xCD000004)
-
 // the filename used to load modules
 static const char LOAD_MODULE_PATH[] ATTRIBUTE_ALIGN(32) = "/tmp/patch.bin";
 static const char LOAD_KERNEL_PATH[] ATTRIBUTE_ALIGN(32) = "/tmp/boot.bin";
@@ -450,7 +452,7 @@ static const struct {
     u16 old_value;
     u16 new_value;
 } patches[] = {
-    {MEM_PROT, 1, 2},
+    {&MEM_PROT, 1, 2},
     {(u16*)0x93A112F2, 0xD001, 0xE001},
     {(u16*)0x939B052C, 0xD140, 0x46C0}
 };
@@ -630,7 +632,7 @@ int check_for_sneek(s32 fd)
 	s32 xfd;
 	u32 bversion;
 
-	if (*MEM_PROT==1)
+	if (MEM_PROT==1)
 		return 2;
 
 	xfd = IOS_Open("/dev/sdio/slot/lrn2strcmp", 0);
@@ -673,7 +675,7 @@ int disable_mem2_protection(s32 fd)
 	static u32 cnt ATTRIBUTE_ALIGN(32);
 	u8 lowmem_save[0x20];
 	s32 ret = check_for_sneek(fd);
-	u32 es_stack;
+	u32* es_stack;
 	if (ret)
 	{
 		u8 *fake_tik;
@@ -774,7 +776,7 @@ int disable_mem2_protection(s32 fd)
 		}
 
 		printf("Playing soothing music...");
-		for (es_stack = 0x20111000; es_stack < ES_STACK_END; es_stack += 4)
+		for (es_stack = ES_STACK; es_stack < ES_STACK_END; es_stack++)
 		{
 			vec[2].data = (void*)es_stack;
 			vec[2].len = 0;
@@ -1156,7 +1158,7 @@ static void load_patched_ios(s32 fd, void* new_ios, u32 ios_version)
 
 	ioctlv vec;
 	u32* addr;
-	for (addr=(u32*)ES_MODULE_START;addr < (u32*)(ES_MODULE_START+ES_MODULE_SIZE);addr++)
+	for (addr=ES_MODULE_START;addr < ES_MODULE_END;addr++)
 	{
 		if (*addr == SYSCALL_DEVICE_OPEN)
 		{
@@ -1174,7 +1176,7 @@ static void load_patched_ios(s32 fd, void* new_ios, u32 ios_version)
 			vec.data = &junk;
 			vec.len = sizeof(junk);
 			// change ios version in lowmem so we know when the new one has loaded
-			*MEM1_IOSVERSION = 0x00020000;
+			MEM1_IOSVERSION = 0x00020000;
 			printf("Taking the plunge...\n");
 			//printf("IOS returned %d\n", IOS_Ioctlv(fd, 0x0c, 0, 1, &vec));
 			//printf("Owned titles: %d\n", junk);
@@ -1207,7 +1209,7 @@ static int load_module_file(s32 fd, const char *filename)
 	s32 ret=1;
 	ioctlv vec;
 
-	for (addr=ES_MODULE_START;addr < ES_MODULE_START+ES_MODULE_SIZE-sizeof(old_es_code);addr++) {
+	for (addr=(u8*)ES_MODULE_START;addr < (u8*)ES_MODULE_END-sizeof(old_es_code);addr++) {
 		if (!memcmp(addr, old_es_code, sizeof(old_es_code))) {
 			memcpy(addr, load_module, sizeof(load_module));
 			DCFlushRange((void*)((u32)addr&~0x1F), 32);
@@ -1247,7 +1249,7 @@ static void recover_from_reload(s32 version)
 	// Catch erroneous IPC signal
 	for (retries = 0; retries < 10; retries++)
 	{
-		if(*IPC_REG_1 & 2)
+		if(IPC_REG_1 & 2)
 			break;
 		udelay(6000);
 	}
@@ -1438,8 +1440,8 @@ static void read_otp()
 	u32 *otpd = (u32*)&otp;
 	for (unsigned int i=0; i < sizeof(otp)/sizeof(u32); i++)
 	{
-		*OTP_COMMAND = 0x80000000|i;
-		*otpd++ = *OTP_DATA;
+		OTP_COMMAND = 0x80000000|i;
+		*otpd++ = OTP_DATA;
 	}
 }
 
@@ -1632,7 +1634,7 @@ static bool do_exploit()
 		if (!patch_failed)
 		{
 			shutdown_for_reload();
-			load_patched_ios(es_fd, new_ios, MEM1_IOSVERSION[0]+1);
+			load_patched_ios(es_fd, new_ios, MEM1_IOSVERSION+1);
 			free(new_ios);
 			es_fd = 0;
 			recover_from_reload((u32)HAXX_IOS);
@@ -1759,7 +1761,7 @@ static void IOS_ReloadwithAHB(u32 ios_version)
 
 	if (read32(0x0D800038) && read32(0x0D80003C))
 	{
-		write16(MEM2_PROT, 2);
+		write16((size_t)&MEM2_PROT, 2);
 		for (patchme=(u16*)ES_MODULE_START; patchme < (u16*)ES_MODULE_START+0x4000-sizeof(ticket_check)/2; ++patchme)
 		{
 			if (!memcmp(patchme, ticket_check, sizeof(ticket_check)))
