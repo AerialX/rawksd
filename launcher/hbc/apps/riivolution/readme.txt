@@ -1,5 +1,4 @@
-Riivolution v1.05
-June 10th, 2013
+Riivolution v1.07
 by Aaron, tueidj, Tempus, and megazig
 riivolution@japaneatahand.com
 
@@ -53,11 +52,18 @@ Special thanks to everyone that contributed: Treeki, Omega, Pop006, TobiasAmaran
 
 Changelog
 
+v1.07
+December XXth, 20XX
+ - ???
+
+v1.06
+December 18th, 2013
+ - Wiimote disconnection issues resolved (Smash Bros. Brawl strap screen crash)
+
 v1.05
 June 10th, 2013
  - Wii U (Virtual Wii Menu) is now supported
  - New Wii Remote Plus remotes are now properly supported
-
 
 v1.04
 September 16th, 2010
