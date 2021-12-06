@@ -379,7 +379,7 @@ static void dol2elf(char *inname, char *outname)
 
 	for (i = 1; i < 19; i++)
 		if (section[i].size && section[i].offset) {
-			p = malloc(section[i].size);
+			p = (u8 *)malloc(section[i].size);
 			fseek(in, section[i].offset, SEEK_SET);
 			fread(p, 1, section[i].size, in);
 			fseek(out, section[i].elf_offset, SEEK_SET);

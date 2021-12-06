@@ -27,7 +27,7 @@ INCLUDES	:=	. libxml++ libxml++/exceptions libxml++/io libxml++/parsers libxml++
 #---------------------------------------------------------------------------------
 
 CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE)
-CXXFLAGS	=	$(CFLAGS)
+CXXFLAGS	=	$(CFLAGS) -Wno-deprecated-declarations
 
 LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 
