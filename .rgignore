@@ -1,0 +1,11 @@
+/consolehaxx
+/rawkaudio
+/filemodule/libfat/
+/launcher/lib/libwiigui
+/launcher/lib/libxml2
+/launcher/lib/libxml++
+/launcher/dollz3
+/launcher/brawl
+build/
+buildwii/
+buildios/
