@@ -2,13 +2,13 @@ Riivolution v1.07
 by Aaron, tueidj, Tempus, and megazig
 riivolution@japaneatahand.com
 
-Homepage: http://rvlution.net/riivolution
-Download: http://rvlution.net/riivolution.zip
+Homepage: https://aerialx.github.io/rvlution.net/wiki/Riivolution
+Download: https://aerialx.github.io/rvlution.net/riivolution.zip
 
 Riivolution is an on-the-fly game patcher for use with retail discs. It allows users to place content on their SD or USB devices, which will be read by the game during regular play.
 Riivolution can be used for custom textures, music, levels, memory patches, game translations, and more.
 
-Mini-FAQ - Updated online version: http://rvlution.net/riiv/FAQ
+Mini-FAQ - Updated online version: https://aerialx.github.io/rvlution.net/wiki/FAQ
 
 Q: Does Riivolution work with my "backups" or USB loaders?
 A: No. And that's not a bug.
@@ -33,19 +33,19 @@ A: It will install a Riivolution channel onto your System Menu for easy access. 
 
 Q: Can I use Ocarina / Gecko codes with it?
 A: Normally, Riivolution just supports direct memory patches. However, Riivolution supports a patching method that can be used with the Gecko OS code handler.
-   Read more about that here: http://rvlution.net/riiv/Ocarina_Codes
+   Read more about that here: https://aerialx.github.io/rvlution.net/wiki/Ocarina_Codes
 
 Q: Uhh, how do I use this?
 A: As a user, you need to either download patch packages made by someone else or make your own.
-   A basic template and packages for common games can be found here: http://rvlution.net/riiv/Patch_Templates
-   For a more detailed explanation about Riivolution's patch XML files, check out the instructions: http://rvlution.net/riiv/Patch_Format
+   A basic template and packages for common games can be found here: https://aerialx.github.io/rvlution.net/wiki/Patch_Templates
+   For a more detailed explanation about Riivolution's patch XML files, check out the instructions: https://aerialx.github.io/rvlution.net/wiki/Patch_Format
 
 Q: Network support? Awesome, how do I use it?
-A: Read more about all of Riivolution's network features here: http://rvlution.net/riiv/Network
-   You can also check out our list of all the known public Riivolution servers: http://rvlution.net/riiv/List_of_RiiFS_servers
+A: Read more about all of Riivolution's network features here: https://aerialx.github.io/rvlution.net/wiki/Network
+   You can also check out our list of all the known public Riivolution servers: https://aerialx.github.io/rvlution.net/wiki/List_of_RiiFS_servers
 
 Q: Can I see it in action?
-A: Sure. http://rvlution.net/riiv/Media
+A: Sure. https://aerialx.github.io/rvlution.net/wiki/Media
 
 Special thanks to everyone that contributed: Treeki, Omega, Pop006, TobiasAmaranth, Mooseknuckle2000, Skawo, and everyone else who helped out!
 
