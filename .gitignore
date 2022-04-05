@@ -9,3 +9,5 @@ bin/
 build/
 buildios/
 buildwii/
+/devkitppc/
+*.lck
