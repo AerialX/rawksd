@@ -10,5 +10,5 @@
 Riivolution requires valid game content and an XML file to apply changes to games.
 
 http://rvlution.net/riivolution</long_description>
-<no_ios_reload/>
+	<ahb_access/>
 </app>
