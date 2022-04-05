@@ -44,11 +44,8 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-    - uses: msys2/setup-msys2@v2
-      with:
-        release: false
-    - uses: actions/checkout@v2
-    - run: |
+    - shell: C:\shells\msys2bash.cmd {0}
+      run: |
         pacman-key --recv BC26F752D25B92CE272E0F44F7FD5492264BB9D0 --keyserver keyserver.ubuntu.com || pacman-key --recv BC26F752D25B92CE272E0F44F7FD5492264BB9D0
         pacman-key --lsign BC26F752D25B92CE272E0F44F7FD5492264BB9D0
         pacman --noconfirm -U https://pkg.devkitpro.org/devkitpro-keyring.pkg.tar.xz
@@ -57,12 +54,13 @@ jobs:
         sed -i 's/^CheckSpace/#CheckSpace/g' /etc/pacman.conf
         pacman --noconfirm -Sy
       name: devkitPro
-    - run: |
-        pacman -S --noconfirm --needed wii-dev ppc-portlibs wii-portlibs devkitARM
-      name: devkitPPC
-    - run: |
-        pacman -S --noconfirm --needed python-yaml zip unzip python
-      name: dependencies
+    - uses: msys2/setup-msys2@v2
+      with:
+        release: false
+        install: >-
+          base-devel gcc python-yaml zip unzip python
+          wii-dev ppc-portlibs wii-portlibs devkitARM
+    - uses: actions/checkout@v2
     - run: |
         DEVKITPRO=/opt/devkitpro DEVKITPPC=$DEVKITPRO/devkitPPC DEVKITARM=$DEVKITPRO/devkitARM \
         make launcher -j
