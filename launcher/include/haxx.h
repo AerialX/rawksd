@@ -79,3 +79,5 @@ int seeprom_read(void *dst, unsigned int offset, unsigned int size);
 #define HAXX_IOS 0x0000000100000025ULL
 #define HAXX_IOS_MAXIMUM 5919
 #define HAXX_IOS_MINIMUM 3869
+
+//#define DEBUG_HAXX 1

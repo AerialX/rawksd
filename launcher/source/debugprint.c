@@ -6,8 +6,6 @@
 
 #include <string.h>
 
-#define DEBUG_PORT 51016
-#define DEBUG_IPADDRESS "192.168.0.2"
 static int socket = -1;
 
 static void InitializeNetwork(const char *ip_str, const int port)
@@ -26,7 +24,7 @@ static void InitializeNetwork(const char *ip_str, const int port)
 	address.sin_family = PF_INET;
 	address.sin_port = htons(port);
 	int ret = inet_aton(ip_str, &address.sin_addr);
-	if (ret <= 0)
+	if (ret == 0)
 		return;
 	if (net_connect(socket, (struct sockaddr*)&address, sizeof(address)) < 0)
 	{
@@ -39,7 +37,12 @@ static ssize_t DebugPrint(struct _reent *r, void *fd, const char *ptr, size_t le
 {
 	File_Log(ptr, len);
 	if (socket >= 0) {
-		net_send(socket, ptr, len, 0);
+		ssize_t res = net_send(socket, ptr, len, 0);
+		while (res > 0 && res != len) {
+			ptr += res;
+			len -= res;
+			res = net_send(socket, ptr, len, 0);
+		}
 		return len;
 	}
 	return 0;
@@ -72,14 +75,14 @@ static const devoptab_t dotab_netout = {
 };
 
 
-void Init_DebugConsole(int use_net)
+void Init_DebugConsole(const char *ip_str, int port)
 {
 	unsigned int level;
 
 	_CPU_ISR_Disable(level);
 
-	if (use_net)
-		InitializeNetwork(DEBUG_IPADDRESS, DEBUG_PORT);
+	if (ip_str)
+		InitializeNetwork(ip_str, port);
 
 	devoptab_list[STD_OUT] = &dotab_netout;
 	devoptab_list[STD_ERR] = &dotab_netout;
@@ -90,4 +93,9 @@ void Init_DebugConsole(int use_net)
 	setvbuf(stderr, NULL, _IONBF, 0);
 
 	printf("Debug Console Connected\n");
+}
+
+void Init_DebugConsole_Shutdown() {
+	net_deinit();
+	socket = -1;
 }

@@ -14,8 +14,7 @@
 #include "installer.h"
 #include "wdvd.h"
 #include "files.h"
-
-extern "C" void Init_DebugConsole(int use_net);
+#include "init.h"
 
 extern u8 _start[], __RO_END[];
 
@@ -194,8 +193,7 @@ void Initialise()
 		}
 	}
 
-	// change parameter to redirect stdout/stderr over wifi
-	Init_DebugConsole(0);
+	Init_DebugConsole();
 
 	SetupPads();
 	InitAudio();

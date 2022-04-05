@@ -2,6 +2,7 @@
 #include "launcher.h"
 #include "wdvd.h"
 #include "sha1.h"
+#include "init.h"
 
 #include <gccore.h>
 #include <wiiuse/wpad.h>
@@ -20,7 +21,7 @@ using std::vector;
 
 //#define BABELFISH
 
-#ifndef BABELFISH
+#if !defined(BABELFISH) && !defined(DEBUG_HAXX)
 #define printf(...)
 #endif
 
@@ -243,7 +244,9 @@ void Haxx_Mount(vector<int>* mounted)
 	if (ret >= 0) {
 		mounted->push_back(ret);
 		ToMount.push_back(ret);
+#ifndef DEBUG_HAXX
 		if (!hasdefault)
+#endif
 			File_SetLogFS(ret);
 
 		DEFAULT();
@@ -1123,6 +1126,9 @@ static void* prepare_new_kernel(u64 title)
 // remember any MEM2 data may be invalid after reloading IOS
 static void shutdown_for_reload()
 {
+#if DEBUG_HAXX && DEBUG_NET
+	Init_DebugConsole_Shutdown();
+#endif
 	ISFS_Deinitialize();
 	WPAD_Shutdown();
 	__IOS_ShutdownSubsystems();
@@ -1630,6 +1636,9 @@ static bool do_exploit()
 			free(new_ios);
 			es_fd = 0;
 			recover_from_reload((u32)HAXX_IOS);
+#if DEBUG_HAXX && DEBUG_NET
+			Init_DebugConsole();
+#endif
 			if (IOS_GetVersion() != (u32)HAXX_IOS || IOS_GetRevision() != ios_rev+1) {
 				printf("New IOS Version is incorrect, %08X\n", IOS_GetVersion());
 				patch_failed = 1;
@@ -1770,6 +1779,9 @@ static void IOS_ReloadwithAHB(u32 ios_version)
 	printf("Reloading IOS %d...\n", ios_version);
 	IOS_ReloadIOS(ios_version);
 	printf("Done.\n");
+#if DEBUG_HAXX && DEBUG_NET
+	Init_DebugConsole();
+#endif
 }
 
 /******* BEGIN SIGNATURE CHECKING STUF ******/

@@ -82,3 +82,11 @@ pacman -S zip unzip python python-yaml
 
 make -j
 ```
+
+## Debugging
+
+Set [DEBUG_NET](launcher/include/init.h) to receive debug output remotely:
+
+```shell
+socat TCP4-LISTEN:51016,fork,reuseaddr STDOUT
+```
