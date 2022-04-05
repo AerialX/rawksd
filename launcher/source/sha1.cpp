@@ -12,9 +12,9 @@ A million repetitions of "a"
   34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
 */
 
-/* #define LITTLE_ENDIAN * This should be #define'd if true. */
 #define SHA1HANDSOFF
 
+#include <gctypes.h>
 #include <stdio.h>
 #include <string.h>
 #include "sha1.h"
@@ -23,7 +23,7 @@ A million repetitions of "a"
 
 /* blk0() and blk() perform the initial expand. */
 /* I got the idea of expanding during the round function from SSLeay */
-#ifdef LITTLE_ENDIAN
+#if BYTE_ORDER == LITTLE_ENDIAN
 #define blk0(i) (block->l[i] = (rol(block->l[i],24)&0xFF00FF00) \
     |(rol(block->l[i],8)&0x00FF00FF))
 #else
@@ -122,7 +122,7 @@ unsigned int i, j;
         memcpy(&context->buffer[j], data, (i = 64-j));
         SHA1Transform(context->state, context->buffer);
         for ( ; i + 63 < len; i += 64) {
-            SHA1Transform(context->state, &data[i]);
+            SHA1Transform(context->state, data + i);
         }
         j = 0;
     }
@@ -155,7 +155,7 @@ unsigned char finalcount[8];
     memset(context->buffer, 0, 64);
     memset(context->state, 0, 20);
     memset(context->count, 0, 8);
-    memset(&finalcount, 0, 8);
+    memset(finalcount, 0, 8);
 #ifdef SHA1HANDSOFF  /* make SHA1Transform overwrite it's own static vars */
     SHA1Transform(context->state, context->buffer);
 #endif
